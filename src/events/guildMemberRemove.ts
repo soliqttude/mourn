@@ -13,9 +13,13 @@ export const event = {
       const ch = member.guild.channels.cache.get(settings.goodbyeChannel);
       if (ch?.isTextBased()) {
         const tmpl =
-          settings.goodbyeMessage || "**{user.tag}** just left **{server}**.";
+          settings.goodbyeMessage ||
+          "{user.mention} just left **{server}**. We now have {member_count} members.";
         await (ch as TextChannel)
-          .send({ content: renderTemplate(tmpl, { member: member as GuildMember }) })
+          .send({
+            content: renderTemplate(tmpl, { member: member as GuildMember }),
+            allowedMentions: { parse: ["users"] },
+          })
           .catch(() => {});
       }
     }
