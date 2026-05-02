@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { parseDuration } from "../../lib/time.js";
+import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "timeout",
@@ -19,15 +20,14 @@ export const command: HybridCommand = {
     const target = await ctx.getMember("user", true);
     const dur = ctx.getString("duration", true);
     const reason = ctx.getString("reason") ?? "No reason provided";
-    if (!target || !dur) return;
+    if (!target || !dur || !ctx.guild) return;
     const ms = parseDuration(dur);
-    if (!ms || ms > 28 * 24 * 60 * 60 * 1000) {
-      return ctx.reply({ embeds: [errorEmbed("Invalid duration. Max 28 days.")] });
-    }
+    if (!ms || ms > 28 * 24 * 60 * 60 * 1000) return ctx.reply({ embeds: [errorEmbed("Invalid duration. Max 28 days.")] });
     if (!target.moderatable) return ctx.reply({ embeds: [errorEmbed("I can't timeout that user.")] });
     try {
       await target.timeout(ms, `${ctx.user.tag}: ${reason}`);
-      return ctx.reply({ embeds: [successEmbed(`Timed out **${target.user.tag}** for ${dur} — ${reason}`)] });
+      const caseId = await logCase(ctx.guild.id, target.id, ctx.user.id, "timeout", reason, dur);
+      return ctx.reply({ embeds: [successEmbed(`Timed out **${target.user.tag}** for ${dur} — ${reason}\nCase #${caseId}`)] });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
     }
