@@ -14,14 +14,16 @@ export const command: HybridCommand = {
     { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
+    const guild = ctx.guild;
+    if (!guild) return;
     const target = await ctx.getMember("user", true);
     const reason = ctx.getString("reason") ?? "No reason provided";
-    if (!target || !ctx.guild) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
     if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't kick yourself.")] });
     if (!target.kickable) return ctx.reply({ embeds: [errorEmbed("I can't kick that user.")] });
     try {
       await target.kick(`${ctx.user.tag}: ${reason}`);
-      const caseId = await logCase(ctx.guild.id, target.id, ctx.user.id, "kick", reason);
+      const caseId = await logCase(guild.id, target.id, ctx.user.id, "kick", reason);
       return ctx.reply({ embeds: [successEmbed(`Kicked **${target.user.tag}** — ${reason}\nCase #${caseId}`)] });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
