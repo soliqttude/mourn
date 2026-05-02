@@ -36,6 +36,7 @@ const STATEMENTS: string[] = [
     mute_role TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS autorole_id TEXT`,
   `CREATE TABLE IF NOT EXISTS warnings (
     id SERIAL PRIMARY KEY,
     guild_id TEXT NOT NULL,
@@ -163,6 +164,55 @@ const STATEMENTS: string[] = [
     reason TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE IF NOT EXISTS giveaways (
+    id SERIAL PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    channel_id TEXT NOT NULL,
+    message_id TEXT,
+    prize TEXT NOT NULL,
+    winners_count INTEGER NOT NULL DEFAULT 1,
+    host_id TEXT NOT NULL,
+    ends_at TIMESTAMPTZ NOT NULL,
+    ended BOOLEAN NOT NULL DEFAULT false,
+    winners JSONB NOT NULL DEFAULT '[]',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS giveaways_guild_idx ON giveaways (guild_id)`,
+  `CREATE TABLE IF NOT EXISTS word_filter (
+    guild_id TEXT NOT NULL,
+    word TEXT NOT NULL,
+    PRIMARY KEY (guild_id, word)
+  )`,
+  `CREATE TABLE IF NOT EXISTS mod_notes (
+    id SERIAL PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    moderator_id TEXT NOT NULL,
+    note TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS mod_notes_guild_user_idx ON mod_notes (guild_id, user_id)`,
+  `CREATE TABLE IF NOT EXISTS mod_cases (
+    id SERIAL PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    moderator_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    duration TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS mod_cases_guild_user_idx ON mod_cases (guild_id, user_id)`,
+  `CREATE TABLE IF NOT EXISTS temp_bans (
+    id SERIAL PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    moderator_id TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    unban_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS temp_bans_guild_idx ON temp_bans (guild_id)`,
 ];
 
 export async function runMigrations(): Promise<void> {
