@@ -1,10 +1,9 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed, successEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
 import { giveaways } from "../../db/schema.js";
 import { eq, and } from "drizzle-orm";
-import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "greroll",
@@ -16,16 +15,17 @@ export const command: HybridCommand = {
     { name: "id", description: "Giveaway ID", type: ApplicationCommandOptionType.Integer, required: true },
   ],
   async execute(ctx) {
-    if (!ctx.guild) return;
+    const guild = ctx.guild;
+    if (!guild) return;
     const id = ctx.getNumber("id", true);
     if (!id) return;
     const rows = await db.select().from(giveaways).where(
-      and(eq(giveaways.id, id), eq(giveaways.guildId, ctx.guild.id))
+      and(eq(giveaways.id, id), eq(giveaways.guildId, guild.id))
     );
     const giveaway = rows[0];
     if (!giveaway) return ctx.reply({ embeds: [errorEmbed("Giveaway not found.")] });
     if (!giveaway.ended) return ctx.reply({ embeds: [errorEmbed("This giveaway hasn't ended yet. Use /gend first.")] });
-    const ch = ctx.guild.channels.cache.get(giveaway.channelId);
+    const ch = guild.channels.cache.get(giveaway.channelId);
     if (!ch || !giveaway.messageId) return ctx.reply({ embeds: [errorEmbed("Could not find the giveaway message.")] });
     const msg = await (ch as any).messages.fetch(giveaway.messageId).catch(() => null);
     if (!msg) return ctx.reply({ embeds: [errorEmbed("Giveaway message not found.")] });
