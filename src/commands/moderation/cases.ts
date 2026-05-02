@@ -11,19 +11,31 @@ export const command: HybridCommand = {
   category: "moderation",
   permission: "mod",
   guildOnly: true,
+  usage: "<@user>",
   options: [
     { name: "user", description: "User to look up", type: ApplicationCommandOptionType.User, required: true },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const target = await ctx.getUser("user", true);
-    if (!target) return;
-    const rows = await db.select().from(modCases)
+    const target = await ctx.getUser("user", true).catch(() => null);
+    if (!target) return ctx.reply({ embeds: [errorEmbed("User not found. Usage: `,cases @user` or `/cases user:@user`")] });
+    const rows = await db
+      .select()
+      .from(modCases)
       .where(and(eq(modCases.guildId, ctx.guild.id), eq(modCases.userId, target.id)))
       .orderBy(desc(modCases.createdAt))
       .limit(15);
-    if (rows.length === 0) return ctx.reply({ embeds: [brandEmbed({ title: `Cases for ${target.tag}`, description: "No cases found.", page: "Moderation" })] });
-    const desc2 = rows.map((c) => `**#${c.id}** ${c.action.toUpperCase()} — ${c.reason}${c.duration ? ` (${c.duration})` : ""} — <t:${Math.floor(new Date(c.createdAt).getTime() / 1000)}:d>`).join("\n");
-    return ctx.reply({ embeds: [brandEmbed({ title: `Cases for ${target.tag} (${rows.length})`, description: desc2, page: "Moderation" })] });
+    if (rows.length === 0) {
+      return ctx.reply({
+        embeds: [brandEmbed({ title: `Cases for ${target.username}`, description: "No cases found for this user.", page: "Moderation" })],
+      });
+    }
+    const lines = rows.map(
+      (c) =>
+        `**#${c.id}** \`${c.action.toUpperCase()}\` — ${c.reason}${c.duration ? ` *(${c.duration})*` : ""} — <t:${Math.floor(new Date(c.createdAt).getTime() / 1000)}:d>`
+    );
+    return ctx.reply({
+      embeds: [brandEmbed({ title: `Cases for ${target.username} (${rows.length})`, description: lines.join("\n"), page: "Moderation" })],
+    });
   },
 };
