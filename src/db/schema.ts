@@ -52,6 +52,7 @@ export const guildSettings = pgTable("guild_settings", {
 
   jailRole: text("jail_role"),
   muteRole: text("mute_role"),
+  autoroleId: text("autorole_id"),
 
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -66,9 +67,7 @@ export const warnings = pgTable(
     reason: text("reason").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
-    guildUserIdx: index("warnings_guild_user_idx").on(t.guildId, t.userId),
-  })
+  (t) => ({ guildUserIdx: index("warnings_guild_user_idx").on(t.guildId, t.userId) })
 );
 
 export const tags = pgTable(
@@ -81,9 +80,7 @@ export const tags = pgTable(
     uses: integer("uses").default(0).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.guildId, t.name] }),
-  })
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.name] }) })
 );
 
 export const autoresponders = pgTable(
@@ -97,9 +94,7 @@ export const autoresponders = pgTable(
     createdBy: text("created_by").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
-    guildIdx: index("ar_guild_idx").on(t.guildId),
-  })
+  (t) => ({ guildIdx: index("ar_guild_idx").on(t.guildId) })
 );
 
 export const reactionRoles = pgTable(
@@ -150,9 +145,7 @@ export const afk = pgTable(
     message: text("message").notNull(),
     since: timestamp("since", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.guildId, t.userId] }),
-  })
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
 );
 
 export const remindersTable = pgTable("reminders", {
@@ -174,9 +167,7 @@ export const economy = pgTable(
     bank: bigint("bank", { mode: "number" }).default(0).notNull(),
     lastDaily: timestamp("last_daily", { withTimezone: true }),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.guildId, t.userId] }),
-  })
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
 );
 
 export const levels = pgTable(
@@ -188,9 +179,7 @@ export const levels = pgTable(
     level: integer("level").default(0).notNull(),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.guildId, t.userId] }),
-  })
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
 );
 
 export const levelRewards = pgTable(
@@ -200,9 +189,7 @@ export const levelRewards = pgTable(
     level: integer("level").notNull(),
     roleId: text("role_id").notNull(),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.guildId, t.level] }),
-  })
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.level] }) })
 );
 
 export const inviteCache = pgTable(
@@ -213,9 +200,7 @@ export const inviteCache = pgTable(
     uses: integer("uses").default(0).notNull(),
     inviterId: text("inviter_id"),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.guildId, t.code] }),
-  })
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.code] }) })
 );
 
 export const inviteUses = pgTable("invite_uses", {
@@ -244,3 +229,72 @@ export const reactionRoleMessages = pgTable("reaction_role_messages", {
   guildId: text("guild_id").notNull(),
   channelId: text("channel_id").notNull(),
 });
+
+export const giveaways = pgTable(
+  "giveaways",
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    channelId: text("channel_id").notNull(),
+    messageId: text("message_id"),
+    prize: text("prize").notNull(),
+    winnersCount: integer("winners_count").default(1).notNull(),
+    hostId: text("host_id").notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    ended: boolean("ended").default(false).notNull(),
+    winners: jsonb("winners").$type<string[]>().default([]).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({ guildIdx: index("giveaways_guild_idx").on(t.guildId) })
+);
+
+export const wordFilter = pgTable(
+  "word_filter",
+  {
+    guildId: text("guild_id").notNull(),
+    word: text("word").notNull(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.word] }) })
+);
+
+export const modNotes = pgTable(
+  "mod_notes",
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    userId: text("user_id").notNull(),
+    moderatorId: text("moderator_id").notNull(),
+    note: text("note").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({ guildUserIdx: index("mod_notes_guild_user_idx").on(t.guildId, t.userId) })
+);
+
+export const modCases = pgTable(
+  "mod_cases",
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    userId: text("user_id").notNull(),
+    moderatorId: text("moderator_id").notNull(),
+    action: text("action").notNull(),
+    reason: text("reason").notNull(),
+    duration: text("duration"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({ guildUserIdx: index("mod_cases_guild_user_idx").on(t.guildId, t.userId) })
+);
+
+export const tempBans = pgTable(
+  "temp_bans",
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    userId: text("user_id").notNull(),
+    moderatorId: text("moderator_id").notNull(),
+    reason: text("reason").notNull(),
+    unbanAt: timestamp("unban_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({ guildIdx: index("temp_bans_guild_idx").on(t.guildId) })
+);
