@@ -10,60 +10,36 @@ export const command: HybridCommand = {
   permission: "mod",
   guildOnly: true,
   options: [
-    {
-      name: "set",
-      description: "Set the autorole for this server.",
-      type: ApplicationCommandOptionType.Subcommand,
-      options: [
-        { name: "role", description: "The role to set as autorole", type: ApplicationCommandOptionType.Role, required: true },
-      ],
-    } as any,
-    {
-      name: "give",
-      description: "Give the autorole to a member.",
-      type: ApplicationCommandOptionType.Subcommand,
-      options: [
-        { name: "user", description: "Member to give the role to", type: ApplicationCommandOptionType.User, required: true },
-      ],
-    } as any,
-    {
-      name: "remove",
-      description: "Remove the autorole from a member.",
-      type: ApplicationCommandOptionType.Subcommand,
-      options: [
-        { name: "user", description: "Member to remove the role from", type: ApplicationCommandOptionType.User, required: true },
-      ],
-    } as any,
-    {
-      name: "clear",
-      description: "Clear the configured autorole.",
-      type: ApplicationCommandOptionType.Subcommand,
-    } as any,
+    { name: "set", description: "Set the autorole for this server.", type: ApplicationCommandOptionType.Subcommand, options: [{ name: "role", description: "The role to set as autorole", type: ApplicationCommandOptionType.Role, required: true }] } as any,
+    { name: "give", description: "Give the autorole to a member.", type: ApplicationCommandOptionType.Subcommand, options: [{ name: "user", description: "Member to give the role to", type: ApplicationCommandOptionType.User, required: true }] } as any,
+    { name: "remove", description: "Remove the autorole from a member.", type: ApplicationCommandOptionType.Subcommand, options: [{ name: "user", description: "Member to remove the role from", type: ApplicationCommandOptionType.User, required: true }] } as any,
+    { name: "clear", description: "Clear the configured autorole.", type: ApplicationCommandOptionType.Subcommand } as any,
   ],
   async execute(ctx) {
-    if (!ctx.guild) return;
+    const guild = ctx.guild;
+    if (!guild) return;
     const sub = ctx.getString("subcommand") ?? ctx.args[0];
 
     if (sub === "set") {
       const role = ctx.getRole("role");
       if (!role) return ctx.reply({ embeds: [errorEmbed("Role not found.")] });
-      await updateGuildSettings(ctx.guild.id, { autoroleId: role.id });
+      await updateGuildSettings(guild.id, { autoroleId: role.id });
       return ctx.reply({ embeds: [successEmbed(`Autorole set to <@&${role.id}>.`)] });
     }
 
     if (sub === "clear") {
-      await updateGuildSettings(ctx.guild.id, { autoroleId: null });
+      await updateGuildSettings(guild.id, { autoroleId: null });
       return ctx.reply({ embeds: [successEmbed("Autorole cleared.")] });
     }
 
-    const settings = await getGuildSettings(ctx.guild.id);
+    const settings = await getGuildSettings(guild.id);
     if (!settings.autoroleId) {
       return ctx.reply({ embeds: [errorEmbed("No autorole configured. Use `/autorole set` first.")] });
     }
 
     const target = await ctx.getMember("user", true);
     if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
-    const role = ctx.guild.roles.cache.get(settings.autoroleId);
+    const role = guild.roles.cache.get(settings.autoroleId);
     if (!role) return ctx.reply({ embeds: [errorEmbed("The configured autorole no longer exists. Please reset it.")] });
 
     if (sub === "give") {
@@ -82,7 +58,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`Removed <@&${role.id}> from **${target.user.tag}**.`)] });
     }
 
-    const embed = brandEmbed({ title: "Autorole", description: `Current autorole: <@&${settings.autoroleId}>`, page: "Settings" });
-    return ctx.reply({ embeds: [embed] });
+    return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: `Current autorole: <@&${settings.autoroleId}>`, page: "Settings" })] });
   },
 };
