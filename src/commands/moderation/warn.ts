@@ -16,13 +16,15 @@ export const command: HybridCommand = {
     { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: true },
   ],
   async execute(ctx) {
+    const guild = ctx.guild;
+    if (!guild) return;
     const target = await ctx.getUser("user", true);
     const reason = ctx.getString("reason", true);
-    if (!target || !ctx.guild) return;
+    if (!target) return;
     if (!reason) return ctx.reply({ embeds: [errorEmbed("Reason is required.")] });
-    await db.insert(warnings).values({ guildId: ctx.guild.id, userId: target.id, moderatorId: ctx.user.id, reason });
-    const caseId = await logCase(ctx.guild.id, target.id, ctx.user.id, "warn", reason);
-    target.send(`You were warned in **${ctx.guild.name}** by ${ctx.user.tag}: ${reason}`).catch(() => {});
+    await db.insert(warnings).values({ guildId: guild.id, userId: target.id, moderatorId: ctx.user.id, reason });
+    const caseId = await logCase(guild.id, target.id, ctx.user.id, "warn", reason);
+    target.send(`You were warned in **${guild.name}** by ${ctx.user.tag}: ${reason}`).catch(() => {});
     return ctx.reply({ embeds: [successEmbed(`Warned **${target.tag}** — ${reason}\nCase #${caseId}`)] });
   },
 };
