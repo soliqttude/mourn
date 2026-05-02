@@ -10,54 +10,52 @@ export const command: HybridCommand = {
   permission: "mod",
   guildOnly: true,
   options: [
-    { name: "set", description: "Set the autorole for this server.", type: ApplicationCommandOptionType.Subcommand, options: [{ name: "role", description: "The role to set as autorole", type: ApplicationCommandOptionType.Role, required: true }] } as any,
-    { name: "give", description: "Give the autorole to a member.", type: ApplicationCommandOptionType.Subcommand, options: [{ name: "user", description: "Member to give the role to", type: ApplicationCommandOptionType.User, required: true }] } as any,
-    { name: "remove", description: "Remove the autorole from a member.", type: ApplicationCommandOptionType.Subcommand, options: [{ name: "user", description: "Member to remove the role from", type: ApplicationCommandOptionType.User, required: true }] } as any,
-    { name: "clear", description: "Clear the configured autorole.", type: ApplicationCommandOptionType.Subcommand } as any,
+    { name: "action", description: "set · give · remove · clear · status", type: ApplicationCommandOptionType.String, required: true },
+    { name: "role", description: "Role to set as autorole (for set)", type: ApplicationCommandOptionType.Role, required: false },
+    { name: "user", description: "Member to give/remove the role (for give/remove)", type: ApplicationCommandOptionType.User, required: false },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
     if (!guild) return;
-    const sub = ctx.getString("subcommand") ?? ctx.args[0];
+    const action = (ctx.getString("action", true) ?? ctx.args[0] ?? "").toLowerCase();
 
-    if (sub === "set") {
+    if (action === "set") {
       const role = ctx.getRole("role");
-      if (!role) return ctx.reply({ embeds: [errorEmbed("Role not found.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a role.")] });
       await updateGuildSettings(guild.id, { autoroleId: role.id });
       return ctx.reply({ embeds: [successEmbed(`Autorole set to <@&${role.id}>.`)] });
     }
 
-    if (sub === "clear") {
+    if (action === "clear") {
       await updateGuildSettings(guild.id, { autoroleId: null });
       return ctx.reply({ embeds: [successEmbed("Autorole cleared.")] });
     }
 
-    const settings = await getGuildSettings(guild.id);
-    if (!settings.autoroleId) {
-      return ctx.reply({ embeds: [errorEmbed("No autorole configured. Use `/autorole set` first.")] });
+    if (action === "status") {
+      const settings = await getGuildSettings(guild.id);
+      if (!settings.autoroleId) return ctx.reply({ embeds: [errorEmbed("No autorole configured.")] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: `Current autorole: <@&${settings.autoroleId}>`, page: "Settings" })] });
     }
 
-    const target = await ctx.getMember("user", true);
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
+    const settings = await getGuildSettings(guild.id);
+    if (!settings.autoroleId) return ctx.reply({ embeds: [errorEmbed("No autorole configured. Use `/autorole set` first.")] });
+    const target = await ctx.getMember("user");
+    if (!target) return ctx.reply({ embeds: [errorEmbed("Please specify a member.")] });
     const role = guild.roles.cache.get(settings.autoroleId);
     if (!role) return ctx.reply({ embeds: [errorEmbed("The configured autorole no longer exists. Please reset it.")] });
 
-    if (sub === "give") {
-      if (target.roles.cache.has(role.id)) {
-        return ctx.reply({ embeds: [errorEmbed(`${target.user.tag} already has the autorole.`)] });
-      }
+    if (action === "give") {
+      if (target.roles.cache.has(role.id)) return ctx.reply({ embeds: [errorEmbed(`${target.user.tag} already has the autorole.`)] });
       await target.roles.add(role, `Autorole given by ${ctx.user.tag}`);
       return ctx.reply({ embeds: [successEmbed(`Gave <@&${role.id}> to **${target.user.tag}**.`)] });
     }
 
-    if (sub === "remove") {
-      if (!target.roles.cache.has(role.id)) {
-        return ctx.reply({ embeds: [errorEmbed(`${target.user.tag} doesn't have the autorole.`)] });
-      }
+    if (action === "remove") {
+      if (!target.roles.cache.has(role.id)) return ctx.reply({ embeds: [errorEmbed(`${target.user.tag} doesn't have the autorole.`)] });
       await target.roles.remove(role, `Autorole removed by ${ctx.user.tag}`);
       return ctx.reply({ embeds: [successEmbed(`Removed <@&${role.id}> from **${target.user.tag}**.`)] });
     }
 
-    return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: `Current autorole: <@&${settings.autoroleId}>`, page: "Settings" })] });
+    return ctx.reply({ embeds: [errorEmbed("Usage: `/autorole set/give/remove/clear/status`")] });
   },
 };
