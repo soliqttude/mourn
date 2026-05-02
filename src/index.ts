@@ -1,9 +1,4 @@
-import {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  ActivityType,
-} from "discord.js";
+import { Client, GatewayIntentBits, Partials, ActivityType } from "discord.js";
 import { config } from "./config.js";
 import { logger } from "./lib/logger.js";
 import { runMigrations } from "./db/migrate.js";
@@ -11,6 +6,8 @@ import { loadCommands } from "./handlers/registry.js";
 import { loadEvents } from "./handlers/events.js";
 import { registerSlashCommands } from "./handlers/slashRegister.js";
 import { startReminderLoop } from "./features/reminders.js";
+import { startGiveawayLoop } from "./features/giveaway.js";
+import { startTempBanLoop } from "./features/tempbans.js";
 
 async function main() {
   await runMigrations();
@@ -28,11 +25,8 @@ async function main() {
       GatewayIntentBits.GuildPresences,
     ],
     partials: [
-      Partials.Message,
-      Partials.Channel,
-      Partials.Reaction,
-      Partials.GuildMember,
-      Partials.User,
+      Partials.Message, Partials.Channel, Partials.Reaction,
+      Partials.GuildMember, Partials.User,
     ],
   });
 
@@ -49,14 +43,12 @@ async function main() {
       await registerSlashCommands(client.application.id);
     }
     startReminderLoop(client);
+    startGiveawayLoop(client);
+    startTempBanLoop(client);
   });
 
-  process.on("unhandledRejection", (err) => {
-    logger.error({ err }, "Unhandled rejection");
-  });
-  process.on("uncaughtException", (err) => {
-    logger.error({ err }, "Uncaught exception");
-  });
+  process.on("unhandledRejection", (err) => { logger.error({ err }, "Unhandled rejection"); });
+  process.on("uncaughtException", (err) => { logger.error({ err }, "Uncaught exception"); });
 
   await client.login(config.token);
 }
