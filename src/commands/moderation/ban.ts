@@ -14,15 +14,17 @@ export const command: HybridCommand = {
     { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
+    const guild = ctx.guild;
+    if (!guild) return;
     const target = await ctx.getUser("user", true);
     const reason = ctx.getString("reason") ?? "No reason provided";
-    if (!target || !ctx.guild) return ctx.reply({ embeds: [errorEmbed("User not found.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("User not found.")] });
     if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't ban yourself.")] });
-    const member = await ctx.guild.members.fetch(target.id).catch(() => null);
+    const member = await guild.members.fetch(target.id).catch(() => null);
     if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("I can't ban that user.")] });
     try {
-      await ctx.guild.members.ban(target.id, { reason: `${ctx.user.tag}: ${reason}` });
-      const caseId = await logCase(ctx.guild.id, target.id, ctx.user.id, "ban", reason);
+      await guild.members.ban(target.id, { reason: `${ctx.user.tag}: ${reason}` });
+      const caseId = await logCase(guild.id, target.id, ctx.user.id, "ban", reason);
       return ctx.reply({ embeds: [successEmbed(`Banned **${target.tag}** — ${reason}\nCase #${caseId}`)] });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
