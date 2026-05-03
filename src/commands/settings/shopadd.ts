@@ -12,10 +12,10 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [
     { name: "name", description: "Item name", type: ApplicationCommandOptionType.String, required: true },
-    { name: "price", description: "Price in coins", type: ApplicationCommandOptionType.Integer, required: true },
+    { name: "price", description: "Price in coins", type: ApplicationCommandOptionType.Number, required: true },
     { name: "description", description: "Item description", type: ApplicationCommandOptionType.String, required: false },
     { name: "role", description: "Role to grant on purchase", type: ApplicationCommandOptionType.Role, required: false },
-    { name: "stock", description: "Stock (-1 = unlimited)", type: ApplicationCommandOptionType.Integer, required: false },
+    { name: "stock", description: "Stock (-1 = unlimited)", type: ApplicationCommandOptionType.Number, required: false },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
