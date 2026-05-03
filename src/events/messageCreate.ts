@@ -13,6 +13,9 @@ import { handleTags } from "../features/tags.js";
 import { handleLevelXp } from "../features/leveling.js";
 import { handleAutomod } from "../features/automod.js";
 import { handleWordFilter } from "../features/wordfilter.js";
+import { handleCounting } from "../features/counting.js";
+import { handleHighlights } from "../features/highlights.js";
+import { handleAutopublish } from "../features/autopublish.js";
 
 export const event = {
   name: "messageCreate",
@@ -24,6 +27,9 @@ export const event = {
       await handleWordFilter(client, message);
       await handleAutoresponders(client, message);
       await handleLevelXp(client, message);
+      await handleCounting(client, message);
+      await handleHighlights(client, message);
+      await handleAutopublish(client, message);
     } catch (err) {
       logger.error({ err }, "messageCreate feature handler error");
     }

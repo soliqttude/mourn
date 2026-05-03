@@ -1,0 +1,25 @@
+import { ApplicationCommandOptionType } from "discord.js";
+import type { HybridCommand } from "../../lib/command.js";
+import { brandEmbed } from "../../lib/embeds.js";
+
+async function getGif(type: string): Promise<string> {
+  try {
+    const res = await fetch(`https://api.waifu.pics/sfw/${type}`);
+    const data = await res.json() as { url: string };
+    return data.url;
+  } catch { return ""; }
+}
+
+export const command: HybridCommand = {
+  name: "wave",
+  description: "Wave at someone.",
+  category: "fun",
+  guildOnly: true,
+  options: [{ name: "user", description: "User to wave at", type: ApplicationCommandOptionType.User, required: false }],
+  async execute(ctx) {
+    const target = await ctx.getUser("user");
+    const gif = await getGif("wave");
+    const title = target ? `${ctx.user.username} waves at ${target.username}! 👋` : `${ctx.user.username} waves! 👋`;
+    return ctx.reply({ embeds: [brandEmbed({ title, image: gif, page: "Fun" })] });
+  },
+};

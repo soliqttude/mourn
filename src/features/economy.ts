@@ -16,11 +16,11 @@ export async function getEconomy(guildId: string, userId: string) {
   return fresh[0]!;
 }
 
-export async function addBalance(
-  guildId: string,
-  userId: string,
-  amount: number
-) {
+export async function getBalance(guildId: string, userId: string) {
+  return getEconomy(guildId, userId);
+}
+
+export async function addBalance(guildId: string, userId: string, amount: number) {
   await getEconomy(guildId, userId);
   await db
     .update(economy)
@@ -28,10 +28,41 @@ export async function addBalance(
     .where(and(eq(economy.guildId, guildId), eq(economy.userId, userId)));
 }
 
+export async function removeBalance(guildId: string, userId: string, amount: number) {
+  await getEconomy(guildId, userId);
+  await db
+    .update(economy)
+    .set({ balance: sql`GREATEST(0, ${economy.balance} - ${amount})` })
+    .where(and(eq(economy.guildId, guildId), eq(economy.userId, userId)));
+}
+
+export async function addBankBalance(guildId: string, userId: string, amount: number) {
+  await getEconomy(guildId, userId);
+  await db
+    .update(economy)
+    .set({ bank: sql`${economy.bank} + ${amount}` })
+    .where(and(eq(economy.guildId, guildId), eq(economy.userId, userId)));
+}
+
+export async function removeBankBalance(guildId: string, userId: string, amount: number) {
+  await getEconomy(guildId, userId);
+  await db
+    .update(economy)
+    .set({ bank: sql`GREATEST(0, ${economy.bank} - ${amount})` })
+    .where(and(eq(economy.guildId, guildId), eq(economy.userId, userId)));
+}
+
 export async function setLastDaily(guildId: string, userId: string, at: Date) {
   await db
     .update(economy)
     .set({ lastDaily: at })
+    .where(and(eq(economy.guildId, guildId), eq(economy.userId, userId)));
+}
+
+export async function setLastRob(guildId: string, userId: string, at: Date) {
+  await db
+    .update(economy)
+    .set({ lastRob: at })
     .where(and(eq(economy.guildId, guildId), eq(economy.userId, userId)));
 }
 

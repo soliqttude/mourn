@@ -33,11 +33,19 @@ export const guildSettings = pgTable("guild_settings", {
   ticketSupportRole: text("ticket_support_role"),
   ticketLogChannel: text("ticket_log_channel"),
   levelsEnabled: boolean("levels_enabled").default(true).notNull(),
+  levelUpChannel: text("level_up_channel"),
   jailRole: text("jail_role"),
   muteRole: text("mute_role"),
   autoroleId: text("autorole_id"),
   confessionChannel: text("confession_channel"),
   reportChannel: text("report_channel"),
+  suggestionsChannel: text("suggestions_channel"),
+  birthdayChannel: text("birthday_channel"),
+  countingChannel: text("counting_channel"),
+  verificationChannel: text("verification_channel"),
+  verificationRole: text("verification_role"),
+  bumpChannel: text("bump_channel"),
+  bumpRoleId: text("bump_role_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -156,4 +164,33 @@ export const userItems = pgTable("user_items",
 export const reports = pgTable("reports",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), reporterId: text("reporter_id").notNull(), targetId: text("target_id").notNull(), reason: text("reason").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildIdx: index("reports_guild_idx").on(t.guildId) })
+);
+
+export const marriages = pgTable("marriages",
+  { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), user1Id: text("user1_id").notNull(), user2Id: text("user2_id").notNull(), marriedAt: timestamp("married_at", { withTimezone: true }).defaultNow().notNull() },
+  (t) => ({ guildIdx: index("marriages_guild_idx").on(t.guildId) })
+);
+
+export const birthdays = pgTable("birthdays",
+  { userId: text("user_id").notNull(), guildId: text("guild_id").notNull(), month: integer("month").notNull(), day: integer("day").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.userId, t.guildId] }) })
+);
+
+export const suggestions = pgTable("suggestions",
+  { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), messageId: text("message_id").notNull(), channelId: text("channel_id").notNull(), content: text("content").notNull(), upvotes: integer("upvotes").default(0).notNull(), downvotes: integer("downvotes").default(0).notNull(), status: text("status").default("pending").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  (t) => ({ guildIdx: index("suggestions_guild_idx").on(t.guildId) })
+);
+
+export const countingData = pgTable("counting_data",
+  { guildId: text("guild_id").primaryKey(), count: integer("count").default(0).notNull(), lastUserId: text("last_user_id"), highScore: integer("high_score").default(0).notNull() }
+);
+
+export const highlights = pgTable("highlights",
+  { id: serial("id").primaryKey(), userId: text("user_id").notNull(), guildId: text("guild_id").notNull(), keyword: text("keyword").notNull() },
+  (t) => ({ guildUserIdx: index("highlights_guild_user_idx").on(t.guildId, t.userId) })
+);
+
+export const autopublishChannels = pgTable("autopublish_channels",
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );

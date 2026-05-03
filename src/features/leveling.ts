@@ -70,9 +70,17 @@ export async function handleLevelXp(client: Client, message: Message) {
       set: { xp: newXp, level: newLevel, lastMessageAt: now },
     });
   if (newLevel > oldLevel) {
-    await message
-      .reply({ content: `🎉 GG <@${message.author.id}>, you reached **level ${newLevel}**!` })
-      .catch(() => {});
+    const lvlUpMsg = `🎉 GG <@${message.author.id}>, you reached **level ${newLevel}**!`;
+    if (settings.levelUpChannel) {
+      const ch = message.guild.channels.cache.get(settings.levelUpChannel);
+      if (ch?.isTextBased()) {
+        await (ch as any).send({ content: lvlUpMsg }).catch(() => {});
+      } else {
+        await message.reply({ content: lvlUpMsg }).catch(() => {});
+      }
+    } else {
+      await message.reply({ content: lvlUpMsg }).catch(() => {});
+    }
     const rewards = await db
       .select()
       .from(levelRewards)
