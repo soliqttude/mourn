@@ -30,6 +30,7 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS verification_role TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_role_id TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS server_type TEXT`,
   `CREATE TABLE IF NOT EXISTS warnings (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
     moderator_id TEXT NOT NULL, reason TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -108,8 +109,9 @@ const STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS giveaways (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
     message_id TEXT, prize TEXT NOT NULL, winners_count INTEGER NOT NULL DEFAULT 1,
-    host_id TEXT NOT NULL, ends_at TIMESTAMPTZ NOT NULL, ended BOOLEAN NOT NULL DEFAULT false,
-    winners JSONB NOT NULL DEFAULT '[]', created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    host_id TEXT NOT NULL, ends_at TIMESTAMPTZ NOT NULL,
+    ended BOOLEAN NOT NULL DEFAULT false, winners JSONB NOT NULL DEFAULT '[]',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS giveaways_guild_idx ON giveaways (guild_id)`,
   `CREATE TABLE IF NOT EXISTS word_filter (
@@ -117,7 +119,8 @@ const STATEMENTS: string[] = [
   )`,
   `CREATE TABLE IF NOT EXISTS mod_notes (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
-    moderator_id TEXT NOT NULL, note TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    moderator_id TEXT NOT NULL, note TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS mod_notes_guild_user_idx ON mod_notes (guild_id, user_id)`,
   `CREATE TABLE IF NOT EXISTS mod_cases (
@@ -128,8 +131,8 @@ const STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS mod_cases_guild_user_idx ON mod_cases (guild_id, user_id)`,
   `CREATE TABLE IF NOT EXISTS temp_bans (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
-    moderator_id TEXT NOT NULL, reason TEXT NOT NULL,
-    unban_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    moderator_id TEXT NOT NULL, reason TEXT NOT NULL, unban_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS temp_bans_guild_idx ON temp_bans (guild_id)`,
   `CREATE TABLE IF NOT EXISTS shop_items (
@@ -156,8 +159,7 @@ const STATEMENTS: string[] = [
   `CREATE INDEX IF NOT EXISTS marriages_guild_idx ON marriages (guild_id)`,
   `CREATE TABLE IF NOT EXISTS birthdays (
     user_id TEXT NOT NULL, guild_id TEXT NOT NULL,
-    month INTEGER NOT NULL, day INTEGER NOT NULL,
-    PRIMARY KEY (user_id, guild_id)
+    month INTEGER NOT NULL, day INTEGER NOT NULL, PRIMARY KEY (user_id, guild_id)
   )`,
   `CREATE TABLE IF NOT EXISTS suggestions (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
@@ -180,9 +182,13 @@ const STATEMENTS: string[] = [
 ];
 
 export async function runMigrations(): Promise<void> {
-  logger.info('Running database migrations…');
-  for (const sql of STATEMENTS) {
-    await pool.query(sql);
+  const client = await pool.connect();
+  try {
+    for (const sql of STATEMENTS) {
+      await client.query(sql);
+    }
+  } finally {
+    client.release();
   }
   logger.info('Database migrations complete.');
 }

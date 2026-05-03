@@ -5,43 +5,40 @@ import {
   type ButtonInteraction,
   type StringSelectMenuInteraction,
   type ModalSubmitInteraction,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
   MessageFlags,
 } from "discord.js";
-import { findCommand } from "../handlers/registry.js";
+import { findCommand, commands } from "../handlers/registry.js";
 import { buildSlashContext } from "../lib/contextFactory.js";
-import { errorEmbed } from "../lib/embeds.js";
+import { errorEmbed, brandEmbed } from "../lib/embeds.js";
 import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
 import { checkTier, isBotOwner } from "../lib/permissions.js";
 import { handlePanelInteraction } from "../panels/router.js";
 
+const CAT_EMOJI: Record<string, string> = {
+  economy: "💰", fun: "🎉", moderation: "🛡️", settings: "⚙️",
+  utility: "🔧", levels: "⭐", giveaway: "🎁", tags: "🏷️",
+  voicemaster: "🎤", custom: "🤖", owner: "👑",
+};
+
 export const event = {
   name: "interactionCreate",
   async execute(client: Client, interaction: Interaction) {
     try {
-      if (interaction.isChatInputCommand()) {
-        return handleSlashCommand(client, interaction);
-      }
-      if (interaction.isButton()) {
-        return handleButton(client, interaction);
-      }
-      if (interaction.isStringSelectMenu()) {
-        return handleSelect(client, interaction);
-      }
-      if (interaction.isModalSubmit()) {
-        return handleModal(client, interaction);
-      }
+      if (interaction.isChatInputCommand()) return handleSlashCommand(client, interaction);
+      if (interaction.isButton()) return handleButton(client, interaction);
+      if (interaction.isStringSelectMenu()) return handleSelect(client, interaction);
+      if (interaction.isModalSubmit()) return handleModal(client, interaction);
     } catch (err) {
       logger.error({ err }, "interactionCreate error");
     }
   },
 };
 
-async function handleSlashCommand(
-  client: Client,
-  interaction: ChatInputCommandInteraction
-) {
+async function handleSlashCommand(client: Client, interaction: ChatInputCommandInteraction) {
   const cmd = findCommand(interaction.commandName);
   if (!cmd) return;
   if (cmd.guildOnly !== false && !interaction.guild) {
@@ -64,9 +61,7 @@ async function handleSlashCommand(
       });
     }
   }
-  const settings = interaction.guild
-    ? await getGuildSettings(interaction.guild.id)
-    : null;
+  const settings = interaction.guild ? await getGuildSettings(interaction.guild.id) : null;
   const prefix = settings?.prefix ?? config.defaultPrefix;
   const ctx = await buildSlashContext(client, interaction, prefix);
   try {
@@ -78,14 +73,9 @@ async function handleSlashCommand(
       flags: MessageFlags.Ephemeral,
     };
     try {
-      if (interaction.deferred || interaction.replied) {
-        await interaction.followUp(payload);
-      } else {
-        await interaction.reply(payload);
-      }
-    } catch {
-      /* ignore */
-    }
+      if (interaction.deferred || interaction.replied) await interaction.followUp(payload);
+      else await interaction.reply(payload);
+    } catch { /* ignore */ }
   }
 }
 
@@ -105,12 +95,12 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
   if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(client, interaction);
 }
 
-async function handleTriviaButton(client: Client, interaction: ButtonInteraction) {
+async function handleTriviaButton(_client: Client, interaction: ButtonInteraction) {
   const [, chosen, correct, userId] = interaction.customId.split("_");
   if (interaction.user.id !== userId) {
     return interaction.reply({ content: "This isn't your trivia question!", flags: 64 });
   }
-  const { successEmbed, errorEmbed } = await import("../lib/embeds.js");
+  const { successEmbed } = await import("../lib/embeds.js");
   if (chosen === correct) {
     await interaction.update({ components: [] });
     return interaction.followUp({ embeds: [successEmbed(`✅ Correct! The answer was **${correct}**.`)] });
@@ -120,20 +110,18 @@ async function handleTriviaButton(client: Client, interaction: ButtonInteraction
   }
 }
 
-async function handleBlackjackButton(client: Client, interaction: ButtonInteraction) {
+async function handleBlackjackButton(_client: Client, interaction: ButtonInteraction) {
   const parts = interaction.customId.split("_");
   const action = parts[1];
   const userId = parts[2];
   if (interaction.user.id !== userId) {
     return interaction.reply({ content: "This isn't your blackjack game!", flags: 64 });
   }
-  const { brandEmbed, successEmbed, errorEmbed } = await import("../lib/embeds.js");
+  const { successEmbed } = await import("../lib/embeds.js");
   const { addBalance } = await import("../features/economy.js");
   const sessions = (global as any).__bjSessions as Map<string, any> ?? new Map();
   const session = sessions.get(userId);
   if (!session) return interaction.update({ components: [] });
-  const suits = ["♠", "♥", "♦", "♣"];
-  const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
   function draw(deck: string[]) { return deck.splice(Math.floor(Math.random() * deck.length), 1)[0]!; }
   function cardValue(card: string) { const r = card.slice(0, -1); if (r === "A") return 11; if (["J","Q","K"].includes(r)) return 10; return parseInt(r); }
   function handValue(hand: string[]) { let val = hand.reduce((a, c) => a + cardValue(c), 0); let aces = hand.filter(c => c.startsWith("A")).length; while (val > 21 && aces > 0) { val -= 10; aces--; } return val; }
@@ -145,8 +133,8 @@ async function handleBlackjackButton(client: Client, interaction: ButtonInteract
       await interaction.update({ components: [] });
       return interaction.followUp({ embeds: [errorEmbed(`Bust! Your hand: ${session.player.join(" ")} (${pv}). Lost **${session.bet}** coins.`)] });
     }
-    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import("discord.js");
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    const { ActionRowBuilder: ARB, ButtonBuilder, ButtonStyle } = await import("discord.js");
+    const row = new ARB<typeof ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId(`bj_hit_${userId}`).setLabel("Hit").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId(`bj_stand_${userId}`).setLabel("Stand").setStyle(ButtonStyle.Secondary),
     );
@@ -156,7 +144,6 @@ async function handleBlackjackButton(client: Client, interaction: ButtonInteract
     });
   }
   if (action === "stand") {
-    const dv_start = handValue(session.dealer);
     while (handValue(session.dealer) < 17) session.dealer.push(draw(session.deck));
     const pv = handValue(session.player);
     const dv = handValue(session.dealer);
@@ -175,7 +162,7 @@ async function handleBlackjackButton(client: Client, interaction: ButtonInteract
   }
 }
 
-async function handleSuggestionVote(client: Client, interaction: ButtonInteraction) {
+async function handleSuggestionVote(_client: Client, interaction: ButtonInteraction) {
   await interaction.deferUpdate().catch(() => {});
   const { db } = await import("../db/index.js");
   const { suggestions } = await import("../db/schema.js");
@@ -187,32 +174,62 @@ async function handleSuggestionVote(client: Client, interaction: ButtonInteracti
   const updated = await db.select().from(suggestions).where(eq(suggestions.messageId, interaction.message.id));
   const s = updated[0];
   if (!s) return;
-  const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import("discord.js");
-  const newRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+  const { ActionRowBuilder: ARB, ButtonBuilder, ButtonStyle } = await import("discord.js");
+  const newRow = new ARB<typeof ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId("suggest_up").setLabel(`👍 ${s.upvotes}`).setStyle(ButtonStyle.Success),
     new ButtonBuilder().setCustomId("suggest_down").setLabel(`👎 ${s.downvotes}`).setStyle(ButtonStyle.Danger),
   );
   await interaction.message.edit({ components: [newRow as any] }).catch(() => {});
 }
 
-async function handleSelect(
-  client: Client,
-  interaction: StringSelectMenuInteraction
-) {
-  if (interaction.customId.startsWith("panel:")) {
-    return handlePanelInteraction(client, interaction);
-  }
+async function handleSelect(client: Client, interaction: StringSelectMenuInteraction) {
+  if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction);
+  if (interaction.customId === "help:category") return handleHelpCategorySelect(interaction);
 }
 
-async function handleModal(
-  client: Client,
-  interaction: ModalSubmitInteraction
-) {
-  if (interaction.customId.startsWith("panel:")) {
-    return handlePanelInteraction(client, interaction);
+async function handleHelpCategorySelect(interaction: StringSelectMenuInteraction) {
+  const category = interaction.values[0]!;
+  const cmds = [...commands.values()]
+    .filter((c) => c.category === category)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const lines = cmds.map((c) => `\`${c.name}\` — ${c.description.slice(0, 65)}`);
+  let description = lines.join("\n");
+  if (description.length > 3900) {
+    const kept = [];
+    let len = 0;
+    for (const l of lines) { if (len + l.length + 1 > 3900) break; kept.push(l); len += l.length + 1; }
+    description = kept.join("\n") + `\n…and ${lines.length - kept.length} more`;
   }
+
+  const categories = [...new Set([...commands.values()].map((c) => c.category))].sort();
+  const select = new StringSelectMenuBuilder()
+    .setCustomId("help:category")
+    .setPlaceholder(`${CAT_EMOJI[category] ?? "📌"} ${category.charAt(0).toUpperCase() + category.slice(1)}`)
+    .addOptions(
+      categories.map((cat) => ({
+        label: `${CAT_EMOJI[cat] ?? "📌"} ${cat.charAt(0).toUpperCase() + cat.slice(1)}`,
+        value: cat,
+        description: `Browse ${cat} commands`,
+        default: cat === category,
+      }))
+    );
+  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
+
+  await interaction.update({
+    embeds: [
+      brandEmbed({
+        title: `${CAT_EMOJI[category] ?? "📌"} ${category.charAt(0).toUpperCase() + category.slice(1)} Commands (${cmds.length})`,
+        description,
+        page: "Help",
+      }),
+    ],
+    components: [row as any],
+  });
+}
+
+async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
+  if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction);
   const { handleTicketModal } = await import("../features/tickets.js");
-  if (interaction.customId.startsWith("ticket:")) {
-    return handleTicketModal(client, interaction);
-  }
+  if (interaction.customId.startsWith("ticket:")) return handleTicketModal(client, interaction);
 }
