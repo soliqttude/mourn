@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
 import { economy, shopItems, userItems } from "../../db/schema.js";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { addBalance } from "../../features/economy.js";
 
 export const command: HybridCommand = {
@@ -30,7 +30,10 @@ export const command: HybridCommand = {
     if (balance < item.price) return ctx.reply({ embeds: [errorEmbed(`You need **${item.price}** coins but only have **${balance}**.`)] });
     await addBalance(guild.id, ctx.user.id, -item.price);
     await db.insert(userItems).values({ guildId: guild.id, userId: ctx.user.id, itemId, quantity: 1 })
-      .onConflictDoUpdate({ target: [userItems.guildId, userItems.userId, userItems.itemId], set: { quantity: 1 } });
+      .onConflictDoUpdate({
+        target: [userItems.guildId, userItems.userId, userItems.itemId],
+        set: { quantity: sql`${userItems.quantity} + 1` },
+      });
     if (item.stock > 0) {
       await db.update(shopItems).set({ stock: item.stock - 1 }).where(eq(shopItems.id, itemId));
     }
