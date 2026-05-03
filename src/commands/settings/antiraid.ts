@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [
     { name: "action", description: "enable | disable | status | threshold | joinage", type: ApplicationCommandOptionType.String, required: true },
-    { name: "value", description: "Number for threshold/joinage", type: ApplicationCommandOptionType.Integer, required: false },
+    { name: "value", description: "Number for threshold/joinage", type: ApplicationCommandOptionType.Number, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
