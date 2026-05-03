@@ -20,8 +20,11 @@ export const command: HybridCommand = {
       try { await cloned.setPosition(pos); } catch { /* ignore */ }
       await channel.delete(`Nuked by ${ctx.user.tag}`);
       await cloned.send({ embeds: [successEmbed("💥 This channel was nuked.")] });
+      if (ctx.source === "slash") {
+        try { await ctx.reply({ content: "✅ Channel nuked.", ephemeral: true } as any); } catch { /* interaction expired or already replied */ }
+      }
     } catch {
-      try { return ctx.reply({ embeds: [errorEmbed("Failed to nuke. Check my permissions.")] }); } catch { /* deleted */ }
+      try { return ctx.reply({ embeds: [errorEmbed("Failed to nuke. Check my permissions.")] }); } catch { /* channel deleted */ }
     }
   },
 };
