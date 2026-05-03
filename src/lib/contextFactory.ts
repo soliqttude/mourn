@@ -43,10 +43,17 @@ export async function buildSlashContext(
     rawArgs: "",
     prefix,
     getString: (n, r) => opts.getString(n, r ?? false),
-    getNumber: (n, r) =>
-      (opts.getNumber(n, r ?? false) ?? opts.getInteger(n, r ?? false) ?? null) as
-        | number
-        | null,
+    getNumber: (n, r) => {
+      try {
+        return opts.getNumber(n, r ?? false) ?? opts.getInteger(n, r ?? false) ?? null;
+      } catch {
+        try {
+          return opts.getInteger(n, r ?? false) ?? null;
+        } catch {
+          return null;
+        }
+      }
+    },
     getBoolean: (n, r) => opts.getBoolean(n, r ?? false),
     getUser: async (n, r) => opts.getUser(n, r ?? false),
     getMember: async (n) => (opts.getMember(n) as GuildMember) ?? null,
