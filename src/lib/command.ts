@@ -22,6 +22,7 @@ export interface HybridCommand {
   aliases?: string[];
   guildOnly?: boolean;
   ownerOnly?: boolean;
+  noSlash?: boolean;
   options?: ApplicationCommandOptionData[];
   usage?: string;
   examples?: string[];
