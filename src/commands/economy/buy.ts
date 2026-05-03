@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   category: "economy",
   guildOnly: true,
   options: [
-    { name: "id", description: "Item ID from /shop", type: ApplicationCommandOptionType.Integer, required: true },
+    { name: "id", description: "Item ID from /shop", type: ApplicationCommandOptionType.Number, required: true },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
