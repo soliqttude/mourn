@@ -2,7 +2,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
 import { userItems, shopItems } from "../../db/schema.js";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "inventory",
@@ -19,7 +19,8 @@ export const command: HybridCommand = {
       .where(and(eq(userItems.guildId, guild.id), eq(userItems.userId, ctx.user.id)));
     if (!owned.length) return ctx.reply({ embeds: [errorEmbed("Your inventory is empty. Use `/shop` and `/buy` to get items.")] });
     const ids = owned.map((r) => r.itemId);
-    const allItems = await db.select().from(shopItems).where(eq(shopItems.guildId, guild.id));
+    const allItems = await db.select().from(shopItems)
+      .where(and(eq(shopItems.guildId, guild.id), inArray(shopItems.id, ids)));
     const itemMap = new Map(allItems.map((i) => [i.id, i]));
     const lines = owned.map((r) => {
       const item = itemMap.get(r.itemId);
