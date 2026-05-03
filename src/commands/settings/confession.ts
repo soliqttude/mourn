@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
+import { hasAdminPerms } from "../../lib/permissions.js";
 
 export const command: HybridCommand = {
   name: "confession",
@@ -19,8 +20,7 @@ export const command: HybridCommand = {
     const action = (ctx.getString("action", true) ?? ctx.args[0] ?? "").toLowerCase();
 
     if (action === "setup") {
-      const { checkTier } = await import("../../lib/permissions.js");
-      if (!ctx.member || !checkTier(ctx.member, "admin"))
+      if (!ctx.member || !hasAdminPerms(ctx.member))
         return ctx.reply({ embeds: [errorEmbed("Only admins can configure the confession channel.")], ephemeral: true } as any);
       const ch = ctx.getChannel("channel");
       if (!ch) return ctx.reply({ embeds: [errorEmbed("Please specify a channel.")] });
@@ -29,8 +29,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "clear") {
-      const { checkTier } = await import("../../lib/permissions.js");
-      if (!ctx.member || !checkTier(ctx.member, "admin"))
+      if (!ctx.member || !hasAdminPerms(ctx.member))
         return ctx.reply({ embeds: [errorEmbed("Only admins can clear the confession channel.")], ephemeral: true } as any);
       await updateGuildSettings(guild.id, { confessionChannel: null });
       return ctx.reply({ embeds: [successEmbed("Confession channel cleared.")] });
