@@ -23,7 +23,7 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [
     { name: "user", description: "Member to set XP for", type: ApplicationCommandOptionType.User, required: true },
-    { name: "amount", description: "XP amount", type: ApplicationCommandOptionType.Number, required: true },
+    { name: "amount", description: "XP amount", type: ApplicationCommandOptionType.Integer, required: true },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
