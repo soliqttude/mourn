@@ -14,7 +14,7 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [
     { name: "user", description: "User", type: ApplicationCommandOptionType.User, required: true },
-    { name: "amount", description: "Amount", type: ApplicationCommandOptionType.Integer, required: true },
+    { name: "amount", description: "Amount", type: ApplicationCommandOptionType.Number, required: true },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
