@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [
     { name: "channel", description: "Starboard channel", type: ApplicationCommandOptionType.Channel, required: true },
-    { name: "threshold", description: "Required reactions (default 3)", type: ApplicationCommandOptionType.Integer, required: false },
+    { name: "threshold", description: "Required reactions (default 3)", type: ApplicationCommandOptionType.Number, required: false },
     { name: "emoji", description: "Emoji (default ⭐)", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
