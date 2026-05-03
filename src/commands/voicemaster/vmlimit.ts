@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   category: "voicemaster",
   guildOnly: true,
   options: [
-    { name: "limit", description: "User limit (0 = unlimited, max 99)", type: ApplicationCommandOptionType.Integer, required: true },
+    { name: "limit", description: "User limit (0 = unlimited, max 99)", type: ApplicationCommandOptionType.Number, required: true },
   ],
   async execute(ctx) {
     if (!ctx.member) return;
