@@ -1,5 +1,5 @@
-import { pool } from "./index.js";
-import { logger } from "../lib/logger.js";
+import { pool } from './index.js';
+import { logger } from '../lib/logger.js';
 
 const STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS guild_settings (
@@ -22,6 +22,14 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS autorole_id TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS confession_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS report_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS suggestions_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS birthday_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS counting_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS verification_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS verification_role TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_role_id TEXT`,
   `CREATE TABLE IF NOT EXISTS warnings (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
     moderator_id TEXT NOT NULL, reason TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -141,12 +149,40 @@ const STATEMENTS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS reports_guild_idx ON reports (guild_id)`,
+  `CREATE TABLE IF NOT EXISTS marriages (
+    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user1_id TEXT NOT NULL,
+    user2_id TEXT NOT NULL, married_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS marriages_guild_idx ON marriages (guild_id)`,
+  `CREATE TABLE IF NOT EXISTS birthdays (
+    user_id TEXT NOT NULL, guild_id TEXT NOT NULL,
+    month INTEGER NOT NULL, day INTEGER NOT NULL,
+    PRIMARY KEY (user_id, guild_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS suggestions (
+    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
+    message_id TEXT NOT NULL, channel_id TEXT NOT NULL, content TEXT NOT NULL,
+    upvotes INTEGER NOT NULL DEFAULT 0, downvotes INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'pending', created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS suggestions_guild_idx ON suggestions (guild_id)`,
+  `CREATE TABLE IF NOT EXISTS counting_data (
+    guild_id TEXT PRIMARY KEY, count INTEGER NOT NULL DEFAULT 0,
+    last_user_id TEXT, high_score INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS highlights (
+    id SERIAL PRIMARY KEY, user_id TEXT NOT NULL, guild_id TEXT NOT NULL, keyword TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS highlights_guild_user_idx ON highlights (guild_id, user_id)`,
+  `CREATE TABLE IF NOT EXISTS autopublish_channels (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, PRIMARY KEY (guild_id, channel_id)
+  )`,
 ];
 
 export async function runMigrations(): Promise<void> {
-  logger.info("Running database migrations…");
+  logger.info('Running database migrations…');
   for (const sql of STATEMENTS) {
     await pool.query(sql);
   }
-  logger.info("Database migrations complete.");
+  logger.info('Database migrations complete.');
 }
