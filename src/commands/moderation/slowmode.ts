@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   permission: "mod",
   guildOnly: true,
   options: [
-    { name: "seconds", description: "Slowmode (0-21600)", type: ApplicationCommandOptionType.Integer, required: true },
+    { name: "seconds", description: "Slowmode (0-21600)", type: ApplicationCommandOptionType.Number, required: true },
   ],
   async execute(ctx) {
     const sec = ctx.getNumber("seconds", true);
