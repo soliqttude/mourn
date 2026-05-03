@@ -1,14 +1,7 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
-
-async function getGif(type: string): Promise<string> {
-  try {
-    const res = await fetch(`https://api.waifu.pics/sfw/${type}`);
-    const data = await res.json() as { url: string };
-    return data.url;
-  } catch { return ""; }
-}
+import { getGif } from "../../lib/gif.js";
 
 export const command: HybridCommand = {
   name: "punch",
@@ -20,7 +13,7 @@ export const command: HybridCommand = {
     const target = await ctx.getUser("user", true);
     if (!target) return;
     if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("Punching yourself? Really?")] });
-    const gif = await getGif("kick");
+    const gif = await getGif("punch");
     return ctx.reply({ embeds: [brandEmbed({ title: `${ctx.user.username} punches ${target.username}! 👊`, image: gif, page: "Fun" })] });
   },
 };
