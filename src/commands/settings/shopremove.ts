@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   permission: "admin",
   guildOnly: true,
   options: [
-    { name: "id", description: "Shop item ID (use /shop to see IDs)", type: ApplicationCommandOptionType.Integer, required: true },
+    { name: "id", description: "Shop item ID (use /shop to see IDs)", type: ApplicationCommandOptionType.Number, required: true },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
