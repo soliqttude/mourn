@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   permission: "mod",
   guildOnly: true,
   options: [
-    { name: "amount", description: "Amount (1-100)", type: ApplicationCommandOptionType.Integer, required: true },
+    { name: "amount", description: "Amount (1-100)", type: ApplicationCommandOptionType.Number, required: true },
   ],
   async execute(ctx) {
     const amt = ctx.getNumber("amount", true);
