@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   options: [
     { name: "prize", description: "What are you giving away?", type: ApplicationCommandOptionType.String, required: true },
     { name: "duration", description: "How long? e.g. 1h, 30m, 1d", type: ApplicationCommandOptionType.String, required: true },
-    { name: "winners", description: "Number of winners (default 1)", type: ApplicationCommandOptionType.Integer, required: false },
+    { name: "winners", description: "Number of winners (default 1)", type: ApplicationCommandOptionType.Number, required: false },
     { name: "channel", description: "Channel to post in (defaults to current)", type: ApplicationCommandOptionType.Channel, required: false },
   ],
   async execute(ctx) {
