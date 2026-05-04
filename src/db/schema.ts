@@ -16,26 +16,40 @@ export const guildSettings = pgTable("guild_settings", {
   goodbyeMessage: text("goodbye_message"),
   boostChannel: text("boost_channel"),
   boostMessage: text("boost_message"),
+  // ── Anti-Nuke ──────────────────────────────────────────────────────────────
   antinukeEnabled: boolean("antinuke_enabled").default(false).notNull(),
   antinukeAction: text("antinuke_action").default("ban").notNull(),
+  antinukeThreshold: integer("antinuke_threshold").default(3).notNull(),
+  antinukeLogChannel: text("antinuke_log_channel"),
+  // ── Anti-Raid ──────────────────────────────────────────────────────────────
   antiraidEnabled: boolean("antiraid_enabled").default(false).notNull(),
   antiraidThreshold: integer("antiraid_threshold").default(8).notNull(),
   antiraidJoinAge: integer("antiraid_join_age").default(7).notNull(),
+  antiraidAction: text("antiraid_action").default("kick").notNull(),
+  antiraidLogChannel: text("antiraid_log_channel"),
+  antiraidLockOnRaid: boolean("antiraid_lock_on_raid").default(false).notNull(),
+  // ── Automod ───────────────────────────────────────────────────────────────
   automodEnabled: boolean("automod_enabled").default(false).notNull(),
   linkFilterEnabled: boolean("link_filter_enabled").default(false).notNull(),
   inviteFilterEnabled: boolean("invite_filter_enabled").default(false).notNull(),
+  // ── Starboard ─────────────────────────────────────────────────────────────
   starboardChannel: text("starboard_channel"),
   starboardEmoji: text("starboard_emoji").default("⭐").notNull(),
   starboardThreshold: integer("starboard_threshold").default(3).notNull(),
+  // ── Voicemaster ───────────────────────────────────────────────────────────
   voicemasterHub: text("voicemaster_hub"),
   voicemasterCategory: text("voicemaster_category"),
+  // ── Tickets ───────────────────────────────────────────────────────────────
   ticketCategory: text("ticket_category"),
   ticketSupportRole: text("ticket_support_role"),
   ticketLogChannel: text("ticket_log_channel"),
+  // ── Levels ────────────────────────────────────────────────────────────────
   levelsEnabled: boolean("levels_enabled").default(true).notNull(),
   levelUpChannel: text("level_up_channel"),
+  // ── Moderation ────────────────────────────────────────────────────────────
   jailRole: text("jail_role"),
   muteRole: text("mute_role"),
+  // ── Misc ──────────────────────────────────────────────────────────────────
   autoroleId: text("autorole_id"),
   confessionChannel: text("confession_channel"),
   reportChannel: text("report_channel"),
@@ -49,6 +63,16 @@ export const guildSettings = pgTable("guild_settings", {
   serverType: text("server_type"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ── Anti-Nuke Whitelist ───────────────────────────────────────────────────────
+export const antinukeWhitelist = pgTable(
+  "antinuke_whitelist",
+  {
+    guildId: text("guild_id").notNull(),
+    userId:  text("user_id").notNull(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }),
+);
 
 export const warnings = pgTable("warnings",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), reason: text("reason").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },

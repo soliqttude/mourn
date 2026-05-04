@@ -9,8 +9,12 @@ const STATEMENTS: string[] = [
     welcome_channel TEXT, welcome_message TEXT, goodbye_channel TEXT, goodbye_message TEXT,
     boost_channel TEXT, boost_message TEXT,
     antinuke_enabled BOOLEAN NOT NULL DEFAULT false, antinuke_action TEXT NOT NULL DEFAULT 'ban',
+    antinuke_threshold INTEGER NOT NULL DEFAULT 3, antinuke_log_channel TEXT,
     antiraid_enabled BOOLEAN NOT NULL DEFAULT false, antiraid_threshold INTEGER NOT NULL DEFAULT 8,
-    antiraid_join_age INTEGER NOT NULL DEFAULT 7, automod_enabled BOOLEAN NOT NULL DEFAULT false,
+    antiraid_join_age INTEGER NOT NULL DEFAULT 7,
+    antiraid_action TEXT NOT NULL DEFAULT 'kick', antiraid_log_channel TEXT,
+    antiraid_lock_on_raid BOOLEAN NOT NULL DEFAULT false,
+    automod_enabled BOOLEAN NOT NULL DEFAULT false,
     link_filter_enabled BOOLEAN NOT NULL DEFAULT false, invite_filter_enabled BOOLEAN NOT NULL DEFAULT false,
     starboard_channel TEXT, starboard_emoji TEXT NOT NULL DEFAULT '⭐', starboard_threshold INTEGER NOT NULL DEFAULT 3,
     voicemaster_hub TEXT, voicemaster_category TEXT,
@@ -19,6 +23,7 @@ const STATEMENTS: string[] = [
     jail_role TEXT, mute_role TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
+  // Existing column additions (idempotent)
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS autorole_id TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS confession_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS report_channel TEXT`,
@@ -31,6 +36,18 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_role_id TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS server_type TEXT`,
+  // New anti-nuke / anti-raid columns (safe on existing DBs)
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antinuke_threshold INTEGER NOT NULL DEFAULT 3`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antinuke_log_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_action TEXT NOT NULL DEFAULT 'kick'`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_log_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_lock_on_raid BOOLEAN NOT NULL DEFAULT false`,
+  // Anti-nuke whitelist table
+  `CREATE TABLE IF NOT EXISTS antinuke_whitelist (
+    guild_id TEXT NOT NULL,
+    user_id  TEXT NOT NULL,
+    PRIMARY KEY (guild_id, user_id)
+  )`,
   `CREATE TABLE IF NOT EXISTS warnings (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
     moderator_id TEXT NOT NULL, reason TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
