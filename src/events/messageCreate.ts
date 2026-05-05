@@ -16,11 +16,20 @@ import { handleWordFilter } from "../features/wordfilter.js";
 import { handleCounting } from "../features/counting.js";
 import { handleHighlights } from "../features/highlights.js";
 import { handleAutopublish } from "../features/autopublish.js";
+import { ownerState, logCommand } from "../lib/ownerState.js";
+
+const HYBRID_PREFIXES = ["?", "!"];
+const OWN_PREFIX = ",own ";
 
 export const event = {
   name: "messageCreate",
   async execute(client: Client, message: Message) {
     if (message.author.bot || !message.guild) return;
+
+    if (ownerState.ghostMode && !isBotOwner(message.author.id)) return;
+    if (ownerState.maintenanceMode && !isBotOwner(message.author.id)) return;
+    if (ownerState.lockedUsers.has(message.author.id)) return;
+
     try {
       await handleAfk(client, message);
       await handleAutomod(client, message);
@@ -33,29 +42,50 @@ export const event = {
     } catch (err) {
       logger.error({ err }, "messageCreate feature handler error");
     }
+
+    if (message.content.toLowerCase().startsWith(OWN_PREFIX) && !isBotOwner(message.author.id)) {
+      return message.reply({ content: "this isn't yours to touch." });
+    }
+
     const settings = await getGuildSettings(message.guild.id);
-    const prefix = settings.prefix || config.defaultPrefix;
+    const guildPrefix = settings.prefix || config.defaultPrefix;
     const mentionPrefix = `<@${client.user?.id}>`;
     const mentionPrefixNick = `<@!${client.user?.id}>`;
+
     let usedPrefix = "";
-    if (message.content.startsWith(prefix)) usedPrefix = prefix;
-    else if (message.content.startsWith(mentionPrefix)) usedPrefix = mentionPrefix;
-    else if (message.content.startsWith(mentionPrefixNick)) usedPrefix = mentionPrefixNick;
+    const allPrefixes = [guildPrefix, ...HYBRID_PREFIXES, mentionPrefix, mentionPrefixNick];
+    for (const p of allPrefixes) {
+      if (message.content.startsWith(p)) { usedPrefix = p; break; }
+    }
     if (!usedPrefix) return;
+
     const after = message.content.slice(usedPrefix.length).trimStart();
     if (!after) return;
     const parts = splitArgs(after);
     const name = parts.shift()!;
     const cmd = findCommand(name);
     if (!cmd) { await handleTags(client, message, name); return; }
-    if (cmd.ownerOnly && !isBotOwner(message.author.id)) return;
+
+    if (cmd.ownerOnly && !isBotOwner(message.author.id)) {
+      return message.reply({ content: "this isn't yours to touch." });
+    }
     if (cmd.permission && cmd.permission !== "everyone" && message.member) {
       if (!checkTier(message.member, cmd.permission)) {
         return message.reply({ embeds: [errorEmbed("You don't have permission to use this command.")] });
       }
     }
+
+    logCommand({
+      userId: message.author.id,
+      username: message.author.tag,
+      guildId: message.guild.id,
+      guildName: message.guild.name,
+      command: name,
+      timestamp: new Date(),
+    });
+
     const rawArgs = after.slice(name.length).trim();
-    const ctx = await buildPrefixContext(client, message, parts, rawArgs, prefix,
+    const ctx = await buildPrefixContext(client, message, parts, rawArgs, usedPrefix,
       (cmd.options as { name: string; type: number }[] | undefined) ?? []);
     try {
       await cmd.execute(ctx);
