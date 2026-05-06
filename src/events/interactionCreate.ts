@@ -24,6 +24,23 @@ const CAT_EMOJI: Record<string, string> = {
   voicemaster: "🎤", custom: "🤖", owner: "👑",
 };
 
+/**
+ * Safe follow-up: tries interaction.followUp first, falls back to channel.send
+ * if the original message was deleted (MESSAGE_REFERENCE_UNKNOWN_MESSAGE).
+ */
+async function safeFollowUp(
+  interaction: ButtonInteraction | ChatInputCommandInteraction,
+  payload: Parameters<ButtonInteraction["followUp"]>[0]
+) {
+  try {
+    await interaction.followUp(payload);
+  } catch {
+    try {
+      await interaction.channel?.send(payload as any);
+    } catch { /* silently ignore if channel send also fails */ }
+  }
+}
+
 export const event = {
   name: "interactionCreate",
   async execute(client: Client, interaction: Interaction) {
@@ -102,11 +119,11 @@ async function handleTriviaButton(_client: Client, interaction: ButtonInteractio
   }
   const { successEmbed } = await import("../lib/embeds.js");
   if (chosen === correct) {
-    await interaction.update({ components: [] });
-    return interaction.followUp({ embeds: [successEmbed(`✅ Correct! The answer was **${correct}**.`)] });
+    await interaction.update({ components: [] }).catch(() => {});
+    return safeFollowUp(interaction, { embeds: [successEmbed(`✅ Correct! The answer was **${correct}**.`)] });
   } else {
-    await interaction.update({ components: [] });
-    return interaction.followUp({ embeds: [errorEmbed(`❌ Wrong! The correct answer was **${correct}**.`)] });
+    await interaction.update({ components: [] }).catch(() => {});
+    return safeFollowUp(interaction, { embeds: [errorEmbed(`❌ Wrong! The correct answer was **${correct}**.`)] });
   }
 }
 
@@ -121,7 +138,7 @@ async function handleBlackjackButton(_client: Client, interaction: ButtonInterac
   const { addBalance } = await import("../features/economy.js");
   const sessions = (global as any).__bjSessions as Map<string, any> ?? new Map();
   const session = sessions.get(userId);
-  if (!session) return interaction.update({ components: [] });
+  if (!session) return interaction.update({ components: [] }).catch(() => {});
   function draw(deck: string[]) { return deck.splice(Math.floor(Math.random() * deck.length), 1)[0]!; }
   function cardValue(card: string) { const r = card.slice(0, -1); if (r === "A") return 11; if (["J","Q","K"].includes(r)) return 10; return parseInt(r); }
   function handValue(hand: string[]) { let val = hand.reduce((a, c) => a + cardValue(c), 0); let aces = hand.filter(c => c.startsWith("A")).length; while (val > 21 && aces > 0) { val -= 10; aces--; } return val; }
@@ -130,8 +147,8 @@ async function handleBlackjackButton(_client: Client, interaction: ButtonInterac
     const pv = handValue(session.player);
     if (pv > 21) {
       sessions.delete(userId);
-      await interaction.update({ components: [] });
-      return interaction.followUp({ embeds: [errorEmbed(`Bust! Your hand: ${session.player.join(" ")} (${pv}). Lost **${session.bet}** coins.`)] });
+      await interaction.update({ components: [] }).catch(() => {});
+      return safeFollowUp(interaction, { embeds: [errorEmbed(`Bust! Your hand: ${session.player.join(" ")} (${pv}). Lost **${session.bet}** coins.`)] });
     }
     const { ActionRowBuilder: ARB, ButtonBuilder, ButtonStyle } = await import("discord.js");
     const row = new ARB<typeof ButtonBuilder>().addComponents(
@@ -141,23 +158,23 @@ async function handleBlackjackButton(_client: Client, interaction: ButtonInterac
     return interaction.update({
       embeds: [brandEmbed({ title: "🃏 Blackjack", description: `**Your hand:** ${session.player.join(" ")} (${pv})\n**Dealer:** ${session.dealer[0]} 🂠\nBet: **${session.bet}**`, page: "Blackjack" })],
       components: [row as any],
-    });
+    }).catch(() => {});
   }
   if (action === "stand") {
     while (handValue(session.dealer) < 17) session.dealer.push(draw(session.deck));
     const pv = handValue(session.player);
     const dv = handValue(session.dealer);
     sessions.delete(userId);
-    await interaction.update({ components: [] });
+    await interaction.update({ components: [] }).catch(() => {});
     if (dv > 21 || pv > dv) {
       const win = session.bet * 2;
       await addBalance(session.guildId, userId, win);
-      return interaction.followUp({ embeds: [successEmbed(`You win! Your: ${session.player.join(" ")} (${pv}) vs Dealer: ${session.dealer.join(" ")} (${dv}). Won **${win}** coins!`)] });
+      return safeFollowUp(interaction, { embeds: [successEmbed(`You win! Your: ${session.player.join(" ")} (${pv}) vs Dealer: ${session.dealer.join(" ")} (${dv}). Won **${win}** coins!`)] });
     } else if (pv === dv) {
       await addBalance(session.guildId, userId, session.bet);
-      return interaction.followUp({ embeds: [brandEmbed({ description: `Push! Tie game. Your bet of **${session.bet}** returned.`, page: "Blackjack" })] });
+      return safeFollowUp(interaction, { embeds: [brandEmbed({ description: `Push! Tie game. Your bet of **${session.bet}** returned.`, page: "Blackjack" })] });
     } else {
-      return interaction.followUp({ embeds: [errorEmbed(`Dealer wins. Your: ${session.player.join(" ")} (${pv}) vs Dealer: ${session.dealer.join(" ")} (${dv}). Lost **${session.bet}** coins.`)] });
+      return safeFollowUp(interaction, { embeds: [errorEmbed(`Dealer wins. Your: ${session.player.join(" ")} (${pv}) vs Dealer: ${session.dealer.join(" ")} (${dv}). Lost **${session.bet}** coins.`)] });
     }
   }
 }
@@ -225,7 +242,7 @@ async function handleHelpCategorySelect(interaction: StringSelectMenuInteraction
       }),
     ],
     components: [row as any],
-  });
+  }).catch(() => {});
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
