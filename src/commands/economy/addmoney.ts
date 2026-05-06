@@ -22,7 +22,7 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("Please provide a valid user and a positive amount.")] });
     await addBalance(ctx.guild.id, target.id, amount);
     return ctx.reply({
-      embeds: [successEmbed(`Added **${amount.toLocaleString()}** coins to **${target.tag}`'s wallet.`)],
+      embeds: [successEmbed(`Added **${amount.toLocaleString()}** coins to **${target.tag}**'s wallet.`)],
     });
   },
 };
