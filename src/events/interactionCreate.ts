@@ -151,7 +151,7 @@ async function handleBlackjackButton(_client: Client, interaction: ButtonInterac
       return safeFollowUp(interaction, { embeds: [errorEmbed(`Bust! Your hand: ${session.player.join(" ")} (${pv}). Lost **${session.bet}** coins.`)] });
     }
     const { ActionRowBuilder: ARB, ButtonBuilder, ButtonStyle } = await import("discord.js");
-    const row = new ARB<typeof ButtonBuilder>().addComponents(
+    const row = new ARB<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId(`bj_hit_${userId}`).setLabel("Hit").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId(`bj_stand_${userId}`).setLabel("Stand").setStyle(ButtonStyle.Secondary),
     );
@@ -192,7 +192,7 @@ async function handleSuggestionVote(_client: Client, interaction: ButtonInteract
   const s = updated[0];
   if (!s) return;
   const { ActionRowBuilder: ARB, ButtonBuilder, ButtonStyle } = await import("discord.js");
-  const newRow = new ARB<typeof ButtonBuilder>().addComponents(
+  const newRow = new ARB<ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId("suggest_up").setLabel(`👍 ${s.upvotes}`).setStyle(ButtonStyle.Success),
     new ButtonBuilder().setCustomId("suggest_down").setLabel(`👎 ${s.downvotes}`).setStyle(ButtonStyle.Danger),
   );
