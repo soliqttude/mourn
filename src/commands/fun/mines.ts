@@ -2,344 +2,201 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed, successEmbed, infoEmbed } from "../../lib/embeds.js";
 
-type CellState = "hidden" | "gem" | "mine";
+type CellState = "hidden" | "safe" | "mine";
 
 type MinesGame = {
   userId: string;
-  stake: number;
+  bet: number;
   mines: number;
-  board: CellState[];
+  size: number;
+  board: boolean[];
   revealed: Set<number>;
-  safeLeft: number;
-  multiplier: number;
-  profit: number;
-  active: boolean;
+  finished: boolean;
+  cashedOut: boolean;
+  startedAt: number;
 };
 
 const activeGames = new Map<string, MinesGame>();
 
-const BOARD_SIZE = 25;
-const MIN_MINES = 1;
-const MAX_MINES = 24;
+function createBoard(size: number, mineCount: number) {
+  const total = size * size;
+  const board = new Array<boolean>(total).fill(false);
+  let placed = 0;
 
-function formatMoney(amount: number) {
-  return `${amount.toFixed(2)} coins`;
-}
-
-function createBoard(mines: number) {
-  const board: CellState[] = Array.from({ length: BOARD_SIZE }, () => "gem");
-  const used = new Set<number>();
-
-  while (used.size < mines) {
-    used.add(Math.floor(Math.random() * BOARD_SIZE));
+  while (placed < mineCount) {
+    const index = Math.floor(Math.random() * total);
+    if (board[index]) continue;
+    board[index] = true;
+    placed++;
   }
 
-  for (const index of used) board[index] = "mine";
   return board;
 }
 
-function getMultiplier(mines: number, revealed: number) {
+function getMultiplier(revealedSafe: number, mineCount: number, totalCells: number) {
   let multiplier = 1;
-  const totalSafe = BOARD_SIZE - mines;
-
-  for (let i = 0; i < revealed; i++) {
-    multiplier *= (totalSafe - i) / (BOARD_SIZE - i);
+  for (let i = 0; i < revealedSafe; i++) {
+    multiplier *= (totalCells - i) / (totalCells - mineCount - i);
   }
-
-  const edgeAdjusted = (1 / multiplier) * 0.97;
-  return Number(edgeAdjusted.toFixed(2));
+  return Math.max(1, multiplier * 0.96);
 }
 
-function renderBoard(game: MinesGame, revealAll = false) {
+function formatBoard(game: MinesGame, revealAll = false) {
   const rows: string[] = [];
+  const total = game.size * game.size;
 
-  for (let row = 0; row < 5; row++) {
-    const cells: string[] = [];
-
-    for (let col = 0; col < 5; col++) {
-      const index = row * 5 + col;
-      const revealed = game.revealed.has(index);
+  for (let y = 0; y < game.size; y++) {
+    const row: string[] = [];
+    for (let x = 0; x < game.size; x++) {
+      const index = y * game.size + x;
+      const isMine = game.board[index];
+      const isRevealed = game.revealed.has(index);
 
       if (revealAll) {
-        cells.push(game.board[index] === "mine" ? "💣" : "💎");
-        continue;
+        row.push(isMine ? "💣" : isRevealed ? "💎" : "⬜");
+      } else {
+        row.push(isRevealed ? "💎" : "🟦");
       }
-
-      if (!revealed) {
-        cells.push("🟦");
-        continue;
-      }
-
-      cells.push(game.board[index] === "mine" ? "💣" : "💎");
     }
-
-    rows.push(cells.join(" "));
+    rows.push(row.join(" "));
   }
 
   return rows.join("\n");
 }
 
-function parseCell(input: string | undefined) {
-  if (!input) return null;
-  const normalized = input.toLowerCase().trim();
+function createGridButtons(game: MinesGame) {
+  const rows: any[] = [];
 
-  if (/^\d+$/.test(normalized)) {
-    const num = parseInt(normalized, 10);
-    if (num >= 1 && num <= 25) return num - 1;
+  for (let y = 0; y < game.size; y++) {
+    const components: any[] = [];
+
+    for (let x = 0; x < game.size; x++) {
+      const index = y * game.size + x;
+      const revealed = game.revealed.has(index);
+
+      components.push({
+        type: 2,
+        custom_id: `mines:${game.userId}:${index}`,
+        label: revealed ? "💎" : " ",
+        style: revealed ? 3 : 2,
+        disabled: game.finished || revealed,
+      });
+    }
+
+    rows.push({ type: 1, components });
   }
 
-  const match = normalized.match(/^([a-e])([1-5])$/);
-  if (!match) return null;
+  rows.push({
+    type: 1,
+    components: [
+      {
+        type: 2,
+        custom_id: `mines_cashout:${game.userId}`,
+        label: "Cash Out",
+        style: 1,
+        disabled: game.finished || game.revealed.size === 0,
+      },
+      {
+        type: 2,
+        custom_id: `mines_stop:${game.userId}`,
+        label: "End Game",
+        style: 4,
+        disabled: game.finished,
+      },
+    ],
+  });
 
-  const col = match[1].charCodeAt(0) - 97;
-  const row = parseInt(match[2], 10) - 1;
-  return row * 5 + col;
+  return rows;
 }
 
-function boardLegend() {
-  return "Pick tiles with `,mines reveal <tile>` using `1-25` or coordinates like `a1`, `c3`, `e5`.\nCash out anytime with `,mines cashout`.";
+function createGameEmbed(game: MinesGame, status?: string) {
+  const totalCells = game.size * game.size;
+  const safeRevealed = game.revealed.size;
+  const multiplier = getMultiplier(safeRevealed, game.mines, totalCells);
+  const payout = Math.floor(game.bet * multiplier);
+
+  return brandEmbed({
+    title: "💣 Mines",
+    description: [
+      formatBoard(game, game.finished),
+      "",
+      status ?? "Pick tiles and avoid the mines.",
+    ].join("\n"),
+    fields: [
+      { name: "Bet", value: `**${game.bet}** coins`, inline: true },
+      { name: "Mines", value: `**${game.mines}**`, inline: true },
+      { name: "Safe Gems", value: `**${safeRevealed}**`, inline: true },
+      { name: "Multiplier", value: `**${multiplier.toFixed(2)}x**`, inline: true },
+      { name: "Cash Out Value", value: `**${payout}** coins`, inline: true },
+      { name: "Grid", value: `**${game.size}x${game.size}**`, inline: true },
+    ],
+    page: "Fun",
+  });
 }
 
 export const command: HybridCommand = {
   name: "mines",
-  description: "Play a Stake-style mines game on a 5x5 board.",
+  description: "Start an interactive mines game with buttons.",
   category: "fun",
-  aliases: ["mine"],
   options: [
-    { name: "stake", description: "Amount to bet", type: ApplicationCommandOptionType.Number, required: false },
-    { name: "mines", description: "How many mines to place", type: ApplicationCommandOptionType.Integer, required: false },
+    {
+      name: "bet",
+      description: "Amount to bet",
+      type: ApplicationCommandOptionType.Integer,
+      required: false,
+    },
+    {
+      name: "mines",
+      description: "How many mines to place (1-10)",
+      type: ApplicationCommandOptionType.Integer,
+      required: false,
+    },
   ],
   async execute(ctx) {
-    const subcommand = (ctx.args[0] ?? "").toLowerCase();
+    const bet = (ctx.getNumber("bet") ?? parseInt(ctx.args[0] ?? "", 10)) || 100;
+    const mineCount = (ctx.getNumber("mines") ?? parseInt(ctx.args[1] ?? "", 10)) || 3;
 
-    if (!subcommand) {
-      return ctx.reply({
-        embeds: [
-          brandEmbed({
-            title: "💣 Mines",
-            description:
-              "Stake-style mines game.\n\n" +
-              "` ,mines start <stake> <mines>` - Start a new game\n" +
-              "` ,mines reveal <tile>` - Reveal a tile\n" +
-              "` ,mines cashout` - Secure your winnings\n" +
-              "` ,mines board` - View your current board\n" +
-              "` ,mines end` - Cancel your current game",
-            page: "Fun",
-            user: ctx.user,
-            guild: ctx.guild ?? undefined,
-          }),
-        ],
-      });
+    if (!Number.isInteger(bet) || bet < 1) {
+      return ctx.reply({ embeds: [errorEmbed("Bet must be a whole number greater than 0.")] });
     }
 
-    const existing = activeGames.get(ctx.user.id);
-
-    if (subcommand === "start") {
-      if (existing?.active) {
-        return ctx.reply({ embeds: [errorEmbed("You already have an active mines game. Use `,mines board`, `,mines reveal <tile>`, or `,mines cashout`.")] });
-      }
-
-      const stake = Number(ctx.args[1] ?? ctx.getNumber("stake"));
-      const mines = Number(ctx.args[2] ?? ctx.getNumber("mines"));
-
-      if (!Number.isFinite(stake) || stake <= 0) {
-        return ctx.reply({ embeds: [errorEmbed("Please provide a valid stake amount. Example: `,mines start 100 3`")] });
-      }
-
-      if (!Number.isInteger(mines) || mines < MIN_MINES || mines > MAX_MINES) {
-        return ctx.reply({ embeds: [errorEmbed("Mines must be an integer between 1 and 24.")] });
-      }
-
-      const board = createBoard(mines);
-      const game: MinesGame = {
-        userId: ctx.user.id,
-        stake,
-        mines,
-        board,
-        revealed: new Set(),
-        safeLeft: BOARD_SIZE - mines,
-        multiplier: 1,
-        profit: 0,
-        active: true,
-      };
-
-      activeGames.set(ctx.user.id, game);
-
-      return ctx.reply({
-        embeds: [
-          brandEmbed({
-            title: "💣 Mines — New Game",
-            description: `${renderBoard(game)}\n\n${boardLegend()}`,
-            fields: [
-              { name: "Stake", value: formatMoney(stake), inline: true },
-              { name: "Mines", value: `${mines}`, inline: true },
-              { name: "Multiplier", value: `${game.multiplier.toFixed(2)}x`, inline: true },
-              { name: "Potential Cashout", value: formatMoney(stake * game.multiplier), inline: true },
-              { name: "Safe Tiles Left", value: `${game.safeLeft}`, inline: true },
-              { name: "Revealed", value: `${game.revealed.size}`, inline: true },
-            ],
-            page: "Fun",
-            user: ctx.user,
-            guild: ctx.guild ?? undefined,
-          }),
-        ],
-      });
+    if (!Number.isInteger(mineCount) || mineCount < 1 || mineCount > 10) {
+      return ctx.reply({ embeds: [errorEmbed("Mines must be a whole number between 1 and 10.")] });
     }
 
-    if (subcommand === "board") {
-      if (!existing?.active) {
-        return ctx.reply({ embeds: [errorEmbed("You do not have an active mines game. Start one with `,mines start <stake> <mines>`.")] });
-      }
-
-      return ctx.reply({
-        embeds: [
-          brandEmbed({
-            title: "💣 Mines — Current Board",
-            description: `${renderBoard(existing)}\n\n${boardLegend()}`,
-            fields: [
-              { name: "Stake", value: formatMoney(existing.stake), inline: true },
-              { name: "Mines", value: `${existing.mines}`, inline: true },
-              { name: "Multiplier", value: `${existing.multiplier.toFixed(2)}x`, inline: true },
-              { name: "Potential Cashout", value: formatMoney(existing.stake * existing.multiplier), inline: true },
-              { name: "Safe Tiles Left", value: `${existing.safeLeft}`, inline: true },
-              { name: "Revealed", value: `${existing.revealed.size}`, inline: true },
-            ],
-            page: "Fun",
-            user: ctx.user,
-            guild: ctx.guild ?? undefined,
-          }),
-        ],
-      });
+    if (activeGames.has(ctx.user.id)) {
+      return ctx.reply({ embeds: [errorEmbed("You already have an active mines game. Finish it before starting a new one.")] });
     }
 
-    if (subcommand === "reveal" || subcommand === "pick") {
-      if (!existing?.active) {
-        return ctx.reply({ embeds: [errorEmbed("You do not have an active mines game. Start one with `,mines start <stake> <mines>`.")] });
-      }
+    const size = 5;
+    const totalCells = size * size;
 
-      const cell = parseCell(ctx.args[1]);
-      if (cell === null) {
-        return ctx.reply({ embeds: [errorEmbed("Please provide a valid tile to reveal. Use `1-25` or coordinates like `a1`, `c3`, `e5`.")] });
-      }
-
-      if (existing.revealed.has(cell)) {
-        return ctx.reply({ embeds: [errorEmbed("That tile has already been revealed. Pick a different tile.")] });
-      }
-
-      existing.revealed.add(cell);
-
-      if (existing.board[cell] === "mine") {
-        existing.active = false;
-        activeGames.delete(ctx.user.id);
-
-        return ctx.reply({
-          embeds: [
-            brandEmbed({
-              title: "💥 Mines — Busted",
-              description: `${renderBoard(existing, true)}\n\nYou hit a mine and lost your stake.`,
-              fields: [
-                { name: "Stake Lost", value: formatMoney(existing.stake), inline: true },
-                { name: "Mines", value: `${existing.mines}`, inline: true },
-                { name: "Final Multiplier", value: `${existing.multiplier.toFixed(2)}x`, inline: true },
-              ],
-              page: "Fun",
-              user: ctx.user,
-              guild: ctx.guild ?? undefined,
-            }),
-          ],
-        });
-      }
-
-      existing.safeLeft -= 1;
-      existing.multiplier = getMultiplier(existing.mines, existing.revealed.size);
-      existing.profit = Number((existing.stake * existing.multiplier - existing.stake).toFixed(2));
-
-      if (existing.safeLeft === 0) {
-        const payout = Number((existing.stake * existing.multiplier).toFixed(2));
-        existing.active = false;
-        activeGames.delete(ctx.user.id);
-
-        return ctx.reply({
-          embeds: [
-            brandEmbed({
-              title: "🏆 Mines — Cleared Board",
-              description: `${renderBoard(existing, true)}\n\nYou revealed every safe tile and completed the board.`,
-              fields: [
-                { name: "Stake", value: formatMoney(existing.stake), inline: true },
-                { name: "Final Multiplier", value: `${existing.multiplier.toFixed(2)}x`, inline: true },
-                { name: "Payout", value: formatMoney(payout), inline: true },
-              ],
-              page: "Fun",
-              user: ctx.user,
-              guild: ctx.guild ?? undefined,
-            }),
-          ],
-        });
-      }
-
-      return ctx.reply({
-        embeds: [
-          brandEmbed({
-            title: "💎 Mines — Safe Pick",
-            description: `${renderBoard(existing)}\n\nSafe tile found. Reveal another or cash out now.`,
-            fields: [
-              { name: "Stake", value: formatMoney(existing.stake), inline: true },
-              { name: "Current Multiplier", value: `${existing.multiplier.toFixed(2)}x`, inline: true },
-              { name: "Current Profit", value: formatMoney(existing.profit), inline: true },
-              { name: "Potential Cashout", value: formatMoney(existing.stake * existing.multiplier), inline: true },
-              { name: "Safe Tiles Left", value: `${existing.safeLeft}`, inline: true },
-              { name: "Revealed", value: `${existing.revealed.size}`, inline: true },
-            ],
-            page: "Fun",
-            user: ctx.user,
-            guild: ctx.guild ?? undefined,
-          }),
-        ],
-      });
+    if (mineCount >= totalCells) {
+      return ctx.reply({ embeds: [errorEmbed("There must be at least one safe tile on the board.")] });
     }
 
-    if (subcommand === "cashout" || subcommand === "cash") {
-      if (!existing?.active) {
-        return ctx.reply({ embeds: [errorEmbed("You do not have an active mines game to cash out.")] });
-      }
+    const game: MinesGame = {
+      userId: ctx.user.id,
+      bet,
+      mines: mineCount,
+      size,
+      board: createBoard(size, mineCount),
+      revealed: new Set(),
+      finished: false,
+      cashedOut: false,
+      startedAt: Date.now(),
+    };
 
-      if (existing.revealed.size === 0) {
-        return ctx.reply({ embeds: [errorEmbed("You need to reveal at least one safe tile before cashing out.")] });
-      }
+    activeGames.set(ctx.user.id, game);
 
-      const payout = Number((existing.stake * existing.multiplier).toFixed(2));
-      const profit = Number((payout - existing.stake).toFixed(2));
-      existing.active = false;
-      activeGames.delete(ctx.user.id);
-
-      return ctx.reply({
-        embeds: [
-          brandEmbed({
-            title: "💰 Mines — Cashed Out",
-            description: `${renderBoard(existing)}\n\nYou safely cashed out your game.`,
-            fields: [
-              { name: "Stake", value: formatMoney(existing.stake), inline: true },
-              { name: "Multiplier", value: `${existing.multiplier.toFixed(2)}x`, inline: true },
-              { name: "Payout", value: formatMoney(payout), inline: true },
-              { name: "Profit", value: formatMoney(profit), inline: true },
-            ],
-            page: "Fun",
-            user: ctx.user,
-            guild: ctx.guild ?? undefined,
-          }),
-        ],
-      });
-    }
-
-    if (subcommand === "end" || subcommand === "cancel" || subcommand === "stop") {
-      if (!existing?.active) {
-        return ctx.reply({ embeds: [errorEmbed("You do not have an active mines game to cancel.")] });
-      }
-
-      activeGames.delete(ctx.user.id);
-      return ctx.reply({ embeds: [infoEmbed("Your active mines game has been cancelled.", "💣 Mines")] });
-    }
-
-    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand. Use `,mines`, `,mines start <stake> <mines>`, `,mines reveal <tile>`, `,mines cashout`, or `,mines board`.")] });
+    return ctx.reply({
+      embeds: [
+        createGameEmbed(
+          game,
+          "Click the buttons below to reveal tiles. Cash out before you hit a mine.",
+        ),
+      ],
+      components: createGridButtons(game),
+    } as any);
   },
 };
