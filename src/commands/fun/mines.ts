@@ -1,11 +1,11 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, ComponentType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed, errorEmbed, successEmbed, infoEmbed } from "../../lib/embeds.js";
-
-type CellState = "hidden" | "safe" | "mine";
+import { brandEmbed, errorEmbed, successEmbed } from "../../lib/embeds.js";
+import { getBalance, removeBalance, addBalance } from "../../features/economy.js";
 
 type MinesGame = {
   userId: string;
+  guildId: string;
   bet: number;
   mines: number;
   size: number;
@@ -13,7 +13,6 @@ type MinesGame = {
   revealed: Set<number>;
   finished: boolean;
   cashedOut: boolean;
-  startedAt: number;
 };
 
 const activeGames = new Map<string, MinesGame>();
@@ -22,181 +21,202 @@ function createBoard(size: number, mineCount: number) {
   const total = size * size;
   const board = new Array<boolean>(total).fill(false);
   let placed = 0;
-
   while (placed < mineCount) {
-    const index = Math.floor(Math.random() * total);
-    if (board[index]) continue;
-    board[index] = true;
-    placed++;
+    const idx = Math.floor(Math.random() * total);
+    if (!board[idx]) { board[idx] = true; placed++; }
   }
-
   return board;
 }
 
-function getMultiplier(revealedSafe: number, mineCount: number, totalCells: number) {
-  let multiplier = 1;
-  for (let i = 0; i < revealedSafe; i++) {
-    multiplier *= (totalCells - i) / (totalCells - mineCount - i);
+function getMultiplier(safeRevealed: number, mineCount: number, totalCells: number) {
+  let mult = 1;
+  for (let i = 0; i < safeRevealed; i++) {
+    mult *= (totalCells - i) / (totalCells - mineCount - i);
   }
-  return Math.max(1, multiplier * 0.96);
-}
-
-function formatBoard(game: MinesGame, revealAll = false) {
-  const rows: string[] = [];
-  const total = game.size * game.size;
-
-  for (let y = 0; y < game.size; y++) {
-    const row: string[] = [];
-    for (let x = 0; x < game.size; x++) {
-      const index = y * game.size + x;
-      const isMine = game.board[index];
-      const isRevealed = game.revealed.has(index);
-
-      if (revealAll) {
-        row.push(isMine ? "💣" : isRevealed ? "💎" : "⬜");
-      } else {
-        row.push(isRevealed ? "💎" : "🟦");
-      }
-    }
-    rows.push(row.join(" "));
-  }
-
-  return rows.join("\n");
+  return Math.max(1, mult * 0.96);
 }
 
 function createGridButtons(game: MinesGame) {
   const rows: any[] = [];
-
   for (let y = 0; y < game.size; y++) {
     const components: any[] = [];
-
     for (let x = 0; x < game.size; x++) {
-      const index = y * game.size + x;
-      const revealed = game.revealed.has(index);
-
+      const idx = y * game.size + x;
+      const revealed = game.revealed.has(idx);
       components.push({
         type: 2,
-        custom_id: `mines:${game.userId}:${index}`,
+        custom_id: `mines:${game.userId}:${idx}`,
         label: revealed ? "💎" : " ",
         style: revealed ? 3 : 2,
         disabled: game.finished || revealed,
       });
     }
-
     rows.push({ type: 1, components });
   }
-
   rows.push({
     type: 1,
     components: [
       {
         type: 2,
         custom_id: `mines_cashout:${game.userId}`,
-        label: "Cash Out",
+        label: `💎 Cash Out (${Math.floor(game.bet * getMultiplier(game.revealed.size, game.mines, game.size * game.size))} coins)`,
         style: 1,
         disabled: game.finished || game.revealed.size === 0,
       },
       {
         type: 2,
         custom_id: `mines_stop:${game.userId}`,
-        label: "End Game",
+        label: "❌ Give Up",
         style: 4,
         disabled: game.finished,
       },
     ],
   });
-
   return rows;
 }
 
-function createGameEmbed(game: MinesGame, status?: string) {
-  const totalCells = game.size * game.size;
+function makeEmbed(game: MinesGame, status?: string, revealAll = false) {
+  const total = game.size * game.size;
   const safeRevealed = game.revealed.size;
-  const multiplier = getMultiplier(safeRevealed, game.mines, totalCells);
-  const payout = Math.floor(game.bet * multiplier);
+  const mult = getMultiplier(safeRevealed, game.mines, total);
+  const payout = Math.floor(game.bet * mult);
+
+  const rows: string[] = [];
+  for (let y = 0; y < game.size; y++) {
+    const row: string[] = [];
+    for (let x = 0; x < game.size; x++) {
+      const idx = y * game.size + x;
+      const isMine = game.board[idx];
+      const isRevealed = game.revealed.has(idx);
+      if (revealAll) row.push(isMine ? "💣" : isRevealed ? "💎" : "⬜");
+      else row.push(isRevealed ? "💎" : "🟦");
+    }
+    rows.push(row.join(" "));
+  }
 
   return brandEmbed({
     title: "💣 Mines",
-    description: [
-      formatBoard(game, game.finished),
-      "",
-      status ?? "Pick tiles and avoid the mines.",
-    ].join("\n"),
+    description: rows.join("\n") + "\n\n" + (status ?? "Click tiles to reveal gems. Cash out before you hit a mine!"),
     fields: [
-      { name: "Bet", value: `**${game.bet}** coins`, inline: true },
-      { name: "Mines", value: `**${game.mines}**`, inline: true },
-      { name: "Safe Gems", value: `**${safeRevealed}**`, inline: true },
-      { name: "Multiplier", value: `**${multiplier.toFixed(2)}x**`, inline: true },
-      { name: "Cash Out Value", value: `**${payout}** coins`, inline: true },
-      { name: "Grid", value: `**${game.size}x${game.size}**`, inline: true },
+      { name: "💰 Bet", value: `**${game.bet}** coins`, inline: true },
+      { name: "💣 Mines", value: `**${game.mines}**`, inline: true },
+      { name: "💎 Found", value: `**${safeRevealed}**`, inline: true },
+      { name: "📈 Multiplier", value: `**${mult.toFixed(2)}x**`, inline: true },
+      { name: "💵 Cash Out", value: `**${payout}** coins`, inline: true },
+      { name: "🎯 Grid", value: `**${game.size}x${game.size}**`, inline: true },
     ],
-    page: "Fun",
+    page: "Mines",
   });
 }
 
 export const command: HybridCommand = {
   name: "mines",
-  description: "Start an interactive mines game with buttons.",
-  category: "fun",
+  description: "Interactive mines game — reveal gems and cash out before hitting a bomb!",
+  category: "economy",
+  guildOnly: true,
+  aliases: ["minesweeper", "mine"],
   options: [
-    {
-      name: "bet",
-      description: "Amount to bet",
-      type: ApplicationCommandOptionType.Integer,
-      required: false,
-    },
-    {
-      name: "mines",
-      description: "How many mines to place (1-10)",
-      type: ApplicationCommandOptionType.Integer,
-      required: false,
-    },
+    { name: "bet", description: "Amount to bet", type: ApplicationCommandOptionType.Integer, required: true },
+    { name: "mines", description: "Number of mines (1-10, default 3)", type: ApplicationCommandOptionType.Integer, required: false },
   ],
   async execute(ctx) {
-    const bet = (ctx.getNumber("bet") ?? parseInt(ctx.args[0] ?? "", 10)) || 100;
-    const mineCount = (ctx.getNumber("mines") ?? parseInt(ctx.args[1] ?? "", 10)) || 3;
+    if (!ctx.guild || !ctx.channel) return;
+    const bet = ctx.getNumber("bet") ?? parseInt(ctx.args[0] ?? "0");
+    const mineCount = ctx.getNumber("mines") ?? parseInt(ctx.args[1] ?? "3") || 3;
 
-    if (!Number.isInteger(bet) || bet < 1) {
-      return ctx.reply({ embeds: [errorEmbed("Bet must be a whole number greater than 0.")] });
-    }
+    if (!bet || bet < 1) return ctx.reply({ embeds: [errorEmbed("Minimum bet is 1 coin.")] });
+    if (mineCount < 1 || mineCount > 10) return ctx.reply({ embeds: [errorEmbed("Mines must be between 1 and 10.")] });
+    if (activeGames.has(ctx.user.id)) return ctx.reply({ embeds: [errorEmbed("You already have an active Mines game! Finish it first.")] });
 
-    if (!Number.isInteger(mineCount) || mineCount < 1 || mineCount > 10) {
-      return ctx.reply({ embeds: [errorEmbed("Mines must be a whole number between 1 and 10.")] });
-    }
+    const bal = await getBalance(ctx.guild.id, ctx.user.id);
+    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`You only have **${bal.balance}** coins.`)] });
 
-    if (activeGames.has(ctx.user.id)) {
-      return ctx.reply({ embeds: [errorEmbed("You already have an active mines game. Finish it before starting a new one.")] });
-    }
-
-    const size = 5;
-    const totalCells = size * size;
-
-    if (mineCount >= totalCells) {
-      return ctx.reply({ embeds: [errorEmbed("There must be at least one safe tile on the board.")] });
-    }
+    await removeBalance(ctx.guild.id, ctx.user.id, bet);
 
     const game: MinesGame = {
       userId: ctx.user.id,
-      bet,
-      mines: mineCount,
-      size,
-      board: createBoard(size, mineCount),
+      guildId: ctx.guild.id,
+      bet, mines: mineCount, size: 5,
+      board: createBoard(5, mineCount),
       revealed: new Set(),
       finished: false,
       cashedOut: false,
-      startedAt: Date.now(),
     };
-
     activeGames.set(ctx.user.id, game);
 
-    return ctx.reply({
-      embeds: [
-        createGameEmbed(
-          game,
-          "Click the buttons below to reveal tiles. Cash out before you hit a mine.",
-        ),
-      ],
+    const msg = await ctx.reply({
+      embeds: [makeEmbed(game)],
       components: createGridButtons(game),
     } as any);
+
+    const msgObj: any = (msg as any)?.interaction?.message ?? msg;
+    if (!msgObj?.createMessageComponentCollector) {
+      // For prefix commands, fetch message
+      return;
+    }
+
+    const collector = msgObj.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      filter: (i: any) => i.user.id === ctx.user.id,
+      time: 300000,
+    });
+
+    collector.on("collect", async (i: any) => {
+      const g = activeGames.get(ctx.user.id);
+      if (!g || g.finished) return i.deferUpdate().catch(() => {});
+
+      if (i.customId === `mines_cashout:${ctx.user.id}`) {
+        g.finished = true; g.cashedOut = true;
+        activeGames.delete(ctx.user.id);
+        const payout = Math.floor(g.bet * getMultiplier(g.revealed.size, g.mines, 25));
+        await addBalance(g.guildId, ctx.user.id, payout);
+        await i.update({ embeds: [makeEmbed(g, `💎 **Cashed out! Won ${payout} coins (${getMultiplier(g.revealed.size, g.mines, 25).toFixed(2)}x)**`, true)], components: [] });
+        collector.stop();
+        return;
+      }
+
+      if (i.customId === `mines_stop:${ctx.user.id}`) {
+        g.finished = true;
+        activeGames.delete(ctx.user.id);
+        await i.update({ embeds: [makeEmbed(g, "❌ **Game ended.** Bet lost.", true)], components: [] });
+        collector.stop();
+        return;
+      }
+
+      if (i.customId.startsWith(`mines:${ctx.user.id}:`)) {
+        const idx = parseInt(i.customId.split(":")[2]!);
+        if (g.board[idx]) {
+          // HIT A MINE
+          g.finished = true;
+          g.revealed.add(idx);
+          activeGames.delete(ctx.user.id);
+          await i.update({ embeds: [makeEmbed(g, "💥 **BOOM! You hit a mine!** Bet lost.", true)], components: [] });
+          collector.stop();
+        } else {
+          g.revealed.add(idx);
+          const safeCells = 25 - g.mines;
+          if (g.revealed.size >= safeCells) {
+            // Won the entire board
+            g.finished = true;
+            activeGames.delete(ctx.user.id);
+            const payout = Math.floor(g.bet * getMultiplier(g.revealed.size, g.mines, 25));
+            await addBalance(g.guildId, ctx.user.id, payout);
+            await i.update({ embeds: [makeEmbed(g, `🏆 **PERFECT GAME! Won ${payout} coins!**`, true)], components: [] });
+            collector.stop();
+          } else {
+            await i.update({ embeds: [makeEmbed(g)], components: createGridButtons(g) });
+          }
+        }
+      }
+    });
+
+    collector.on("end", async () => {
+      const g = activeGames.get(ctx.user.id);
+      if (g && !g.finished) {
+        g.finished = true;
+        activeGames.delete(ctx.user.id);
+        await msgObj.edit({ embeds: [makeEmbed(g, "⏰ **Timed out.** Bet lost.", true)], components: [] }).catch(() => {});
+      }
+    });
   },
 };
