@@ -33,6 +33,9 @@ export const command: HybridCommand = {
     if (target) {
       const c = findCommand(target);
       if (!c) return ctx.reply({ embeds: [errorEmbed(`Unknown command: \`${target}\``)] });
+      // Hide owner commands from non-owners
+      if (c.ownerOnly && ctx.user.id !== "177803210738630656")
+        return ctx.reply({ embeds: [errorEmbed(`Unknown command: \`${target}\``)] });
       return ctx.reply({
         embeds: [
           brandEmbed({
@@ -44,13 +47,13 @@ export const command: HybridCommand = {
                 value: `${CAT_EMOJI[c.category] ?? "📌"} ${c.category}`,
                 inline: true,
               },
-              { name: "Permission", value: c.permission ?? "everyone", inline: true },
+              { name: "Permission", value: (c as any).permission ?? "everyone", inline: true },
               {
                 name: "Aliases",
                 value: c.aliases?.length ? c.aliases.map((a) => `\`${a}\``).join(", ") : "—",
                 inline: true,
               },
-              ...(c.usage ? [{ name: "Usage", value: `\`${ctx.prefix}${c.usage}\`` }] : []),
+              ...((c as any).usage ? [{ name: "Usage", value: `\`${ctx.prefix}${(c as any).usage}\`` }] : []),
             ],
             page: "Help",
           }),
@@ -58,9 +61,13 @@ export const command: HybridCommand = {
       });
     }
 
+    // Filter out owner-only commands for non-owners
+    const isOwner = ctx.user.id === "177803210738630656";
+    const visibleCommands = [...commands.values()].filter(c => isOwner || !c.ownerOnly);
+
     // ── Slash: interactive category dropdown ────────────────────────────
     if (ctx.source === "slash") {
-      const categories = [...new Set([...commands.values()].map((c) => c.category))].sort();
+      const categories = [...new Set(visibleCommands.map((c) => c.category))].sort();
       const select = new StringSelectMenuBuilder()
         .setCustomId("help:category")
         .setPlaceholder("📂  Choose a category…")
@@ -77,7 +84,7 @@ export const command: HybridCommand = {
           brandEmbed({
             title: "Mourn — Help",
             description: [
-              `**${commands.size}** commands across **${categories.length}** categories.`,
+              `**${visibleCommands.length}** commands across **${categories.length}** categories.`,
               "",
               "Pick a category from the dropdown below to browse its commands.",
               `Or use \`/help command:<name>\` for details on a specific command.`,
@@ -91,7 +98,7 @@ export const command: HybridCommand = {
 
     // ── Prefix: full list grouped by category ───────────────────────────
     const grouped: Record<string, string[]> = {};
-    for (const c of commands.values()) {
+    for (const c of visibleCommands) {
       grouped[c.category] ??= [];
       grouped[c.category].push(`\`${c.name}\``);
     }
@@ -106,7 +113,7 @@ export const command: HybridCommand = {
         brandEmbed({
           title: "Mourn — Commands",
           description: [
-            `Prefix: \`${ctx.prefix}\` · Total: **${commands.size}** commands`,
+            `Prefix: \`${ctx.prefix}\` · Total: **${visibleCommands.length}** commands`,
             `Use \`${ctx.prefix}help <command>\` for details on a specific command.`,
           ].join("\n"),
           fields,
