@@ -6,38 +6,29 @@ import {
   type StringSelectMenuInteraction,
   type ModalSubmitInteraction,
   ActionRowBuilder,
-  StringSelectMenuBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   MessageFlags,
 } from "discord.js";
 import { findCommand, commands } from "../handlers/registry.js";
 import { buildSlashContext } from "../lib/contextFactory.js";
-import { errorEmbed, brandEmbed } from "../lib/embeds.js";
+import { errorEmbed, brandEmbed, successEmbed } from "../lib/embeds.js";
 import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
 import { checkTier, isBotOwner } from "../lib/permissions.js";
 import { handlePanelInteraction } from "../panels/router.js";
 
-const CAT_EMOJI: Record<string, string> = {
-  economy: "💰", fun: "🎉", moderation: "🛡️", settings: "⚙️",
-  utility: "🔧", levels: "⭐", giveaway: "🎁", tags: "🏷️",
-  voicemaster: "🎤", custom: "🤖", owner: "👑",
-};
-
-/**
- * Safe follow-up: tries interaction.followUp first, falls back to channel.send
- * if the original message was deleted (MESSAGE_REFERENCE_UNKNOWN_MESSAGE).
- */
 async function safeFollowUp(
   interaction: ButtonInteraction | ChatInputCommandInteraction,
-  payload: Parameters<ButtonInteraction["followUp"]>[0]
+  payload: Parameters<ButtonInteraction["followUp"]>[0],
 ) {
   try {
     await interaction.followUp(payload);
   } catch {
     try {
       await interaction.channel?.send(payload as any);
-    } catch { /* silently ignore if channel send also fails */ }
+    } catch { /* ignore */ }
   }
 }
 
@@ -60,20 +51,20 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   if (!cmd) return;
   if (cmd.guildOnly !== false && !interaction.guild) {
     return interaction.reply({
-      embeds: [errorEmbed("This command must be used in a server.")],
+      embeds: [errorEmbed("this command must be used in a server.")],
       flags: MessageFlags.Ephemeral,
     });
   }
   if (cmd.ownerOnly && !isBotOwner(interaction.user.id)) {
     return interaction.reply({
-      embeds: [errorEmbed("This command is restricted to the bot owner.")],
+      embeds: [errorEmbed("this command is restricted to the bot owner.")],
       flags: MessageFlags.Ephemeral,
     });
   }
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
     if (!checkTier(interaction.member as any, cmd.permission)) {
       return interaction.reply({
-        embeds: [errorEmbed("You don't have permission to use this command.")],
+        embeds: [errorEmbed("you don't have permission to use this command.")],
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -86,7 +77,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   } catch (err) {
     logger.error({ err, cmd: cmd.name }, "Slash command error");
     const payload: any = {
-      embeds: [errorEmbed((err as Error).message || "An unexpected error occurred.")],
+      embeds: [errorEmbed((err as Error).message || "something went wrong.")],
       flags: MessageFlags.Ephemeral,
     };
     try {
@@ -98,6 +89,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
 
 async function handleButton(client: Client, interaction: ButtonInteraction) {
   const id = interaction.customId;
+  if (id.startsWith("help:")) return handleHelpButton(interaction);
   if (id.startsWith("panel:")) return handlePanelInteraction(client, interaction);
   const { handleTicketButton } = await import("../features/tickets.js");
   if (id.startsWith("ticket:")) return handleTicketButton(client, interaction);
@@ -107,59 +99,93 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
     const { handleVerificationButton } = await import("../features/verification.js");
     return handleVerificationButton(client, interaction);
   }
-  if (id.startsWith("trivia_")) return handleTriviaButton(client, interaction);
-  if (id.startsWith("bj_")) return handleBlackjackButton(client, interaction);
-  if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(client, interaction);
+  if (id.startsWith("trivia_")) return handleTriviaButton(interaction);
+  if (id.startsWith("bj_")) return handleBlackjackButton(interaction);
+  if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(interaction);
 }
 
-async function handleTriviaButton(_client: Client, interaction: ButtonInteraction) {
+async function handleHelpButton(interaction: ButtonInteraction) {
+  const parts = interaction.customId.split(":");
+  const action = parts[1];
+
+  const settings = interaction.guild
+    ? await getGuildSettings(interaction.guild.id).catch(() => null)
+    : null;
+  const prefix = settings?.prefix ?? config.defaultPrefix;
+
+  if (action === "back") {
+    const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
+    const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
+    const { buildHelpHome } = await import("../commands/utility/help.js");
+    const { embed, rows } = buildHelpHome(visibleCmds.length, categories, prefix);
+    return interaction.update({ embeds: [embed], components: rows as any[] }).catch(() => {});
+  }
+
+  if (action === "cat") {
+    const category = parts[2];
+    if (!category) return;
+    const { buildCategoryEmbed } = await import("../commands/utility/help.js");
+    const { embed, row } = buildCategoryEmbed(category, prefix);
+    return interaction.update({ embeds: [embed], components: [row as any] }).catch(() => {});
+  }
+}
+
+async function handleTriviaButton(interaction: ButtonInteraction) {
   const [, chosen, correct, userId] = interaction.customId.split("_");
   if (interaction.user.id !== userId) {
-    return interaction.reply({ content: "This isn't your trivia question!", flags: 64 });
+    return interaction.reply({ content: "that's not your trivia question.", flags: 64 });
   }
-  const { successEmbed } = await import("../lib/embeds.js");
   if (chosen === correct) {
     await interaction.update({ components: [] }).catch(() => {});
-    return safeFollowUp(interaction, { embeds: [successEmbed(`✅ Correct! The answer was **${correct}**.`)] });
+    return safeFollowUp(interaction, {
+      embeds: [successEmbed(`correct. the answer was **${correct}**.`)],
+    });
   } else {
     await interaction.update({ components: [] }).catch(() => {});
-    return safeFollowUp(interaction, { embeds: [errorEmbed(`❌ Wrong! The correct answer was **${correct}**.`)] });
+    return safeFollowUp(interaction, {
+      embeds: [errorEmbed(`wrong. the answer was **${correct}**.`)],
+    });
   }
 }
 
-async function handleBlackjackButton(_client: Client, interaction: ButtonInteraction) {
+async function handleBlackjackButton(interaction: ButtonInteraction) {
   const parts = interaction.customId.split("_");
   const action = parts[1];
   const userId = parts[2];
   if (interaction.user.id !== userId) {
-    return interaction.reply({ content: "This isn't your blackjack game!", flags: 64 });
+    return interaction.reply({ content: "that's not your game.", flags: 64 });
   }
-  const { successEmbed } = await import("../lib/embeds.js");
   const { addBalance } = await import("../features/economy.js");
   const sessions = (global as any).__bjSessions as Map<string, any> ?? new Map();
   const session = sessions.get(userId);
   if (!session) return interaction.update({ components: [] }).catch(() => {});
+
   function draw(deck: string[]) { return deck.splice(Math.floor(Math.random() * deck.length), 1)[0]!; }
   function cardValue(card: string) { const r = card.slice(0, -1); if (r === "A") return 11; if (["J","Q","K"].includes(r)) return 10; return parseInt(r); }
   function handValue(hand: string[]) { let val = hand.reduce((a, c) => a + cardValue(c), 0); let aces = hand.filter(c => c.startsWith("A")).length; while (val > 21 && aces > 0) { val -= 10; aces--; } return val; }
+
   if (action === "hit") {
     session.player.push(draw(session.deck));
     const pv = handValue(session.player);
     if (pv > 21) {
       sessions.delete(userId);
       await interaction.update({ components: [] }).catch(() => {});
-      return safeFollowUp(interaction, { embeds: [errorEmbed(`Bust! Your hand: ${session.player.join(" ")} (${pv}). Lost **${session.bet}** coins.`)] });
+      return safeFollowUp(interaction, {
+        embeds: [errorEmbed(`bust. your hand: ${session.player.join(" ")} (${pv}). lost **${session.bet}** coins.`)],
+      });
     }
-    const { ActionRowBuilder: ARB, ButtonBuilder, ButtonStyle } = await import("discord.js");
-    const row = new ARB<ButtonBuilder>().addComponents(
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId(`bj_hit_${userId}`).setLabel("Hit").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId(`bj_stand_${userId}`).setLabel("Stand").setStyle(ButtonStyle.Secondary),
     );
     return interaction.update({
-      embeds: [brandEmbed({ title: "🃏 Blackjack", description: `**Your hand:** ${session.player.join(" ")} (${pv})\n**Dealer:** ${session.dealer[0]} 🂠\nBet: **${session.bet}**`, page: "Blackjack" })],
+      embeds: [brandEmbed({
+        description: `**your hand** — ${session.player.join(" ")} (${pv})\n**dealer** — ${session.dealer[0]} 🂠\n**bet** — ${session.bet}`,
+      })],
       components: [row as any],
     }).catch(() => {});
   }
+
   if (action === "stand") {
     while (handValue(session.dealer) < 17) session.dealer.push(draw(session.deck));
     const pv = handValue(session.player);
@@ -169,17 +195,23 @@ async function handleBlackjackButton(_client: Client, interaction: ButtonInterac
     if (dv > 21 || pv > dv) {
       const win = session.bet * 2;
       await addBalance(session.guildId, userId, win);
-      return safeFollowUp(interaction, { embeds: [successEmbed(`You win! Your: ${session.player.join(" ")} (${pv}) vs Dealer: ${session.dealer.join(" ")} (${dv}). Won **${win}** coins!`)] });
+      return safeFollowUp(interaction, {
+        embeds: [successEmbed(`you won **${win}** coins. your ${session.player.join(" ")} (${pv}) beat dealer's ${session.dealer.join(" ")} (${dv}).`)],
+      });
     } else if (pv === dv) {
       await addBalance(session.guildId, userId, session.bet);
-      return safeFollowUp(interaction, { embeds: [brandEmbed({ description: `Push! Tie game. Your bet of **${session.bet}** returned.`, page: "Blackjack" })] });
+      return safeFollowUp(interaction, {
+        embeds: [brandEmbed({ description: `push. tie game — your **${session.bet}** returned.` })],
+      });
     } else {
-      return safeFollowUp(interaction, { embeds: [errorEmbed(`Dealer wins. Your: ${session.player.join(" ")} (${pv}) vs Dealer: ${session.dealer.join(" ")} (${dv}). Lost **${session.bet}** coins.`)] });
+      return safeFollowUp(interaction, {
+        embeds: [errorEmbed(`dealer wins. your ${session.player.join(" ")} (${pv}) vs dealer's ${session.dealer.join(" ")} (${dv}). lost **${session.bet}** coins.`)],
+      });
     }
   }
 }
 
-async function handleSuggestionVote(_client: Client, interaction: ButtonInteraction) {
+async function handleSuggestionVote(interaction: ButtonInteraction) {
   await interaction.deferUpdate().catch(() => {});
   const { db } = await import("../db/index.js");
   const { suggestions } = await import("../db/schema.js");
@@ -187,12 +219,13 @@ async function handleSuggestionVote(_client: Client, interaction: ButtonInteract
   const row = await db.select().from(suggestions).where(eq(suggestions.messageId, interaction.message.id));
   if (!row[0]) return;
   const isUp = interaction.customId === "suggest_up";
-  await db.update(suggestions).set(isUp ? { upvotes: sql`${suggestions.upvotes} + 1` } : { downvotes: sql`${suggestions.downvotes} + 1` }).where(eq(suggestions.messageId, interaction.message.id));
+  await db.update(suggestions)
+    .set(isUp ? { upvotes: sql`${suggestions.upvotes} + 1` } : { downvotes: sql`${suggestions.downvotes} + 1` })
+    .where(eq(suggestions.messageId, interaction.message.id));
   const updated = await db.select().from(suggestions).where(eq(suggestions.messageId, interaction.message.id));
   const s = updated[0];
   if (!s) return;
-  const { ActionRowBuilder: ARB, ButtonBuilder, ButtonStyle } = await import("discord.js");
-  const newRow = new ARB<ButtonBuilder>().addComponents(
+  const newRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId("suggest_up").setLabel(`👍 ${s.upvotes}`).setStyle(ButtonStyle.Success),
     new ButtonBuilder().setCustomId("suggest_down").setLabel(`👎 ${s.downvotes}`).setStyle(ButtonStyle.Danger),
   );
@@ -201,48 +234,6 @@ async function handleSuggestionVote(_client: Client, interaction: ButtonInteract
 
 async function handleSelect(client: Client, interaction: StringSelectMenuInteraction) {
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction);
-  if (interaction.customId === "help:category") return handleHelpCategorySelect(interaction);
-}
-
-async function handleHelpCategorySelect(interaction: StringSelectMenuInteraction) {
-  const category = interaction.values[0]!;
-  const cmds = [...commands.values()]
-    .filter((c) => c.category === category)
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const lines = cmds.map((c) => `\`${c.name}\` — ${c.description.slice(0, 65)}`);
-  let description = lines.join("\n");
-  if (description.length > 3900) {
-    const kept = [];
-    let len = 0;
-    for (const l of lines) { if (len + l.length + 1 > 3900) break; kept.push(l); len += l.length + 1; }
-    description = kept.join("\n") + `\n…and ${lines.length - kept.length} more`;
-  }
-
-  const categories = [...new Set([...commands.values()].map((c) => c.category))].sort();
-  const select = new StringSelectMenuBuilder()
-    .setCustomId("help:category")
-    .setPlaceholder(`${CAT_EMOJI[category] ?? "📌"} ${category.charAt(0).toUpperCase() + category.slice(1)}`)
-    .addOptions(
-      categories.map((cat) => ({
-        label: `${CAT_EMOJI[cat] ?? "📌"} ${cat.charAt(0).toUpperCase() + cat.slice(1)}`,
-        value: cat,
-        description: `Browse ${cat} commands`,
-        default: cat === category,
-      }))
-    );
-  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
-
-  await interaction.update({
-    embeds: [
-      brandEmbed({
-        title: `${CAT_EMOJI[category] ?? "📌"} ${category.charAt(0).toUpperCase() + category.slice(1)} Commands (${cmds.length})`,
-        description,
-        page: "Help",
-      }),
-    ],
-    components: [row as any],
-  }).catch(() => {});
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
