@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { modEmbed, errorEmbed } from "../../lib/embeds.js";
 import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
@@ -17,15 +17,17 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const target = await ctx.getUser("user", true);
-    const reason = ctx.getString("reason") ?? "No reason provided";
-    if (!target) return ctx.reply({ embeds: [errorEmbed("User not found.")] });
-    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't ban yourself.")] });
+    const reason = ctx.getString("reason") ?? "no reason provided";
+    if (!target) return ctx.reply({ embeds: [errorEmbed("user not found.")] });
+    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you can't ban yourself.")] });
     const member = await guild.members.fetch(target.id).catch(() => null);
-    if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("I can't ban that user.")] });
+    if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("i can't ban that user.")] });
     try {
       await guild.members.ban(target.id, { reason: `${ctx.user.tag}: ${reason}` });
       const caseId = await logCase(guild.id, target.id, ctx.user.id, "ban", reason);
-      return ctx.reply({ embeds: [successEmbed(`Banned **${target.tag}** — ${reason}\nCase #${caseId}`)] });
+      return ctx.reply({
+        embeds: [modEmbed({ action: "banned", target, moderator: ctx.user, reason, caseId })],
+      });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
     }
