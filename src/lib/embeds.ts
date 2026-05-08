@@ -20,7 +20,7 @@ export function brandEmbed(opts: EmbedOpts = {}): EmbedBuilder {
   if (opts.thumbnail) eb.setThumbnail(opts.thumbnail);
   if (opts.image) eb.setImage(opts.image);
 
-  const footer = opts.page ? `${config.embedFooter} • ${opts.page}` : config.embedFooter;
+  const footer = opts.page ? `${config.embedFooter} · ${opts.page}` : config.embedFooter;
   eb.setFooter({ text: footer });
   eb.setTimestamp(new Date());
 
@@ -38,22 +38,19 @@ export function brandEmbed(opts: EmbedOpts = {}): EmbedBuilder {
   return eb;
 }
 
-export function successEmbed(message: string, title = "Success"): EmbedBuilder {
+export function successEmbed(message: string): EmbedBuilder {
   return new EmbedBuilder()
-    .setColor(config.successColor)
-    .setDescription(`✅ ${message}`)
+    .setColor(0x1e3322)
+    .setDescription(message)
     .setFooter({ text: config.embedFooter })
-    .setTimestamp(new Date())
-    .setTitle(title);
+    .setTimestamp(new Date());
 }
 
-export function errorEmbed(message: string, title = "Error"): EmbedBuilder {
+export function errorEmbed(message: string): EmbedBuilder {
   return new EmbedBuilder()
-    .setColor(config.errorColor)
-    .setDescription(`❌ ${message}`)
-    .setFooter({ text: config.embedFooter })
-    .setTimestamp(new Date())
-    .setTitle(title);
+    .setColor(0x3d1a1a)
+    .setDescription(message)
+    .setFooter({ text: config.embedFooter });
 }
 
 export function infoEmbed(message: string, title?: string): EmbedBuilder {
@@ -64,4 +61,34 @@ export function infoEmbed(message: string, title?: string): EmbedBuilder {
     .setTimestamp(new Date());
   if (title) eb.setTitle(title);
   return eb;
+}
+
+interface ModEmbedOpts {
+  action: string;
+  target: User;
+  moderator: User;
+  reason: string;
+  caseId?: number;
+  duration?: string;
+}
+
+export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
+  const lines: string[] = [
+    `**reason** — ${opts.reason}`,
+  ];
+  if (opts.duration) lines.push(`**duration** — ${opts.duration}`);
+  if (opts.caseId) lines.push(`**case** — #${opts.caseId}`);
+
+  return new EmbedBuilder()
+    .setColor(0x1a0a0a)
+    .setAuthor({
+      name: `${opts.action} · ${opts.target.username}`,
+      iconURL: opts.target.displayAvatarURL(),
+    })
+    .setDescription(lines.join("\n"))
+    .setFooter({
+      text: `${config.embedFooter} · ${opts.moderator.username}`,
+      iconURL: opts.moderator.displayAvatarURL(),
+    })
+    .setTimestamp(new Date());
 }
