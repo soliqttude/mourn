@@ -4,7 +4,7 @@ import { logger } from "../lib/logger.js";
 interface JoinWindow {
   members: GuildMember[];
   resetAt: number;
-  raidActioned: boolean; // prevent double-alert
+  raidActioned: boolean;
 }
 
 const joinTracker = new Map<string, JoinWindow>();
@@ -13,26 +13,24 @@ const WINDOW_MS = 10_000;
 // Active lockdown timers: guildId -> timeout handle
 const lockdownTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// Age-gate burst batching: don't spam log per join, batch alerts every 5s
+interface AgeGateBatch {
+  count: number;
+  users: { id: string; tag: string; ageDays: number }[];
+  timer: ReturnType<typeof setTimeout>;
+}
+const ageGateBatches = new Map<string, AgeGateBatch>();
+
+// ── Helpers ───────────────────────────────────────────────────────────────
 
 async function actionMember(member: GuildMember, action: string): Promise<boolean> {
   try {
     if (action === "ban") {
-      if (member.bannable) {
-        await member.ban({ reason: "🛡️ Anti-Raid: join flood" });
-        return true;
-      }
+      if (member.bannable) { await member.ban({ reason: "antiraid: join flood" }); return true; }
     } else if (action === "timeout") {
-      if (member.moderatable) {
-        await member.timeout(10 * 60 * 1000, "🛡️ Anti-Raid: join flood");
-        return true;
-      }
+      if (member.moderatable) { await member.timeout(15 * 60 * 1000, "antiraid: join flood"); return true; }
     } else {
-      // kick (default)
-      if (member.kickable) {
-        await member.kick("🛡️ Anti-Raid: join flood");
-        return true;
-      }
+      if (member.kickable) { await member.kick("antiraid: join flood"); return true; }
     }
   } catch {}
   return false;
@@ -45,10 +43,8 @@ async function lockServer(guild: GuildMember["guild"]): Promise<number> {
   );
   let count = 0;
   for (const [, ch] of channels) {
-    try {
-      await (ch as any).permissionOverwrites.edit(everyone, { SendMessages: false });
-      count++;
-    } catch {}
+    try { await (ch as any).permissionOverwrites.edit(everyone, { SendMessages: false }); count++; }
+    catch {}
   }
   return count;
 }
@@ -59,41 +55,111 @@ async function unlockServer(guild: GuildMember["guild"]): Promise<void> {
     (c) => c.isTextBased() && c.type !== 11 && c.type !== 12,
   );
   for (const [, ch] of channels) {
-    try {
-      await (ch as any).permissionOverwrites.edit(everyone, { SendMessages: null });
-    } catch {}
+    try { await (ch as any).permissionOverwrites.edit(everyone, { SendMessages: null }); }
+    catch {}
   }
 }
 
-async function sendAlert(
+function detectUsernamePattern(members: GuildMember[]): boolean {
+  if (members.length < 3) return false;
+  const names = members.map((m) => m.user.username.toLowerCase().replace(/\d+/g, ""));
+  const counts = new Map<string, number>();
+  for (const name of names) {
+    // Check 4-char prefixes
+    if (name.length >= 4) {
+      const prefix = name.slice(0, 4);
+      counts.set(prefix, (counts.get(prefix) ?? 0) + 1);
+    }
+  }
+  for (const count of counts.values()) {
+    if (count >= 3) return true;
+  }
+  return false;
+}
+
+function isHighRisk(member: GuildMember, minAgeDays: number): boolean {
+  const ageDays = (Date.now() - member.user.createdTimestamp) / 86_400_000;
+  // Brand new account (< 12 hours) = instant action regardless of joinage setting
+  if (ageDays < 0.5) return true;
+  // Default avatar + young account
+  const hasDefaultAvatar = !member.user.avatar;
+  if (hasDefaultAvatar && ageDays < Math.max(minAgeDays, 3)) return true;
+  return false;
+}
+
+async function sendFloodAlert(
   guild: GuildMember["guild"],
   logChannelId: string | null | undefined,
   actioned: number,
   action: string,
   didLock: boolean,
+  wasPattern: boolean,
+): Promise<void> {
+  const chId = logChannelId ?? guild.systemChannelId;
+  if (!chId) return;
+  const ch = guild.channels.cache.get(chId) as TextChannel | undefined;
+  if (!ch?.isTextBased()) return;
+
+  const lines = [
+    `**type** — ${wasPattern ? "coordinated raid (name pattern)" : "join flood"}`,
+    `**actioned** — ${actioned} members`,
+    `**punishment** — ${action}`,
+  ];
+  if (didLock) lines.push(`**lockdown** — active (5 minutes)`);
+
+  const embed = new EmbedBuilder()
+    .setColor(0x1a0600)
+    .setAuthor({ name: "antiraid · raid stopped" })
+    .setDescription(lines.join("\n"))
+    .setFooter({ text: `mourn · ${guild.name}` })
+    .setTimestamp();
+  await ch.send({ embeds: [embed] }).catch(() => {});
+}
+
+async function sendUnlockAlert(
+  guild: GuildMember["guild"],
+  logChannelId: string | null | undefined,
 ): Promise<void> {
   const chId = logChannelId ?? guild.systemChannelId;
   if (!chId) return;
   const ch = guild.channels.cache.get(chId) as TextChannel | undefined;
   if (!ch?.isTextBased()) return;
   const embed = new EmbedBuilder()
-    .setColor(0xe67e22)
-    .setTitle("🚨 Raid Detected & Stopped")
-    .setDescription(
-      `A **join flood** was detected and blocked!\n\n` +
-      `**Members actioned:** ${actioned}\n` +
-      `**Punishment:** \`${action}\`\n` +
-      (didLock
-        ? `**Server locked** for 5 minutes to stop further raiding.\n`
-        : "") +
-      `**Time:** <t:${Math.floor(Date.now() / 1000)}:F>`,
-    )
-    .setFooter({ text: "Anti-Raid System" })
+    .setColor(0x1e3322)
+    .setAuthor({ name: "antiraid · lockdown lifted" })
+    .setDescription("5-minute raid lockdown expired. server is open again.")
+    .setFooter({ text: `mourn · ${guild.name}` })
     .setTimestamp();
   await ch.send({ embeds: [embed] }).catch(() => {});
 }
 
-// ── Main handler (called from guildMemberAdd) ─────────────────────────────
+async function sendAgeGateBatchAlert(
+  guild: GuildMember["guild"],
+  logChannelId: string | null | undefined,
+  users: { id: string; tag: string; ageDays: number }[],
+  action: string,
+): Promise<void> {
+  const chId = logChannelId ?? guild.systemChannelId;
+  if (!chId) return;
+  const ch = guild.channels.cache.get(chId) as TextChannel | undefined;
+  if (!ch?.isTextBased()) return;
+
+  const list = users
+    .slice(0, 10)
+    .map((u) => `<@${u.id}> — ${u.ageDays < 1 ? `${(u.ageDays * 24).toFixed(0)}h old` : `${u.ageDays.toFixed(1)}d old`}`)
+    .join("\n");
+  const extra = users.length > 10 ? `\n*…and ${users.length - 10} more*` : "";
+
+  const embed = new EmbedBuilder()
+    .setColor(0x1a0600)
+    .setAuthor({ name: `antiraid · ${users.length} account${users.length !== 1 ? "s" : ""} blocked` })
+    .setDescription(`**punishment** — ${action}\n\n${list}${extra}`)
+    .setFooter({ text: `mourn · ${guild.name}` })
+    .setTimestamp();
+  await ch.send({ embeds: [embed] }).catch(() => {});
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────
 
 export async function handleAntiraidJoin(
   member: GuildMember,
@@ -109,33 +175,33 @@ export async function handleAntiraidJoin(
   if (!settings.antiraidEnabled) return;
   const guild = member.guild;
   const action = settings.antiraidAction ?? "kick";
-
-  // ── 1. Age gate ──────────────────────────────────────────────────────────
   const ageDays = (Date.now() - member.user.createdTimestamp) / 86_400_000;
-  if (settings.antiraidJoinAge > 0 && ageDays < settings.antiraidJoinAge) {
+
+  // ── 1. High-risk fast path (brand new or default avatar + young) ──────────
+  const highRisk = isHighRisk(member, settings.antiraidJoinAge);
+  if (highRisk || (settings.antiraidJoinAge > 0 && ageDays < settings.antiraidJoinAge)) {
     const ok = await actionMember(member, action);
     if (ok) {
       logger.info(
-        { guild: guild.id, user: member.id, ageDays: ageDays.toFixed(1) },
-        `antiraid: age-gated member (${action})`,
+        { guild: guild.id, user: member.id, ageDays: ageDays.toFixed(2), highRisk },
+        `antiraid: age/risk-gated member (${action})`,
       );
-      // Alert in log channel for every age-gate hit
-      const chId = settings.antiraidLogChannel ?? guild.systemChannelId;
-      if (chId) {
-        const ch = guild.channels.cache.get(chId) as TextChannel | undefined;
-        if (ch?.isTextBased()) {
-          const embed = new EmbedBuilder()
-            .setColor(0xf39c12)
-            .setTitle("⚠️ Anti-Raid: New Account Blocked")
-            .setDescription(
-              `<@${member.id}> (\`${member.user.tag}\`) was **${action}ed**.\n` +
-              `**Account age:** ${ageDays.toFixed(1)} days (min: ${settings.antiraidJoinAge}d)\n` +
-              `**Account created:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>`,
-            )
-            .setThumbnail(member.user.displayAvatarURL())
-            .setTimestamp();
-          await ch.send({ embeds: [embed] }).catch(() => {});
-        }
+
+      // Batch age-gate alerts to avoid log spam
+      const existing = ageGateBatches.get(guild.id);
+      const entry = { id: member.id, tag: member.user.tag, ageDays };
+      if (existing) {
+        existing.users.push(entry);
+        existing.count++;
+      } else {
+        const timer = setTimeout(async () => {
+          const batch = ageGateBatches.get(guild.id);
+          if (batch) {
+            await sendAgeGateBatchAlert(guild, settings.antiraidLogChannel, batch.users, action);
+            ageGateBatches.delete(guild.id);
+          }
+        }, 5_000);
+        ageGateBatches.set(guild.id, { count: 1, users: [entry], timer });
       }
     }
     return;
@@ -150,24 +216,24 @@ export async function handleAntiraidJoin(
   }
   track.members.push(member);
 
-  const threshold = settings.antiraidThreshold;
-
-  // If already raiding, action new arrivals immediately
   if (track.raidActioned) {
     await actionMember(member, action);
     return;
   }
 
-  if (track.members.length < threshold) return;
+  const threshold = settings.antiraidThreshold;
+  const wasPattern = detectUsernamePattern(track.members);
+
+  // Trigger on threshold OR username pattern (whichever comes first)
+  if (track.members.length < threshold && !wasPattern) return;
 
   // ── 3. Threshold crossed — action ALL members in window ──────────────────
   track.raidActioned = true;
   const raiders = [...track.members];
   let actioned = 0;
-  const results = await Promise.allSettled(
+  await Promise.allSettled(
     raiders.map((r) => actionMember(r, action).then((ok) => { if (ok) actioned++; })),
   );
-  results; // just drain
 
   // ── 4. Optional lockdown ─────────────────────────────────────────────────
   let didLock = false;
@@ -175,35 +241,21 @@ export async function handleAntiraidJoin(
     const locked = await lockServer(guild);
     didLock = locked > 0;
 
-    // Clear any existing unlock timer
     const existing = lockdownTimers.get(guild.id);
     if (existing) clearTimeout(existing);
 
     const timer = setTimeout(async () => {
       await unlockServer(guild).catch(() => {});
       lockdownTimers.delete(guild.id);
-      logger.info({ guild: guild.id }, "antiraid: auto-unlocked server after 5m");
-
-      // Notify that server unlocked
-      const chId = settings.antiraidLogChannel ?? guild.systemChannelId;
-      if (chId) {
-        const ch = guild.channels.cache.get(chId) as TextChannel | undefined;
-        if (ch?.isTextBased()) {
-          const embed = new EmbedBuilder()
-            .setColor(0x57f287)
-            .setTitle("✅ Server Unlocked")
-            .setDescription("The 5-minute raid lockdown has expired. Server is now open again.")
-            .setTimestamp();
-          await ch.send({ embeds: [embed] }).catch(() => {});
-        }
-      }
+      logger.info({ guild: guild.id }, "antiraid: auto-unlocked after 5m");
+      await sendUnlockAlert(guild, settings.antiraidLogChannel);
     }, 5 * 60 * 1000);
     lockdownTimers.set(guild.id, timer);
   }
 
   logger.warn(
-    { guild: guild.id, raiderCount: actioned, action, didLock },
+    { guild: guild.id, raiderCount: actioned, action, didLock, wasPattern },
     "antiraid: raid detected and actioned",
   );
-  await sendAlert(guild, settings.antiraidLogChannel, actioned, action, didLock);
+  await sendFloodAlert(guild, settings.antiraidLogChannel, actioned, action, didLock, wasPattern);
 }
