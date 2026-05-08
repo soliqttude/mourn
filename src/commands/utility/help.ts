@@ -10,7 +10,7 @@ import { commands, findCommand } from "../../handlers/registry.js";
 const CAT_EMOJI: Record<string, string> = {
   economy: "💰", fun: "🎉", moderation: "🛡️", settings: "⚙️",
   utility: "🔧", levels: "⭐", giveaway: "🎁", tags: "🏷️",
-  voicemaster: "🎤", custom: "🤖", owner: "👑",
+  voicemaster: "🎤", custom: "🤖",
 };
 
 export const command: HybridCommand = {
@@ -32,9 +32,8 @@ export const command: HybridCommand = {
     // ── Single command info ──────────────────────────────────────────────
     if (target) {
       const c = findCommand(target);
-      if (!c) return ctx.reply({ embeds: [errorEmbed(`Unknown command: \`${target}\``)] });
-      // Hide owner commands from non-owners
-      if (c.ownerOnly && ctx.user.id !== "177803210738630656")
+      // Hide owner commands entirely — act as if they don't exist
+      if (!c || c.ownerOnly)
         return ctx.reply({ embeds: [errorEmbed(`Unknown command: \`${target}\``)] });
       return ctx.reply({
         embeds: [
@@ -61,9 +60,8 @@ export const command: HybridCommand = {
       });
     }
 
-    // Filter out owner-only commands for non-owners
-    const isOwner = ctx.user.id === "177803210738630656";
-    const visibleCommands = [...commands.values()].filter(c => isOwner || !c.ownerOnly);
+    // Owner commands are always hidden from ,help — use ,own for the panel
+    const visibleCommands = [...commands.values()].filter(c => !c.ownerOnly);
 
     // ── Slash: interactive category dropdown ────────────────────────────
     if (ctx.source === "slash") {
