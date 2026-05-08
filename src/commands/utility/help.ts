@@ -1,27 +1,111 @@
 import {
   ApplicationCommandOptionType,
   ActionRowBuilder,
-  StringSelectMenuBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { commands, findCommand } from "../../handlers/registry.js";
 
-const CAT_EMOJI: Record<string, string> = {
-  economy: "💰", fun: "🎉", moderation: "🛡️", settings: "⚙️",
-  utility: "🔧", levels: "⭐", giveaway: "🎁", tags: "🏷️",
-  voicemaster: "🎤", custom: "🤖",
+export const CAT_EMOJI: Record<string, string> = {
+  economy:     "💰",
+  fun:         "🎉",
+  moderation:  "🛡️",
+  settings:    "⚙️",
+  utility:     "🔧",
+  levels:      "⭐",
+  giveaway:    "🎁",
+  tags:        "🏷️",
+  voicemaster: "🎤",
+  custom:      "🌙",
 };
+
+export const CAT_LABEL: Record<string, string> = {
+  economy:     "Economy",
+  fun:         "Fun",
+  moderation:  "Moderation",
+  settings:    "Settings",
+  utility:     "Utility",
+  levels:      "Levels",
+  giveaway:    "Giveaway",
+  tags:        "Tags",
+  voicemaster: "Voice",
+  custom:      "Custom",
+};
+
+export function buildCategoryEmbed(category: string, prefix: string) {
+  const cmds = [...commands.values()]
+    .filter((c) => c.category === category && !c.ownerOnly)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const lines = cmds.map((c) => `\`${c.name}\` — ${c.description.slice(0, 60)}`);
+  let desc = lines.join("\n");
+  if (desc.length > 3800) {
+    const kept: string[] = [];
+    let len = 0;
+    for (const l of lines) {
+      if (len + l.length + 1 > 3800) break;
+      kept.push(l);
+      len += l.length + 1;
+    }
+    desc = kept.join("\n") + `\n*…and ${lines.length - kept.length} more*`;
+  }
+
+  const embed = brandEmbed({
+    description:
+      `**${CAT_EMOJI[category] ?? "📌"} ${CAT_LABEL[category] ?? category}** — ${cmds.length} commands\n\n` +
+      desc +
+      `\n\n*use \`${prefix}help <command>\` for details on any command.*`,
+  });
+
+  const backRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId("help:back")
+      .setLabel("← back")
+      .setStyle(ButtonStyle.Secondary),
+  );
+
+  return { embed, row: backRow };
+}
+
+export function buildHelpHome(totalCmds: number, categories: string[], prefix: string) {
+  const visibleCats = categories.filter((c) => c !== "owner");
+
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+  for (let i = 0; i < visibleCats.length; i += 5) {
+    const chunk = visibleCats.slice(i, i + 5);
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      chunk.map((cat) =>
+        new ButtonBuilder()
+          .setCustomId(`help:cat:${cat}`)
+          .setLabel(`${CAT_EMOJI[cat] ?? "📌"} ${CAT_LABEL[cat] ?? cat}`)
+          .setStyle(ButtonStyle.Secondary),
+      ),
+    );
+    rows.push(row);
+  }
+
+  const embed = brandEmbed({
+    description: [
+      `**${totalCmds}** commands · **${visibleCats.length}** categories`,
+      ``,
+      `pick a category below, or use \`${prefix}help <command>\` for command details.`,
+    ].join("\n"),
+  });
+
+  return { embed, rows };
+}
 
 export const command: HybridCommand = {
   name: "help",
-  aliases: ["h", "commands"],
+  aliases: ["h", "commands", "cmds"],
   description: "Browse commands by category or look up a specific command.",
   category: "utility",
   options: [
     {
       name: "command",
-      description: "Get detailed info on a specific command",
+      description: "Look up a specific command",
       type: ApplicationCommandOptionType.String,
       required: false,
     },
@@ -29,93 +113,52 @@ export const command: HybridCommand = {
   async execute(ctx) {
     const target = ctx.getString("command") ?? ctx.args[0];
 
-    // ── Single command info ──────────────────────────────────────────────
     if (target) {
       const c = findCommand(target);
-      // Hide owner commands entirely — act as if they don't exist
       if (!c || c.ownerOnly)
-        return ctx.reply({ embeds: [errorEmbed(`Unknown command: \`${target}\``)] });
-      return ctx.reply({
-        embeds: [
-          brandEmbed({
-            title: `Command — ${c.name}`,
-            description: c.description,
-            fields: [
-              {
-                name: "Category",
-                value: `${CAT_EMOJI[c.category] ?? "📌"} ${c.category}`,
-                inline: true,
-              },
-              { name: "Permission", value: (c as any).permission ?? "everyone", inline: true },
-              {
-                name: "Aliases",
-                value: c.aliases?.length ? c.aliases.map((a) => `\`${a}\``).join(", ") : "—",
-                inline: true,
-              },
-              ...((c as any).usage ? [{ name: "Usage", value: `\`${ctx.prefix}${(c as any).usage}\`` }] : []),
-            ],
-            page: "Help",
-          }),
-        ],
-      });
+        return ctx.reply({ embeds: [errorEmbed(`no command found: \`${target}\``)] });
+
+      const lines = [
+        `**${c.name}** — ${c.description}`,
+        ``,
+        `**category** — ${CAT_EMOJI[c.category] ?? "📌"} ${CAT_LABEL[c.category] ?? c.category}`,
+        `**permission** — ${(c as any).permission ?? "everyone"}`,
+        c.aliases?.length
+          ? `**aliases** — ${c.aliases.map((a) => `\`${a}\``).join(", ")}`
+          : null,
+        (c as any).usage
+          ? `**usage** — \`${ctx.prefix}${(c as any).usage}\``
+          : null,
+      ].filter(Boolean) as string[];
+
+      return ctx.reply({ embeds: [brandEmbed({ description: lines.join("\n") })] });
     }
 
-    // Owner commands are always hidden from ,help — use ,own for the panel
-    const visibleCommands = [...commands.values()].filter(c => !c.ownerOnly);
+    const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
+    const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
 
-    // ── Slash: interactive category dropdown ────────────────────────────
     if (ctx.source === "slash") {
-      const categories = [...new Set(visibleCommands.map((c) => c.category))].sort();
-      const select = new StringSelectMenuBuilder()
-        .setCustomId("help:category")
-        .setPlaceholder("📂  Choose a category…")
-        .addOptions(
-          categories.map((cat) => ({
-            label: `${CAT_EMOJI[cat] ?? "📌"} ${cat.charAt(0).toUpperCase() + cat.slice(1)}`,
-            value: cat,
-            description: `Browse ${cat} commands`,
-          }))
-        );
-      const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
-      return ctx.reply({
-        embeds: [
-          brandEmbed({
-            title: "Mourn — Help",
-            description: [
-              `**${visibleCommands.length}** commands across **${categories.length}** categories.`,
-              "",
-              "Pick a category from the dropdown below to browse its commands.",
-              `Or use \`/help command:<name>\` for details on a specific command.`,
-            ].join("\n"),
-            page: "Help",
-          }),
-        ],
-        components: [row as any],
-      });
+      const { embed, rows } = buildHelpHome(visibleCmds.length, categories, ctx.prefix);
+      return ctx.reply({ embeds: [embed], components: rows as any[] });
     }
 
-    // ── Prefix: full list grouped by category ───────────────────────────
+    // Prefix: grouped list with command names
     const grouped: Record<string, string[]> = {};
-    for (const c of visibleCommands) {
+    for (const c of visibleCmds) {
       grouped[c.category] ??= [];
       grouped[c.category].push(`\`${c.name}\``);
     }
     const fields = Object.entries(grouped)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([cat, cmds]) => ({
-        name: `${CAT_EMOJI[cat] ?? "📌"} ${cat} (${cmds.length})`,
+        name: `${CAT_EMOJI[cat] ?? "📌"} ${CAT_LABEL[cat] ?? cat} (${cmds.length})`,
         value: cmds.sort().join(" "),
       }));
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "Mourn — Commands",
-          description: [
-            `Prefix: \`${ctx.prefix}\` · Total: **${visibleCommands.length}** commands`,
-            `Use \`${ctx.prefix}help <command>\` for details on a specific command.`,
-          ].join("\n"),
+          description: `prefix: \`${ctx.prefix}\` · **${visibleCmds.length}** commands · \`${ctx.prefix}help <command>\` for details`,
           fields,
-          page: "Help",
         }),
       ],
     });
