@@ -20,10 +20,6 @@ export function brandEmbed(opts: EmbedOpts = {}): EmbedBuilder {
   if (opts.thumbnail) eb.setThumbnail(opts.thumbnail);
   if (opts.image) eb.setImage(opts.image);
 
-  const footer = opts.page ? `${config.embedFooter} · ${opts.page}` : config.embedFooter;
-  eb.setFooter({ text: footer });
-  eb.setTimestamp(new Date());
-
   if (opts.guild) {
     eb.setAuthor({
       name: opts.guild.name,
@@ -41,24 +37,19 @@ export function brandEmbed(opts: EmbedOpts = {}): EmbedBuilder {
 export function successEmbed(message: string): EmbedBuilder {
   return new EmbedBuilder()
     .setColor(0x1e3322)
-    .setDescription(message)
-    .setFooter({ text: config.embedFooter })
-    .setTimestamp(new Date());
+    .setDescription(message);
 }
 
 export function errorEmbed(message: string): EmbedBuilder {
   return new EmbedBuilder()
     .setColor(0x3d1a1a)
-    .setDescription(message)
-    .setFooter({ text: config.embedFooter });
+    .setDescription(message);
 }
 
 export function infoEmbed(message: string, title?: string): EmbedBuilder {
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
-    .setDescription(message)
-    .setFooter({ text: config.embedFooter })
-    .setTimestamp(new Date());
+    .setDescription(message);
   if (title) eb.setTitle(title);
   return eb;
 }
@@ -80,15 +71,10 @@ export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
   if (opts.caseId) lines.push(`**case** — #${opts.caseId}`);
 
   return new EmbedBuilder()
-    .setColor(0x1a0a0a)
+    .setColor(config.brandColor)
     .setAuthor({
       name: `${opts.action} · ${opts.target.username}`,
       iconURL: opts.target.displayAvatarURL(),
     })
-    .setDescription(lines.join("\n"))
-    .setFooter({
-      text: `${config.embedFooter} · ${opts.moderator.username}`,
-      iconURL: opts.moderator.displayAvatarURL(),
-    })
-    .setTimestamp(new Date());
+    .setDescription(lines.join("\n"));
 }
