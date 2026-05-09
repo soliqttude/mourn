@@ -110,9 +110,7 @@ async function sendFloodAlert(
   const embed = new EmbedBuilder()
     .setColor(0x1a0600)
     .setAuthor({ name: "antiraid · raid stopped" })
-    .setDescription(lines.join("\n"))
-    .setFooter({ text: `mourn · ${guild.name}` })
-    .setTimestamp();
+    .setDescription(lines.join("\n"));
   await ch.send({ embeds: [embed] }).catch(() => {});
 }
 
@@ -127,9 +125,7 @@ async function sendUnlockAlert(
   const embed = new EmbedBuilder()
     .setColor(0x1e3322)
     .setAuthor({ name: "antiraid · lockdown lifted" })
-    .setDescription("5-minute raid lockdown expired. server is open again.")
-    .setFooter({ text: `mourn · ${guild.name}` })
-    .setTimestamp();
+    .setDescription("5-minute raid lockdown expired. server is open again.");
   await ch.send({ embeds: [embed] }).catch(() => {});
 }
 
@@ -153,9 +149,7 @@ async function sendAgeGateBatchAlert(
   const embed = new EmbedBuilder()
     .setColor(0x1a0600)
     .setAuthor({ name: `antiraid · ${users.length} account${users.length !== 1 ? "s" : ""} blocked` })
-    .setDescription(`**punishment** — ${action}\n\n${list}${extra}`)
-    .setFooter({ text: `mourn · ${guild.name}` })
-    .setTimestamp();
+    .setDescription(`**punishment** — ${action}\n\n${list}${extra}`);
   await ch.send({ embeds: [embed] }).catch(() => {});
 }
 
