@@ -15,7 +15,6 @@ export const config = {
   databaseUrl: required("DATABASE_URL"),
   logLevel: process.env.LOG_LEVEL || "info",
   botInviteUrl: process.env.BOT_INVITE_URL || "",
-  websiteUrl: process.env.WEBSITE_URL || "https://mourn.bot",
   voteUrl: process.env.VOTE_URL || "",
   supportServer: process.env.SUPPORT_SERVER || "",
   brandColor: 0x8b0000,
