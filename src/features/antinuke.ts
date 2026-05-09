@@ -107,9 +107,7 @@ async function sendAlert(
         `**by** — <@${executorId}> (\`${executorId}\`)`,
         `**action** — ${actionTaken}`,
       ].join("\n"),
-    )
-    .setFooter({ text: `mourn · ${guild.name}` })
-    .setTimestamp();
+    );
 
   await ch.send({ embeds: [embed] }).catch(() => {});
 }
