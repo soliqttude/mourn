@@ -12,6 +12,17 @@ import { commands } from "./registry.js";
 // Categories whose commands should never be registered as slash commands
 const SKIP_CATEGORIES = new Set(["custom", "owner"]);
 
+// These commands are always registered first in their category,
+// guaranteeing they make the cut no matter how many commands exist.
+const PINNED_COMMANDS = new Set([
+  "help",
+  "ping",
+  "serverinfo",
+  "userinfo",
+  "membercount",
+  "avatar",
+]);
+
 // Per-category slash command caps — total must stay at or below 100
 const CATEGORY_CAPS: Record<string, number> = {
   fun:         21,
@@ -28,13 +39,25 @@ const CATEGORY_CAPS: Record<string, number> = {
 
 function hasUserOption(cmd: { options?: { type: number }[] }): boolean {
   return (cmd.options ?? []).some(
-    (o) => o.type === ApplicationCommandOptionType.User || o.type === ApplicationCommandOptionType.Member
+    (o) =>
+      o.type === ApplicationCommandOptionType.User ||
+      o.type === ApplicationCommandOptionType.Member,
   );
+}
+
+function sortPriority(cmd: { name: string; options?: { type: number }[] }): number {
+  if (PINNED_COMMANDS.has(cmd.name)) return 0;
+  if (hasUserOption(cmd)) return 1;
+  return 2;
 }
 
 export async function registerSlashCommands(applicationId: string): Promise<void> {
   // Group eligible commands by category
-  const grouped: Record<string, { name: string; description: string; options?: any[]; guildOnly?: boolean }[]> = {};
+  const grouped: Record<
+    string,
+    { name: string; description: string; options?: any[]; guildOnly?: boolean }[]
+  > = {};
+
   for (const cmd of commands.values()) {
     if (SKIP_CATEGORIES.has(cmd.category)) continue;
     if (cmd.noSlash) continue;
@@ -42,15 +65,15 @@ export async function registerSlashCommands(applicationId: string): Promise<void
     grouped[cmd.category].push(cmd);
   }
 
-  // Build the final list: within each category, sort interaction commands (User option) first,
-  // then alphabetically — then apply the per-category cap
+  // Build final list: pinned first → user-option commands → alphabetical → cap
   const body: RESTPostAPIApplicationCommandsJSONBody[] = [];
+
   for (const [category, cap] of Object.entries(CATEGORY_CAPS)) {
     const cmds = (grouped[category] ?? [])
       .sort((a, b) => {
-        const au = hasUserOption(a) ? 0 : 1;
-        const bu = hasUserOption(b) ? 0 : 1;
-        if (au !== bu) return au - bu;
+        const pa = sortPriority(a);
+        const pb = sortPriority(b);
+        if (pa !== pb) return pa - pb;
         return a.name.localeCompare(b.name);
       })
       .slice(0, cap);
@@ -69,7 +92,9 @@ export async function registerSlashCommands(applicationId: string): Promise<void
   const rest = new REST({ version: "10" }).setToken(config.token);
   try {
     await rest.put(Routes.applicationCommands(applicationId), { body });
-    logger.info(`Registered ${body.length} slash commands globally (capped at 100 across categories).`);
+    logger.info(
+      `Registered ${body.length} slash commands globally (pinned: ${[...PINNED_COMMANDS].join(", ")}).`,
+    );
   } catch (err) {
     logger.error({ err }, "Failed to register slash commands");
   }
