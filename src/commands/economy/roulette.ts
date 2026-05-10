@@ -1,6 +1,6 @@
-import { ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, type ActionRow } from "discord.js";
+import { ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
+import { errorEmbed } from "../../lib/embeds.js";
 import { getBalance, removeBalance, addBalance } from "../../features/economy.js";
 import { config } from "../../config.js";
 
@@ -21,16 +21,27 @@ function resolve(num: number, choice: string): number {
 function makeWaitEmbed(bet: number) {
   return new EmbedBuilder()
     .setColor(0x0f1923)
-    .setTitle("🎡 ROULETTE")
+    .setTitle("🎡  R O U L E T T E")
     .setDescription([
       "```",
-      "  Pick your bet type below!",
-      "```",
-      `💰 **Bet:** ${bet} coins`,
+      "  Pick your bet type:",
       "",
-      "🔴 **Red** — 2x | ⚫ **Black** — 2x | 🟢 **Green** — 14x | 🎯 **Number** — 36x",
+      "  🔴 Red    — 2x payout",
+      "  ⚫ Black  — 2x payout",
+      "  🟢 Green  — 14x payout",
+      "  🎯 Number — 36x payout",
+      "```",
+      `💰 **Bet:** $${bet.toLocaleString()}`,
     ].join("\n"))
     .setFooter({ text: `${config.embedFooter} • Roulette` })
+    .setTimestamp();
+}
+
+function makeSpinningEmbed() {
+  return new EmbedBuilder()
+    .setColor(0xffd740)
+    .setTitle("🎡  SPINNING...")
+    .setDescription("```\n  🎡  The wheel is spinning...\n```")
     .setTimestamp();
 }
 
@@ -38,20 +49,21 @@ function makeResultEmbed(num: number, choice: string, bet: number, mult: number)
   const isRed = REDS.has(num), isGreen = num === 0;
   const emoji = isGreen ? "🟢" : isRed ? "🔴" : "⚫";
   const colorName = isGreen ? "green" : isRed ? "red" : "black";
-  const net = Math.floor(bet * mult) - bet;
+  const payout = Math.floor(bet * mult);
+  const net = payout - bet;
   const won = mult > 0;
   return new EmbedBuilder()
     .setColor(won ? 0x00e676 : 0xff1744)
-    .setTitle(`🎡 ROULETTE — ${won ? "WIN!" : "LOSS"}`)
+    .setTitle(won ? "🎡  ROULETTE — WIN!" : "🎡  ROULETTE — LOSS")
     .setDescription([
       "```",
       `  Result    :  ${emoji}  ${num}  (${colorName})`,
       `  Your Pick :  ${choice.toUpperCase()}`,
-      `  Bet       :  ${bet} coins`,
-      `  Payout    :  ${mult}x`,
-      `  Net       :  ${net >= 0 ? "+" : ""}${net} coins`,
+      `  Bet       :  $${bet.toLocaleString()}`,
+      `  Payout    :  $${payout.toLocaleString()}  (${mult}x)`,
+      `  Net       :  ${net >= 0 ? "+" : ""}$${Math.abs(net).toLocaleString()}`,
       "```",
-      won ? `🎉 **You won +${net} coins!**` : "💸 **Better luck next time.**",
+      won ? `🎉 **You won +$${net.toLocaleString()}!**` : `💸 **The ball didn't land your way. Lost $${bet.toLocaleString()}.**`,
     ].join("\n"))
     .setFooter({ text: `${config.embedFooter} • Roulette` })
     .setTimestamp();
@@ -68,16 +80,27 @@ function choiceRow(disabled = false) {
 
 function playAgainRow() {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId("rl_again").setLabel("🔄 Play Again").setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId("rl_again").setLabel("🔄 Spin Again").setStyle(ButtonStyle.Primary),
   );
+}
+
+async function doSpin(i: any, choice: string, bet: number, msg: any, guild: any) {
+  await i.update({ embeds: [makeSpinningEmbed()], components: [] });
+  await new Promise(r => setTimeout(r, 1200));
+  const num = spin();
+  const mult = resolve(num, choice);
+  await removeBalance(guild.id, i.user.id, bet);
+  const payout = Math.floor(bet * mult);
+  if (payout > 0) await addBalance(guild.id, i.user.id, payout);
+  await msg.edit({ embeds: [makeResultEmbed(num, choice, bet, mult)], components: [playAgainRow() as any] }).catch(() => {});
 }
 
 export const command: HybridCommand = {
   name: "roulette",
-  description: "Spin the roulette wheel! Choose Red, Black, Green, or a number.",
+  description: "Spin the roulette! Pick Red, Black, Green, or a number 0-36.",
   category: "economy",
   guildOnly: true,
-  aliases: ["rl", "spin"],
+  aliases: ["rl"],
   options: [
     { name: "bet", description: "Amount to bet", type: ApplicationCommandOptionType.Integer, required: true },
     { name: "choice", description: "red | black | green | 0-36", type: ApplicationCommandOptionType.String, required: false },
@@ -85,28 +108,20 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild || !ctx.channel) return;
     const bet = ctx.getNumber("bet") ?? parseInt(ctx.args[0] ?? "0");
-    const quickChoice = ctx.getString("choice") ?? ctx.args[1];
-
-    if (!bet || bet < 1) return ctx.reply({ embeds: [errorEmbed("Minimum bet is 1 coin.")] });
-
+    if (!bet || bet < 1) return ctx.reply({ embeds: [errorEmbed("Minimum bet is **$1**.")] });
     const bal = await getBalance(ctx.guild.id, ctx.user.id);
-    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`You only have **${bal.balance}** coins.`)] });
+    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`You only have **$${bal.balance.toLocaleString()}**.`)] });
 
-    // If quick choice given (prefix style), resolve immediately
+    const quickChoice = (ctx.getString("choice") ?? ctx.args[1])?.toLowerCase().trim();
     if (quickChoice) {
-      const choice = quickChoice.toLowerCase().trim();
       const num = spin();
-      const mult = resolve(num, choice);
+      const mult = resolve(num, quickChoice);
       await removeBalance(ctx.guild.id, ctx.user.id, bet);
       const payout = Math.floor(bet * mult);
       if (payout > 0) await addBalance(ctx.guild.id, ctx.user.id, payout);
-      return ctx.reply({
-        embeds: [makeResultEmbed(num, choice, bet, mult)],
-        components: [playAgainRow() as any],
-      });
+      return ctx.reply({ embeds: [makeResultEmbed(num, quickChoice, bet, mult)], components: [playAgainRow() as any] });
     }
 
-    // Interactive button selection
     if (ctx.source === "slash") await ctx.defer();
     const msg = await ctx.channel.send({
       content: `<@${ctx.user.id}>`,
@@ -117,57 +132,52 @@ export const command: HybridCommand = {
     const collector = msg.createMessageComponentCollector({
       componentType: ComponentType.Button,
       filter: i => i.user.id === ctx.user.id,
-      time: 30000,
-      max: 1,
+      time: 30_000,
     });
 
     collector.on("collect", async i => {
-      if (i.customId === "rl_again") return;
+      if (i.customId === "rl_again") {
+        const curBal = await getBalance(ctx.guild!.id, ctx.user.id);
+        if (curBal.balance < bet) {
+          await i.update({ embeds: [errorEmbed(`Insufficient balance. You have **$${curBal.balance.toLocaleString()}**.`)], components: [] });
+          return collector.stop();
+        }
+        await i.update({ embeds: [makeWaitEmbed(bet)], components: [choiceRow() as any] });
+        return;
+      }
+
       const choiceMap: Record<string, string> = { rl_red: "red", rl_black: "black", rl_green: "green" };
-      let choice = choiceMap[i.customId] ?? "red";
 
       if (i.customId === "rl_num") {
-        // For number bets without a modal, pick random number for fun or ask in reply
-        await i.reply({ content: "Type a number 0-36 in chat!", ephemeral: true });
-        const numCollector = msg.channel.createMessageCollector({
+        await i.reply({ content: "Type a number **0–36** in chat:", ephemeral: true });
+        const numCol = msg.channel.createMessageCollector({
           filter: m => m.author.id === ctx.user.id && !isNaN(parseInt(m.content)) && parseInt(m.content) >= 0 && parseInt(m.content) <= 36,
-          time: 15000, max: 1,
+          time: 15_000, max: 1,
         });
-        numCollector.on("collect", async m => {
-          choice = m.content.trim();
+        numCol.on("collect", async m => {
           m.delete().catch(() => {});
-          const currentBal = await getBalance(ctx.guild!.id, ctx.user.id);
-          if (currentBal.balance < bet) {
+          const curBal = await getBalance(ctx.guild!.id, ctx.user.id);
+          if (curBal.balance < bet) {
             await msg.edit({ embeds: [errorEmbed("Insufficient balance!")], components: [] });
             return;
           }
-          const num = spin();
-          const mult = resolve(num, choice);
-          await removeBalance(ctx.guild!.id, ctx.user.id, bet);
-          const payout = Math.floor(bet * mult);
-          if (payout > 0) await addBalance(ctx.guild!.id, ctx.user.id, payout);
-          await msg.edit({ embeds: [makeResultEmbed(num, choice, bet, mult)], components: [playAgainRow() as any] });
+          await doSpin({ update: async (p: any) => { await msg.edit(p); } }, m.content.trim(), bet, msg, ctx.guild!);
         });
-        numCollector.on("end", (c) => { if (!c.size) msg.edit({ embeds: [errorEmbed("Timed out.")], components: [] }).catch(() => {}); });
+        numCol.on("end", (c) => { if (!c.size) msg.edit({ components: [choiceRow(true) as any] }).catch(() => {}); });
         return;
       }
 
-      await i.deferUpdate();
-      const currentBal = await getBalance(ctx.guild!.id, ctx.user.id);
-      if (currentBal.balance < bet) {
-        await msg.edit({ embeds: [errorEmbed("Insufficient balance!")], components: [] });
-        return;
+      const choice = choiceMap[i.customId] ?? "red";
+      const curBal = await getBalance(ctx.guild!.id, ctx.user.id);
+      if (curBal.balance < bet) {
+        await i.update({ embeds: [errorEmbed(`Insufficient balance. You have **$${curBal.balance.toLocaleString()}**.`)], components: [] });
+        return collector.stop();
       }
-      const num = spin();
-      const mult = resolve(num, choice);
-      await removeBalance(ctx.guild!.id, ctx.user.id, bet);
-      const payout = Math.floor(bet * mult);
-      if (payout > 0) await addBalance(ctx.guild!.id, ctx.user.id, payout);
-      await msg.edit({ embeds: [makeResultEmbed(num, choice, bet, mult)], components: [playAgainRow() as any] });
+      await doSpin(i, choice, bet, msg, ctx.guild!);
     });
 
     collector.on("end", (c) => {
-      if (!c.size) msg.edit({ embeds: [makeWaitEmbed(bet)], components: [choiceRow(true) as any] }).catch(() => {});
+      if (!c.size) msg.edit({ components: [choiceRow(true) as any] }).catch(() => {});
     });
   },
 };
