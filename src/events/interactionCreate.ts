@@ -100,8 +100,9 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
     return handleVerificationButton(client, interaction);
   }
   if (id.startsWith("trivia_")) return handleTriviaButton(interaction);
-  if (id.startsWith("bj_")) return handleBlackjackButton(interaction);
   if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(interaction);
+  // Note: blackjack, mines, crash, towers, hilo, roulette, plinko, scratch, keno, dice, wheel, slots
+  // all use self-contained message component collectors — no global handlers needed.
 }
 
 async function handleHelpButton(interaction: ButtonInteraction) {
@@ -145,69 +146,6 @@ async function handleTriviaButton(interaction: ButtonInteraction) {
     return safeFollowUp(interaction, {
       embeds: [errorEmbed(`wrong. the answer was **${correct}**.`)],
     });
-  }
-}
-
-async function handleBlackjackButton(interaction: ButtonInteraction) {
-  const parts = interaction.customId.split("_");
-  const action = parts[1];
-  const userId = parts[2];
-  if (interaction.user.id !== userId) {
-    return interaction.reply({ content: "that's not your game.", flags: 64 });
-  }
-  const { addBalance } = await import("../features/economy.js");
-  const sessions = (global as any).__bjSessions as Map<string, any> ?? new Map();
-  const session = sessions.get(userId);
-  if (!session) return interaction.update({ components: [] }).catch(() => {});
-
-  function draw(deck: string[]) { return deck.splice(Math.floor(Math.random() * deck.length), 1)[0]!; }
-  function cardValue(card: string) { const r = card.slice(0, -1); if (r === "A") return 11; if (["J","Q","K"].includes(r)) return 10; return parseInt(r); }
-  function handValue(hand: string[]) { let val = hand.reduce((a, c) => a + cardValue(c), 0); let aces = hand.filter(c => c.startsWith("A")).length; while (val > 21 && aces > 0) { val -= 10; aces--; } return val; }
-
-  if (action === "hit") {
-    session.player.push(draw(session.deck));
-    const pv = handValue(session.player);
-    if (pv > 21) {
-      sessions.delete(userId);
-      await interaction.update({ components: [] }).catch(() => {});
-      return safeFollowUp(interaction, {
-        embeds: [errorEmbed(`bust. your hand: ${session.player.join(" ")} (${pv}). lost **${session.bet}** coins.`)],
-      });
-    }
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId(`bj_hit_${userId}`).setLabel("Hit").setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId(`bj_stand_${userId}`).setLabel("Stand").setStyle(ButtonStyle.Secondary),
-    );
-    return interaction.update({
-      embeds: [brandEmbed({
-        description: `**your hand** — ${session.player.join(" ")} (${pv})\n**dealer** — ${session.dealer[0]} 🂠\n**bet** — ${session.bet}`,
-      })],
-      components: [row as any],
-    }).catch(() => {});
-  }
-
-  if (action === "stand") {
-    while (handValue(session.dealer) < 17) session.dealer.push(draw(session.deck));
-    const pv = handValue(session.player);
-    const dv = handValue(session.dealer);
-    sessions.delete(userId);
-    await interaction.update({ components: [] }).catch(() => {});
-    if (dv > 21 || pv > dv) {
-      const win = session.bet * 2;
-      await addBalance(session.guildId, userId, win);
-      return safeFollowUp(interaction, {
-        embeds: [successEmbed(`you won **${win}** coins. your ${session.player.join(" ")} (${pv}) beat dealer's ${session.dealer.join(" ")} (${dv}).`)],
-      });
-    } else if (pv === dv) {
-      await addBalance(session.guildId, userId, session.bet);
-      return safeFollowUp(interaction, {
-        embeds: [brandEmbed({ description: `push. tie game — your **${session.bet}** returned.` })],
-      });
-    } else {
-      return safeFollowUp(interaction, {
-        embeds: [errorEmbed(`dealer wins. your ${session.player.join(" ")} (${pv}) vs dealer's ${session.dealer.join(" ")} (${dv}). lost **${session.bet}** coins.`)],
-      });
-    }
   }
 }
 
