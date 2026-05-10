@@ -20,38 +20,46 @@ const SLOTS = [
 ];
 
 function makeWaitEmbed(bet: number) {
-  const preview = SLOTS.map(s => `   ${s.label}`).join("\n");
+  const preview = SLOTS.map((s, i) => i === 5 ? `  ❯ [${s.label}] ◀` : `    ${s.label}`).join("\n");
   return new EmbedBuilder()
     .setColor(0x0f1923)
-    .setTitle("🎡 WHEEL OF FORTUNE")
-    .setDescription(["```", preview, "```", `\n💰 **Bet:** ${bet} coins\n\nClick **Spin** to launch the wheel!`].join("\n"))
+    .setTitle("🎡  W H E E L  O F  F O R T U N E")
+    .setDescription(["```", preview, "```", `\n💰 **Bet:** $${bet.toLocaleString()}\n\nHit **Spin** to launch the wheel!`].join("\n"))
     .setFooter({ text: `${config.embedFooter} • Wheel` })
     .setTimestamp();
 }
 
-function makeSpinEmbed(bet: number, frame: number) {
+function makeSpinEmbed(frame: number) {
   const shifted = [...SLOTS.slice(frame % SLOTS.length), ...SLOTS.slice(0, frame % SLOTS.length)];
-  const display = shifted.map((s, i) => i === 5 ? `❯ [${s.label}] ◀` : `   ${s.label}`).join("\n");
+  const display = shifted.map((s, i) => i === 5 ? `  ❯ [${s.label}] ◀` : `    ${s.label}`).join("\n");
   return new EmbedBuilder()
     .setColor(0xffd740)
-    .setTitle("🎡 SPINNING...")
+    .setTitle("🎡  SPINNING...")
     .setDescription(["```", display, "```"].join("\n"))
-    .setFooter({ text: `${config.embedFooter} • Wheel` })
     .setTimestamp();
 }
 
 function makeResultEmbed(bet: number, idx: number) {
   const slot = SLOTS[idx]!;
-  const net = Math.floor(bet * slot.mult) - bet;
-  const display = SLOTS.map((s, i) => i === idx ? `❯ [${s.label}] ◀` : `   ${s.label}`).join("\n");
+  const payout = Math.floor(bet * slot.mult);
+  const net = payout - bet;
+  const display = SLOTS.map((s, i) => i === idx ? `  ❯ [${s.label}] ◀` : `    ${s.label}`).join("\n");
   return new EmbedBuilder()
     .setColor(slot.color)
-    .setTitle(`🎡 WHEEL — ${slot.mult >= 1 ? "WIN" : "LOSS"}`)
+    .setTitle(slot.mult >= 1 ? "🎡  WHEEL — WIN!" : "🎡  WHEEL — LOSS")
     .setDescription([
       "```",
       display,
       "```",
-      `**${slot.mult}x** → Net: **${net >= 0 ? "+" : ""}${net}** coins`,
+      "```",
+      `  Multiplier  :  ${slot.mult}x`,
+      `  Bet         :  $${bet.toLocaleString()}`,
+      `  Payout      :  $${payout.toLocaleString()}`,
+      `  Net         :  ${net >= 0 ? "+" : ""}$${Math.abs(net).toLocaleString()}`,
+      "```",
+      slot.mult >= 1
+        ? `🎉 **Landed on ${slot.mult}x!** Won **$${payout.toLocaleString()}** (+$${net.toLocaleString()}).`
+        : `💸 **Landed on ${slot.mult}x.** Lost **$${bet.toLocaleString()}**.`,
     ].join("\n"))
     .setFooter({ text: `${config.embedFooter} • Wheel` })
     .setTimestamp();
@@ -67,16 +75,15 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild || !ctx.channel) return;
     const bet = ctx.getNumber("bet") ?? parseInt(ctx.args[0] ?? "0");
-    if (!bet || bet < 1) return ctx.reply({ embeds: [errorEmbed("Minimum bet is 1 coin.")] });
-
+    if (!bet || bet < 1) return ctx.reply({ embeds: [errorEmbed("Minimum bet is **$1**.")] });
     const bal = await getBalance(ctx.guild.id, ctx.user.id);
-    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`You only have **${bal.balance}** coins.`)] });
+    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`You only have **$${bal.balance.toLocaleString()}**.`)] });
 
     const spinRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("wheel_spin").setLabel("🎡 Spin the Wheel!").setStyle(ButtonStyle.Success)
+      new ButtonBuilder().setCustomId("wheel_spin").setLabel("🎡 Spin the Wheel!").setStyle(ButtonStyle.Success),
     );
     const playAgainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("wheel_again").setLabel("🔄 Spin Again").setStyle(ButtonStyle.Primary)
+      new ButtonBuilder().setCustomId("wheel_again").setLabel("🔄 Spin Again").setStyle(ButtonStyle.Primary),
     );
 
     if (ctx.source === "slash") await ctx.defer();
@@ -89,35 +96,34 @@ export const command: HybridCommand = {
     const collector = msg.createMessageComponentCollector({
       componentType: ComponentType.Button,
       filter: i => i.user.id === ctx.user.id,
-      time: 30000,
+      time: 30_000,
     });
 
-    collector.on("collect", async i => {
-      if (i.customId !== "wheel_spin" && i.customId !== "wheel_again") return i.deferUpdate().catch(() => {});
-
-      const currentBal = await getBalance(ctx.guild!.id, ctx.user.id);
-      if (currentBal.balance < bet) {
-        await i.update({ embeds: [errorEmbed(`You only have **${currentBal.balance}** coins.`)], components: [] });
+    const doSpin = async (i: any) => {
+      const curBal = await getBalance(ctx.guild!.id, ctx.user.id);
+      if (curBal.balance < bet) {
+        await i.update({ embeds: [errorEmbed(`You only have **$${curBal.balance.toLocaleString()}**.`)], components: [] });
         return collector.stop();
       }
-
       await removeBalance(ctx.guild!.id, ctx.user.id, bet);
       const finalIdx = Math.floor(Math.random() * SLOTS.length);
-
-      // Spin animation
-      await i.update({ embeds: [makeSpinEmbed(bet, 0)], components: [] });
+      await i.update({ embeds: [makeSpinEmbed(0)], components: [] });
       for (let f = 1; f <= 8; f++) {
         await new Promise(r => setTimeout(r, 150));
-        await msg.edit({ embeds: [makeSpinEmbed(bet, f)] }).catch(() => {});
+        await msg.edit({ embeds: [makeSpinEmbed(f)] }).catch(() => {});
       }
-
       const payout = Math.floor(bet * SLOTS[finalIdx]!.mult);
       if (payout > 0) await addBalance(ctx.guild!.id, ctx.user.id, payout);
       await msg.edit({ embeds: [makeResultEmbed(bet, finalIdx)], components: [playAgainRow as any] }).catch(() => {});
+    };
+
+    collector.on("collect", async i => {
+      if (i.customId === "wheel_spin") return doSpin(i);
+      if (i.customId === "wheel_again") return doSpin(i);
     });
 
     collector.on("end", (c) => {
-      if (!c.size) msg.edit({ embeds: [makeWaitEmbed(bet)], components: [] }).catch(() => {});
+      if (!c.size) msg.edit({ components: [] }).catch(() => {});
     });
   },
 };
