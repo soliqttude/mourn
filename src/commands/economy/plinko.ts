@@ -4,7 +4,6 @@ import { errorEmbed } from "../../lib/embeds.js";
 import { getBalance, removeBalance, addBalance } from "../../features/economy.js";
 import { config } from "../../config.js";
 
-const MULTS = [0.2, 0.5, 1, 1.5, 2, 3, 5, 3, 2, 1.5, 1, 0.5, 0.2];
 const RISKS = {
   low:    [0.5, 0.7, 1, 1.5, 2, 3, 2, 1.5, 1, 0.7, 0.5],
   medium: [0.2, 0.5, 1, 1.5, 2, 3, 5, 3, 2, 1.5, 1, 0.5, 0.2],
@@ -23,39 +22,46 @@ function dropBall(mults: number[]) {
 }
 
 function makeWaitEmbed(bet: number) {
-  const slots = MULTS.map(m => `${m}x`).join("  ");
   return new EmbedBuilder()
     .setColor(0x0f1923)
-    .setTitle("🎯 PLINKO")
+    .setTitle("🎯  P L I N K O")
     .setDescription([
       "```",
-      "        ●",
-      "       ● ●",
-      "      ● ● ●",
-      "     ● ● ● ●",
-      "    ● ● ● ● ●",
-      slots,
+      "      ●",
+      "     ● ●",
+      "    ● ● ●",
+      "   ● ● ● ●",
+      "  ● ● ● ● ●",
+      "",
+      "  0.2x 0.5x 1x 1.5x 2x [3x] 2x 1.5x 1x 0.5x 0.2x",
       "```",
-      `💰 **Bet:** ${bet} coins\n\nChoose risk and drop the ball!`,
+      `💰 **Bet:** $${bet.toLocaleString()}\n\nChoose a risk level and drop the ball!`,
     ].join("\n"))
     .setFooter({ text: `${config.embedFooter} • Plinko` })
     .setTimestamp();
 }
 
 function makeResultEmbed(bet: number, pos: number, mult: number, path: string[], risk: string) {
-  const mults = RISKS[risk as keyof typeof RISKS] ?? MULTS;
+  const mults = RISKS[risk as keyof typeof RISKS] ?? RISKS.medium;
   const slots = mults.map((m, i) => i === pos ? `[${m}x]` : `${m}x`).join("  ");
-  const net = Math.floor(bet * mult) - bet;
+  const payout = Math.floor(bet * mult);
+  const net = payout - bet;
   return new EmbedBuilder()
-    .setColor(mult >= 1 ? (mult >= 3 ? 0x00e676 : 0xffd740) : 0xff1744)
-    .setTitle(`🎯 PLINKO — ${mult}x`)
+    .setColor(mult >= 3 ? 0x00e676 : mult >= 1 ? 0xffd740 : 0xff1744)
+    .setTitle(`🎯  PLINKO — ${mult}x`)
     .setDescription([
       `**Path:** ${path.join(" ")}`,
       "```",
       slots,
-      `Landed: slot ${pos} → ${mult}x`,
+      `Landed: ${mult}x slot`,
       "```",
-      `Net: **${net >= 0 ? "+" : ""}${net}** coins`,
+      "```",
+      `  Risk     :  ${risk.toUpperCase()}`,
+      `  Bet      :  $${bet.toLocaleString()}`,
+      `  Payout   :  $${payout.toLocaleString()}`,
+      `  Net      :  ${net >= 0 ? "+" : ""}$${Math.abs(net).toLocaleString()}`,
+      "```",
+      mult >= 1 ? `🎉 **Won $${payout.toLocaleString()}!** (+$${net.toLocaleString()})` : `💸 **Lost $${bet.toLocaleString()}.** The ball landed low.`,
     ].join("\n"))
     .setFooter({ text: `${config.embedFooter} • Plinko` })
     .setTimestamp();
@@ -71,10 +77,9 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild || !ctx.channel) return;
     const bet = ctx.getNumber("bet") ?? parseInt(ctx.args[0] ?? "0");
-    if (!bet || bet < 1) return ctx.reply({ embeds: [errorEmbed("Minimum bet is 1 coin.")] });
-
+    if (!bet || bet < 1) return ctx.reply({ embeds: [errorEmbed("Minimum bet is **$1**.")] });
     const bal = await getBalance(ctx.guild.id, ctx.user.id);
-    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`You only have **${bal.balance}** coins.`)] });
+    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`You only have **$${bal.balance.toLocaleString()}**.`)] });
 
     const riskRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId("plinko_low").setLabel("🟢 Low Risk").setStyle(ButtonStyle.Success),
@@ -82,7 +87,7 @@ export const command: HybridCommand = {
       new ButtonBuilder().setCustomId("plinko_high").setLabel("🔴 High Risk").setStyle(ButtonStyle.Danger),
     );
     const playAgainRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("plinko_again").setLabel("🔄 Drop Again").setStyle(ButtonStyle.Primary)
+      new ButtonBuilder().setCustomId("plinko_again").setLabel("🔄 Drop Again").setStyle(ButtonStyle.Primary),
     );
 
     if (ctx.source === "slash") await ctx.defer();
@@ -95,21 +100,25 @@ export const command: HybridCommand = {
     const collector = msg.createMessageComponentCollector({
       componentType: ComponentType.Button,
       filter: i => i.user.id === ctx.user.id,
-      time: 30000,
+      time: 30_000,
     });
 
     const doRound = async (i: any, risk: string) => {
-      const currentBal = await getBalance(ctx.guild!.id, ctx.user.id);
-      if (currentBal.balance < bet) {
-        await i.update({ embeds: [errorEmbed(`You only have **${currentBal.balance}** coins.`)], components: [] });
+      const curBal = await getBalance(ctx.guild!.id, ctx.user.id);
+      if (curBal.balance < bet) {
+        await i.update({ embeds: [errorEmbed(`You only have **$${curBal.balance.toLocaleString()}**.`)], components: [] });
         return collector.stop();
       }
       await removeBalance(ctx.guild!.id, ctx.user.id, bet);
-      const mults = RISKS[risk as keyof typeof RISKS] ?? MULTS;
+
+      await i.update({ embeds: [new EmbedBuilder().setColor(0xffd740).setTitle("🎯  PLINKO").setDescription("```\n  ● dropping...\n```")], components: [] });
+      await new Promise(r => setTimeout(r, 1000));
+
+      const mults = RISKS[risk as keyof typeof RISKS] ?? RISKS.medium;
       const { pos, mult, path } = dropBall(mults);
       const payout = Math.floor(bet * mult);
       if (payout > 0) await addBalance(ctx.guild!.id, ctx.user.id, payout);
-      await i.update({ embeds: [makeResultEmbed(bet, pos, mult, path, risk)], components: [playAgainRow as any] });
+      await msg.edit({ embeds: [makeResultEmbed(bet, pos, mult, path, risk)], components: [playAgainRow as any] }).catch(() => {});
     };
 
     collector.on("collect", async i => {
@@ -117,12 +126,17 @@ export const command: HybridCommand = {
       if (i.customId === "plinko_medium") return doRound(i, "medium");
       if (i.customId === "plinko_high") return doRound(i, "high");
       if (i.customId === "plinko_again") {
+        const curBal = await getBalance(ctx.guild!.id, ctx.user.id);
+        if (curBal.balance < bet) {
+          await i.update({ embeds: [errorEmbed(`Insufficient balance. You have **$${curBal.balance.toLocaleString()}**.`)], components: [] });
+          return collector.stop();
+        }
         await i.update({ embeds: [makeWaitEmbed(bet)], components: [riskRow as any] });
       }
     });
 
     collector.on("end", (c) => {
-      if (!c.size) msg.edit({ embeds: [makeWaitEmbed(bet)], components: [] }).catch(() => {});
+      if (!c.size) msg.edit({ components: [] }).catch(() => {});
     });
   },
 };
