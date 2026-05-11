@@ -17,9 +17,9 @@ export const config = {
   botInviteUrl: process.env.BOT_INVITE_URL || "",
   voteUrl: process.env.VOTE_URL || "",
   supportServer: process.env.SUPPORT_SERVER || "",
-  brandColor: 0x4A8FE7,
-  errorColor: 0xff3333,
-  successColor: 0x00b894,
-  neutralColor: 0x0a0a0a,
+  brandColor: 0x9B59B6,
+  errorColor: 0x922B21,
+  successColor: 0x2D6A4F,
+  neutralColor: 0x1a1a2e,
   embedFooter: process.env.EMBED_FOOTER || "Mourn",
 };

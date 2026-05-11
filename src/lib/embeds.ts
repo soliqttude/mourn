@@ -13,7 +13,11 @@ interface EmbedOpts {
 }
 
 export function brandEmbed(opts: EmbedOpts = {}): EmbedBuilder {
-  const eb = new EmbedBuilder().setColor(config.brandColor);
+  const eb = new EmbedBuilder()
+    .setColor(config.brandColor)
+    .setFooter({ text: config.embedFooter })
+    .setTimestamp();
+
   if (opts.title) eb.setTitle(opts.title);
   if (opts.description) eb.setDescription(opts.description);
   if (opts.fields?.length) eb.addFields(opts.fields);
@@ -36,20 +40,26 @@ export function brandEmbed(opts: EmbedOpts = {}): EmbedBuilder {
 
 export function successEmbed(message: string): EmbedBuilder {
   return new EmbedBuilder()
-    .setColor(0x1e3322)
-    .setDescription(message);
+    .setColor(0x1e3a2b)
+    .setDescription(message)
+    .setFooter({ text: config.embedFooter })
+    .setTimestamp();
 }
 
 export function errorEmbed(message: string): EmbedBuilder {
   return new EmbedBuilder()
-    .setColor(0x3d1a1a)
-    .setDescription(message);
+    .setColor(0x3a1e1e)
+    .setDescription(message)
+    .setFooter({ text: config.embedFooter })
+    .setTimestamp();
 }
 
 export function infoEmbed(message: string, title?: string): EmbedBuilder {
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
-    .setDescription(message);
+    .setDescription(message)
+    .setFooter({ text: config.embedFooter })
+    .setTimestamp();
   if (title) eb.setTitle(title);
   return eb;
 }
@@ -66,6 +76,7 @@ interface ModEmbedOpts {
 export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
   const lines: string[] = [
     `**reason** — ${opts.reason}`,
+    `**moderator** — ${opts.moderator.username}`,
   ];
   if (opts.duration) lines.push(`**duration** — ${opts.duration}`);
   if (opts.caseId) lines.push(`**case** — #${opts.caseId}`);
@@ -76,5 +87,7 @@ export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
       name: `${opts.action} · ${opts.target.username}`,
       iconURL: opts.target.displayAvatarURL(),
     })
-    .setDescription(lines.join("\n"));
+    .setDescription(lines.join("\n"))
+    .setFooter({ text: config.embedFooter })
+    .setTimestamp();
 }
