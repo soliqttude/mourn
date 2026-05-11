@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { getBalance, addBalance, removeBalance } from "../../features/economy.js";
+import { humanDuration } from "../../lib/format.js";
 
 const cooldowns = new Map<string, number>();
 const COOLDOWN = 90 * 60 * 1000;
@@ -15,22 +16,21 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const key = `${ctx.guild.id}:${ctx.user.id}`;
-    const last = cooldowns.get(key) ?? 0;
-    if (Date.now() - last < COOLDOWN) {
-      const left = Math.ceil((COOLDOWN - (Date.now() - last)) / 60000);
-      return ctx.reply({ embeds: [errorEmbed(`Heat is too high. Try again in ${left}m.`)] });
+    const remaining = COOLDOWN - (Date.now() - (cooldowns.get(key) ?? 0));
+    if (remaining > 0) {
+      return ctx.reply({ embeds: [errorEmbed(`you're on cooldown — try again in **${humanDuration(remaining)}**.`)] });
     }
     const bet = ctx.getNumber("bet", true) ?? parseInt(ctx.args[0]);
-    if (!bet || bet <= 0) return ctx.reply({ embeds: [errorEmbed("Invalid bet.")] });
+    if (!bet || bet <= 0) return ctx.reply({ embeds: [errorEmbed("enter a valid bet amount.")] });
     const bal = await getBalance(ctx.guild.id, ctx.user.id);
-    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`You only have **${bal.balance}** coins.`)] });
+    if (bal.balance < bet) return ctx.reply({ embeds: [errorEmbed(`you only have **${bal.balance.toLocaleString()}** coins.`)] });
     cooldowns.set(key, Date.now());
     const outcomes = [
-      { msg: "The vault was empty. You barely escaped.", mult: 0 },
-      { msg: "You triggered the alarm. Lost everything.", mult: 0 },
-      { msg: "Small score. Clean getaway.", mult: 1.5 },
-      { msg: "You cracked the safe. Big haul.", mult: 2.5 },
-      { msg: "PERFECT HEIST. You're a legend.", mult: 4 },
+      { msg: "the vault was empty. you barely escaped.",    mult: 0   },
+      { msg: "you triggered the alarm. lost everything.",   mult: 0   },
+      { msg: "small score. clean getaway.",                 mult: 1.5 },
+      { msg: "you cracked the safe. big haul.",             mult: 2.5 },
+      { msg: "perfect heist. you're a legend.",             mult: 4   },
     ];
     const weights = [20, 20, 30, 20, 10];
     let rand = Math.random() * 100;
@@ -41,8 +41,8 @@ export const command: HybridCommand = {
     if (outcome.mult > 0) {
       const won = Math.floor(bet * outcome.mult);
       await addBalance(ctx.guild.id, ctx.user.id, won);
-      return ctx.reply({ embeds: [brandEmbed({ title: "💰 Heist", description: `${outcome.msg}\nYou walked away with **${won}** coins (${outcome.mult}x)!`, page: "Economy" })] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "💰 heist", description: `${outcome.msg}\nyou walked away with **${won.toLocaleString()}** coins (${outcome.mult}x).`, page: "Economy" })] });
     }
-    return ctx.reply({ embeds: [brandEmbed({ title: "💰 Heist", description: `${outcome.msg}\nLost **${bet}** coins.`, page: "Economy" })] });
+    return ctx.reply({ embeds: [brandEmbed({ title: "💰 heist", description: `${outcome.msg}\nlost **${bet.toLocaleString()}** coins.`, page: "Economy" })] });
   },
 };

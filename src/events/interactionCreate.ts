@@ -18,6 +18,7 @@ import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
 import { checkTier, isBotOwner } from "../lib/permissions.js";
 import { handlePanelInteraction } from "../panels/router.js";
+import { cleanError } from "../lib/format.js";
 
 async function safeFollowUp(
   interaction: ButtonInteraction | ChatInputCommandInteraction,
@@ -46,6 +47,8 @@ export const event = {
   },
 };
 
+const SLOW_CATEGORIES = new Set(["moderation", "economy", "levels", "giveaway"]);
+
 async function handleSlashCommand(client: Client, interaction: ChatInputCommandInteraction) {
   const cmd = findCommand(interaction.commandName);
   if (!cmd) return;
@@ -64,26 +67,33 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
     if (!checkTier(interaction.member as any, cmd.permission)) {
       return interaction.reply({
-        embeds: [errorEmbed("you don't have permission to use this command.")],
+        embeds: [errorEmbed(`you need the **${cmd.permission}** permission to use this.`)],
         flags: MessageFlags.Ephemeral,
       });
     }
   }
+
+  if (SLOW_CATEGORIES.has(cmd.category)) {
+    await interaction.deferReply().catch(() => {});
+  }
+
   const settings = interaction.guild ? await getGuildSettings(interaction.guild.id) : null;
   const prefix = settings?.prefix ?? config.defaultPrefix;
   const ctx = await buildSlashContext(client, interaction, prefix);
   try {
     await cmd.execute(ctx);
   } catch (err) {
-    logger.error({ err, cmd: cmd.name }, "Slash command error");
+    logger.error({ err, cmd: cmd.name }, "slash command error");
     const payload: any = {
-      embeds: [errorEmbed((err as Error).message || "something went wrong.")],
+      embeds: [errorEmbed(cleanError(err))],
       flags: MessageFlags.Ephemeral,
     };
     try {
       if (interaction.deferred || interaction.replied) await interaction.followUp(payload);
       else await interaction.reply(payload);
-    } catch { /* ignore */ }
+    } catch (replyErr) {
+      logger.warn({ replyErr }, "failed to send slash error reply");
+    }
   }
 }
 
@@ -101,8 +111,6 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
   }
   if (id.startsWith("trivia_")) return handleTriviaButton(interaction);
   if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(interaction);
-  // Note: blackjack, mines, crash, towers, hilo, roulette, plinko, scratch, keno, dice, wheel, slots
-  // all use self-contained message component collectors — no global handlers needed.
 }
 
 async function handleHelpButton(interaction: ButtonInteraction) {

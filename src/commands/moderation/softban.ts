@@ -1,7 +1,8 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { modEmbed, errorEmbed } from "../../lib/embeds.js";
 import { logCase } from "../../features/modcase.js";
+import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
 
 export const command: HybridCommand = {
   name: "softban",
@@ -17,16 +18,18 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const target = await ctx.getUser("user", true);
-    const reason = ctx.getString("reason") ?? "No reason provided";
-    if (!target) return;
-    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You cannot softban yourself.")] });
+    const reason = ctx.getString("reason") ?? REASON_DEFAULT;
+    if (!target) return ctx.reply({ embeds: [errorEmbed("user not found.")] });
+    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you can't softban yourself.")] });
+    const member = await guild.members.fetch(target.id).catch(() => null);
+    if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("i can't ban that user — they may have a higher role.")] });
     try {
       await guild.bans.create(target.id, { deleteMessageSeconds: 604800, reason });
       await guild.bans.remove(target.id, "softban cleanup");
-      await logCase(guild.id, target.id, ctx.user.id, "softban", reason);
-      return ctx.reply({ embeds: [successEmbed(`Softbanned **${target.tag}** — recent messages cleared.`)] });
-    } catch {
-      return ctx.reply({ embeds: [errorEmbed("Failed to softban. Check my permissions.")] });
+      const caseId = await logCase(guild.id, target.id, ctx.user.id, "softban", reason);
+      return ctx.reply({ embeds: [modEmbed({ action: "softbanned", target, moderator: ctx.user, reason, caseId })] });
+    } catch (err) {
+      return ctx.reply({ embeds: [errorEmbed(cleanError(err))] });
     }
   },
 };

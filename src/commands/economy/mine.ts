@@ -1,17 +1,18 @@
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { addBalance } from "../../features/economy.js";
+import { humanDuration } from "../../lib/format.js";
 
 const cooldowns = new Map<string, number>();
 const COOLDOWN = 60 * 60 * 1000;
 
 const finds = [
-  { item: "💎 diamond", coins: [500, 1000] },
-  { item: "🟡 gold", coins: [200, 400] },
-  { item: "⚪ silver", coins: [100, 200] },
-  { item: "🪨 iron", coins: [50, 100] },
-  { item: "🪨 coal", coins: [20, 50] },
-  { item: "💣 a cave-in! Lost some time", coins: [0, 0] },
+  { item: "💎 diamond",             coins: [500, 1000] },
+  { item: "🟡 gold",                coins: [200, 400]  },
+  { item: "⚪ silver",               coins: [100, 200]  },
+  { item: "🪨 iron",                coins: [50,  100]  },
+  { item: "🪨 coal",                coins: [20,  50]   },
+  { item: "💣 a cave-in",           coins: [0,   0]    },
 ];
 
 export const command: HybridCommand = {
@@ -22,10 +23,9 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const key = `${ctx.guild.id}:${ctx.user.id}`;
-    const last = cooldowns.get(key) ?? 0;
-    if (Date.now() - last < COOLDOWN) {
-      const left = Math.ceil((COOLDOWN - (Date.now() - last)) / 60000);
-      return ctx.reply({ embeds: [errorEmbed(`Your pickaxe needs to rest. Try in ${left}m.`)] });
+    const remaining = COOLDOWN - (Date.now() - (cooldowns.get(key) ?? 0));
+    if (remaining > 0) {
+      return ctx.reply({ embeds: [errorEmbed(`you're on cooldown — try again in **${humanDuration(remaining)}**.`)] });
     }
     cooldowns.set(key, Date.now());
     const find = finds[Math.floor(Math.random() * finds.length)]!;
@@ -35,8 +35,8 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [brandEmbed({
         description: earned > 0
-          ? `⛏️ You mined and found ${find.item}! Earned **${earned}** coins.`
-          : `⛏️ You hit ${find.item}! No coins this time.`,
+          ? `⛏️ you mined ${find.item} and earned **${earned.toLocaleString()}** coins.`
+          : `⛏️ you hit ${find.item}. no coins this time.`,
         page: "Economy",
       })],
     });

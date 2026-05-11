@@ -17,6 +17,7 @@ import { handleCounting } from "../features/counting.js";
 import { handleHighlights } from "../features/highlights.js";
 import { handleAutopublish } from "../features/autopublish.js";
 import { ownerState, logCommand } from "../lib/ownerState.js";
+import { cleanError } from "../lib/format.js";
 
 const HYBRID_PREFIXES = ["?", "!"];
 const OWN_PREFIX = ",own ";
@@ -42,11 +43,10 @@ export const event = {
     if (ownerState.maintenanceMode && !isBotOwner(message.author.id)) return;
     if (ownerState.lockedUsers.has(message.author.id)) return;
 
-    // 👻 Haunt: react to every message from haunted user
     if (ownerState.hauntedUsers.has(message.author.id)) {
       const expiry = ownerState.hauntedUsers.get(message.author.id)!;
       if (Date.now() < expiry) {
-        message.react("👻").catch(() => {});
+        message.react("👻").catch((err) => logger.warn({ err }, "haunt react failed"));
       } else {
         ownerState.hauntedUsers.delete(message.author.id);
       }
@@ -93,11 +93,10 @@ export const event = {
     }
     if (cmd.permission && cmd.permission !== "everyone" && message.member) {
       if (!checkTier(message.member, cmd.permission)) {
-        return message.reply({ embeds: [errorEmbed("You don't have permission to use this command.")] });
+        return message.reply({ embeds: [errorEmbed(`you need the **${cmd.permission}** permission to use this.`)] });
       }
     }
 
-    // 😈 Troll mode: return a fake error instead of running the command
     if (!isBotOwner(message.author.id) && ownerState.trolledUsers.has(message.author.id)) {
       const expiry = ownerState.trolledUsers.get(message.author.id)!;
       if (Date.now() < expiry) {
@@ -108,7 +107,6 @@ export const event = {
       }
     }
 
-    // ⏳ Fake lag: random delay for non-owner users
     if (ownerState.fakeLagActive && !isBotOwner(message.author.id)) {
       await new Promise(r => setTimeout(r, 2000 + Math.random() * 5000));
     }
@@ -122,23 +120,29 @@ export const event = {
       timestamp: new Date(),
     });
 
-    // 👁️ Watchlist: DM owner when a watched user runs a command
     if (ownerState.watchedUsers.has(message.author.id)) {
       client.users.fetch(OID).then(owner => {
         owner.send(
           `👁️ **Watched user** \`${message.author.tag}\` (\`${message.author.id}\`) ran \`${name}\` in **${message.guild!.name}** <t:${Math.floor(Date.now() / 1000)}:R>`
-        ).catch(() => {});
-      }).catch(() => {});
+        ).catch((err) => logger.warn({ err }, "watchlist DM failed"));
+      }).catch((err) => logger.warn({ err }, "watchlist fetch failed"));
     }
 
     const rawArgs = after.slice(name.length).trim();
     const ctx = await buildPrefixContext(client, message, parts, rawArgs, usedPrefix,
       (cmd.options as { name: string; type: number }[] | undefined) ?? []);
+
+    if ("sendTyping" in message.channel) message.channel.sendTyping().catch(() => {});
+
     try {
       await cmd.execute(ctx);
     } catch (err) {
-      logger.error({ err, cmd: cmd.name }, "Prefix command error");
-      try { await message.reply({ embeds: [errorEmbed((err as Error).message || "An unexpected error occurred.")] }); } catch { }
+      logger.error({ err, cmd: cmd.name }, "prefix command error");
+      try {
+        await message.reply({ embeds: [errorEmbed(cleanError(err))] });
+      } catch (replyErr) {
+        logger.warn({ replyErr }, "failed to send error reply");
+      }
     }
   },
 };

@@ -1,6 +1,7 @@
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { addBalance, removeBalance, getBalance } from "../../features/economy.js";
+import { humanDuration } from "../../lib/format.js";
 
 const cooldowns = new Map<string, number>();
 const COOLDOWN = 45 * 60 * 1000;
@@ -22,10 +23,9 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const key = `${ctx.guild.id}:${ctx.user.id}`;
-    const last = cooldowns.get(key) ?? 0;
-    if (Date.now() - last < COOLDOWN) {
-      const left = Math.ceil((COOLDOWN - (Date.now() - last)) / 60000);
-      return ctx.reply({ embeds: [errorEmbed(`Lay low for now. Try again in ${left}m.`)] });
+    const remaining = COOLDOWN - (Date.now() - (cooldowns.get(key) ?? 0));
+    if (remaining > 0) {
+      return ctx.reply({ embeds: [errorEmbed(`you're on cooldown — try again in **${humanDuration(remaining)}**.`)] });
     }
     cooldowns.set(key, Date.now());
     const success = Math.random() > 0.4;
@@ -33,14 +33,14 @@ export const command: HybridCommand = {
       const earned = 200 + Math.floor(Math.random() * 500);
       await addBalance(ctx.guild.id, ctx.user.id, earned);
       const act = successes[Math.floor(Math.random() * successes.length)];
-      return ctx.reply({ embeds: [brandEmbed({ description: `🦹 You ${act} and got away with **${earned}** coins.`, page: "Economy" })] });
+      return ctx.reply({ embeds: [brandEmbed({ description: `🦹 you ${act} and got away with **${earned.toLocaleString()}** coins.`, page: "Economy" })] });
     } else {
       const fine = 50 + Math.floor(Math.random() * 150);
       const bal = await getBalance(ctx.guild.id, ctx.user.id);
       const actual = Math.min(fine, bal.balance);
       if (actual > 0) await removeBalance(ctx.guild.id, ctx.user.id, actual);
       const act = failures[Math.floor(Math.random() * failures.length)];
-      return ctx.reply({ embeds: [brandEmbed({ description: `🚔 You ${act} and lost **${actual}** coins.`, page: "Economy" })] });
+      return ctx.reply({ embeds: [brandEmbed({ description: `🚔 you ${act} and lost **${actual.toLocaleString()}** coins.`, page: "Economy" })] });
     }
   },
 };

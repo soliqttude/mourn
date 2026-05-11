@@ -5,6 +5,7 @@ import { db } from "../../db/index.js";
 import { economy } from "../../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { addBalance } from "../../features/economy.js";
+import { humanDuration } from "../../lib/format.js";
 
 const ROB_COOLDOWN = 30 * 60 * 1000;
 const cooldowns = new Map<string, number>();
@@ -17,7 +18,7 @@ async function getBal(guildId: string, userId: string): Promise<number> {
 
 export const command: HybridCommand = {
   name: "rob",
-  description: "Attempt to steal coins from another member (30-min cooldown).",
+  description: "Attempt to steal coins from another member.",
   category: "economy",
   guildOnly: true,
   options: [
@@ -27,17 +28,16 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const key = `${guild.id}:${ctx.user.id}`;
-    const last = cooldowns.get(key) ?? 0;
-    if (Date.now() - last < ROB_COOLDOWN) {
-      const left = Math.ceil((ROB_COOLDOWN - (Date.now() - last)) / 60000);
-      return ctx.reply({ embeds: [errorEmbed(`You must wait **${left}m** before robbing again.`)] });
+    const remaining = ROB_COOLDOWN - (Date.now() - (cooldowns.get(key) ?? 0));
+    if (remaining > 0) {
+      return ctx.reply({ embeds: [errorEmbed(`you're on cooldown — try again in **${humanDuration(remaining)}**.`)] });
     }
     const target = await ctx.getUser("user", true);
     if (!target) return;
-    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't rob yourself.")] });
-    if (target.bot) return ctx.reply({ embeds: [errorEmbed("You can't rob a bot.")] });
+    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you can't rob yourself.")] });
+    if (target.bot) return ctx.reply({ embeds: [errorEmbed("you can't rob a bot.")] });
     const targetBal = await getBal(guild.id, target.id);
-    if (targetBal < 100) return ctx.reply({ embeds: [errorEmbed("That user is too broke to rob!")] });
+    if (targetBal < 100) return ctx.reply({ embeds: [errorEmbed("that user doesn't have enough to rob.")] });
     cooldowns.set(key, Date.now());
     const success = Math.random() < 0.4;
     if (success) {
@@ -46,12 +46,12 @@ export const command: HybridCommand = {
       await db.update(economy).set({ balance: targetBal - stolen })
         .where(and(eq(economy.guildId, guild.id), eq(economy.userId, target.id)));
       await addBalance(guild.id, ctx.user.id, stolen);
-      return ctx.reply({ embeds: [successEmbed(`You robbed **${target.tag}** and stole **${stolen}** coins! 💰`)] });
+      return ctx.reply({ embeds: [successEmbed(`you robbed **${target.username}** and stole **${stolen.toLocaleString()}** coins. 💰`)] });
     } else {
       const selfBal = await getBal(guild.id, ctx.user.id);
       const fine = Math.min(selfBal, 50 + Math.floor(Math.random() * 150));
       if (fine > 0) await addBalance(guild.id, ctx.user.id, -fine);
-      return ctx.reply({ embeds: [errorEmbed(`You got caught! You paid a **${fine}** coin fine. 🚔`)] });
+      return ctx.reply({ embeds: [errorEmbed(`you got caught and paid a **${fine.toLocaleString()}** coin fine. 🚔`)] });
     }
   },
 };

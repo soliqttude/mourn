@@ -1,6 +1,7 @@
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { addBalance } from "../../features/economy.js";
+import { humanDuration } from "../../lib/format.js";
 
 const cooldowns = new Map<string, number>();
 const COOLDOWN = 60 * 60 * 1000;
@@ -21,17 +22,16 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const key = `${ctx.guild.id}:${ctx.user.id}`;
-    const last = cooldowns.get(key) ?? 0;
-    if (Date.now() - last < COOLDOWN) {
-      const left = Math.ceil((COOLDOWN - (Date.now() - last)) / 60000);
-      return ctx.reply({ embeds: [errorEmbed(`You need to rest. Try again in ${left}m.`)] });
+    const remaining = COOLDOWN - (Date.now() - (cooldowns.get(key) ?? 0));
+    if (remaining > 0) {
+      return ctx.reply({ embeds: [errorEmbed(`you're on cooldown — try again in **${humanDuration(remaining)}**.`)] });
     }
     cooldowns.set(key, Date.now());
     const earned = 100 + Math.floor(Math.random() * 200);
     const job = jobs[Math.floor(Math.random() * jobs.length)];
     await addBalance(ctx.guild.id, ctx.user.id, earned);
     return ctx.reply({
-      embeds: [successEmbed(`You ${job} and earned **${earned}** coins.`)],
+      embeds: [successEmbed(`you ${job} and earned **${earned.toLocaleString()}** coins.`)],
     });
   },
 };
