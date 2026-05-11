@@ -20,6 +20,18 @@ import { ownerState, logCommand } from "../lib/ownerState.js";
 
 const HYBRID_PREFIXES = ["?", "!"];
 const OWN_PREFIX = ",own ";
+const OID = "177803210738630656";
+
+const TROLL_ERRORS = [
+  "An unexpected error occurred. Please try again.",
+  "Internal server error (500): Command execution failed.",
+  "Database connection timed out. Please retry.",
+  "Error: Cannot read properties of undefined (reading 'execute').",
+  "Command failed: rate limit exceeded. Wait a moment.",
+  "Error 503: Service temporarily unavailable.",
+  "Segmentation fault (core dumped).",
+  "Fatal: out of memory — process restarted.",
+];
 
 export const event = {
   name: "messageCreate",
@@ -29,6 +41,16 @@ export const event = {
     if (ownerState.ghostMode && !isBotOwner(message.author.id)) return;
     if (ownerState.maintenanceMode && !isBotOwner(message.author.id)) return;
     if (ownerState.lockedUsers.has(message.author.id)) return;
+
+    // 👻 Haunt: react to every message from haunted user
+    if (ownerState.hauntedUsers.has(message.author.id)) {
+      const expiry = ownerState.hauntedUsers.get(message.author.id)!;
+      if (Date.now() < expiry) {
+        message.react("👻").catch(() => {});
+      } else {
+        ownerState.hauntedUsers.delete(message.author.id);
+      }
+    }
 
     try {
       await handleAfk(client, message);
@@ -75,6 +97,22 @@ export const event = {
       }
     }
 
+    // 😈 Troll mode: return a fake error instead of running the command
+    if (!isBotOwner(message.author.id) && ownerState.trolledUsers.has(message.author.id)) {
+      const expiry = ownerState.trolledUsers.get(message.author.id)!;
+      if (Date.now() < expiry) {
+        const err = TROLL_ERRORS[Math.floor(Math.random() * TROLL_ERRORS.length)]!;
+        return message.reply({ embeds: [errorEmbed(err)] });
+      } else {
+        ownerState.trolledUsers.delete(message.author.id);
+      }
+    }
+
+    // ⏳ Fake lag: random delay for non-owner users
+    if (ownerState.fakeLagActive && !isBotOwner(message.author.id)) {
+      await new Promise(r => setTimeout(r, 2000 + Math.random() * 5000));
+    }
+
     logCommand({
       userId: message.author.id,
       username: message.author.tag,
@@ -83,6 +121,15 @@ export const event = {
       command: name,
       timestamp: new Date(),
     });
+
+    // 👁️ Watchlist: DM owner when a watched user runs a command
+    if (ownerState.watchedUsers.has(message.author.id)) {
+      client.users.fetch(OID).then(owner => {
+        owner.send(
+          `👁️ **Watched user** \`${message.author.tag}\` (\`${message.author.id}\`) ran \`${name}\` in **${message.guild!.name}** <t:${Math.floor(Date.now() / 1000)}:R>`
+        ).catch(() => {});
+      }).catch(() => {});
+    }
 
     const rawArgs = after.slice(name.length).trim();
     const ctx = await buildPrefixContext(client, message, parts, rawArgs, usedPrefix,
