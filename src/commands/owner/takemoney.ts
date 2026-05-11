@@ -18,7 +18,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
     if (!ctx.guild) return;
-    const target = ctx.getUser("user") ?? null;
+    const target = await ctx.getUser("user") ?? null;
     const userId = (target as any)?.id ?? ctx.args[0]?.replace(/[<@!>]/g, "");
     const rawAmount = ctx.getString("amount") ?? ctx.args[1];
     if (!userId || !rawAmount) return ctx.reply({ content: "Provide a user and amount." });

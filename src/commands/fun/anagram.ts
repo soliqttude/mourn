@@ -12,6 +12,6 @@ export const command: HybridCommand = {
     const w2=(ctx.getString("word2")??ctx.args[1]??"").trim().toLowerCase();
     if(!w1||!w2)return ctx.reply({embeds:[errorEmbed("Provide two words.")]});
     const sort=(s:string)=>s.split("").sort().join("");
-    return ctx.reply({embeds:[sort(w1)===sort(w2)?successEmbed(`**${w1}** and **${w2}** ARE anagrams! ✅`,"🔤 Anagram"):errorEmbed(`**${w1}** and **${w2}** are NOT anagrams.`)]});
+    return ctx.reply({embeds:[sort(w1)===sort(w2)?successEmbed(`🔤 **${w1}** and **${w2}** ARE anagrams! ✅`):errorEmbed(`**${w1}** and **${w2}** are NOT anagrams.`)]});
   },
 };

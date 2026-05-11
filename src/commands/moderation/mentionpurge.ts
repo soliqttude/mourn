@@ -12,6 +12,6 @@ export const command: HybridCommand = {
     const toDelete=msgs.filter(m=>m.mentions.users.size>0||m.mentions.roles.size>0);
     if(!toDelete.size)return ctx.reply({embeds:[errorEmbed("No mention messages found.")]});
     await(ctx.channel as any).bulkDelete(toDelete,true).catch(()=>{});
-    return ctx.reply({embeds:[successEmbed(`Deleted **${toDelete.size}** mention message(s).`,"📢 Mention Purge")]});
+    return ctx.reply({embeds:[successEmbed(`📢 Deleted **${toDelete.size}** mention message(s).`)]});
   },
 };

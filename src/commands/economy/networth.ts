@@ -14,7 +14,7 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const target = ctx.getUser("user") ?? null;
+    const target = await ctx.getUser("user") ?? null;
     const userId = (target as any)?.id ?? ctx.args[0]?.replace(/[<@!>]/g, "") ?? ctx.user.id;
     const user = userId === ctx.user.id ? ctx.user : await ctx.client.users.fetch(userId).catch(() => null);
 

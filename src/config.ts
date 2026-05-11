@@ -21,4 +21,5 @@ export const config = {
   errorColor: 0xff3333,
   successColor: 0x00b894,
   neutralColor: 0x0a0a0a,
+  embedFooter: process.env.EMBED_FOOTER || "Mourn",
 };

@@ -12,6 +12,7 @@ export const command: HybridCommand = {
     await ctx.reply({embeds:[new EmbedBuilder().setColor(config.brandColor).setDescription(`⏳ Unbanning **${bans.size}** users...`).setTimestamp()]});
     let done=0,failed=0;
     for(const[id]of bans)await ctx.guild.members.unban(id,`Mass unban by ${ctx.user.tag}`).then(()=>done++).catch(()=>failed++);
-    return ctx.followUp({embeds:[successEmbed(`Unbanned **${done}** users${failed?` (${failed} failed)`:""}.","✅ Unban All")]});
+    const msg = `Unbanned **${done}** users${failed ? ` (${failed} failed)` : ""}.`;
+    return ctx.followUp({embeds:[successEmbed(msg)]});
   },
 };

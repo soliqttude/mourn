@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (!ctx.guild || !ctx.channel) return;
-    const target = ctx.getUser("user") ?? null;
+    const target = await ctx.getUser("user") ?? null;
     const targetId = (target as any)?.id ?? ctx.args[0]?.replace(/[<@!>]/g, "");
     const bet = ctx.getNumber("bet") ?? parseInt(ctx.args[1] ?? "0");
 

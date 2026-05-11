@@ -9,7 +9,7 @@ export const command: HybridCommand = {
     await ctx.reply({embeds:[brandEmbed({title:"⌨️ Typing Race",description:`Type this exactly:\n\n\`\`\`${sentence}\`\`\`\n\n**Go!**`,page:"Fun"})]});
     const start=Date.now();
     const col=ctx.channel.createMessageCollector?.({filter:(m:any)=>m.author.id===ctx.user.id&&m.content.trim()===sentence,time:60000,max:1});
-    col?.on("collect",async(m:any)=>{const ms=Date.now()-start;const wpm=Math.round((sentence.split(" ").length/ms)*60000);await m.reply({embeds:[successEmbed(`⏱️ **${(ms/1000).toFixed(2)}s** | **${wpm} WPM**`,"Typing Race Complete")]});});
+    col?.on("collect",async(m:any)=>{const ms=Date.now()-start;const wpm=Math.round((sentence.split(" ").length/ms)*60000);await m.reply({embeds:[successEmbed(`⏱️ **${(ms/1000).toFixed(2)}s** | **${wpm} WPM**`)]});});
     col?.on("end",(c:any)=>{if(!c.size)ctx.followUp({embeds:[brandEmbed({title:"⌨️ Too slow!",description:`The sentence: \`${sentence}\``,page:"Fun"})]}).catch(()=>{});});
   },
 };

@@ -62,5 +62,5 @@ export type ReplyContent =
       ephemeral?: boolean;
       components?: any[];
       files?: AttachmentBuilder[];
-      allowedMentions?: { parse?: ("users" | "roles" | "everyone")[] };
+      allowedMentions?: { parse?: ("users" | "roles" | "everyone")[]; users?: string[]; roles?: string[] };
     };

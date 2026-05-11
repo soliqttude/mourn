@@ -19,7 +19,9 @@ export const command: HybridCommand = {
       [ChannelType.GuildText]: "Text", [ChannelType.GuildVoice]: "Voice",
       [ChannelType.GuildCategory]: "Category", [ChannelType.GuildAnnouncement]: "Announcement",
       [ChannelType.GuildStageVoice]: "Stage", [ChannelType.GuildForum]: "Forum",
-      [ChannelType.GuildThread]: "Thread",
+      [ChannelType.PublicThread]: "Thread",
+      [ChannelType.PrivateThread]: "Thread",
+      [ChannelType.AnnouncementThread]: "Thread",
     };
     return ctx.reply({
       embeds: [brandEmbed({

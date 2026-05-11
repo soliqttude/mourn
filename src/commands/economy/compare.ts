@@ -14,7 +14,7 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const target = ctx.getUser("user") ?? null;
+    const target = await ctx.getUser("user") ?? null;
     const targetId = (target as any)?.id ?? ctx.args[0]?.replace(/[<@!>]/g, "");
     if (!targetId) return ctx.reply({ content: "Provide a user to compare with." });
     if (targetId === ctx.user.id) return ctx.reply({ content: "You can't compare with yourself!" });

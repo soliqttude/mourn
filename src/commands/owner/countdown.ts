@@ -14,8 +14,8 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
-    const secs = Math.min(60, Math.max(1, ctx.getNumber("seconds") ?? parseInt(ctx.args[0] ?? "10") || 10));
-    const endMsg = ctx.getString("message") ?? ctx.args.slice(1).join(" ") || "🚀 Time's up!";
+    const secs = Math.min(60, Math.max(1, ctx.getNumber("seconds") ?? (parseInt(ctx.args[0] ?? "10") || 10)));
+    const endMsg = ctx.getString("message") ?? (ctx.args.slice(1).join(" ") || "🚀 Time's up!");
 
     const makeEmbed = (remaining: number) => new EmbedBuilder()
       .setColor(remaining > 10 ? 0x00e676 : remaining > 3 ? 0xffd740 : 0xff1744)

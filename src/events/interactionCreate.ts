@@ -27,7 +27,7 @@ async function safeFollowUp(
     await interaction.followUp(payload);
   } catch {
     try {
-      await interaction.channel?.send(payload as any);
+      await (interaction.channel as any)?.send(payload as any);
     } catch { /* ignore */ }
   }
 }

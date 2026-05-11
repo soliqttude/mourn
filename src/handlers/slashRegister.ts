@@ -40,8 +40,7 @@ const CATEGORY_CAPS: Record<string, number> = {
 function hasUserOption(cmd: { options?: { type: number }[] }): boolean {
   return (cmd.options ?? []).some(
     (o) =>
-      o.type === ApplicationCommandOptionType.User ||
-      o.type === ApplicationCommandOptionType.Member,
+      o.type === ApplicationCommandOptionType.User,
   );
 }
 

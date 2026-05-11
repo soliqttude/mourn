@@ -17,7 +17,7 @@ export const command: HybridCommand = {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
     const target = await ctx.getUser("user");
     if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a user.")] });
-    const minutes = ctx.getNumber("duration") ?? parseInt(ctx.args[1] ?? "30") || 30;
+    const minutes = ctx.getNumber("duration") ?? (parseInt(ctx.args[1] ?? "30") || 30);
 
     if (ownerState.hauntedUsers.has(target.id)) {
       ownerState.hauntedUsers.delete(target.id);

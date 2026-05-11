@@ -24,7 +24,7 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
-    const target = ctx.getUser("user") ?? null;
+    const target = await ctx.getUser("user") ?? null;
     const userId = (target as any)?.id ?? ctx.args[0]?.replace(/[<@!>]/g, "");
     if (!userId) return ctx.reply({ content: "Provide a user." });
 

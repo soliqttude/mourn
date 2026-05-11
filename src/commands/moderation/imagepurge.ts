@@ -12,6 +12,6 @@ export const command: HybridCommand = {
     const toDelete=msgs.filter(m=>m.attachments.size>0||m.embeds.some(e=>!!e.image));
     if(!toDelete.size)return ctx.reply({embeds:[errorEmbed("No image messages found.")]});
     await(ctx.channel as any).bulkDelete(toDelete,true).catch(()=>{});
-    return ctx.reply({embeds:[successEmbed(`Deleted **${toDelete.size}** image message(s).`,"🖼️ Image Purge")]});
+    return ctx.reply({embeds:[successEmbed(`🖼️ Deleted **${toDelete.size}** image message(s).`)]});
   },
 };

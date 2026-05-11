@@ -17,7 +17,7 @@ export const command: HybridCommand = {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
     if (!ctx.guild) return ctx.reply({ content: "Guild only." });
 
-    const target = ctx.getUser("user") ?? ctx.args[0];
+    const target = await ctx.getUser("user") ?? ctx.args[0];
     const userId = typeof target === "string" ? target.replace(/[<@!>]/g, "") : (target as any)?.id;
     const reason = ctx.getString("reason") ?? ctx.args[1] ?? "No reason provided.";
 

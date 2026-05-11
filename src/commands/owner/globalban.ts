@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   description: "(Owner) Ban a user from ALL servers the bot is in.",
   category: "owner",
   ownerOnly: true,
-  aliases: ["globalban", "banall"],
+  aliases: ["banall"],
   options: [
     { name: "userid", description: "User ID to ban", type: ApplicationCommandOptionType.String, required: true },
     { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false },

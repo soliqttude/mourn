@@ -16,7 +16,8 @@ export const command: HybridCommand = {
     let totalMembers = 0, totalBots = 0;
     const guildList: string[] = [];
 
-    for (const [, g] of guilds.slice(0, 20)) {
+    const guildArr = [...guilds.values()];
+    for (const g of guildArr.slice(0, 20)) {
       const members = g.memberCount;
       const bots = g.members.cache.filter(m => m.user.bot).size;
       totalMembers += members;

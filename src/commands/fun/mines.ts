@@ -131,7 +131,7 @@ export const command: HybridCommand = {
     if (!ctx.guild || !ctx.channel) return;
 
     const bet = ctx.getNumber("bet") ?? parseInt(ctx.args[0] ?? "0");
-    const mineCount = Math.max(1, Math.min(8, ctx.getNumber("mines") ?? parseInt(ctx.args[1] ?? "3") || 3));
+    const mineCount = Math.max(1, Math.min(8, ctx.getNumber("mines") ?? (parseInt(ctx.args[1] ?? "3") || 3)));
 
     if (!bet || bet < 1) return ctx.reply({ embeds: [errorEmbed("Minimum bet is **$1**.")] });
     if (activeGames.has(ctx.user.id)) return ctx.reply({ embeds: [errorEmbed("You already have an active Mines game!")] });
