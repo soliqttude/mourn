@@ -4,6 +4,28 @@ import { commands } from "../../handlers/registry.js";
 import { config } from "../../config.js";
 const OID = "177803210738630656";
 
+function chunkFields(cat: string, lines: string[]): { name: string; value: string }[] {
+  const chunks: { name: string; value: string }[] = [];
+  let current: string[] = [];
+  let currentLen = 0;
+  let part = 1;
+
+  for (const line of lines) {
+    if (currentLen + line.length + 1 > 1000 && current.length > 0) {
+      chunks.push({ name: `${cat}${part > 1 ? ` (cont.)` : ""} (${current.length})`, value: current.join("\n") });
+      current = [];
+      currentLen = 0;
+      part++;
+    }
+    current.push(line);
+    currentLen += line.length + 1;
+  }
+  if (current.length > 0) {
+    chunks.push({ name: `${cat}${part > 1 ? ` (cont.)` : ""} (${current.length})`, value: current.join("\n") });
+  }
+  return chunks;
+}
+
 export const command: HybridCommand = {
   name: "ownerhelp",
   description: "(Owner) List all owner-only commands with full details.",
@@ -21,26 +43,33 @@ export const command: HybridCommand = {
       byCat[c.category].push(`\`${c.name}\`${aliases} — ${c.description}`);
     }
 
-    const fields = Object.entries(byCat).sort().map(([cat, list]) => ({
-      name: `${cat} (${list.length})`,
-      value: list.join("\n"),
-    }));
+    const allFields = Object.entries(byCat).sort().flatMap(([cat, list]) => chunkFields(cat, list));
 
+    // Discord max 25 fields per embed — split into pages if needed
+    const PAGE_SIZE = 20;
+    const pages = [];
+    for (let i = 0; i < allFields.length; i += PAGE_SIZE) {
+      pages.push(allFields.slice(i, i + PAGE_SIZE));
+    }
+
+    const embeds = pages.map((fields, idx) =>
+      new EmbedBuilder()
+        .setColor(0x8b0000)
+        .setTitle(idx === 0 ? "👑 OWNER COMMAND REFERENCE — Full Index" : `👑 OWNER COMMAND REFERENCE — Page ${idx + 1}`)
+        .setDescription(idx === 0 ? [
+          `**${ownerCmds.length}** owner-only commands. Visible to you only.`,
+          "",
+          "These commands are hidden from all other users.",
+        ].join("\n") : null)
+        .addFields(fields)
+        .setThumbnail(idx === 0 ? (ctx.client.user?.displayAvatarURL() ?? null) : null)
+        .setFooter({ text: `${config.embedFooter} • Classified — Geico eyes only${pages.length > 1 ? ` • Page ${idx + 1}/${pages.length}` : ""}` })
+        .setTimestamp()
+    );
+
+    // Discord allows max 10 embeds per message
     return ctx.reply({
-      embeds: [
-        new EmbedBuilder()
-          .setColor(0x8b0000)
-          .setTitle("👑 OWNER COMMAND REFERENCE — Full Index")
-          .setDescription([
-            `**${ownerCmds.length}** owner-only commands. Visible to you only.`,
-            "",
-            "These commands are hidden from all other users.",
-          ].join("\n"))
-          .addFields(fields)
-          .setThumbnail(ctx.client.user?.displayAvatarURL() ?? null)
-          .setFooter({ text: `${config.embedFooter} • Classified — Geico eyes only` })
-          .setTimestamp(),
-      ],
+      embeds: embeds.slice(0, 10),
       ephemeral: true,
     } as any);
   },
