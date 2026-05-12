@@ -3,12 +3,13 @@ import type { HybridCommand } from "../../lib/command.js";
 import { addBalance } from "../../features/economy.js";
 import { config } from "../../config.js";
 
-const COOLDOWN = 60 * 60 * 1000; // 1 hour
+const COOLDOWN = 60 * 60 * 1000;
 const lastClaim = new Map<string, number>();
+const hourlyStreak = new Map<string, number>();
 
 export const command: HybridCommand = {
   name: "hourly",
-  description: "Claim your hourly coin reward! (100-300 coins every hour)",
+  description: "Claim your hourly coin reward. Claim on time to build a streak bonus.",
   category: "economy",
   guildOnly: true,
   aliases: ["hr", "hourlyclaim"],
@@ -21,39 +22,47 @@ export const command: HybridCommand = {
 
     if (diff < COOLDOWN) {
       const remaining = COOLDOWN - diff;
-      const m = Math.floor(remaining / 60000), s = Math.floor((remaining % 60000) / 1000);
+      const m = Math.floor(remaining / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
       return ctx.reply({
         embeds: [
           new EmbedBuilder()
-            .setColor(0xff5252)
-            .setTitle("⏰ Hourly — On Cooldown")
-            .setDescription(`You already claimed your hourly!\nCome back in **${m}m ${s}s**.`)
-            .setFooter({ text: `${config.embedFooter} • Economy` })
+            .setColor(config.errorColor)
+            .setDescription(`already claimed. come back in **${m}m ${s}s**.`)
+            .setFooter({ text: `${config.embedFooter} • economy` })
             .setTimestamp(),
         ],
       });
     }
 
-    const amount = Math.floor(Math.random() * 201) + 100; // 100-300
-    const streak = Math.floor(diff / COOLDOWN);
-    const bonus = streak <= 1 ? 0 : Math.min(streak * 10, 100);
+    const amount = Math.floor(Math.random() * 201) + 100;
+
+    // streak: only counts if claimed within 2 hours (on time-ish)
+    const streak = last > 0 && diff < COOLDOWN * 2
+      ? (hourlyStreak.get(key) ?? 0) + 1
+      : 1;
+    hourlyStreak.set(key, streak);
+    lastClaim.set(key, now);
+
+    const bonus = streak >= 3 ? Math.min(Math.floor((streak - 2) * 15), 150) : 0;
     const total = amount + bonus;
 
-    lastClaim.set(key, now);
     await addBalance(ctx.guild.id, ctx.user.id, total);
+
+    const lines = [
+      `you received **${amount}** coins.`,
+      bonus > 0 ? `🔥 on-time streak ×${streak}: **+${bonus}** bonus coins` : ``,
+      ``,
+      `**total:** ${total.toLocaleString()} coins`,
+    ].filter(l => l !== undefined);
 
     return ctx.reply({
       embeds: [
         new EmbedBuilder()
-          .setColor(0x00e676)
-          .setTitle("⏰ Hourly Coins Claimed!")
-          .setDescription([
-            `You received **${amount}** coins!`,
-            bonus > 0 ? `🔥 Punctuality bonus: **+${bonus}** coins` : "",
-            "",
-            `**Total:** ${total} coins added to your wallet.`,
-          ].filter(Boolean).join("\n"))
-          .setFooter({ text: `${config.embedFooter} • Next hourly in 1 hour` })
+          .setColor(config.successColor)
+          .setTitle("⏰ hourly claimed")
+          .setDescription(lines.join("\n"))
+          .setFooter({ text: `${config.embedFooter} • next hourly in 1 hour` })
           .setTimestamp(),
       ],
     });

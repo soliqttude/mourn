@@ -140,19 +140,29 @@ async function handleHelpButton(interaction: ButtonInteraction) {
 }
 
 async function handleTriviaButton(interaction: ButtonInteraction) {
-  const [, chosen, correct, userId] = interaction.customId.split("_");
+  const parts = interaction.customId.split("_");
+  const chosen = parts[1];
+  const correct = parts[2];
+  const userId = parts[3];
+  const reward = parseInt(parts[4] ?? "50", 10);
+  const guildId = parts[5] ?? interaction.guildId ?? "";
+
   if (interaction.user.id !== userId) {
     return interaction.reply({ content: "that's not your trivia question.", flags: 64 });
   }
   if (chosen === correct) {
     await interaction.update({ components: [] }).catch(() => {});
+    if (guildId) {
+      const { addBalance } = await import("../features/economy.js");
+      await addBalance(guildId, userId, reward).catch(() => {});
+    }
     return safeFollowUp(interaction, {
-      embeds: [successEmbed(`correct. the answer was **${correct}**.`)],
+      embeds: [successEmbed(`✅ correct! the answer was **${correct}**. +${reward} coins 🪙`)],
     });
   } else {
     await interaction.update({ components: [] }).catch(() => {});
     return safeFollowUp(interaction, {
-      embeds: [errorEmbed(`wrong. the answer was **${correct}**.`)],
+      embeds: [errorEmbed(`❌ wrong. the correct answer was **${correct}**.`)],
     });
   }
 }

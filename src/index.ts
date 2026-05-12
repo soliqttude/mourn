@@ -8,6 +8,7 @@ import { registerSlashCommands } from "./handlers/slashRegister.js";
 import { startReminderLoop } from "./features/reminders.js";
 import { startGiveawayLoop } from "./features/giveaway.js";
 import { startTempBanLoop } from "./features/tempbans.js";
+import { startDropLoop } from "./features/drops.js";
 
 async function main() {
   await runMigrations();
@@ -45,6 +46,7 @@ async function main() {
     startReminderLoop(client);
     startGiveawayLoop(client);
     startTempBanLoop(client);
+    startDropLoop(client);
   });
 
   process.on("unhandledRejection", (err) => { logger.error({ err }, "Unhandled rejection"); });

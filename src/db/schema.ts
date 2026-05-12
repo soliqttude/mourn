@@ -1,6 +1,6 @@
 import {
   pgTable, text, bigint, integer, boolean, timestamp, jsonb,
-  serial, primaryKey, index,
+  serial, primaryKey, index, real,
 } from "drizzle-orm/pg-core";
 
 export const guildSettings = pgTable("guild_settings", {
@@ -16,40 +16,31 @@ export const guildSettings = pgTable("guild_settings", {
   goodbyeMessage: text("goodbye_message"),
   boostChannel: text("boost_channel"),
   boostMessage: text("boost_message"),
-  // ── Anti-Nuke ──────────────────────────────────────────────────────────────
   antinukeEnabled: boolean("antinuke_enabled").default(false).notNull(),
   antinukeAction: text("antinuke_action").default("ban").notNull(),
   antinukeThreshold: integer("antinuke_threshold").default(3).notNull(),
   antinukeLogChannel: text("antinuke_log_channel"),
-  // ── Anti-Raid ──────────────────────────────────────────────────────────────
   antiraidEnabled: boolean("antiraid_enabled").default(false).notNull(),
   antiraidThreshold: integer("antiraid_threshold").default(8).notNull(),
   antiraidJoinAge: integer("antiraid_join_age").default(7).notNull(),
   antiraidAction: text("antiraid_action").default("kick").notNull(),
   antiraidLogChannel: text("antiraid_log_channel"),
   antiraidLockOnRaid: boolean("antiraid_lock_on_raid").default(false).notNull(),
-  // ── Automod ───────────────────────────────────────────────────────────────
   automodEnabled: boolean("automod_enabled").default(false).notNull(),
   linkFilterEnabled: boolean("link_filter_enabled").default(false).notNull(),
   inviteFilterEnabled: boolean("invite_filter_enabled").default(false).notNull(),
-  // ── Starboard ─────────────────────────────────────────────────────────────
   starboardChannel: text("starboard_channel"),
   starboardEmoji: text("starboard_emoji").default("⭐").notNull(),
   starboardThreshold: integer("starboard_threshold").default(3).notNull(),
-  // ── Voicemaster ───────────────────────────────────────────────────────────
   voicemasterHub: text("voicemaster_hub"),
   voicemasterCategory: text("voicemaster_category"),
-  // ── Tickets ───────────────────────────────────────────────────────────────
   ticketCategory: text("ticket_category"),
   ticketSupportRole: text("ticket_support_role"),
   ticketLogChannel: text("ticket_log_channel"),
-  // ── Levels ────────────────────────────────────────────────────────────────
   levelsEnabled: boolean("levels_enabled").default(true).notNull(),
   levelUpChannel: text("level_up_channel"),
-  // ── Moderation ────────────────────────────────────────────────────────────
   jailRole: text("jail_role"),
   muteRole: text("mute_role"),
-  // ── Misc ──────────────────────────────────────────────────────────────────
   autoroleId: text("autorole_id"),
   confessionChannel: text("confession_channel"),
   reportChannel: text("report_channel"),
@@ -61,16 +52,14 @@ export const guildSettings = pgTable("guild_settings", {
   bumpChannel: text("bump_channel"),
   bumpRoleId: text("bump_role_id"),
   serverType: text("server_type"),
+  // ── Drops ─────────────────────────────────────────────────────────────────
+  dropChannel: text("drop_channel"),
+  economyFrozen: boolean("economy_frozen").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// ── Anti-Nuke Whitelist ───────────────────────────────────────────────────────
-export const antinukeWhitelist = pgTable(
-  "antinuke_whitelist",
-  {
-    guildId: text("guild_id").notNull(),
-    userId:  text("user_id").notNull(),
-  },
+export const antinukeWhitelist = pgTable("antinuke_whitelist",
+  { guildId: text("guild_id").notNull(), userId: text("user_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }),
 );
 
@@ -106,10 +95,54 @@ export const afk = pgTable("afk",
 export const remindersTable = pgTable("reminders", {
   id: serial("id").primaryKey(), userId: text("user_id").notNull(), channelId: text("channel_id").notNull(), guildId: text("guild_id"), message: text("message").notNull(), remindAt: timestamp("remind_at", { withTimezone: true }).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ── Economy ───────────────────────────────────────────────────────────────────
 export const economy = pgTable("economy",
-  { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), balance: bigint("balance", { mode: "number" }).default(0).notNull(), bank: bigint("bank", { mode: "number" }).default(0).notNull(), lastDaily: timestamp("last_daily", { withTimezone: true }), lastRob: timestamp("last_rob", { withTimezone: true }) },
+  {
+    guildId: text("guild_id").notNull(),
+    userId: text("user_id").notNull(),
+    balance: bigint("balance", { mode: "number" }).default(0).notNull(),
+    bank: bigint("bank", { mode: "number" }).default(0).notNull(),
+    lastDaily: timestamp("last_daily", { withTimezone: true }),
+    lastRob: timestamp("last_rob", { withTimezone: true }),
+    streak: integer("streak").default(0).notNull(),
+    streakUpdatedAt: timestamp("streak_updated_at", { withTimezone: true }),
+    prestige: integer("prestige").default(0).notNull(),
+  },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
 );
+
+// ── Rep system ────────────────────────────────────────────────────────────────
+export const userRep = pgTable("user_rep",
+  {
+    guildId: text("guild_id").notNull(),
+    userId: text("user_id").notNull(),
+    repCount: integer("rep_count").default(0).notNull(),
+    lastRepGiven: timestamp("last_rep_given", { withTimezone: true }),
+    lastRepRecipient: text("last_rep_recipient"),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
+);
+
+// ── Active item buffs ─────────────────────────────────────────────────────────
+export const activeBuffs = pgTable("active_buffs", {
+  id: serial("id").primaryKey(),
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  buffType: text("buff_type").notNull(),
+  multiplier: real("multiplier").default(1.5).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+},
+  (t) => ({ guildUserIdx: index("active_buffs_guild_user_idx").on(t.guildId, t.userId) })
+);
+
+// ── User mood / profile ───────────────────────────────────────────────────────
+export const userMood = pgTable("user_mood",
+  { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), mood: text("mood").notNull(), updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
+);
+
 export const levels = pgTable("levels",
   { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), xp: integer("xp").default(0).notNull(), level: integer("level").default(0).notNull(), lastMessageAt: timestamp("last_message_at", { withTimezone: true }) },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })

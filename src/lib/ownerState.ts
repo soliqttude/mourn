@@ -19,18 +19,16 @@ export const ownerState = {
   lockedUsers: new Set<string>(),
   errorLog: [] as ErrorLogEntry[],
   commandLog: [] as CommandLogEntry[],
-  // Troll mode: userId -> expiry timestamp ms
   trolledUsers: new Map<string, number>(),
-  // Haunt mode: userId -> expiry timestamp ms
   hauntedUsers: new Map<string, number>(),
-  // Watchlist: set of user IDs to DM owner about
   watchedUsers: new Set<string>(),
-  // Fake lag toggle
   fakeLagActive: false,
-  // Status rotation
   statusRotation: [] as string[],
   statusRotationIndex: 0,
   statusRotationInterval: null as ReturnType<typeof setInterval> | null,
+  // ── New owner controls ────────────────────────────────────────────────────
+  globalCooldownBypass: false,
+  frozenGuilds: new Set<string>(),
 };
 
 export function logCommand(entry: CommandLogEntry): void {
