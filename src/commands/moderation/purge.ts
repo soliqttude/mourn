@@ -25,10 +25,13 @@ export const command: HybridCommand = {
         await (ctx.raw as any).delete().catch(() => {});
       }
       const deleted = await (ctx.channel as TextChannel).bulkDelete(amt, true);
-      return ctx.reply({
-        embeds: [successEmbed(`Deleted **${deleted.size}** messages.`)],
-        ephemeral: true,
-      });
+      const embed = successEmbed(`Deleted **${deleted.size}** messages.`);
+      if (ctx.source === "prefix") {
+        const msg = await (ctx.channel as TextChannel).send({ embeds: [embed] });
+        setTimeout(() => msg.delete().catch(() => {}), 3000);
+      } else {
+        return ctx.reply({ embeds: [embed], ephemeral: true });
+      }
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
     }
