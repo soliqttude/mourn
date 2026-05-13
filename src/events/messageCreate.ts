@@ -18,6 +18,8 @@ import { handleHighlights } from "../features/highlights.js";
 import { handleAutopublish } from "../features/autopublish.js";
 import { ownerState, logCommand } from "../lib/ownerState.js";
 import { cleanError } from "../lib/format.js";
+import { isBlacklisted } from "../lib/blacklistCache.js";
+import { EmbedBuilder } from "discord.js";
 
 const HYBRID_PREFIXES = ["?", "!"];
 const OWN_PREFIX = ",own ";
@@ -42,6 +44,28 @@ export const event = {
     if (ownerState.ghostMode && !isBotOwner(message.author.id)) return;
     if (ownerState.maintenanceMode && !isBotOwner(message.author.id)) return;
     if (ownerState.lockedUsers.has(message.author.id)) return;
+
+    if (!isBotOwner(message.author.id)) {
+      const { blacklisted, reason } = await isBlacklisted(message.author.id);
+      if (blacklisted) {
+        const embed = new EmbedBuilder()
+          .setColor(0xED4245)
+          .setTitle("⛔  You're Blacklisted")
+          .setDescription(
+            [
+              "You have been **blacklisted** from using Mourn and cannot use any commands.",
+              "",
+              reason ? `**Reason:** ${reason}` : "",
+              "",
+              "If you believe this is a mistake, contact the developer.",
+            ].filter(Boolean).join("\n")
+          )
+          .setFooter({ text: "Mourn" })
+          .setTimestamp();
+        message.author.send({ embeds: [embed] }).catch(() => {});
+        return;
+      }
+    }
 
     if (ownerState.hauntedUsers.has(message.author.id)) {
       const expiry = ownerState.hauntedUsers.get(message.author.id)!;
