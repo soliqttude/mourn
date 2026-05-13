@@ -10,16 +10,17 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "geico.",
+          title: "geico. — Creator of Mourn",
           description: [
-            "**mourn** was built and is maintained by a single developer.",
-            "",
-            "**username** — geico (@udrs)",
-            "**discord** — @udrs",
-            "**built** — mourn, a full all-in-one Discord toolkit",
-            "",
-            "if you have suggestions, bugs, or just want to talk — find him.",
+            "> Built **Mourn** from the ground up — solo.",
+            "> Every command, every feature, every fix.",
           ].join("\n"),
+          fields: [
+            { name: "Discord",  value: "@udrs",                              inline: true },
+            { name: "Handle",   value: "geico",                              inline: true },
+            { name: "Project",  value: "Mourn — all-in-one Discord toolkit", inline: false },
+            { name: "Feedback", value: "Got a bug or idea? Hit him up directly.", inline: false },
+          ],
           page: "Creator",
         }),
       ],
