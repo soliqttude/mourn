@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { getEconomy, getRep, getAllActiveBuffs } from "../../features/economy.js";
+import { userProfiles } from "../../db/schema.js";
 import { db } from "../../db/index.js";
 import { levels, marriages, userMood } from "../../db/schema.js";
 import { and, eq, or } from "drizzle-orm";
@@ -20,13 +21,14 @@ export const command: HybridCommand = {
     const target = (await ctx.getUser("user")) ?? ctx.user;
     const member = await ctx.guild.members.fetch(target.id).catch(() => null);
 
-    const [eco, rep, levelRow, marriageRows, moodRow, buffs] = await Promise.all([
+    const [eco, rep, levelRow, marriageRows, moodRow, buffs, profileRow] = await Promise.all([
       getEconomy(ctx.guild.id, target.id),
       getRep(ctx.guild.id, target.id),
       db.select().from(levels).where(and(eq(levels.guildId, ctx.guild.id), eq(levels.userId, target.id))).then(r => r[0] ?? null),
       db.select().from(marriages).where(or(eq(marriages.user1Id, target.id), eq(marriages.user2Id, target.id))).then(r => r.filter(m => m.guildId === ctx.guild!.id)),
       db.select().from(userMood).where(and(eq(userMood.guildId, ctx.guild.id), eq(userMood.userId, target.id))).then(r => r[0] ?? null),
       getAllActiveBuffs(ctx.guild.id, target.id),
+      db.select().from(userProfiles).where(eq(userProfiles.userId, target.id)).then(r => r[0] ?? null),
     ]);
 
     const marriage = marriageRows[0] ?? null;
@@ -59,6 +61,7 @@ export const command: HybridCommand = {
             { name: "💍 partner", value: partner ? `<@${partnerId}>` : "single", inline: true },
             { name: "📅 joined", value: joinTs ? `<t:${joinTs}:D>` : "unknown", inline: true },
             { name: "😶 mood", value: moodRow?.mood ?? "not set", inline: true },
+            { name: "📝 bio", value: (profileRow as any)?.bio ?? "not set", inline: false },
             { name: "🧪 active buffs", value: activeBuffStr, inline: false },
           )
           .setFooter({ text: `${config.embedFooter} • fun` })
