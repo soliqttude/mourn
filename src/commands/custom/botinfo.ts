@@ -1,4 +1,3 @@
-import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed } from "../../lib/embeds.js";
 import { commands } from "../../handlers/registry.js";
@@ -14,40 +13,34 @@ function formatUptime(ms: number): string {
   return `${s}s`;
 }
 
-function formatMemory(bytes: number): string {
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
 export const command: HybridCommand = {
   name: "botinfo",
   description: "Detailed stats about Mourn.",
   category: "custom",
   aliases: ["bi", "stats"],
   async execute(ctx) {
-    const client = ctx.client;
-    const guilds = client.guilds.cache.size;
-    const users = client.guilds.cache.reduce((acc, g) => acc + g.memberCount, 0);
-    const channels = client.channels.cache.size;
-    const uptime = formatUptime(client.uptime ?? 0);
-    const mem = formatMemory(process.memoryUsage().heapUsed);
-    const ping = client.ws.ping;
+    const client  = ctx.client;
+    const guilds  = client.guilds.cache.size;
+    const users   = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+    const ping    = client.ws.ping;
+    const uptime  = formatUptime(client.uptime ?? 0);
+    const mem     = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1);
     const cmdCount = commands.size;
-    const nodeVersion = process.version;
 
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "mourn — stats.",
+          title: "Mourn — Bot Info",
+          thumbnail: client.user?.displayAvatarURL() ?? undefined,
           fields: [
-            { name: "servers", value: guilds.toLocaleString(), inline: true },
-            { name: "users", value: users.toLocaleString(), inline: true },
-            { name: "channels", value: channels.toLocaleString(), inline: true },
-            { name: "commands", value: cmdCount.toLocaleString(), inline: true },
-            { name: "ping", value: `${ping}ms`, inline: true },
-            { name: "uptime", value: uptime, inline: true },
-            { name: "memory", value: mem, inline: true },
-            { name: "node.js", value: nodeVersion, inline: true },
-            { name: "developer", value: "geico (@udrs)", inline: true },
+            { name: "🌐  Servers",   value: guilds.toLocaleString(),  inline: true },
+            { name: "👥  Users",     value: users.toLocaleString(),   inline: true },
+            { name: "⚡  Ping",      value: `${ping}ms`,              inline: true },
+            { name: "🕐  Uptime",    value: uptime,                   inline: true },
+            { name: "💾  Memory",    value: `${mem} MB`,              inline: true },
+            { name: "🛠️  Commands",  value: cmdCount.toLocaleString(), inline: true },
+            { name: "👤  Developer", value: "geico (@udrs)",          inline: true },
+            { name: "⚙️  Runtime",   value: `Node.js ${process.version}`, inline: true },
           ],
           page: "Bot Info",
         }),
