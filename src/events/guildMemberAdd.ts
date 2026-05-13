@@ -1,9 +1,11 @@
 import type { Client, GuildMember, TextChannel } from "discord.js";
+import { AttachmentBuilder } from "discord.js";
 import { brandEmbed } from "../lib/embeds.js";
 import { getGuildSettings } from "../db/settings.js";
 import { renderTemplate } from "../lib/template.js";
 import { trackInviteUse } from "../features/invites.js";
 import { handleAntiraidJoin } from "../features/antiraid.js";
+import { generateWelcomeImage } from "../features/welcomeImage.js";
 
 export const event = {
   name: "guildMemberAdd",
@@ -17,26 +19,31 @@ export const event = {
     if (settings.welcomeChannel) {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
-        const tmpl =
-          settings.welcomeMessage ||
-          "Welcome {user.mention} to **{server}** — you're member #{member_count}.";
-        await (ch as TextChannel)
-          .send({
-            content: renderTemplate(tmpl, { member, inviter }),
+        const tmpl = settings.welcomeMessage || "Welcome {user.mention} to **{server}**! You're member #{member_count}.";
+        const content = renderTemplate(tmpl, { member, inviter });
+        try {
+          const imgBuffer = await generateWelcomeImage(member);
+          const attachment = new AttachmentBuilder(imgBuffer, { name: "welcome.png" });
+          await (ch as TextChannel).send({
+            content,
+            files: [attachment],
             allowedMentions: { parse: ["users"] },
-          })
-          .catch(() => {});
+          }).catch(() => {});
+        } catch {
+          await (ch as TextChannel).send({
+            content,
+            allowedMentions: { parse: ["users"] },
+          }).catch(() => {});
+        }
       }
     }
 
     if (settings.joinLogChannel) {
       const ch = member.guild.channels.cache.get(settings.joinLogChannel);
       if (ch?.isTextBased()) {
-        const accountAge = Math.floor(
-          (Date.now() - member.user.createdTimestamp) / 86_400_000
-        );
+        const accountAge = Math.floor((Date.now() - member.user.createdTimestamp) / 86_400_000);
         const embed = brandEmbed({
-          title: "📥 Member Joined",
+          title: "\uD83D\uDCE5 Member Joined",
           description: `<@${member.id}> (${member.user.tag})\n**Account age:** ${accountAge} days\n**Member count:** ${member.guild.memberCount}${
             inviter ? `\n**Invited by:** <@${inviter.inviterId}> (\`${inviter.code}\`)` : ""
           }`,
