@@ -17,6 +17,7 @@ import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
 import { checkTier, isBotOwner } from "../lib/permissions.js";
+import { isBlacklisted } from "../lib/blacklistCache.js";
 import { handlePanelInteraction } from "../panels/router.js";
 import { cleanError } from "../lib/format.js";
 
@@ -63,6 +64,31 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
       embeds: [errorEmbed("this command is restricted to the bot owner.")],
       flags: MessageFlags.Ephemeral,
     });
+  }
+
+  if (!isBotOwner(interaction.user.id)) {
+    const { blacklisted, reason } = await isBlacklisted(interaction.user.id);
+    if (blacklisted) {
+      return interaction.reply({
+        embeds: [
+          new (await import("discord.js")).EmbedBuilder()
+            .setColor(0xED4245)
+            .setTitle("⛔  You're Blacklisted")
+            .setDescription(
+              [
+                "You have been **blacklisted** from using Mourn and cannot use any commands.",
+                "",
+                reason ? `**Reason:** ${reason}` : "",
+                "",
+                "If you believe this is a mistake, contact the developer.",
+              ].filter(Boolean).join("\n")
+            )
+            .setFooter({ text: "Mourn" })
+            .setTimestamp(),
+        ],
+        flags: MessageFlags.Ephemeral,
+      });
+    }
   }
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
     if (!checkTier(interaction.member as any, cmd.permission)) {
