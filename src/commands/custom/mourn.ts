@@ -9,18 +9,40 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "mourn.",
-          description: [
-            "an all-in-one Discord toolkit built different.",
-            "",
-            "**moderation** — ban, kick, warn, jail, timeout, case logs, word filter, anti-nuke, anti-raid",
-            "**utility** — embeds, polls, reminders, invites, starboard, reaction roles, voicemaster, tickets",
-            "**economy** — coins, shop, gambling, fishing, leaderboards",
-            "**levels** — xp system, rank cards, role rewards",
-            "**fun** — 8ball, coinflip, facts, jokes, rps",
-            "",
-            "built by **geico** (@udrs). built to last.",
-          ].join("\n"),
+          title: "Mourn — All-in-One Discord Toolkit",
+          description: "> Built different. Built to last.\n> One bot. Every feature your server needs.",
+          fields: [
+            {
+              name: "🛡️  Moderation",
+              value: "Ban, kick, warn, jail, timeout, case logs, word filter, anti-nuke, anti-raid",
+              inline: false,
+            },
+            {
+              name: "⚙️  Utility",
+              value: "Embeds, polls, reminders, starboard, reaction roles, voicemaster, tickets",
+              inline: false,
+            },
+            {
+              name: "💰  Economy",
+              value: "Coins, shop, gambling, fishing, heists, leaderboards",
+              inline: false,
+            },
+            {
+              name: "📈  Levels",
+              value: "XP system, rank cards, role rewards",
+              inline: true,
+            },
+            {
+              name: "🎉  Fun",
+              value: "8ball, trivia, rps, ship, and more",
+              inline: true,
+            },
+            {
+              name: "👤  Developer",
+              value: "geico (@udrs)",
+              inline: false,
+            },
+          ],
           page: "Mourn",
         }),
       ],
