@@ -51,7 +51,7 @@ export const command: HybridCommand = {
 
     // ,autorole — view current
     if (settings.autoroleId) {
-      return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: `Current autorole: <@&${settings.autoroleId}>\nRun `,autorole @role\` to change or \`,autorole clear\` to remove it.`, page: "Settings" })] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: `Current autorole: <@&${settings.autoroleId}>\nRun \`,autorole @role\` to change or \`,autorole clear\` to remove it.`, page: "Settings" })] });
     }
     return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: "No autorole set. Run `,autorole @role` to configure one.", page: "Settings" })] });
   },
