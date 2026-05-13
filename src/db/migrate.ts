@@ -196,12 +196,12 @@ const STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS autopublish_channels (
     guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, PRIMARY KEY (guild_id, channel_id)
   )`,
-  \`CREATE TABLE IF NOT EXISTS user_profiles (
+  `CREATE TABLE IF NOT EXISTS user_profiles (
     user_id TEXT PRIMARY KEY,
     bio TEXT,
     socials JSONB NOT NULL DEFAULT '{}',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-  )\`,
+  )`,
 ];
 
 export async function runMigrations(): Promise<void> {
