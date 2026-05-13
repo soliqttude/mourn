@@ -222,3 +222,10 @@ export const autopublishChannels = pgTable("autopublish_channels",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
+
+export const userProfiles = pgTable("user_profiles", {
+  userId: text("user_id").primaryKey(),
+  bio: text("bio"),
+  socials: jsonb("socials").$type<Record<string, string>>().default({}).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
