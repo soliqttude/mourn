@@ -1,4 +1,4 @@
-# Mourn built by geico @udrs
+# Mourn built by geico  @udrs on discord
 
   A feature-rich Discord bot for community and utility server management, built with discord.js v14 and TypeScript.
 
