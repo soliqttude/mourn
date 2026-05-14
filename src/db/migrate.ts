@@ -202,6 +202,13 @@ const STATEMENTS: string[] = [
     socials JSONB NOT NULL DEFAULT '{}',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
+  // sudo welcome mode + automod thresholds
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS welcome_mode TEXT NOT NULL DEFAULT 'default'`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_threshold INTEGER NOT NULL DEFAULT 5`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_window INTEGER NOT NULL DEFAULT 5`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS mention_limit INTEGER NOT NULL DEFAULT 5`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_threshold INTEGER NOT NULL DEFAULT 70`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_min_length INTEGER NOT NULL DEFAULT 10`,
 ];
 
 export async function runMigrations(): Promise<void> {
