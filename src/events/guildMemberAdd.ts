@@ -1,5 +1,5 @@
 import type { Client, GuildMember, TextChannel } from "discord.js";
-import { AttachmentBuilder } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { brandEmbed } from "../lib/embeds.js";
 import { getGuildSettings } from "../db/settings.js";
 import { renderTemplate } from "../lib/template.js";
@@ -19,21 +19,34 @@ export const event = {
     if (settings.welcomeChannel) {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
-        const tmpl = settings.welcomeMessage || "Welcome {user.mention} to **{server}**! You're member #{member_count}.";
-        const content = renderTemplate(tmpl, { member, inviter });
-        try {
-          const imgBuffer = await generateWelcomeImage(member);
-          const attachment = new AttachmentBuilder(imgBuffer, { name: "welcome.png" });
+        if (settings.welcomeMode === "sudo") {
+          const embed = new EmbedBuilder()
+            .setDescription(`welcome to **${member.guild.name}** !!\nenjoy your stay 🫂`)
+            .setColor(0x2b2d31)
+            .setThumbnail(member.user.displayAvatarURL({ size: 256 }));
+
           await (ch as TextChannel).send({
-            content,
-            files: [attachment],
-            allowedMentions: { parse: ["users"] },
+            content: `welcome, <@${member.id}>`,
+            embeds: [embed],
+            allowedMentions: { users: [member.id] },
           }).catch(() => {});
-        } catch {
-          await (ch as TextChannel).send({
-            content,
-            allowedMentions: { parse: ["users"] },
-          }).catch(() => {});
+        } else {
+          const tmpl = settings.welcomeMessage || "Welcome {user.mention} to **{server}**! You're member #{member_count}.";
+          const content = renderTemplate(tmpl, { member, inviter });
+          try {
+            const imgBuffer = await generateWelcomeImage(member);
+            const attachment = new AttachmentBuilder(imgBuffer, { name: "welcome.png" });
+            await (ch as TextChannel).send({
+              content,
+              files: [attachment],
+              allowedMentions: { parse: ["users"] },
+            }).catch(() => {});
+          } catch {
+            await (ch as TextChannel).send({
+              content,
+              allowedMentions: { parse: ["users"] },
+            }).catch(() => {});
+          }
         }
       }
     }
