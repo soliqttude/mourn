@@ -80,7 +80,6 @@ export const event = {
       await handleAfk(client, message);
       await handleAutomod(client, message);
       await handleWordFilter(client, message);
-      await handleAutoresponders(client, message);
       await handleLevelXp(client, message);
       await handleCounting(client, message);
       await handleHighlights(client, message);
@@ -103,7 +102,13 @@ export const event = {
     for (const p of allPrefixes) {
       if (message.content.startsWith(p)) { usedPrefix = p; break; }
     }
-    if (!usedPrefix) return;
+
+    if (!usedPrefix) {
+      try { await handleAutoresponders(client, message); } catch (err) {
+        logger.error({ err }, "autoresponder error");
+      }
+      return;
+    }
 
     const after = message.content.slice(usedPrefix.length).trimStart();
     if (!after) return;
