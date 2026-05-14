@@ -21,7 +21,7 @@ export const event = {
       if (ch?.isTextBased()) {
         if (settings.welcomeMode === "sudo") {
           const embed = new EmbedBuilder()
-            .setDescription(`welcome to **${member.guild.name}** !!\nenjoy your stay 🫂`)
+            .setDescription(`welcome to ${member.guild.name} 👀 !!\nenjoy your stay 🤙`)
             .setColor(0x2b2d31)
             .setThumbnail(member.user.displayAvatarURL({ size: 256 }));
 
