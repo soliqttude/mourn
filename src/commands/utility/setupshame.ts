@@ -5,13 +5,15 @@ import {
   EmbedBuilder,
 } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { errorEmbed, successEmbed } from "../../lib/embeds.js";
-import { updateGuildSettings } from "../../db/settings.js";
+import { errorEmbed } from "../../lib/embeds.js";
+import { db } from "../../db/index.js";
+import { shameConfig } from "../../db/schema.js";
 import { extractId } from "../../lib/parsing.js";
+import { eq } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "setupshame",
-  description: "Set the shame channel — messages that get 3+ 😭 or 💀 reactions get posted there.",
+  description: "Set the shame channel — messages with 3+ 😭 or 💀 reactions get posted there.",
   category: "utility",
   guildOnly: true,
   aliases: ["shamechannel", "setshame"],
@@ -53,15 +55,22 @@ export const command: HybridCommand = {
       }
     }
 
-    if (!targetChannel) return ctx.reply({ embeds: [errorEmbed("Please mention a text channel.")] });
-    if (!targetChannel.isTextBased?.()) return ctx.reply({ embeds: [errorEmbed("That must be a text channel.")] });
+    if (!targetChannel) {
+      return ctx.reply({ embeds: [errorEmbed("Please mention a text channel.")] });
+    }
+    if (!targetChannel.isTextBased?.()) {
+      return ctx.reply({ embeds: [errorEmbed("That must be a text channel.")] });
+    }
 
     const threshold = ctx.getNumber("threshold") ?? 3;
 
-    await updateGuildSettings(ctx.guild.id, {
-      shameChannel: targetChannel.id,
-      shameThreshold: threshold,
-    });
+    await db
+      .insert(shameConfig)
+      .values({ guildId: ctx.guild.id, channelId: targetChannel.id, threshold })
+      .onConflictDoUpdate({
+        target: shameConfig.guildId,
+        set: { channelId: targetChannel.id, threshold },
+      });
 
     if (ctx.source === "prefix") {
       const msg = ctx.raw as Message;
