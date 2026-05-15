@@ -135,6 +135,7 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
     const { handleVerificationButton } = await import("../features/verification.js");
     return handleVerificationButton(client, interaction);
   }
+  if (id.startsWith("role:")) return handleRoleButton(interaction);
   if (id.startsWith("trivia_")) return handleTriviaButton(interaction);
   if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(interaction);
 }
@@ -190,6 +191,25 @@ async function handleTriviaButton(interaction: ButtonInteraction) {
     return safeFollowUp(interaction, {
       embeds: [errorEmbed(`❌ wrong. the correct answer was **${correct}**.`)],
     });
+  }
+}
+
+async function handleRoleButton(interaction: ButtonInteraction) {
+  if (!interaction.guild || !interaction.member) return;
+  const parts = interaction.customId.split(":");
+  const roleId = parts[2];
+  if (!roleId) return;
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral }).catch(() => {});
+  const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+  if (!member) return;
+  const role = interaction.guild.roles.cache.get(roleId);
+  if (!role) return interaction.editReply({ content: "Role not found." }).catch(() => {});
+  if (member.roles.cache.has(roleId)) {
+    await member.roles.remove(roleId).catch(() => {});
+    return interaction.editReply({ content: `removed **${role.name}**` }).catch(() => {});
+  } else {
+    await member.roles.add(roleId).catch(() => {});
+    return interaction.editReply({ content: `gave you **${role.name}**` }).catch(() => {});
   }
 }
 
