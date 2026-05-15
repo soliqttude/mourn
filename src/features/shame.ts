@@ -6,8 +6,7 @@ import {
 } from "discord.js";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { shameMessages } from "../db/schema.js";
-import { getGuildSettings } from "../db/settings.js";
+import { shameMessages, shameConfig } from "../db/schema.js";
 
 const SHAME_EMOJIS = new Set(["😭", "💀"]);
 
@@ -22,10 +21,16 @@ export async function handleShameReaction(
   const emojiName = reaction.emoji.name ?? "";
   if (!SHAME_EMOJIS.has(emojiName)) return;
 
-  const settings = await getGuildSettings(message.guild.id);
-  if (!settings.shameChannel) return;
+  // Load shame config from its own table (never touches guild_settings)
+  const configRows = await db
+    .select()
+    .from(shameConfig)
+    .where(eq(shameConfig.guildId, message.guild.id))
+    .catch(() => []);
+  const cfg = configRows[0];
+  if (!cfg) return;
 
-  const shameChannel = message.guild.channels.cache.get(settings.shameChannel);
+  const shameChannel = message.guild.channels.cache.get(cfg.channelId);
   if (!shameChannel?.isTextBased()) return;
 
   // Count total shame reactions (😭 + 💀 combined)
@@ -36,18 +41,17 @@ export async function handleShameReaction(
     }
   }
 
-  const threshold = settings.shameThreshold ?? 3;
-  if (totalCount < threshold) return;
+  if (totalCount < (cfg.threshold ?? 3)) return;
 
   const existingRows = await db
     .select()
     .from(shameMessages)
-    .where(eq(shameMessages.originalMessageId, message.id));
+    .where(eq(shameMessages.originalMessageId, message.id))
+    .catch(() => []);
   const existing = existingRows[0];
 
   const channelName = (message.channel as any).name ?? "unknown";
-  const msgDate = new Date(message.createdTimestamp);
-  const timeStr = msgDate.toLocaleString("en-US", {
+  const timeStr = new Date(message.createdTimestamp).toLocaleString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
@@ -79,7 +83,7 @@ export async function handleShameReaction(
         .set({ count: totalCount })
         .where(eq(shameMessages.originalMessageId, message.id));
     } catch {
-      /* message was deleted, ignore */
+      /* shame post was deleted, ignore */
     }
   } else {
     const sent = await (shameChannel as TextChannel)
@@ -91,7 +95,7 @@ export async function handleShameReaction(
         guildId: message.guild.id,
         shameMessageId: sent.id,
         count: totalCount,
-      });
+      }).catch(() => {});
     }
   }
 }
