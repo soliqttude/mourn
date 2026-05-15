@@ -1,7 +1,7 @@
 import type { Client, GuildMember, TextChannel } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import { brandEmbed } from "../lib/embeds.js";
 import { getGuildSettings } from "../db/settings.js";
-import { renderTemplate } from "../lib/template.js";
 import { trackInviteUse } from "../features/invites.js";
 import { handleAntiraidJoin } from "../features/antiraid.js";
 
@@ -17,11 +17,17 @@ export const event = {
     if (settings.welcomeChannel) {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
-        const tmpl = settings.welcomeMessage || "welcome {user.mention} to **{server}**! you're member #{member_count}.";
-        const content = renderTemplate(tmpl, { member, inviter });
+        const embed = new EmbedBuilder()
+          .setTitle(`welcome to ${member.guild.name}`)
+          .setDescription("enjoy your stay 👋")
+          .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
+          .setFooter({ text: `member #${member.guild.memberCount}` })
+          .setColor(0x111116);
+
         await (ch as TextChannel).send({
-          content,
-          allowedMentions: { parse: ["users"] },
+          content: `welcome, <@${member.id}>`,
+          embeds: [embed],
+          allowedMentions: { users: [member.id] },
         }).catch(() => {});
       }
     }
