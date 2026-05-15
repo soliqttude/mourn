@@ -209,6 +209,22 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS mention_limit INTEGER NOT NULL DEFAULT 5`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_threshold INTEGER NOT NULL DEFAULT 70`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_min_length INTEGER NOT NULL DEFAULT 10`,
+  // button role panel system
+  `CREATE TABLE IF NOT EXISTS button_role_categories (
+    id SERIAL PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(guild_id, name)
+  )`,
+  `CREATE TABLE IF NOT EXISTS button_role_entries (
+    id SERIAL PRIMARY KEY,
+    category_id INTEGER NOT NULL,
+    guild_id TEXT NOT NULL,
+    role_id TEXT NOT NULL,
+    UNIQUE(category_id, role_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS bre_category_idx ON button_role_entries (category_id)`,
 ];
 
 export async function runMigrations(): Promise<void> {
