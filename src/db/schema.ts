@@ -55,6 +55,8 @@ export const guildSettings = pgTable("guild_settings", {
   // ── Drops ─────────────────────────────────────────────────────────────────
   dropChannel: text("drop_channel"),
   economyFrozen: boolean("economy_frozen").default(false).notNull(),
+  shameChannel: text("shame_channel"),
+  shameThreshold: integer("shame_threshold").default(3).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -81,6 +83,12 @@ export const reactionRoles = pgTable("reaction_roles",
 );
 export const starboardMessages = pgTable("starboard_messages", {
   guildId: text("guild_id").notNull(), originalMessageId: text("original_message_id").primaryKey(), starboardMessageId: text("starboard_message_id").notNull(), stars: integer("stars").default(0).notNull(),
+});
+export const shameMessages = pgTable("shame_messages", {
+  originalMessageId: text("original_message_id").primaryKey(),
+  guildId: text("guild_id").notNull(),
+  shameMessageId: text("shame_message_id").notNull(),
+  count: integer("count").default(0).notNull(),
 });
 export const voicemasterChannels = pgTable("voicemaster_channels", {
   channelId: text("channel_id").primaryKey(), guildId: text("guild_id").notNull(), ownerId: text("owner_id").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
