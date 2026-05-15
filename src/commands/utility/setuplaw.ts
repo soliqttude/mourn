@@ -5,6 +5,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   PermissionFlagsBits,
+  Message,
 } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
@@ -31,7 +32,7 @@ export const command: HybridCommand = {
   ],
 
   async execute(ctx) {
-    if (!ctx.guild) return;
+    if (!ctx.guild || !ctx.channel) return;
 
     const member = ctx.member;
     if (!member || !member.permissions.has(PermissionFlagsBits.ManageGuild)) {
@@ -45,8 +46,7 @@ export const command: HybridCommand = {
       owner = await guild.members.fetch(guild.ownerId).catch(() => null);
     }
 
-    const createdAt = guild.createdAt;
-    const creationStr = createdAt.toLocaleDateString("en-US", {
+    const creationStr = guild.createdAt.toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
@@ -75,9 +75,10 @@ export const command: HybridCommand = {
     const hasChatBtn = chatUrl && isValidUrl(chatUrl);
     const hasRolesBtn = rolesUrl && isValidUrl(rolesUrl);
 
+    const payload: any = { embeds: [embed] };
+
     if (hasChatBtn || hasRolesBtn) {
       const row = new ActionRowBuilder<ButtonBuilder>();
-
       if (hasChatBtn) {
         row.addComponents(
           new ButtonBuilder()
@@ -87,7 +88,6 @@ export const command: HybridCommand = {
             .setEmoji("↗️"),
         );
       }
-
       if (hasRolesBtn) {
         row.addComponents(
           new ButtonBuilder()
@@ -97,10 +97,16 @@ export const command: HybridCommand = {
             .setEmoji("↗️"),
         );
       }
-
-      return ctx.reply({ embeds: [embed], components: [row as any] });
+      payload.components = [row];
     }
 
-    return ctx.reply({ embeds: [embed] });
+    if (ctx.source === "prefix") {
+      const msg = ctx.raw as Message;
+      await msg.delete().catch(() => {});
+      await ctx.channel.send(payload);
+    } else {
+      await ctx.reply({ ...payload, ephemeral: true });
+      await ctx.channel.send(payload);
+    }
   },
 };
