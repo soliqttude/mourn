@@ -4,6 +4,17 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { getCategories } from "../../features/buttonRoles.js";
 
+const SYMBOLS = [
+  "(˘³˘)",
+  "('ᴗ')",
+  "(˙˘˙)",
+  "(◜ᴗ◝)",
+  "(⌐■_■)",
+  "(˶ᵔ ᵕ ᵔ˶)",
+  "(¬‿¬)",
+  "(◕‿◕)",
+];
+
 export const command: HybridCommand = {
   name: "reactionroles",
   aliases: ["rolepanel", "rp"],
@@ -27,28 +38,30 @@ export const command: HybridCommand = {
     const ch = ctx.guild.channels.cache.get(channel.id) as TextChannel | null;
     if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Invalid text channel.")] });
 
-    for (const cat of categories) {
+    for (let i = 0; i < categories.length; i++) {
+      const cat = categories[i]!;
       if (!cat.roles.length) continue;
 
-      const roleLines = cat.roles.map(r => `<@&${r}>`).join("\n");
+      const symbol = SYMBOLS[i % SYMBOLS.length]!;
+
+      const roleLines = cat.roles
+        .map(r => `> <@&${r}>`)
+        .join("\n");
+
       const embed = new EmbedBuilder()
         .setDescription(roleLines)
         .setColor(0x111116);
 
       const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-      const chunks = [];
-      for (let i = 0; i < cat.roles.length; i += 5) {
-        chunks.push(cat.roles.slice(i, i + 5));
-      }
-
-      for (const chunk of chunks) {
+      for (let j = 0; j < cat.roles.length; j += 5) {
+        const chunk = cat.roles.slice(j, j + 5);
         const row = new ActionRowBuilder<ButtonBuilder>();
         for (const roleId of chunk) {
-          const roleObj = ctx.guild.roles.cache.get(roleId);
+          const roleObj = ctx.guild!.roles.cache.get(roleId);
           const label = roleObj ? roleObj.name : roleId;
           row.addComponents(
             new ButtonBuilder()
-              .setCustomId(`role:${ctx.guild.id}:${roleId}`)
+              .setCustomId(`role:${ctx.guild!.id}:${roleId}`)
               .setLabel(label.slice(0, 80))
               .setStyle(ButtonStyle.Secondary)
           );
@@ -57,7 +70,7 @@ export const command: HybridCommand = {
       }
 
       await ch.send({
-        content: `( \`°□°\` ) · **${cat.name}**`,
+        content: `${symbol} · **${cat.name}**`,
         embeds: [embed],
         components: rows as any[],
       });
