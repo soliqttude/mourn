@@ -1,6 +1,7 @@
 import type { Client, MessageReaction, PartialMessageReaction, User, PartialUser } from "discord.js";
 import { handleStarboardReaction } from "../features/starboard.js";
 import { handleReactionRoleAdd } from "../features/reactionRoles.js";
+import { handleShameReaction } from "../features/shame.js";
 
 export const event = {
   name: "messageReactionAdd",
@@ -18,5 +19,6 @@ export const event = {
     }
     await handleStarboardReaction(client, reaction as MessageReaction);
     await handleReactionRoleAdd(client, reaction as MessageReaction, user as User);
+    await handleShameReaction(client, reaction as MessageReaction);
   },
 };
