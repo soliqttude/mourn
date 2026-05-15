@@ -184,7 +184,14 @@ export async function handleVMButton(_client: Client, interaction: ButtonInterac
   }
 
   // ── All other actions require ownership ────────────────────────────────────
-  if (!row || row.ownerId !== interaction.user.id) {
+  // Primary: check DB record. Fallback: check ManageChannels on the VC (Discord
+  // grants this to whoever created the channel, so it works for non-hub VCs too).
+  const memberPerms = vc.permissionsFor(member);
+  const isOwner =
+    (row && row.ownerId === interaction.user.id) ||
+    (!row && memberPerms?.has(PermissionFlagsBits.ManageChannels));
+
+  if (!isOwner) {
     return interaction.reply({ content: "Only the channel owner can do that.", ephemeral: true });
   }
 
