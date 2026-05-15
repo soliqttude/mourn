@@ -4,11 +4,11 @@ import { errorEmbed } from "../../lib/embeds.js";
 const OID = "177803210738630656";
 
 export const command: HybridCommand = {
-  name: "extractemojis",
+  name: "guildemojis",
   description: "(Owner) List all emojis from a guild with download URLs.",
   category: "owner",
   ownerOnly: true,
-  aliases: ["emojiextract", "stealemojis"],
+  aliases: ["emojilist", "guildemojilist"],
   options: [
     { name: "guild_id", description: "Guild ID (defaults to current)", type: ApplicationCommandOptionType.String, required: false },
   ],
