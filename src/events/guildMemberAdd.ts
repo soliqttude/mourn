@@ -18,10 +18,8 @@ export const event = {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
         const embed = new EmbedBuilder()
-          .setTitle(`welcome to ${member.guild.name}`)
-          .setDescription("enjoy your stay 👋")
+          .setDescription(`welcome to ${member.guild.name} 👀 !!\n-# enjoy your stay 🤙`)
           .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
-          .setFooter({ text: `member #${member.guild.memberCount}` })
           .setColor(0x111116);
 
         await (ch as TextChannel).send({
