@@ -37,6 +37,8 @@ export const guildSettings = pgTable("guild_settings", {
   ticketCategory: text("ticket_category"),
   ticketSupportRole: text("ticket_support_role"),
   ticketLogChannel: text("ticket_log_channel"),
+  ticketCount: integer("ticket_count").default(0).notNull(),
+  ticketTopics: jsonb("ticket_topics").$type<Array<{ name: string; emoji?: string; description?: string }>>().default([]).notNull(),
   levelsEnabled: boolean("levels_enabled").default(true).notNull(),
   levelUpChannel: text("level_up_channel"),
   jailRole: text("jail_role"),
@@ -104,7 +106,17 @@ export const voicemasterChannels = pgTable("voicemaster_channels", {
   channelId: text("channel_id").primaryKey(), guildId: text("guild_id").notNull(), ownerId: text("owner_id").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 export const tickets = pgTable("tickets", {
-  id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), openerId: text("opener_id").notNull(), claimerId: text("claimer_id"), status: text("status").default("open").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(), closedAt: timestamp("closed_at", { withTimezone: true }),
+  id: serial("id").primaryKey(),
+  guildId: text("guild_id").notNull(),
+  channelId: text("channel_id").notNull(),
+  openerId: text("opener_id").notNull(),
+  claimerId: text("claimer_id"),
+  status: text("status").default("open").notNull(),
+  topic: text("topic"),
+  number: integer("number").default(0).notNull(),
+  managementMessageId: text("management_message_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
 });
 export const afk = pgTable("afk",
   { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), message: text("message").notNull(), since: timestamp("since", { withTimezone: true }).defaultNow().notNull() },

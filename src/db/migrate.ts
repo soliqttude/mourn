@@ -276,6 +276,12 @@ const STATEMENTS: string[] = [
     content TEXT NOT NULL,
     PRIMARY KEY (guild_id, command, type)
   )`,
+  // Ticket system v2
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_count INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_topics JSONB NOT NULL DEFAULT '[]'`,
+  `ALTER TABLE tickets ADD COLUMN IF NOT EXISTS topic TEXT`,
+  `ALTER TABLE tickets ADD COLUMN IF NOT EXISTS number INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE tickets ADD COLUMN IF NOT EXISTS management_message_id TEXT`,
 ];
 
 export async function runMigrations(): Promise<void> {

@@ -1,25 +1,32 @@
 import { ApplicationCommandOptionType, type TextChannel } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
-import { createTicketPanel } from "../../features/tickets.js";
+import { createTicketPanel, type TicketTopic } from "../../features/tickets.js";
+import { getGuildSettings } from "../../db/settings.js";
 
 export const command: HybridCommand = {
   name: "ticketpanel",
-  description: "Send a ticket panel into the current channel.",
+  description: "send a ticket panel to this channel",
   category: "settings",
   permission: "admin",
   guildOnly: true,
+  usage: "ticketpanel [title] [description]",
+  examples: ["ticketpanel", "ticketpanel Support open a ticket for help"],
   options: [
-    { name: "title", description: "Panel title", type: ApplicationCommandOptionType.String, required: false },
-    { name: "description", description: "Panel description", type: ApplicationCommandOptionType.String, required: false },
+    { name: "title", description: "panel title", type: ApplicationCommandOptionType.String, required: false },
+    { name: "description", description: "panel description", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild || !ctx.channel) return;
-    const title = ctx.getString("title") ?? "🎟️ Support";
-    const desc = ctx.getString("description") ?? "Click the button below to open a ticket.";
+
+    const title = ctx.getString("title") ?? ctx.args[0] ?? "support";
+    const desc = ctx.getString("description") ?? ctx.args.slice(1).join(" ") || "click a button below to open a ticket.";
+    const settings = await getGuildSettings(ctx.guild.id);
+    const topics = (settings.ticketTopics ?? []) as TicketTopic[];
+
     try {
-      await createTicketPanel(ctx.channel as TextChannel, title, desc);
-      return ctx.reply({ embeds: [successEmbed("Panel sent.")], ephemeral: true });
+      await createTicketPanel(ctx.channel as TextChannel, title, desc, topics);
+      return ctx.reply({ embeds: [successEmbed("panel sent.")], ephemeral: true });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
     }
