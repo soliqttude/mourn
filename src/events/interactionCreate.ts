@@ -160,8 +160,9 @@ function handleHelpButton(interaction: ButtonInteraction) {
   }
 
   if (action === "pg") {
-    const idx = parseInt(parts[2] ?? "0", 10);
-    const { embed, row } = buildPagedCategoryEmbed(idx, categories, prefix);
+    const catIdx = parseInt(parts[2] ?? "0", 10);
+    const cmdPage = parseInt(parts[3] ?? "0", 10);
+    const { embed, row } = buildPagedCategoryEmbed(catIdx, categories, prefix, cmdPage);
     return interaction.update({ embeds: [embed], components: [row as any] });
   }
 
