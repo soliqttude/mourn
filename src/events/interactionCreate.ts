@@ -149,18 +149,29 @@ async function handleHelpButton(interaction: ButtonInteraction) {
     : null;
   const prefix = settings?.prefix ?? config.defaultPrefix;
 
-  if (action === "back") {
-    const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
-    const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
-    const { buildHelpHome } = await import("../commands/utility/help.js");
+  const { buildHelpHome, buildPagedCategoryEmbed, buildCategoryEmbed } =
+    await import("../commands/utility/help.js");
+
+  const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
+  const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
+
+  // ── Home ──────────────────────────────────────────────────────────────────
+  if (action === "back" || action === "home") {
     const { embed, rows } = buildHelpHome(visibleCmds.length, categories, prefix);
     return interaction.update({ embeds: [embed], components: rows as any[] }).catch(() => {});
   }
 
+  // ── Navigate to a page by index: help:pg:N ────────────────────────────────
+  if (action === "pg") {
+    const idx = parseInt(parts[2] ?? "0", 10);
+    const { embed, row } = buildPagedCategoryEmbed(idx, categories, prefix);
+    return interaction.update({ embeds: [embed], components: [row as any] }).catch(() => {});
+  }
+
+  // ── Jump to category by name: help:cat:NAME ───────────────────────────────
   if (action === "cat") {
     const category = parts[2];
     if (!category) return;
-    const { buildCategoryEmbed } = await import("../commands/utility/help.js");
     const { embed, row } = buildCategoryEmbed(category, prefix);
     return interaction.update({ embeds: [embed], components: [row as any] }).catch(() => {});
   }
