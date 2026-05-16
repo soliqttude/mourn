@@ -4,7 +4,7 @@ export const command: HybridCommand = {
   name: "quote", description: "Get a random inspirational quote.", category: "fun",
   async execute(ctx) {
     try {
-      const res = await fetch("https://zenquotes.io/api/random", { headers: { "User-Agent": "mourn-bot/1.0" } });
+      const res = await fetch("https://zenquotes.io/api/random", { headers: { "User-Agent": "bleed-bot/1.0" } });
       const data = await res.json() as { q: string; a: string }[];
       const q = data[0];
       if (!q?.q) throw new Error("empty");

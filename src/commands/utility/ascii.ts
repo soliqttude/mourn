@@ -8,7 +8,7 @@ export const command: HybridCommand = {
     const text = (ctx.getString("text", true) ?? ctx.rawArgs).slice(0, 8).toUpperCase();
     if (!text) return ctx.reply({ embeds: [errorEmbed("Provide some text (max 8 characters).")] });
     try {
-      const res = await fetch(`https://artii.herokuapp.com/make?text=${encodeURIComponent(text)}&font=banner3`, { headers: { "User-Agent": "mourn-bot/1.0" } });
+      const res = await fetch(`https://artii.herokuapp.com/make?text=${encodeURIComponent(text)}&font=banner3`, { headers: { "User-Agent": "bleed-bot/1.0" } });
       if (!res.ok) throw new Error("artii unavailable");
       const art = await res.text();
       return ctx.reply({ embeds: [brandEmbed({ title: "🎨 ASCII Art", description: `\`\`\`\n${art.slice(0, 1900)}\n\`\`\``, page: "ASCII" })] });

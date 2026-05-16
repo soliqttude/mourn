@@ -53,14 +53,14 @@ export const event = {
           .setTitle("⛔  You're Blacklisted")
           .setDescription(
             [
-              "You have been **blacklisted** from using Mourn and cannot use any commands.",
+              "You have been **blacklisted** from using Bleed and cannot use any commands.",
               "",
               reason ? `**Reason:** ${reason}` : "",
               "",
               "If you believe this is a mistake, contact the developer.",
             ].filter(Boolean).join("\n")
           )
-          .setFooter({ text: "Mourn" })
+          .setFooter({ text: "Bleed" })
           .setTimestamp();
         message.author.send({ embeds: [embed] }).catch(() => {});
         return;

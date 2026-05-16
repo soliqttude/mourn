@@ -1,4 +1,4 @@
-# Mourn built by geico  @udrs on discord
+# Bleed built by geico  @udrs on discord
 
   A feature-rich Discord bot for community and utility server management, built with discord.js v14 and TypeScript.
 
@@ -38,8 +38,8 @@
   ## Installation
 
   ```bash
-  git clone https://github.com/youruser/mourn-bot.git
-  cd mourn-bot
+  git clone https://github.com/youruser/bleed-bot.git
+  cd bleed-bot
   npm install
   ```
 
@@ -119,7 +119,7 @@
   ## Project Structure
 
   ```
-  mourn-bot/
+  bleed-bot/
   ├── src/
   │   ├── commands/           # Hybrid commands by category
   │   │   ├── custom/         # Server-specific custom commands

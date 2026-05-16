@@ -21,7 +21,7 @@ export const command: HybridCommand = {
       .setTitle(`#${raw.toUpperCase()}`)
       .setDescription(`**RGB:** ${r}, ${g}, ${b}\n**Decimal:** ${int}`)
       .setThumbnail(`https://singlecolorimage.com/get/${raw}/100x100`)
-      .setFooter({ text: "Mourn • Color" })
+      .setFooter({ text: "Bleed • Color" })
       .setTimestamp();
     return ctx.reply({ embeds: [embed] });
   },

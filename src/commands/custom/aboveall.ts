@@ -11,7 +11,7 @@ export const command: HybridCommand = {
         brandEmbed({
           title: "above all.",
           description:
-            "**Mourn** — built by **geico** (@udrs)\nrising above all the rest.",
+            "**Bleed** — built by **geico** (@udrs)\nrising above all the rest.",
           page: "Credits",
         }),
       ],

@@ -5,7 +5,7 @@ import { errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "panel",
   aliases: ["dashboard"],
-  description: "Open the Mourn control panel.",
+  description: "Open the Bleed control panel.",
   category: "settings",
   permission: "admin",
   guildOnly: true,

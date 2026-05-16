@@ -7,7 +7,7 @@ export const event = {
   name: "ready",
   once: false,
   async execute(client: Client) {
-    logger.info(`Mourn is online as ${client.user?.tag}`);
+    logger.info(`Bleed is online as ${client.user?.tag}`);
     for (const [, guild] of client.guilds.cache) {
       try {
         await cacheGuildInvites(guild);

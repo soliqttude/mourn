@@ -1,7 +1,7 @@
 {
-  "name": "mourn-bot",
+  "name": "bleed-bot",
   "version": "1.0.0",
-  "description": "Mourn — a feature-rich Discord bot for community and utility server management.",
+  "description": "Bleed — a feature-rich Discord bot for community and utility server management.",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {

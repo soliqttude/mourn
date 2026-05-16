@@ -8,7 +8,7 @@ export const command: HybridCommand = {
     const query = ctx.getString("query", true) ?? ctx.args.join(" ");
     if (!query) return ctx.reply({ embeds: [errorEmbed("Please provide a search query.")] });
     try {
-      const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query.replace(/ /g, "_"))}`, { headers: { "User-Agent": "mourn-bot/1.0" } });
+      const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query.replace(/ /g, "_"))}`, { headers: { "User-Agent": "bleed-bot/1.0" } });
       if (res.status === 404) return ctx.reply({ embeds: [errorEmbed(`No Wikipedia article found for **${query}**.`)] });
       const data = await res.json() as any;
       if (data.type === "disambiguation") return ctx.reply({ embeds: [errorEmbed(`**${query}** is ambiguous. Try a more specific term.`)] });

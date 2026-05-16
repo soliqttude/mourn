@@ -6,7 +6,7 @@ const entries = [
     version: "v1.3.0",
     date: "May 2025",
     changes: [
-      "added botinfo, creator, mourn, invite, website, donate, changelog commands",
+      "added botinfo, creator, bleed, invite, website, donate, changelog commands",
       "fixed setxp amount option type mismatch",
       "improved error handling across all slash commands",
     ],
@@ -34,7 +34,7 @@ const entries = [
     version: "v1.0.0",
     date: "Feb 2025",
     changes: [
-      "initial release of mourn",
+      "initial release of bleed",
       "full moderation suite (ban, kick, warn, timeout, jail, etc.)",
       "case logging system",
       "welcome, goodbye, boost messages",
@@ -44,7 +44,7 @@ const entries = [
 
 export const command: HybridCommand = {
   name: "changelog",
-  description: "Recent updates and changes to Mourn.",
+  description: "Recent updates and changes to Bleed.",
   category: "custom",
   aliases: ["updates", "patch", "patchnotes"],
   async execute(ctx) {
@@ -58,7 +58,7 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "mourn — changelog.",
+          title: "bleed — changelog.",
           description,
           page: "Changelog",
         }),

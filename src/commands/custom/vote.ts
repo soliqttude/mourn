@@ -4,16 +4,16 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "vote",
-  description: "Vote for Mourn on bot lists.",
+  description: "Vote for Bleed on bot lists.",
   category: "custom",
   async execute(ctx) {
     const voteUrl = (config as any).voteUrl;
     return ctx.reply({
       embeds: [brandEmbed({
-        title: "vote for mourn.",
+        title: "vote for bleed.",
         description: voteUrl
-          ? `support the bot by voting:\n\n[**vote here**](${voteUrl})\n${voteUrl}\n\nvoting helps mourn grow. it takes 10 seconds.`
-          : "voting isn't set up yet — it's coming soon.\n\nyou can still help by sharing mourn with your friends.",
+          ? `support the bot by voting:\n\n[**vote here**](${voteUrl})\n${voteUrl}\n\nvoting helps bleed grow. it takes 10 seconds.`
+          : "voting isn't set up yet — it's coming soon.\n\nyou can still help by sharing bleed with your friends.",
         page: "Vote",
       })],
     });

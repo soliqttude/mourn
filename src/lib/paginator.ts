@@ -17,8 +17,8 @@ import { logger } from "./logger.js";
 export interface PaginateOpts {
   /**
    * Context label shown in the footer.
-   * e.g. "Moderation" → "Mourn  ·  Moderation  ·  Page 1 / 3"
-   * Omit for: "Mourn  ·  Page 1 / 3"
+   * e.g. "Moderation" → "Bleed  ·  Moderation  ·  Page 1 / 3"
+   * Omit for: "Bleed  ·  Page 1 / 3"
    */
   label?: string;
 

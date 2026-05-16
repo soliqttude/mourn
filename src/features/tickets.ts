@@ -28,7 +28,7 @@ export async function createTicketPanel(
     .setColor(config.brandColor)
     .setTitle(title)
     .setDescription(description)
-    .setFooter({ text: "Mourn • Tickets" });
+    .setFooter({ text: "Bleed • Tickets" });
   const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId("ticket:open")
@@ -175,7 +175,7 @@ export async function handleTicketModal(
     .setDescription(
       `Hello <@${interaction.user.id}>, support will be with you shortly.\n\n**Reason:**\n${reason}`
     )
-    .setFooter({ text: "Mourn • Tickets" });
+    .setFooter({ text: "Bleed • Tickets" });
 
   const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()

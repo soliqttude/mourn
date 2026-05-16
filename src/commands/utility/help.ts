@@ -69,7 +69,7 @@ export function buildPagedCategoryEmbed(
   const cmdCounter = totalCmdPages > 1 ? ` · cmds ${pgIdx + 1}/${totalCmdPages}` : "";
 
   const description =
-    `**Mourn Help • ${label} (${catCounter}${cmdCounter})**\n` +
+    `**Bleed Help • ${label} (${catCounter}${cmdCounter})**\n` +
     `\`${prefix}help <command>\` for details\n\n` +
     "```\n" + lines.join("\n") + "\n```";
 

@@ -10,7 +10,7 @@ export const command: HybridCommand = {
     try {
       const isRepo = query.includes("/");
       const url = isRepo ? `https://api.github.com/repos/${query}` : `https://api.github.com/users/${query}`;
-      const res = await fetch(url, { headers: { "User-Agent": "mourn-bot/1.0" } });
+      const res = await fetch(url, { headers: { "User-Agent": "bleed-bot/1.0" } });
       if (!res.ok) return ctx.reply({ embeds: [errorEmbed(`Not found: **${query}**`)] });
       const d = await res.json() as any;
       if (isRepo) {

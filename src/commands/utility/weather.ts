@@ -8,7 +8,7 @@ export const command: HybridCommand = {
     const city = ctx.getString("city", true) ?? ctx.args.join(" ");
     if (!city) return ctx.reply({ embeds: [errorEmbed("Please provide a city name.")] });
     try {
-      const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, { headers: { "User-Agent": "mourn-bot/1.0" } });
+      const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, { headers: { "User-Agent": "bleed-bot/1.0" } });
       if (!res.ok) return ctx.reply({ embeds: [errorEmbed("City not found.")] });
       const data = await res.json() as any;
       const cur = data.current_condition?.[0];

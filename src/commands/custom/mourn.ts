@@ -2,14 +2,14 @@ import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
-  name: "mourn",
-  description: "What is Mourn?",
+  name: "bleed",
+  description: "What is Bleed?",
   category: "custom",
   async execute(ctx) {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "Mourn — All-in-One Discord Toolkit",
+          title: "Bleed — All-in-One Discord Toolkit",
           description: "> Built different. Built to last.\n> One bot. Every feature your server needs.",
           fields: [
             {
@@ -43,7 +43,7 @@ export const command: HybridCommand = {
               inline: false,
             },
           ],
-          page: "Mourn",
+          page: "Bleed",
         }),
       ],
     });

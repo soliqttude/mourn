@@ -5,7 +5,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "review",
-  description: "Leave a review or feedback for Mourn.",
+  description: "Leave a review or feedback for Bleed.",
   category: "custom",
   aliases: ["feedback"],
   options: [

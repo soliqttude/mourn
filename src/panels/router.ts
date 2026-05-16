@@ -68,11 +68,11 @@ export async function buildPanelEmbed(active: PanelTab, guildId: string) {
   const s = await getGuildSettings(guildId);
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
-    .setFooter({ text: `Mourn • Panel • ${TAB_LABELS[active]}` })
+    .setFooter({ text: `Bleed • Panel • ${TAB_LABELS[active]}` })
     .setTimestamp();
 
   if (active === "home") {
-    eb.setTitle("Mourn Control Panel").setDescription(
+    eb.setTitle("Bleed Control Panel").setDescription(
       [
         "Pick a tab from the menu below to view its settings.",
         "",

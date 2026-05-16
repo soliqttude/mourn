@@ -4,17 +4,17 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "invite",
-  description: "Invite Mourn to your server.",
+  description: "Invite Bleed to your server.",
   category: "custom",
   async execute(ctx) {
     const link = config.botInviteUrl || null;
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "invite mourn.",
+          title: "invite bleed.",
           description: link
-            ? `add **mourn** to your server:\n\n[**click here to invite**](${link})\n${link}`
-            : "mourn isn't publicly available yet.\n\nstay tuned — it's coming.",
+            ? `add **bleed** to your server:\n\n[**click here to invite**](${link})\n${link}`
+            : "bleed isn't publicly available yet.\n\nstay tuned — it's coming.",
           page: "Invite",
         }),
       ],

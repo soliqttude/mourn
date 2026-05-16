@@ -15,7 +15,7 @@ function formatUptime(ms: number): string {
 
 export const command: HybridCommand = {
   name: "botinfo",
-  description: "Detailed stats about Mourn.",
+  description: "Detailed stats about Bleed.",
   category: "custom",
   aliases: ["bi", "stats"],
   async execute(ctx) {
@@ -30,7 +30,7 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "Mourn — Bot Info",
+          title: "Bleed — Bot Info",
           thumbnail: client.user?.displayAvatarURL() ?? undefined,
           fields: [
             { name: "🌐  Servers",   value: guilds.toLocaleString(),  inline: true },
