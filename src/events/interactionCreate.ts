@@ -141,6 +141,9 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
 }
 
 async function handleHelpButton(interaction: ButtonInteraction) {
+  // Acknowledge immediately so Discord never shows "interaction failed"
+  await interaction.deferUpdate().catch(() => {});
+
   const parts = interaction.customId.split(":");
   const action = parts[1];
 
@@ -158,14 +161,14 @@ async function handleHelpButton(interaction: ButtonInteraction) {
   // ── Home ──────────────────────────────────────────────────────────────────
   if (action === "back" || action === "home") {
     const { embed, rows } = buildHelpHome(visibleCmds.length, categories, prefix);
-    return interaction.update({ embeds: [embed], components: rows as any[] }).catch(() => {});
+    return interaction.editReply({ embeds: [embed], components: rows as any[] }).catch(() => {});
   }
 
   // ── Navigate to a page by index: help:pg:N ────────────────────────────────
   if (action === "pg") {
     const idx = parseInt(parts[2] ?? "0", 10);
     const { embed, row } = buildPagedCategoryEmbed(idx, categories, prefix);
-    return interaction.update({ embeds: [embed], components: [row as any] }).catch(() => {});
+    return interaction.editReply({ embeds: [embed], components: [row as any] }).catch(() => {});
   }
 
   // ── Jump to category by name: help:cat:NAME ───────────────────────────────
@@ -173,7 +176,7 @@ async function handleHelpButton(interaction: ButtonInteraction) {
     const category = parts[2];
     if (!category) return;
     const { embed, row } = buildCategoryEmbed(category, prefix);
-    return interaction.update({ embeds: [embed], components: [row as any] }).catch(() => {});
+    return interaction.editReply({ embeds: [embed], components: [row as any] }).catch(() => {});
   }
 }
 
