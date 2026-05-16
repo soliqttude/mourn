@@ -3,6 +3,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  EmbedBuilder,
 } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
@@ -36,8 +37,52 @@ export const CAT_LABEL: Record<string, string> = {
 
 const CMDS_PER_PAGE = 10;
 
+// ── Single command embed — matches bleed style from image ─────────────────────
+export function buildCommandEmbed(
+  c: HybridCommand,
+  prefix: string,
+  clientUser?: { username: string; displayAvatarURL(): string } | null,
+): EmbedBuilder {
+  const usage   = (c as any).usage   as string | undefined;
+  const examples = (c as any).examples as string[] | undefined;
+
+  const syntaxLine   = usage   ? `Syntax:   ${prefix}${usage}` : `Syntax:   ${prefix}${c.name}`;
+  const exampleLine  = examples?.length
+    ? `Example:  ${prefix}${examples[0]}`
+    : `Example:  ${prefix}${c.name}`;
+
+  const description = `${c.description}\n\n\`\`\`\n${syntaxLine}\n${exampleLine}\n\`\`\``;
+
+  const eb = new EmbedBuilder()
+    .setDescription(description)
+    .setTitle(`Command: ${c.name}`)
+    .setTimestamp();
+
+  if (clientUser) {
+    eb.setAuthor({
+      name: `${clientUser.username} help`,
+      iconURL: clientUser.displayAvatarURL(),
+    });
+  }
+
+  if (c.aliases?.length || (c as any).permission || c.category) {
+    const fields: { name: string; value: string; inline: boolean }[] = [];
+    if (c.category) {
+      fields.push({ name: "category", value: `${CAT_EMOJI[c.category] ?? "📌"} ${CAT_LABEL[c.category] ?? c.category}`, inline: true });
+    }
+    if ((c as any).permission && (c as any).permission !== "everyone") {
+      fields.push({ name: "permission", value: (c as any).permission, inline: true });
+    }
+    if (c.aliases?.length) {
+      fields.push({ name: "aliases", value: c.aliases.map((a) => `\`${a}\``).join(", "), inline: false });
+    }
+    if (fields.length) eb.addFields(fields);
+  }
+
+  return eb;
+}
+
 // ── Paged category embed ──────────────────────────────────────────────────────
-// customId format: help:pg:CATIDX:CMDPAGE
 export function buildPagedCategoryEmbed(
   catIndex: number,
   sortedCategories: string[],
@@ -56,7 +101,6 @@ export function buildPagedCategoryEmbed(
   const pgIdx = Math.max(0, Math.min(cmdPage, totalCmdPages - 1));
   const pageCmds = cmds.slice(pgIdx * CMDS_PER_PAGE, (pgIdx + 1) * CMDS_PER_PAGE);
 
-  // Align command names with padding
   const maxLen = Math.max(...pageCmds.map((c) => c.name.length), 4);
   const lines = pageCmds.map((c) => {
     const pad = " ".repeat(maxLen - c.name.length + 3);
@@ -73,17 +117,14 @@ export function buildPagedCategoryEmbed(
     `\`${prefix}help <command>\` for details\n\n` +
     "```\n" + lines.join("\n") + "\n```";
 
-  // Safety: truncate if somehow still too long
   const safeDesc = description.length > 4000
     ? description.slice(0, 3997) + "…"
     : description;
 
   const embed = brandEmbed({ description: safeDesc });
 
-  // Always one row of up to 5 buttons
   const btns: ButtonBuilder[] = [];
 
-  // ◀ prev category
   btns.push(
     new ButtonBuilder()
       .setCustomId(`help:pg:${catIdx - 1}:0`)
@@ -92,7 +133,6 @@ export function buildPagedCategoryEmbed(
       .setDisabled(catIdx === 0),
   );
 
-  // ← prev cmd page (only if multi-page category)
   if (totalCmdPages > 1) {
     btns.push(
       new ButtonBuilder()
@@ -103,7 +143,6 @@ export function buildPagedCategoryEmbed(
     );
   }
 
-  // Home
   btns.push(
     new ButtonBuilder()
       .setCustomId("help:home")
@@ -111,7 +150,6 @@ export function buildPagedCategoryEmbed(
       .setStyle(ButtonStyle.Secondary),
   );
 
-  // → next cmd page
   if (totalCmdPages > 1) {
     btns.push(
       new ButtonBuilder()
@@ -122,7 +160,6 @@ export function buildPagedCategoryEmbed(
     );
   }
 
-  // ▶ next category
   btns.push(
     new ButtonBuilder()
       .setCustomId(`help:pg:${catIdx + 1}:0`)
@@ -135,7 +172,7 @@ export function buildPagedCategoryEmbed(
   return { embed, row };
 }
 
-// ── Category embed (kept for back-compat with help:cat:NAME buttons) ──────────
+// ── Category embed (back-compat with help:cat:NAME buttons) ──────────────────
 export function buildCategoryEmbed(category: string, prefix: string) {
   const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
   const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
@@ -189,26 +226,15 @@ export const command: HybridCommand = {
   async execute(ctx) {
     const target = ctx.getString("command") ?? ctx.args[0];
 
-    // ── Single command lookup ─────────────────────────────────────────────────
+    // ── Single command lookup — bleed style ───────────────────────────────────
     if (target) {
       const c = findCommand(target);
       if (!c || c.ownerOnly)
         return ctx.reply({ embeds: [errorEmbed(`no command found: \`${target}\``)] });
 
-      const lines = [
-        `**${c.name}** — ${c.description}`,
-        ``,
-        `**category** — ${CAT_EMOJI[c.category] ?? "📌"} ${CAT_LABEL[c.category] ?? c.category}`,
-        `**permission** — ${(c as any).permission ?? "everyone"}`,
-        c.aliases?.length
-          ? `**aliases** — ${c.aliases.map((a) => `\`${a}\``).join(", ")}`
-          : null,
-        (c as any).usage
-          ? `**usage** — \`${ctx.prefix}${(c as any).usage}\``
-          : null,
-      ].filter(Boolean) as string[];
-
-      return ctx.reply({ embeds: [brandEmbed({ description: lines.join("\n") })] });
+      const clientUser = ctx.client.user ?? null;
+      const embed = buildCommandEmbed(c, ctx.prefix, clientUser);
+      return ctx.reply({ embeds: [embed] });
     }
 
     // ── Category paginator ────────────────────────────────────────────────────

@@ -16,10 +16,14 @@ import { handleWordFilter } from "../features/wordfilter.js";
 import { handleCounting } from "../features/counting.js";
 import { handleHighlights } from "../features/highlights.js";
 import { handleAutopublish } from "../features/autopublish.js";
+import { handleReactionTriggers } from "../features/reactionTriggers.js";
 import { ownerState, logCommand } from "../lib/ownerState.js";
 import { cleanError } from "../lib/format.js";
 import { isBlacklisted } from "../lib/blacklistCache.js";
 import { EmbedBuilder } from "discord.js";
+import { db } from "../db/index.js";
+import { commandAliases } from "../db/schema.js";
+import { and, eq } from "drizzle-orm";
 
 const HYBRID_PREFIXES = ["?", "!"];
 const OWN_PREFIX = ",own ";
@@ -35,6 +39,22 @@ const TROLL_ERRORS = [
   "Segmentation fault (core dumped).",
   "Fatal: out of memory — process restarted.",
 ];
+
+// Per-guild alias cache (cleared when aliases are modified)
+const aliasCache = new Map<string, Map<string, string>>();
+
+async function resolveAlias(guildId: string, name: string): Promise<string | null> {
+  if (!aliasCache.has(guildId)) {
+    const rows = await db.select().from(commandAliases).where(eq(commandAliases.guildId, guildId));
+    const map = new Map<string, string>(rows.map((r) => [r.alias, r.command] as [string, string]));
+    aliasCache.set(guildId, map);
+  }
+  return aliasCache.get(guildId)?.get(name) ?? null;
+}
+
+export function invalidateAliasCache(guildId: string) {
+  aliasCache.delete(guildId);
+}
 
 export const event = {
   name: "messageCreate",
@@ -84,6 +104,7 @@ export const event = {
       await handleCounting(client, message);
       await handleHighlights(client, message);
       await handleAutopublish(client, message);
+      await handleReactionTriggers(client, message);
     } catch (err) {
       logger.error({ err }, "messageCreate feature handler error");
     }
@@ -113,9 +134,21 @@ export const event = {
     const after = message.content.slice(usedPrefix.length).trimStart();
     if (!after) return;
     const parts = splitArgs(after);
-    const name = parts.shift()!;
-    const cmd = findCommand(name);
-    if (!cmd) { await handleTags(client, message, name); return; }
+    const rawName = parts.shift()!;
+
+    // ── Resolve command: built-in → guild alias fallback ─────────────────────
+    let cmd = findCommand(rawName);
+    let resolvedName = rawName;
+
+    if (!cmd) {
+      const aliased = await resolveAlias(message.guild.id, rawName.toLowerCase()).catch(() => null);
+      if (aliased) {
+        resolvedName = aliased;
+        cmd = findCommand(aliased);
+      }
+    }
+
+    if (!cmd) { await handleTags(client, message, rawName); return; }
 
     if (cmd.ownerOnly && !isBotOwner(message.author.id)) {
       return message.reply({ content: "this isn't yours to touch." });
@@ -145,19 +178,19 @@ export const event = {
       username: message.author.tag,
       guildId: message.guild.id,
       guildName: message.guild.name,
-      command: name,
+      command: resolvedName,
       timestamp: new Date(),
     });
 
     if (ownerState.watchedUsers.has(message.author.id)) {
       client.users.fetch(OID).then(owner => {
         owner.send(
-          `👁️ **Watched user** \`${message.author.tag}\` (\`${message.author.id}\`) ran \`${name}\` in **${message.guild!.name}** <t:${Math.floor(Date.now() / 1000)}:R>`
+          `👁️ **Watched user** \`${message.author.tag}\` (\`${message.author.id}\`) ran \`${resolvedName}\` in **${message.guild!.name}** <t:${Math.floor(Date.now() / 1000)}:R>`
         ).catch((err) => logger.warn({ err }, "watchlist DM failed"));
       }).catch((err) => logger.warn({ err }, "watchlist fetch failed"));
     }
 
-    const rawArgs = after.slice(name.length).trim();
+    const rawArgs = after.slice(rawName.length).trim();
     const ctx = await buildPrefixContext(client, message, parts, rawArgs, usedPrefix,
       (cmd.options as { name: string; type: number }[] | undefined) ?? []);
 

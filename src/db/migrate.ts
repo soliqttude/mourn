@@ -23,7 +23,6 @@ const STATEMENTS: string[] = [
     jail_role TEXT, mute_role TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
-  // Existing column additions (idempotent)
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS autorole_id TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS confession_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS report_channel TEXT`,
@@ -36,17 +35,29 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_role_id TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS server_type TEXT`,
-  // New anti-nuke / anti-raid columns (safe on existing DBs)
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antinuke_threshold INTEGER NOT NULL DEFAULT 3`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antinuke_log_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_action TEXT NOT NULL DEFAULT 'kick'`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_log_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_lock_on_raid BOOLEAN NOT NULL DEFAULT false`,
-  // Anti-nuke whitelist table
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS drop_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS economy_frozen BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS welcome_mode TEXT NOT NULL DEFAULT 'default'`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_threshold INTEGER NOT NULL DEFAULT 5`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_window INTEGER NOT NULL DEFAULT 5`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS mention_limit INTEGER NOT NULL DEFAULT 5`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_threshold INTEGER NOT NULL DEFAULT 70`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_min_length INTEGER NOT NULL DEFAULT 10`,
+  // New feature columns
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS image_mute_role TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS reaction_mute_role TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS staff_role_ids JSONB NOT NULL DEFAULT '[]'`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_avatar TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_banner TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_bio TEXT`,
+
   `CREATE TABLE IF NOT EXISTS antinuke_whitelist (
-    guild_id TEXT NOT NULL,
-    user_id  TEXT NOT NULL,
-    PRIMARY KEY (guild_id, user_id)
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, PRIMARY KEY (guild_id, user_id)
   )`,
   `CREATE TABLE IF NOT EXISTS warnings (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
@@ -131,6 +142,13 @@ const STATEMENTS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS giveaways_guild_idx ON giveaways (guild_id)`,
+  // Giveaway extended columns
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS description TEXT`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS thumbnail TEXT`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS image_url TEXT`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS required_role_ids JSONB NOT NULL DEFAULT '[]'`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS min_level INTEGER`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS max_level INTEGER`,
   `CREATE TABLE IF NOT EXISTS word_filter (
     guild_id TEXT NOT NULL, word TEXT NOT NULL, PRIMARY KEY (guild_id, word)
   )`,
@@ -202,29 +220,62 @@ const STATEMENTS: string[] = [
     socials JSONB NOT NULL DEFAULT '{}',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
-  // sudo welcome mode + automod thresholds
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS welcome_mode TEXT NOT NULL DEFAULT 'default'`,
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_threshold INTEGER NOT NULL DEFAULT 5`,
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_window INTEGER NOT NULL DEFAULT 5`,
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS mention_limit INTEGER NOT NULL DEFAULT 5`,
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_threshold INTEGER NOT NULL DEFAULT 70`,
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_min_length INTEGER NOT NULL DEFAULT 10`,
-  // button role panel system
   `CREATE TABLE IF NOT EXISTS button_role_categories (
-    id SERIAL PRIMARY KEY,
-    guild_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    position INTEGER NOT NULL DEFAULT 0,
-    UNIQUE(guild_id, name)
+    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, name TEXT NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0, UNIQUE(guild_id, name)
   )`,
   `CREATE TABLE IF NOT EXISTS button_role_entries (
-    id SERIAL PRIMARY KEY,
-    category_id INTEGER NOT NULL,
-    guild_id TEXT NOT NULL,
-    role_id TEXT NOT NULL,
-    UNIQUE(category_id, role_id)
+    id SERIAL PRIMARY KEY, category_id INTEGER NOT NULL, guild_id TEXT NOT NULL,
+    role_id TEXT NOT NULL, UNIQUE(category_id, role_id)
   )`,
   `CREATE INDEX IF NOT EXISTS bre_category_idx ON button_role_entries (category_id)`,
+  // ── New feature tables ────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS reaction_triggers (
+    id SERIAL PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    trigger TEXT NOT NULL,
+    emoji TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS reaction_triggers_guild_idx ON reaction_triggers (guild_id)`,
+  `CREATE TABLE IF NOT EXISTS fake_permissions (
+    guild_id TEXT NOT NULL,
+    role_id TEXT NOT NULL,
+    permissions JSONB NOT NULL DEFAULT '[]',
+    PRIMARY KEY (guild_id, role_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS auto_messages (
+    id SERIAL PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    channel_id TEXT NOT NULL,
+    interval_ms BIGINT NOT NULL,
+    message TEXT NOT NULL,
+    last_sent_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS auto_messages_guild_idx ON auto_messages (guild_id)`,
+  `CREATE TABLE IF NOT EXISTS command_aliases (
+    guild_id TEXT NOT NULL,
+    alias TEXT NOT NULL,
+    command TEXT NOT NULL,
+    PRIMARY KEY (guild_id, alias)
+  )`,
+  `CREATE TABLE IF NOT EXISTS booster_roles (
+    guild_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    role_id TEXT NOT NULL,
+    PRIMARY KEY (guild_id, user_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS booster_role_config (
+    guild_id TEXT PRIMARY KEY,
+    base_role_id TEXT
+  )`,
+  `CREATE TABLE IF NOT EXISTS invoke_messages (
+    guild_id TEXT NOT NULL,
+    command TEXT NOT NULL,
+    type TEXT NOT NULL,
+    content TEXT NOT NULL,
+    PRIMARY KEY (guild_id, command, type)
+  )`,
 ];
 
 export async function runMigrations(): Promise<void> {

@@ -9,6 +9,7 @@ import { startReminderLoop } from "./features/reminders.js";
 import { startGiveawayLoop } from "./features/giveaway.js";
 import { startTempBanLoop } from "./features/tempbans.js";
 import { startDropLoop } from "./features/drops.js";
+import { startAutoMessageLoop } from "./features/autoMessages.js";
 
 async function main() {
   await runMigrations();
@@ -37,7 +38,7 @@ async function main() {
   client.once("ready", async () => {
     logger.info(`✅ Logged in as ${client.user?.tag}`);
     client.user?.setPresence({
-      activities: [{ name: `${config.defaultPrefix}panel`, type: ActivityType.Watching }],
+      activities: [{ name: `${config.defaultPrefix}help`, type: ActivityType.Watching }],
       status: "online",
     });
     if (client.application?.id) {
@@ -47,6 +48,7 @@ async function main() {
     startGiveawayLoop(client);
     startTempBanLoop(client);
     startDropLoop(client);
+    startAutoMessageLoop(client);
   });
 
   process.on("unhandledRejection", (err) => { logger.error({ err }, "Unhandled rejection"); });

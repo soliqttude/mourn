@@ -5,6 +5,47 @@ import { giveaways } from "../db/schema.js";
 import { config } from "../config.js";
 import { logger } from "../lib/logger.js";
 
+function buildGiveawayEmbed(gw: {
+  id: number;
+  prize: string;
+  description?: string | null;
+  thumbnail?: string | null;
+  imageUrl?: string | null;
+  winnersCount: number;
+  hostId: string;
+  endsAt: Date;
+  requiredRoleIds?: string[] | null;
+  minLevel?: number | null;
+  maxLevel?: number | null;
+}): EmbedBuilder {
+  const lines: string[] = [];
+  lines.push(`**Prize:** ${gw.prize}`);
+  if (gw.description) lines.push(gw.description);
+  lines.push(`**Winners:** ${gw.winnersCount}`);
+  lines.push(`**Hosted by:** <@${gw.hostId}>`);
+  lines.push(`**Ends:** <t:${Math.floor(gw.endsAt.getTime() / 1000)}:R>`);
+
+  const reqs: string[] = [];
+  if (gw.requiredRoleIds?.length) reqs.push(`roles: ${gw.requiredRoleIds.map((r) => `<@&${r}>`).join(", ")}`);
+  if (gw.minLevel != null) reqs.push(`min level: ${gw.minLevel}`);
+  if (gw.maxLevel != null) reqs.push(`max level: ${gw.maxLevel}`);
+  if (reqs.length) lines.push(`\n**Requirements:** ${reqs.join(" | ")}`);
+
+  lines.push("\nReact with 🎉 to enter!");
+
+  const eb = new EmbedBuilder()
+    .setColor(config.brandColor)
+    .setTitle("🎉 GIVEAWAY 🎉")
+    .setDescription(lines.join("\n"))
+    .setFooter({ text: `ID: ${gw.id} • ${config.embedFooter}` })
+    .setTimestamp(gw.endsAt);
+
+  if (gw.thumbnail) eb.setThumbnail(gw.thumbnail);
+  if (gw.imageUrl) eb.setImage(gw.imageUrl);
+
+  return eb;
+}
+
 export async function createGiveaway(
   client: Client,
   guildId: string,
@@ -12,24 +53,39 @@ export async function createGiveaway(
   hostId: string,
   prize: string,
   winnersCount: number,
-  endsAt: Date
+  endsAt: Date,
+  opts?: {
+    description?: string;
+    thumbnail?: string;
+    imageUrl?: string;
+    requiredRoleIds?: string[];
+    minLevel?: number;
+    maxLevel?: number;
+  }
 ): Promise<number> {
   const result = await db.insert(giveaways).values({
     guildId, channelId, hostId, prize, winnersCount, endsAt, ended: false, winners: [],
+    description: opts?.description,
+    thumbnail: opts?.thumbnail,
+    imageUrl: opts?.imageUrl,
+    requiredRoleIds: opts?.requiredRoleIds ?? [],
+    minLevel: opts?.minLevel,
+    maxLevel: opts?.maxLevel,
   }).returning({ id: giveaways.id });
   const id = result[0].id;
 
   const ch = client.channels.cache.get(channelId) as TextChannel | undefined;
   if (!ch) return id;
 
-  const embed = new EmbedBuilder()
-    .setColor(config.brandColor)
-    .setTitle("🎉 GIVEAWAY 🎉")
-    .setDescription(
-      `**Prize:** ${prize}\n**Winners:** ${winnersCount}\n**Hosted by:** <@${hostId}>\n**Ends:** <t:${Math.floor(endsAt.getTime() / 1000)}:R>\n\nReact with 🎉 to enter!`
-    )
-    .setFooter({ text: `ID: ${id} • ${config.embedFooter}` })
-    .setTimestamp(endsAt);
+  const embed = buildGiveawayEmbed({
+    id, prize, winnersCount, hostId, endsAt,
+    description: opts?.description,
+    thumbnail: opts?.thumbnail,
+    imageUrl: opts?.imageUrl,
+    requiredRoleIds: opts?.requiredRoleIds,
+    minLevel: opts?.minLevel,
+    maxLevel: opts?.maxLevel,
+  });
 
   const msg = await ch.send({ embeds: [embed] });
   await msg.react("🎉").catch(() => {});

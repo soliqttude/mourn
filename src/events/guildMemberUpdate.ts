@@ -6,6 +6,7 @@ import type {
 } from "discord.js";
 import { brandEmbed } from "../lib/embeds.js";
 import { getGuildSettings } from "../db/settings.js";
+import { handleBoostEnd } from "../features/boosterRoles.js";
 
 export const event = {
   name: "guildMemberUpdate",
@@ -14,6 +15,14 @@ export const event = {
     oldMember: GuildMember | PartialGuildMember,
     newMember: GuildMember
   ) {
+    // ── Booster role cleanup when boost is removed ────────────────────────────
+    const wasBooster = (oldMember as GuildMember).premiumSince !== null;
+    const isBooster  = newMember.premiumSince !== null;
+    if (wasBooster && !isBooster) {
+      await handleBoostEnd(newMember.guild, newMember).catch(() => {});
+    }
+
+    // ── Role change logging ───────────────────────────────────────────────────
     const settings = await getGuildSettings(newMember.guild.id);
     if (!settings.modLogChannel) return;
     const oldRoles = (oldMember as GuildMember).roles?.cache;
