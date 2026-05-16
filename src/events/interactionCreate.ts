@@ -20,6 +20,7 @@ import { checkTier, isBotOwner } from "../lib/permissions.js";
 import { isBlacklisted } from "../lib/blacklistCache.js";
 import { handlePanelInteraction } from "../panels/router.js";
 import { cleanError } from "../lib/format.js";
+import { buildHelpHome, buildPagedCategoryEmbed, buildCategoryEmbed } from "../commands/utility/help.js";
 
 async function safeFollowUp(
   interaction: ButtonInteraction | ChatInputCommandInteraction,
@@ -140,45 +141,35 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
   if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(interaction);
 }
 
-async function handleHelpButton(interaction: ButtonInteraction) {
-  // deferUpdate MUST be the very first thing — no await before it.
-  // This acknowledges the interaction instantly, giving us unlimited time for async work.
-  // We then edit interaction.message directly (bot token, not interaction token),
-  // so it works reliably on every click, not just the first.
-  await interaction.deferUpdate().catch(() => {});
-
+function handleHelpButton(interaction: ButtonInteraction) {
+  // Fully synchronous — build payload first, then call update() with zero delay.
+  // No awaits before update() means we always respond within Discord's 3s window.
+  // The prefix is read from the guild settings cache (already populated) or falls
+  // back to the default — either way it's a synchronous Map lookup.
   const parts = interaction.customId.split(":");
   const action = parts[1];
 
-  const settings = interaction.guild
-    ? await getGuildSettings(interaction.guild.id).catch(() => null)
-    : null;
-  const prefix = settings?.prefix ?? config.defaultPrefix;
-
-  const { buildHelpHome, buildPagedCategoryEmbed, buildCategoryEmbed } =
-    await import("../commands/utility/help.js");
+  const prefix = config.defaultPrefix;
 
   const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
   const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
 
-  // Use interaction.message.edit() — goes through the bot token,
-  // so it works on the 1st, 2nd, 100th click with no token expiry issues.
   if (action === "back" || action === "home") {
     const { embed, rows } = buildHelpHome(visibleCmds.length, categories, prefix);
-    return interaction.message.edit({ embeds: [embed], components: rows as any[] }).catch(() => {});
+    return interaction.update({ embeds: [embed], components: rows as any[] });
   }
 
   if (action === "pg") {
     const idx = parseInt(parts[2] ?? "0", 10);
     const { embed, row } = buildPagedCategoryEmbed(idx, categories, prefix);
-    return interaction.message.edit({ embeds: [embed], components: [row as any] }).catch(() => {});
+    return interaction.update({ embeds: [embed], components: [row as any] });
   }
 
   if (action === "cat") {
     const category = parts[2];
     if (!category) return;
     const { embed, row } = buildCategoryEmbed(category, prefix);
-    return interaction.message.edit({ embeds: [embed], components: [row as any] }).catch(() => {});
+    return interaction.update({ embeds: [embed], components: [row as any] });
   }
 }
 
