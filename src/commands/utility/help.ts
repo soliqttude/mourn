@@ -34,63 +34,113 @@ export const CAT_LABEL: Record<string, string> = {
   custom:      "Custom",
 };
 
-// ── Paged category embed ─────────────────────────────────────────────────────
+const CMDS_PER_PAGE = 10;
+
+// ── Paged category embed ──────────────────────────────────────────────────────
+// customId format: help:pg:CATIDX:CMDPAGE
 export function buildPagedCategoryEmbed(
   catIndex: number,
   sortedCategories: string[],
-  prefix: string
+  prefix: string,
+  cmdPage = 0,
 ) {
   const total = sortedCategories.length;
-  const idx = Math.max(0, Math.min(catIndex, total - 1));
-  const category = sortedCategories[idx]!;
+  const catIdx = Math.max(0, Math.min(catIndex, total - 1));
+  const category = sortedCategories[catIdx]!;
 
   const cmds = [...commands.values()]
     .filter((c) => c.category === category && !c.ownerOnly)
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const totalCmdPages = Math.max(1, Math.ceil(cmds.length / CMDS_PER_PAGE));
+  const pgIdx = Math.max(0, Math.min(cmdPage, totalCmdPages - 1));
+  const pageCmds = cmds.slice(pgIdx * CMDS_PER_PAGE, (pgIdx + 1) * CMDS_PER_PAGE);
+
   // Align command names with padding
-  const maxLen = Math.max(...cmds.map((c) => c.name.length), 4);
-  const lines = cmds.map((c) => {
+  const maxLen = Math.max(...pageCmds.map((c) => c.name.length), 4);
+  const lines = pageCmds.map((c) => {
     const pad = " ".repeat(maxLen - c.name.length + 3);
-    const desc = c.description.length > 55 ? c.description.slice(0, 52) + "…" : c.description;
+    const desc = c.description.length > 45 ? c.description.slice(0, 42) + "…" : c.description;
     return `${c.name}${pad}${desc}`;
   });
 
-  const label = `${CAT_LABEL[category] ?? category}`;
-  const embed = brandEmbed({
-    description:
-      `**Mourn Help • ${label} (${idx + 1}/${total})**\n` +
-      `\`${prefix}help <command>\` for details\n\n` +
-      "```\n" + lines.join("\n") + "\n```",
-  });
+  const label = CAT_LABEL[category] ?? category;
+  const catCounter = `${catIdx + 1}/${total}`;
+  const cmdCounter = totalCmdPages > 1 ? ` · cmds ${pgIdx + 1}/${totalCmdPages}` : "";
 
-  // Buttons: ◀  Home  ▶
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+  const description =
+    `**Mourn Help • ${label} (${catCounter}${cmdCounter})**\n` +
+    `\`${prefix}help <command>\` for details\n\n` +
+    "```\n" + lines.join("\n") + "\n```";
+
+  // Safety: truncate if somehow still too long
+  const safeDesc = description.length > 4000
+    ? description.slice(0, 3997) + "…"
+    : description;
+
+  const embed = brandEmbed({ description: safeDesc });
+
+  // Always one row of up to 5 buttons
+  const btns: ButtonBuilder[] = [];
+
+  // ◀ prev category
+  btns.push(
     new ButtonBuilder()
-      .setCustomId(`help:pg:${idx - 1}`)
+      .setCustomId(`help:pg:${catIdx - 1}:0`)
       .setLabel("◀")
       .setStyle(ButtonStyle.Secondary)
-      .setDisabled(idx === 0),
+      .setDisabled(catIdx === 0),
+  );
+
+  // ← prev cmd page (only if multi-page category)
+  if (totalCmdPages > 1) {
+    btns.push(
+      new ButtonBuilder()
+        .setCustomId(`help:pg:${catIdx}:${pgIdx - 1}`)
+        .setLabel("←")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(pgIdx === 0),
+    );
+  }
+
+  // Home
+  btns.push(
     new ButtonBuilder()
       .setCustomId("help:home")
       .setLabel("Home")
       .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(`help:pg:${idx + 1}`)
-      .setLabel("▶")
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(idx === total - 1),
   );
 
+  // → next cmd page
+  if (totalCmdPages > 1) {
+    btns.push(
+      new ButtonBuilder()
+        .setCustomId(`help:pg:${catIdx}:${pgIdx + 1}`)
+        .setLabel("→")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(pgIdx === totalCmdPages - 1),
+    );
+  }
+
+  // ▶ next category
+  btns.push(
+    new ButtonBuilder()
+      .setCustomId(`help:pg:${catIdx + 1}:0`)
+      .setLabel("▶")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(catIdx === total - 1),
+  );
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(btns);
   return { embed, row };
 }
 
-// ── Category embed (kept for back-compat) ─────────────────────────────────────
+// ── Category embed (kept for back-compat with help:cat:NAME buttons) ──────────
 export function buildCategoryEmbed(category: string, prefix: string) {
   const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
   const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
   const idx = categories.indexOf(category);
-  return buildPagedCategoryEmbed(idx === -1 ? 0 : idx, categories, prefix);
+  return buildPagedCategoryEmbed(idx === -1 ? 0 : idx, categories, prefix, 0);
 }
 
 // ── Help home ─────────────────────────────────────────────────────────────────
@@ -164,7 +214,7 @@ export const command: HybridCommand = {
     // ── Category paginator ────────────────────────────────────────────────────
     const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
     const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
-    const { embed, row } = buildPagedCategoryEmbed(0, categories, ctx.prefix);
+    const { embed, row } = buildPagedCategoryEmbed(0, categories, ctx.prefix, 0);
     return ctx.reply({ embeds: [embed], components: [row as any] });
   },
 };
