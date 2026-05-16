@@ -141,7 +141,10 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
 }
 
 async function handleHelpButton(interaction: ButtonInteraction) {
-  // Acknowledge immediately so Discord never shows "interaction failed"
+  // deferUpdate MUST be the very first thing — no await before it.
+  // This acknowledges the interaction instantly, giving us unlimited time for async work.
+  // We then edit interaction.message directly (bot token, not interaction token),
+  // so it works reliably on every click, not just the first.
   await interaction.deferUpdate().catch(() => {});
 
   const parts = interaction.customId.split(":");
@@ -158,25 +161,24 @@ async function handleHelpButton(interaction: ButtonInteraction) {
   const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
   const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
 
-  // ── Home ──────────────────────────────────────────────────────────────────
+  // Use interaction.message.edit() — goes through the bot token,
+  // so it works on the 1st, 2nd, 100th click with no token expiry issues.
   if (action === "back" || action === "home") {
     const { embed, rows } = buildHelpHome(visibleCmds.length, categories, prefix);
-    return interaction.editReply({ embeds: [embed], components: rows as any[] }).catch(() => {});
+    return interaction.message.edit({ embeds: [embed], components: rows as any[] }).catch(() => {});
   }
 
-  // ── Navigate to a page by index: help:pg:N ────────────────────────────────
   if (action === "pg") {
     const idx = parseInt(parts[2] ?? "0", 10);
     const { embed, row } = buildPagedCategoryEmbed(idx, categories, prefix);
-    return interaction.editReply({ embeds: [embed], components: [row as any] }).catch(() => {});
+    return interaction.message.edit({ embeds: [embed], components: [row as any] }).catch(() => {});
   }
 
-  // ── Jump to category by name: help:cat:NAME ───────────────────────────────
   if (action === "cat") {
     const category = parts[2];
     if (!category) return;
     const { embed, row } = buildCategoryEmbed(category, prefix);
-    return interaction.editReply({ embeds: [embed], components: [row as any] }).catch(() => {});
+    return interaction.message.edit({ embeds: [embed], components: [row as any] }).catch(() => {});
   }
 }
 
