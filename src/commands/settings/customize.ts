@@ -1,7 +1,17 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, REST } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
-import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
+import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { updateGuildSettings } from "../../db/settings.js";
+import { config } from "../../config.js";
+
+async function urlToDataUri(url: string): Promise<string> {
+  const res = await fetch(url, { headers: { "User-Agent": "BleedBot/1.0" } });
+  if (!res.ok) throw new Error(`could not fetch image (${res.status})`);
+  const ct = res.headers.get("content-type") ?? "image/png";
+  if (!ct.startsWith("image/")) throw new Error("url must point to an image");
+  const buf = await res.arrayBuffer();
+  return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
+}
 
 export const command: HybridCommand = {
   name: "customize",
@@ -49,13 +59,17 @@ export const command: HybridCommand = {
       });
     }
 
+    const rest = new REST({ version: "10" }).setToken(config.token);
+    const endpoint = `/guilds/${ctx.guild.id}/members/@me`;
+
     if (field === "reset") {
+      await rest.patch(endpoint, { body: { avatar: null, banner: null } }).catch(() => {});
       await updateGuildSettings(ctx.guild.id, {
         customizeAvatar: null,
         customizeBanner: null,
         customizeBio: null,
       });
-      return ctx.reply({ embeds: [successEmbed("bot customization has been reset.", "settings")] });
+      return ctx.reply({ embeds: [successEmbed("server customization has been reset.", "settings")] });
     }
 
     if (!value) {
@@ -65,34 +79,48 @@ export const command: HybridCommand = {
     if (field === "avatar") {
       if (!/^https?:\/\/.+/.test(value))
         return ctx.reply({ embeds: [errorEmbed("please provide a valid image url.")] });
+      let dataUri: string;
+      try {
+        dataUri = await urlToDataUri(value);
+      } catch (err) {
+        return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
+      }
+      try {
+        await rest.patch(endpoint, { body: { avatar: dataUri } });
+      } catch {
+        return ctx.reply({ embeds: [errorEmbed("discord rejected the avatar — make sure the image is under 10mb and is png/jpg/gif/webp.")] });
+      }
       await updateGuildSettings(ctx.guild.id, { customizeAvatar: value });
-    } else if (field === "banner") {
+      return ctx.reply({ embeds: [successEmbed("server avatar updated.", "settings")] });
+    }
+
+    if (field === "banner") {
       if (!/^https?:\/\/.+/.test(value))
         return ctx.reply({ embeds: [errorEmbed("please provide a valid image url.")] });
+      let dataUri: string;
+      try {
+        dataUri = await urlToDataUri(value);
+      } catch (err) {
+        return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
+      }
+      try {
+        await rest.patch(endpoint, { body: { banner: dataUri } });
+      } catch {
+        return ctx.reply({ embeds: [errorEmbed("discord rejected the banner — make sure the image is under 10mb and is png/jpg/gif/webp.")] });
+      }
       await updateGuildSettings(ctx.guild.id, { customizeBanner: value });
-    } else if (field === "bio") {
+      return ctx.reply({ embeds: [successEmbed("server banner updated.", "settings")] });
+    }
+
+    if (field === "bio") {
       if (value.length > 190)
         return ctx.reply({ embeds: [errorEmbed("bio must be 190 characters or less.")] });
       await updateGuildSettings(ctx.guild.id, { customizeBio: value });
-    } else {
-      return ctx.reply({
-        embeds: [errorEmbed("invalid option. use `avatar`, `banner`, `bio`, or `reset`.")],
-      });
+      return ctx.reply({ embeds: [successEmbed(`bio updated — **${value}**`, "settings")] });
     }
 
-    const s = await getGuildSettings(ctx.guild.id);
     return ctx.reply({
-      embeds: [
-        brandEmbed({
-          description: [
-            s.customizeAvatar ? `**avatar** — [link](${s.customizeAvatar})` : "**avatar** — default",
-            s.customizeBanner ? `**banner** — [link](${s.customizeBanner})` : "**banner** — default",
-            s.customizeBio    ? `**bio** — ${s.customizeBio}`               : "**bio** — not set",
-          ].join("\n"),
-          thumbnail: s.customizeAvatar ?? undefined,
-          page: "settings",
-        }),
-      ],
+      embeds: [errorEmbed("invalid option. use `avatar`, `banner`, `bio`, or `reset`.")],
     });
   },
 };
