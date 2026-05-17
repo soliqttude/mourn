@@ -21,8 +21,7 @@ export const command: HybridCommand = {
 
     const title = ctx.getString("title") ?? ctx.args[0] ?? "support";
     const desc =
-      ctx.getString("description") ??
-      ctx.args.slice(1).join(" ") ||
+      (ctx.getString("description") ?? ctx.args.slice(1).join(" ")) ||
       "click a button below to open a ticket.";
 
     const settings = await getGuildSettings(ctx.guild.id);
