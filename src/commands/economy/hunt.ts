@@ -19,6 +19,7 @@ const animals = [
 
 export const command: HybridCommand = {
   name: "hunt",
+  aliases: ["hunting", "chase"],
   description: "Go hunting for coins.",
   category: "economy",
   guildOnly: true,

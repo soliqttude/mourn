@@ -13,6 +13,7 @@ function getIqLabel(iq: number): string {
 
 export const command: HybridCommand = {
   name: "iq",
+  aliases: ["iqtest", "brains"],
   description: "Check someone's IQ.",
   category: "fun",
   options: [{ name: "user", description: "User to check", type: ApplicationCommandOptionType.User, required: false }],

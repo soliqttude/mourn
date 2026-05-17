@@ -9,6 +9,7 @@ import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
 
 export const command: HybridCommand = {
   name: "tempban",
+  aliases: ["tb", "tban", "timeban"],
   description: "Temporarily ban a member.",
   category: "moderation",
   permission: "mod",

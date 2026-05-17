@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "unroleall",
+  aliases: ["massunrole", "removeroleall"],
   description: "Remove a role from all members.",
   category: "moderation",
   permission: "admin",

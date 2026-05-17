@@ -25,6 +25,7 @@ function roll(): typeof FISH[number] {
 
 export const command: HybridCommand = {
   name: "fish",
+  aliases: ["fishing", "cast"],
   description: "Go fishing and earn coins.",
   category: "economy",
   guildOnly: true,

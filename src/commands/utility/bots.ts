@@ -3,6 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "bots",
+  aliases: ["botmembers", "robotlist"],
   description: "List all bots in the server.",
   category: "utility",
   guildOnly: true,

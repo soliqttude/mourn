@@ -4,6 +4,7 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "decode",
+  aliases: ["dec", "decodetext"],
   description: "Base64 decode text.",
   category: "utility",
   options: [{ name: "text", description: "Base64 text to decode", type: ApplicationCommandOptionType.String, required: true }],

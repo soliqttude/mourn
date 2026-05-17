@@ -7,6 +7,7 @@ const STREAK_EMOJIS = ["", "🔥", "🔥🔥", "💫", "⚡", "🌟", "💎", "�
 
 export const command: HybridCommand = {
   name: "daily",
+  aliases: ["dailyclaim", "dl"],
   description: "Claim your daily reward. Consecutive days increase your streak bonus!",
   category: "economy",
   guildOnly: true,

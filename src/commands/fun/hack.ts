@@ -53,6 +53,7 @@ function pick<T>(arr: T[]): T {
 
 export const command: HybridCommand = {
   name: "hack",
+  aliases: ["hacking", "hackme"],
   description: "Fake-hack someone for fun.",
   category: "fun",
   guildOnly: true,

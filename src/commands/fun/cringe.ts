@@ -2,7 +2,8 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "cringe", description: "Rate someone's cringe level.", category: "fun", guildOnly: true,
+  name: "cringe",
+  aliases: ["ew", "yikes"], description: "Rate someone's cringe level.", category: "fun", guildOnly: true,
   options: [{ name: "user", description: "User to rate", type: ApplicationCommandOptionType.User, required: false }],
   async execute(ctx) {
     const target = (await ctx.getUser("user")) ?? ctx.user;

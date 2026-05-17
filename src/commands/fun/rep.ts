@@ -6,6 +6,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "rep",
+  aliases: ["reputation", "giverep"],
   description: "Give reputation to a user once per day.",
   category: "fun",
   guildOnly: true,

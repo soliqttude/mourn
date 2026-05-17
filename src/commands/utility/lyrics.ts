@@ -2,7 +2,8 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "lyrics", description: "Find song lyrics (format: Artist - Song Title).", category: "utility",
+  name: "lyrics",
+  aliases: ["lyr", "song", "songlyrics"], description: "Find song lyrics (format: Artist - Song Title).", category: "utility",
   options: [{ name: "song", description: "Artist - Song Title (e.g. Drake - God's Plan)", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     const query = ctx.getString("song", true) ?? ctx.rawArgs;

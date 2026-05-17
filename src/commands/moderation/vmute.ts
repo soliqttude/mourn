@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "vmute",
+  aliases: ["voicemute", "vcmute"],
   description: "Server-mute a member in voice.",
   category: "moderation",
   permission: "mod",

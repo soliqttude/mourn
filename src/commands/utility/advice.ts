@@ -1,7 +1,8 @@
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "advice", description: "Get a random piece of advice.", category: "utility",
+  name: "advice",
+  aliases: ["tip", "suggest"], description: "Get a random piece of advice.", category: "utility",
   async execute(ctx) {
     try {
       const res = await fetch("https://api.adviceslip.com/advice", { headers: { "Cache-Control": "no-cache" } });

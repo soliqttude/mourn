@@ -9,6 +9,7 @@ const COOLDOWN = 90 * 60 * 1000;
 
 export const command: HybridCommand = {
   name: "heist",
+  aliases: ["bankrob", "robbery"],
   description: "Organize a heist for a big payout — or lose it all.",
   category: "economy",
   guildOnly: true,

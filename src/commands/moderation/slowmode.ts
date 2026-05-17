@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "slowmode",
+  aliases: ["sm", "slow", "ratelimit"],
   description: "Set slowmode for this channel (in seconds, 0 to disable).",
   category: "moderation",
   permission: "mod",

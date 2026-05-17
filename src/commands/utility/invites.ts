@@ -5,6 +5,7 @@ import { getInviteCount } from "../../features/invites.js";
 
 export const command: HybridCommand = {
   name: "invites",
+  aliases: ["myinvites", "invitecount"],
   description: "See how many people you (or another user) have invited.",
   category: "utility",
   guildOnly: true,

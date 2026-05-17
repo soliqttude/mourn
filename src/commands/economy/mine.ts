@@ -17,6 +17,7 @@ const finds = [
 
 export const command: HybridCommand = {
   name: "mine",
+  aliases: ["mining"],
   description: "Mine for resources and coins.",
   category: "economy",
   guildOnly: true,

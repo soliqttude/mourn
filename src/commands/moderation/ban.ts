@@ -6,6 +6,7 @@ import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
 
 export const command: HybridCommand = {
   name: "ban",
+  aliases: ["b"],
   description: "Ban a member from the server.",
   category: "moderation",
   permission: "mod",

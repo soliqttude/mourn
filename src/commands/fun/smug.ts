@@ -4,6 +4,7 @@ import { getGif } from "../../lib/gif.js";
 
 export const command: HybridCommand = {
   name: "smug",
+  aliases: ["smugface", "smirk"],
   description: "Give a smug look.",
   category: "fun",
   async execute(ctx) {

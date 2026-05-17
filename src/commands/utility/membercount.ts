@@ -3,6 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "membercount",
+  aliases: ["mc", "members", "serverpop"],
   description: "Show the server's member statistics.",
   category: "utility",
   guildOnly: true,

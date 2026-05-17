@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "unhide",
+  aliases: ["showchannel", "uch"],
   description: "Restore visibility of a hidden channel.",
   category: "moderation",
   permission: "mod",

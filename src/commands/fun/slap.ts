@@ -5,6 +5,7 @@ import { getGif } from "../../lib/gif.js";
 
 export const command: HybridCommand = {
   name: "slap",
+  aliases: ["smack", "whack"],
   description: "Slap someone.",
   category: "fun",
   guildOnly: true,

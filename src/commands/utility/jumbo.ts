@@ -4,6 +4,7 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "jumbo",
+  aliases: ["bigemoji", "enlargeemoji", "e"],
   description: "Enlarge a custom emoji.",
   category: "utility",
   options: [{ name: "emoji", description: "Custom emoji to enlarge", type: ApplicationCommandOptionType.String, required: true }],

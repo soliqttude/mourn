@@ -5,6 +5,7 @@ import { getGuildSettings } from "../../db/settings.js";
 
 export const command: HybridCommand = {
   name: "unjail",
+  aliases: ["uj", "release", "free"],
   description: "Remove the jail role from a member.",
   category: "moderation",
   permission: "mod",

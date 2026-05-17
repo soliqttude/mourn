@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "imute",
+  aliases: ["imagemute", "imgmute"],
   description: "Prevent a user from sending images/attachments.",
   category: "moderation",
   permission: "mod",

@@ -9,7 +9,8 @@ const MAP: Record<string, string> = {
   "!":"❗","?":"❓","+":"➕","-":"➖",
 };
 export const command: HybridCommand = {
-  name: "emojify", description: "Convert text to emoji letters.", category: "fun",
+  name: "emojify",
+  aliases: ["emoji", "emojis"], description: "Convert text to emoji letters.", category: "fun",
   options: [{ name: "text", description: "Text to emojify", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     const text = ctx.getString("text", true) ?? ctx.rawArgs;

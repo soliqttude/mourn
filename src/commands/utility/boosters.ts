@@ -3,6 +3,7 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "boosters",
+  aliases: ["serverboosts", "boostlist"],
   description: "List all current server boosters.",
   category: "utility",
   guildOnly: true,

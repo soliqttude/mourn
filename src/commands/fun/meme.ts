@@ -5,6 +5,7 @@ const subreddits = ["memes", "dankmemes", "me_irl", "AdviceAnimals", "funny"];
 
 export const command: HybridCommand = {
   name: "meme",
+  aliases: ["dankmeme", "memes"],
   description: "Get a random meme.",
   category: "fun",
   async execute(ctx) {

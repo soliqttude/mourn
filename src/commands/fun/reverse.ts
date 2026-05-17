@@ -4,6 +4,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "reverse",
+  aliases: ["rev", "backwards"],
   description: "Reverse some text.",
   category: "fun",
   options: [{ name: "text", description: "Text to reverse", type: ApplicationCommandOptionType.String, required: true }],

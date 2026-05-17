@@ -8,6 +8,7 @@ import { addBalance } from "../../features/economy.js";
 
 export const command: HybridCommand = {
   name: "sell",
+  aliases: ["sellitem", "trade"],
   description: "Sell an item from your inventory for 50% of its price.",
   category: "economy",
   guildOnly: true,

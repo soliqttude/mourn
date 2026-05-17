@@ -12,6 +12,7 @@ const PRESTIGE_BALANCE_REQUIRED = 50_000;
 
 export const command: HybridCommand = {
   name: "prestige",
+  aliases: ["pres", "rankup"],
   description: "Reset your level and economy in exchange for a prestige badge.",
   category: "economy",
   guildOnly: true,

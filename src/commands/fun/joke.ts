@@ -21,6 +21,7 @@ const JOKES = [
 
 export const command: HybridCommand = {
   name: "joke",
+  aliases: ["jokes", "funny"],
   description: "Get a random joke.",
   category: "fun",
   permission: "everyone",

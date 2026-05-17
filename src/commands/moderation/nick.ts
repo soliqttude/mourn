@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "nick",
+  aliases: ["nickname", "setnick"],
   description: "Change a member's nickname.",
   category: "moderation",
   permission: "mod",

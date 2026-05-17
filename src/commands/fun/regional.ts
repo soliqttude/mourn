@@ -10,7 +10,8 @@ function regional(t: string): string {
   }).join(" ");
 }
 export const command: HybridCommand = {
-  name: "regional", description: "Convert text to regional indicator emojis.", category: "fun",
+  name: "regional",
+  aliases: ["letters", "bigletters"], description: "Convert text to regional indicator emojis.", category: "fun",
   options: [{ name: "text", description: "Text to convert", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     const text = ctx.getString("text", true) ?? ctx.rawArgs;

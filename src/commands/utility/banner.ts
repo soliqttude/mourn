@@ -4,6 +4,7 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "banner",
+  aliases: ["userbanner", "profilebanner", "ub"],
   description: "Show a user's banner.",
   category: "utility",
   options: [

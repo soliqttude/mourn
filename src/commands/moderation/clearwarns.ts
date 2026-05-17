@@ -7,6 +7,7 @@ import { warnings } from "../../db/schema.js";
 
 export const command: HybridCommand = {
   name: "clearwarns",
+  aliases: ["clearwarnings", "cw", "delwarns"],
   description: "Clear all warnings for a member.",
   category: "moderation",
   permission: "admin",

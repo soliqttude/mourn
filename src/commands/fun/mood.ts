@@ -8,6 +8,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "mood",
+  aliases: ["mymood", "feelings"],
   description: "Set your current mood (shows on your profile).",
   category: "fun",
   guildOnly: true,

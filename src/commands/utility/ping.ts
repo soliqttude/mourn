@@ -3,6 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "ping",
+  aliases: ["latency", "pong"],
   description: "Show the bot's latency.",
   category: "utility",
   async execute(ctx) {

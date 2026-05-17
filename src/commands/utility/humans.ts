@@ -3,6 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "humans",
+  aliases: ["realusers", "nonbots"],
   description: "Show the count of non-bot members.",
   category: "utility",
   guildOnly: true,

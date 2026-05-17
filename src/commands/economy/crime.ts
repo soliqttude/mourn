@@ -17,6 +17,7 @@ const failures = [
 
 export const command: HybridCommand = {
   name: "crime",
+  aliases: ["criminal", "cr"],
   description: "Commit a crime for coins — risky.",
   category: "economy",
   guildOnly: true,

@@ -2,7 +2,8 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "weather", description: "Get current weather for a city.", category: "utility",
+  name: "weather",
+  aliases: ["forecast", "climate"], description: "Get current weather for a city.", category: "utility",
   options: [{ name: "city", description: "City name", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     const city = ctx.getString("city", true) ?? ctx.args.join(" ");

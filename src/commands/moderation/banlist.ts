@@ -3,6 +3,7 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "banlist",
+  aliases: ["bans", "banned"],
   description: "List all banned users in the server.",
   category: "moderation",
   permission: "mod",

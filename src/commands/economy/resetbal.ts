@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "resetbal",
+  aliases: ["resetbalance", "resetmoney"],
   description: "Reset a user's balance to 0 (admin).",
   category: "economy",
   permission: "admin",

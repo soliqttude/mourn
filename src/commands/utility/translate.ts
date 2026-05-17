@@ -21,6 +21,7 @@ const LANGS: Record<string, string> = {
 
 export const command: HybridCommand = {
   name: "translate",
+  aliases: ["tr", "lang", "tl"],
   description: "Translate text into another language.",
   category: "utility",
   guildOnly: false,

@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "massban",
+  aliases: ["mban", "bulkban"],
   description: "Ban multiple users by ID (space-separated list).",
   category: "moderation",
   permission: "admin",

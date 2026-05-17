@@ -2,7 +2,8 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "time", description: "Get the current time in any timezone.", category: "utility",
+  name: "time",
+  aliases: ["currenttime", "clock"], description: "Get the current time in any timezone.", category: "utility",
   options: [{ name: "timezone", description: "Timezone (e.g. America/New_York, UTC, Europe/London)", type: ApplicationCommandOptionType.String, required: false }],
   async execute(ctx) {
     const tz = (ctx.getString("timezone") ?? ctx.args.join(" ")) || "UTC";

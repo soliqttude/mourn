@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "stripall",
+  aliases: ["stripallroles", "massstrip"],
   description: "Remove all roles from a member.",
   category: "moderation",
   permission: "admin",

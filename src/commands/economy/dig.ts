@@ -17,6 +17,7 @@ const finds = [
 
 export const command: HybridCommand = {
   name: "dig",
+  aliases: ["excavate", "pickaxe"],
   description: "Dig for buried treasure.",
   category: "economy",
   guildOnly: true,

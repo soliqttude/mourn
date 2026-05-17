@@ -5,6 +5,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "embed",
+  aliases: ["buildembed", "embedbuilder"],
   description: "Send a custom embed message.",
   category: "utility",
   permission: "mod",

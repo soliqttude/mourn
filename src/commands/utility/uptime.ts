@@ -4,6 +4,7 @@ import { formatDuration } from "../../lib/time.js";
 
 export const command: HybridCommand = {
   name: "uptime",
+  aliases: ["ut", "botuptime"],
   description: "Show how long the bot has been online.",
   category: "utility",
   async execute(ctx) {

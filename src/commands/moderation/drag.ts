@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "drag",
+  aliases: ["movemember", "move"],
   description: "Move a member to a different voice channel.",
   category: "moderation",
   permission: "mod",

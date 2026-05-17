@@ -5,6 +5,7 @@ import { getGif } from "../../lib/gif.js";
 
 export const command: HybridCommand = {
   name: "highfive",
+  aliases: ["hi5", "hive"],
   description: "High five someone!",
   category: "fun",
   options: [{ name: "user", description: "User to high five", type: ApplicationCommandOptionType.User, required: true }],

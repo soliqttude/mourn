@@ -5,6 +5,7 @@ import { getGif } from "../../lib/gif.js";
 
 export const command: HybridCommand = {
   name: "lick",
+  aliases: ["tongue", "lickme"],
   description: "Lick someone.",
   category: "fun",
   guildOnly: true,

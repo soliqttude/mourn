@@ -3,6 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "roles",
+  aliases: ["serverroles", "allroles"],
   description: "List all roles in the server.",
   category: "utility",
   guildOnly: true,

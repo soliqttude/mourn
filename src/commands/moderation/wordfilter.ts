@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "wordfilter",
+  aliases: ["filter", "wf", "badwords"],
   description: "Manage the server word filter.",
   category: "moderation",
   permission: "mod",

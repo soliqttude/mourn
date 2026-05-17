@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "deafen",
+  aliases: ["deaf", "dv"],
   description: "Server-deafen a member in voice.",
   category: "moderation",
   permission: "mod",

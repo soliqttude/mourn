@@ -13,6 +13,7 @@ const ANSWERS = [
 
 export const command: HybridCommand = {
   name: "8ball",
+  aliases: ["8b", "magic8ball", "ask"],
   description: "Ask the magic 8ball a question.",
   category: "fun",
   permission: "everyone",

@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "shop",
+  aliases: ["store", "market"],
   description: "View the server item shop.",
   category: "economy",
   guildOnly: true,

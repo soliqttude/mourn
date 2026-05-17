@@ -5,6 +5,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "numberrace",
+  aliases: ["numrace", "countrace"],
   description: "First person to type the secret number wins coins! Open to everyone.",
   category: "fun",
   guildOnly: true,

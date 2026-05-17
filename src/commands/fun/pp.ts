@@ -4,6 +4,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "pp",
+  aliases: ["ppsize", "dicksize", "ppcheck"],
   description: "Check someone's pp size.",
   category: "fun",
   options: [{ name: "user", description: "User to check", type: ApplicationCommandOptionType.User, required: false }],

@@ -12,7 +12,8 @@ function zalgo(t: string): string {
   }).join("");
 }
 export const command: HybridCommand = {
-  name: "zalgo", description: "Corrupt text with zalgo glitch characters.", category: "fun",
+  name: "zalgo",
+  aliases: ["corrupt", "cursed"], description: "Corrupt text with zalgo glitch characters.", category: "fun",
   options: [{ name: "text", description: "Text to corrupt", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     const text = ctx.getString("text", true) ?? ctx.rawArgs;

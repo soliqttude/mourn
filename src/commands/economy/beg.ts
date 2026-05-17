@@ -14,6 +14,7 @@ const responses = [
 
 export const command: HybridCommand = {
   name: "beg",
+  aliases: ["panhandle", "spare"],
   description: "Beg for coins.",
   category: "economy",
   guildOnly: true,

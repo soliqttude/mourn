@@ -4,6 +4,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "clap",
+  aliases: ["clapping", "applause"],
   description: "Add 👏 between 👏 every 👏 word.",
   category: "fun",
   options: [{ name: "text", description: "Text to clapify", type: ApplicationCommandOptionType.String, required: true }],

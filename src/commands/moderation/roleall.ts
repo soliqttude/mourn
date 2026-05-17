@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "roleall",
+  aliases: ["massrole", "giveroleall"],
   description: "Give a role to all members.",
   category: "moderation",
   permission: "admin",

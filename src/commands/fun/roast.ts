@@ -17,6 +17,7 @@ const roasts = [
 
 export const command: HybridCommand = {
   name: "roast",
+  aliases: ["rip", "insult"],
   description: "Roast someone.",
   category: "fun",
   options: [{ name: "user", description: "User to roast", type: ApplicationCommandOptionType.User, required: true }],

@@ -16,6 +16,7 @@ const jobs = [
 
 export const command: HybridCommand = {
   name: "work",
+  aliases: ["job", "earn"],
   description: "Work for some coins.",
   category: "economy",
   guildOnly: true,

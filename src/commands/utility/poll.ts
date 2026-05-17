@@ -5,6 +5,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "poll",
+  aliases: ["vote", "createpoll"],
   description: "Create a yes/no poll.",
   category: "utility",
   guildOnly: true,

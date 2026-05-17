@@ -6,6 +6,7 @@ import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
 
 export const command: HybridCommand = {
   name: "softban",
+  aliases: ["sb", "sban"],
   description: "Ban then immediately unban a member, wiping their recent messages.",
   category: "moderation",
   permission: "mod",

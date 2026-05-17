@@ -8,6 +8,7 @@ import { paginate, chunkArray } from "../../lib/paginator.js";
 
 export const command: HybridCommand = {
   name: "cases",
+  aliases: ["modcases", "allcases"],
   description: "View all mod cases for a user.",
   category: "moderation",
   permission: "mod",

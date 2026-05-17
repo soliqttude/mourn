@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "note",
+  aliases: ["addnote", "staffnote"],
   description: "Manage moderator notes on users.",
   category: "moderation",
   permission: "mod",

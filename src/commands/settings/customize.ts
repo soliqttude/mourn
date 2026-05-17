@@ -60,10 +60,18 @@ export const command: HybridCommand = {
     }
 
     const rest = new REST({ version: "10" }).setToken(config.token);
-    const endpoint = `/guilds/${ctx.guild.id}/members/@me`;
+    const memberEndpoint = `/guilds/${ctx.guild.id}/members/@me`;
 
     if (field === "reset") {
-      await rest.patch(endpoint, { body: { avatar: null, banner: null } }).catch(() => {});
+      // Reset guild member avatar/banner
+      const resetErr = await rest
+        .patch(memberEndpoint, { body: { avatar: null, banner: null } })
+        .catch((e: Error) => e);
+      if (resetErr instanceof Error) {
+        return ctx.reply({ embeds: [errorEmbed(`discord rejected the reset: ${resetErr.message}`)] });
+      }
+      // Reset global bio via application endpoint
+      await rest.patch("/applications/@me", { body: { description: "" } }).catch(() => {});
       await updateGuildSettings(ctx.guild.id, {
         customizeAvatar: null,
         customizeBanner: null,
@@ -85,10 +93,20 @@ export const command: HybridCommand = {
       } catch (err) {
         return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
       }
-      try {
-        await rest.patch(endpoint, { body: { avatar: dataUri } });
-      } catch {
-        return ctx.reply({ embeds: [errorEmbed("discord rejected the avatar — make sure the image is under 10mb and is png/jpg/gif/webp.")] });
+      // Try per-guild avatar first
+      const guildErr = await rest
+        .patch(memberEndpoint, { body: { avatar: dataUri } })
+        .catch((e: Error) => e);
+      if (guildErr instanceof Error) {
+        // Fall back to global avatar change
+        const globalErr = await rest
+          .patch("/users/@me", { body: { avatar: dataUri } })
+          .catch((e: Error) => e);
+        if (globalErr instanceof Error) {
+          return ctx.reply({
+            embeds: [errorEmbed(`discord rejected the avatar — make sure the image is under 10mb and is png/jpg/gif/webp. (${(globalErr as Error).message})`)],
+          });
+        }
       }
       await updateGuildSettings(ctx.guild.id, { customizeAvatar: value });
       return ctx.reply({ embeds: [successEmbed("server avatar updated.", "settings")] });
@@ -103,18 +121,30 @@ export const command: HybridCommand = {
       } catch (err) {
         return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
       }
-      try {
-        await rest.patch(endpoint, { body: { banner: dataUri } });
-      } catch {
-        return ctx.reply({ embeds: [errorEmbed("discord rejected the banner — make sure the image is under 10mb and is png/jpg/gif/webp.")] });
+      const bannerErr = await rest
+        .patch(memberEndpoint, { body: { banner: dataUri } })
+        .catch((e: Error) => e);
+      if (bannerErr instanceof Error) {
+        return ctx.reply({
+          embeds: [errorEmbed(`discord rejected the banner — make sure the image is under 10mb and is png/jpg/gif/webp. (${(bannerErr as Error).message})`)],
+        });
       }
       await updateGuildSettings(ctx.guild.id, { customizeBanner: value });
       return ctx.reply({ embeds: [successEmbed("server banner updated.", "settings")] });
     }
 
     if (field === "bio") {
-      if (value.length > 190)
-        return ctx.reply({ embeds: [errorEmbed("bio must be 190 characters or less.")] });
+      if (value.length > 400)
+        return ctx.reply({ embeds: [errorEmbed("bio must be 400 characters or less.")] });
+      // Update the bot's application description (this is the actual Discord bio)
+      const bioErr = await rest
+        .patch("/applications/@me", { body: { description: value } })
+        .catch((e: Error) => e);
+      if (bioErr instanceof Error) {
+        return ctx.reply({
+          embeds: [errorEmbed(`discord rejected the bio update: ${(bioErr as Error).message}`)],
+        });
+      }
       await updateGuildSettings(ctx.guild.id, { customizeBio: value });
       return ctx.reply({ embeds: [successEmbed(`bio updated — **${value}**`, "settings")] });
     }

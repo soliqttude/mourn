@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "steal",
+  aliases: ["copyemoji", "grabemoji"],
   description: "Steal an emoji from another server and add it here.",
   category: "utility",
   permission: "admin",

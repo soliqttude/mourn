@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "undeafen",
+  aliases: ["undeaf", "undv"],
   description: "Remove server-deafen from a member.",
   category: "moderation",
   permission: "mod",

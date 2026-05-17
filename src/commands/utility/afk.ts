@@ -5,6 +5,7 @@ import { setAfk } from "../../features/afk.js";
 
 export const command: HybridCommand = {
   name: "afk",
+  aliases: ["away", "brb"],
   description: "Mark yourself AFK.",
   category: "utility",
   guildOnly: true,

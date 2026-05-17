@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "case",
+  aliases: ["modcase", "viewcase"],
   description: "Look up a mod case by number.",
   category: "moderation",
   permission: "mod",

@@ -5,6 +5,7 @@ import { getGif } from "../../lib/gif.js";
 
 export const command: HybridCommand = {
   name: "poke",
+  aliases: ["prod", "jab"],
   description: "Poke someone.",
   category: "fun",
   guildOnly: true,

@@ -4,6 +4,7 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "admins",
+  aliases: ["staff", "mods"],
   description: "List all members with administrator permissions.",
   category: "utility",
   guildOnly: true,

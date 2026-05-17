@@ -6,6 +6,7 @@ import { or, eq } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "divorce",
+  aliases: ["breakup", "separate"],
   description: "Divorce your partner.",
   category: "fun",
   guildOnly: true,

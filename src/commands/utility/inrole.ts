@@ -4,6 +4,7 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "inrole",
+  aliases: ["roleusers", "membersinrole", "rolemembers"],
   description: "List all members who have a specific role.",
   category: "utility",
   guildOnly: true,

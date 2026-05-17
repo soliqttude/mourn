@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "moveall",
+  aliases: ["mvall", "massMove"],
   description: "Move all members from one voice channel to another.",
   category: "moderation",
   permission: "mod",

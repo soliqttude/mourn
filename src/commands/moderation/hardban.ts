@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "hardban",
+  aliases: ["hban", "permban"],
   description: "Permanently ban a user and delete all accessible message history.",
   category: "moderation",
   permission: "admin",

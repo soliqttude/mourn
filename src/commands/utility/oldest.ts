@@ -3,6 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "oldest",
+  aliases: ["oldestmembers", "firstjoins"],
   description: "Show the oldest members in the server.",
   category: "utility",
   guildOnly: true,

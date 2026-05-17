@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "hackban",
+  aliases: ["forceban", "hb", "idban"],
   description: "Ban a user by ID even if they are not in the server.",
   category: "moderation",
   permission: "mod",

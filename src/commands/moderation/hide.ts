@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "hide",
+  aliases: ["hidechannel", "hch"],
   description: "Hide a channel from @everyone.",
   category: "moderation",
   permission: "mod",

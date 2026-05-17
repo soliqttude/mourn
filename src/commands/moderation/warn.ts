@@ -7,6 +7,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "warn",
+  aliases: ["w", "strike"],
   description: "Warn a member.",
   category: "moderation",
   permission: "mod",

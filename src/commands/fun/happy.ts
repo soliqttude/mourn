@@ -3,7 +3,8 @@ import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { getGif } from "../../lib/gif.js";
 export const command: HybridCommand = {
-  name: "happy", description: "Express happiness.", category: "fun", guildOnly: true,
+  name: "happy",
+  aliases: ["happiness", "joyful"], description: "Express happiness.", category: "fun", guildOnly: true,
   options: [{ name: "user", description: "Someone making you happy", type: ApplicationCommandOptionType.User, required: false }],
   async execute(ctx) {
     const target = (await ctx.getUser("user")) ?? null;

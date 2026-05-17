@@ -4,6 +4,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "mock",
+  aliases: ["spongebob", "sponge"],
   description: "Mock someone with SpOnGeBoB text.",
   category: "fun",
   options: [{ name: "text", description: "Text to mock", type: ApplicationCommandOptionType.String, required: true }],

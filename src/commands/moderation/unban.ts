@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "unban",
+  aliases: ["ub", "pardon"],
   description: "Unban a user.",
   category: "moderation",
   permission: "mod",

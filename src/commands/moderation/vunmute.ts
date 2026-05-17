@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "vunmute",
+  aliases: ["voiceunmute", "vcunmute"],
   description: "Remove server-mute from a member.",
   category: "moderation",
   permission: "mod",

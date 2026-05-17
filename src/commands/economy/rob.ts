@@ -18,6 +18,7 @@ async function getBal(guildId: string, userId: string): Promise<number> {
 
 export const command: HybridCommand = {
   name: "rob",
+  aliases: ["steal", "mug"],
   description: "Attempt to steal coins from another member.",
   category: "economy",
   guildOnly: true,

@@ -3,6 +3,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "unlock",
+  aliases: ["unlockchannel", "ulch"],
   description: "Unlock the current channel.",
   category: "moderation",
   permission: "mod",

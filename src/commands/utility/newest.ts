@@ -3,6 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "newest",
+  aliases: ["newmembers", "latestjoins"],
   description: "Show the newest members in the server.",
   category: "utility",
   guildOnly: true,

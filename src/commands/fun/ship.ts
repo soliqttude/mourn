@@ -19,6 +19,7 @@ function getShipText(pct: number): string {
 
 export const command: HybridCommand = {
   name: "ship",
+  aliases: ["shiplove", "couple"],
   description: "Check the compatibility between two users.",
   category: "fun",
   options: [

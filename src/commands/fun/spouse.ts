@@ -8,6 +8,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "spouse",
+  aliases: ["partner", "waifu", "hubby"],
   description: "See who you're married to.",
   category: "fun",
   guildOnly: true,

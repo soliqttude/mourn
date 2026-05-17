@@ -14,6 +14,7 @@ function getResult(player: Choice, bot: Choice): "win" | "lose" | "tie" {
 
 export const command: HybridCommand = {
   name: "rps",
+  aliases: ["rockpaperscissors", "rockpaper"],
   description: "Play rock paper scissors against the bot.",
   category: "fun",
   permission: "everyone",

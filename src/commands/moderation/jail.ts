@@ -6,6 +6,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "jail",
+  aliases: ["jl", "imprison"],
   description: "Assign the jail role to a member.",
   category: "moderation",
   permission: "mod",

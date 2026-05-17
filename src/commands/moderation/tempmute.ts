@@ -6,6 +6,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "tempmute",
+  aliases: ["tm", "timemute"],
   description: "Temporarily mute (timeout) a member.",
   category: "moderation",
   permission: "mod",

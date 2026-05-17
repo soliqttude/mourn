@@ -7,6 +7,7 @@ import { reports } from "../../db/schema.js";
 
 export const command: HybridCommand = {
   name: "report",
+  aliases: ["submitreport", "reportuser"],
   description: "Report a member to the server moderators.",
   category: "utility",
   guildOnly: true,

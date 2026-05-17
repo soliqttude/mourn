@@ -18,6 +18,7 @@ const REWARDS: Record<string, number> = { easy: 50, medium: 100, hard: 175 };
 
 export const command: HybridCommand = {
   name: "trivia",
+  aliases: ["quiz", "triviatime"],
   description: "Answer a random trivia question and win coins.",
   category: "fun",
   async execute(ctx) {

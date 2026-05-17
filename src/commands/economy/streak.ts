@@ -5,6 +5,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "streak",
+  aliases: ["dailystreak", "combo"],
   description: "Check your daily claim streak.",
   category: "economy",
   guildOnly: true,

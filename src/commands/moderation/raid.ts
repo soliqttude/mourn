@@ -8,6 +8,7 @@ type Action = typeof ACTIONS[number];
 
 export const command: HybridCommand = {
   name: "raid",
+  aliases: ["simulateraid", "testraids"],
   description: "Handle a raid — mass-action members who joined recently with a new account.",
   category: "moderation",
   permission: "admin",

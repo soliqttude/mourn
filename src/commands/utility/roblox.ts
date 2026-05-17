@@ -2,7 +2,8 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "roblox", description: "Look up a Roblox user profile.", category: "utility",
+  name: "roblox",
+  aliases: ["rlx", "rbx"], description: "Look up a Roblox user profile.", category: "utility",
   options: [{ name: "username", description: "Roblox username", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     const username = (ctx.getString("username", true) ?? ctx.args[0] ?? "").trim();

@@ -4,6 +4,7 @@ import { successEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "antispam",
+  aliases: ["spamprotect", "aspam"],
   description: "Toggle antispam on/off. Run with no args to toggle, or pass `status` to check.",
   category: "moderation",
   permission: "admin",

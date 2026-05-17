@@ -2,7 +2,8 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "steam", description: "Look up a Steam profile.", category: "utility",
+  name: "steam",
+  aliases: ["steamprofile", "steamlookup"], description: "Look up a Steam profile.", category: "utility",
   options: [{ name: "steamid", description: "Steam ID (17 digits) or custom URL name", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     const input = (ctx.getString("steamid", true) ?? ctx.args[0] ?? "").replace(/.*\/profiles\//, "").replace(/.*\/id\//, "").replace(/\/$/, "").trim();

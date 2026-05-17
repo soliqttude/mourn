@@ -3,6 +3,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "nuke",
+  aliases: ["clearchannel", "wipe"],
   description: "Clone this channel and delete the original, wiping all messages.",
   category: "moderation",
   permission: "admin",

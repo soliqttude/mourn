@@ -4,6 +4,7 @@ import { errorEmbed, successEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "say",
+  aliases: ["echo", "announce"],
   description: "Make the bot send a message.",
   category: "utility",
   permission: "mod",

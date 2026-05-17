@@ -17,6 +17,7 @@ const compliments = [
 
 export const command: HybridCommand = {
   name: "compliment",
+  aliases: ["comp", "flatter"],
   description: "Compliment someone.",
   category: "fun",
   options: [{ name: "user", description: "User to compliment", type: ApplicationCommandOptionType.User, required: true }],

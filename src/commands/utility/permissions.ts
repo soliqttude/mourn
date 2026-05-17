@@ -15,6 +15,7 @@ const PERMS: [keyof typeof PermissionsBitField.Flags, string][] = [
 
 export const command: HybridCommand = {
   name: "permissions",
+  aliases: ["perms", "checkperms"],
   description: "View what permissions a member has in the current channel.",
   category: "utility",
   guildOnly: true,

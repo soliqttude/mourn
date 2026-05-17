@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "rmute",
+  aliases: ["reactionmute", "reactmute"],
   description: "Prevent a user from adding reactions.",
   category: "moderation",
   permission: "mod",

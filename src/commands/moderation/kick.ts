@@ -5,6 +5,7 @@ import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "kick",
+  aliases: ["k", "remove"],
   description: "Kick a member from the server.",
   category: "moderation",
   permission: "mod",
