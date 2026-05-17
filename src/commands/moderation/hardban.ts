@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "hardban",
@@ -25,7 +24,6 @@ export const command: HybridCommand = {
     if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You cannot hardban yourself.")] });
     try {
       await guild.bans.create(target.id, { deleteMessageSeconds: 604800, reason });
-      await logCase(guild.id, target.id, ctx.user.id, "hardban", reason);
       return ctx.reply({ embeds: [successEmbed(`Hardbanned **${target.tag}** — all message history cleared.`)] });
     } catch {
       return ctx.reply({ embeds: [errorEmbed("Failed to hardban. Check my permissions.")] });

@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "rmute",
@@ -26,7 +25,6 @@ export const command: HybridCommand = {
       .forEach(async (ch) => {
         await (ch as any).permissionOverwrites.edit(target.id, { AddReactions: false }).catch(() => {});
       });
-    const caseId = await logCase(ctx.guild.id, target.id, ctx.user.id, "rmute", reason);
-    return ctx.reply({ embeds: [successEmbed(`Reaction-muted **${target.user.tag}** — ${reason}\nCase #${caseId}`)] });
+    return ctx.reply({ embeds: [successEmbed(`Reaction-muted **${target.user.tag}** — ${reason}`)] });
   },
 };

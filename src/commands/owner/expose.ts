@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import type { HybridCommand } from "../../lib/command.js";
 import { config } from "../../config.js";
 import { db } from "../../db/index.js";
-import { economy, levels, warnings, modCases, blacklist } from "../../db/schema.js";
+import { economy, levels, warnings, blacklist } from "../../db/schema.js";
 import { ownerState } from "../../lib/ownerState.js";
 
 export const command: HybridCommand = {
@@ -28,7 +28,6 @@ export const command: HybridCommand = {
       const eco = await db.query.economy.findFirst({ where: and(eq(economy.guildId, guildId), eq(economy.userId, userId)) });
       const lvl = await db.query.levels.findFirst({ where: and(eq(levels.guildId, guildId), eq(levels.userId, userId)) });
       const warns = await db.select().from(warnings).where(and(eq(warnings.guildId, guildId), eq(warnings.userId, userId)));
-      const cases = await db.select().from(modCases).where(and(eq(modCases.guildId, guildId), eq(modCases.userId, userId)));
       if (eco) { totalBalance += eco.balance; totalBank += eco.bank; }
       if (lvl) totalXp += lvl.xp;
       totalWarnings += warns.length;

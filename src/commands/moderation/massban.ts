@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "massban",
@@ -28,7 +27,6 @@ export const command: HybridCommand = {
     for (const id of ids) {
       try {
         await guild.bans.create(id, { reason, deleteMessageSeconds: 86400 });
-        await logCase(guild.id, id, ctx.user.id, "massban", reason);
         success++;
       } catch { failed++; }
     }

@@ -2,7 +2,6 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { modEmbed, errorEmbed } from "../../lib/embeds.js";
 import { parseDuration } from "../../lib/time.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "timeout",
@@ -30,9 +29,8 @@ export const command: HybridCommand = {
     if (!target.moderatable) return ctx.reply({ embeds: [errorEmbed("i can't timeout that user.")] });
     try {
       await target.timeout(ms, `${ctx.user.tag}: ${reason}`);
-      const caseId = await logCase(guild.id, target.id, ctx.user.id, "timeout", reason, dur);
       return ctx.reply({
-        embeds: [modEmbed({ action: "timed out", target: target.user, moderator: ctx.user, reason, caseId, duration: dur })],
+        embeds: [modEmbed({ action: "timed out", target: target.user, moderator: ctx.user, reason, duration: dur })],
       });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });

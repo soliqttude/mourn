@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { modEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
 
 export const command: HybridCommand = {
@@ -29,8 +28,7 @@ export const command: HybridCommand = {
     try {
       await guild.bans.create(target.id, { deleteMessageSeconds: 604800, reason });
       await guild.bans.remove(target.id, "softban cleanup");
-      const caseId = await logCase(guild.id, target.id, ctx.user.id, "softban", reason);
-      return ctx.reply({ embeds: [modEmbed({ action: "softbanned", target, moderator: ctx.user, reason, caseId })] });
+      return ctx.reply({ embeds: [modEmbed({ action: "softbanned", target, moderator: ctx.user, reason })] });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed(cleanError(err))] });
     }

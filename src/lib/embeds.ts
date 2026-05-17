@@ -33,7 +33,6 @@ interface ModEmbedOpts {
   target:     User;
   moderator:  User;
   reason:     string;
-  caseId?:    number;
   duration?:  string;
 }
 
@@ -127,8 +126,6 @@ export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
     `**moderator** — ${opts.moderator.username.toLowerCase()}`,
   ];
   if (opts.duration) lines.push(`**duration** — ${opts.duration.toLowerCase()}`);
-  if (opts.caseId)   lines.push(`**case** — #${opts.caseId}`);
-
   return base(C.mod)
     .setAuthor({
       name:    `${opts.action.toLowerCase()}  ·  ${opts.target.username.toLowerCase()}`,

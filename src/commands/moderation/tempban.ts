@@ -4,7 +4,6 @@ import { modEmbed, errorEmbed } from "../../lib/embeds.js";
 import { parseDuration } from "../../lib/time.js";
 import { db } from "../../db/index.js";
 import { tempBans } from "../../db/schema.js";
-import { logCase } from "../../features/modcase.js";
 import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
 
 export const command: HybridCommand = {
@@ -35,8 +34,7 @@ export const command: HybridCommand = {
     try {
       await guild.members.ban(target.id, { reason: `[TEMPBAN ${durStr}] ${ctx.user.tag}: ${reason}` });
       await db.insert(tempBans).values({ guildId: guild.id, userId: target.id, moderatorId: ctx.user.id, reason, unbanAt });
-      const caseId = await logCase(guild.id, target.id, ctx.user.id, "tempban", reason, durStr);
-      return ctx.reply({ embeds: [modEmbed({ action: "temp-banned", target, moderator: ctx.user, reason, caseId, duration: durStr })] });
+      return ctx.reply({ embeds: [modEmbed({ action: "temp-banned", target, moderator: ctx.user, reason, duration: durStr })] });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed(cleanError(err))] });
     }

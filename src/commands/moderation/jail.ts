@@ -2,7 +2,6 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { getGuildSettings } from "../../db/settings.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "jail",
@@ -32,7 +31,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("That member is already jailed.")] });
     try {
       await target.roles.add(jailRole, reason);
-      await logCase(guild.id, target.user.id, ctx.user.id, "jail", reason);
       return ctx.reply({ embeds: [successEmbed(`Jailed **${target.user.tag}**.`)] });
     } catch {
       return ctx.reply({ embeds: [errorEmbed("Failed to jail. Check my role hierarchy.")] });

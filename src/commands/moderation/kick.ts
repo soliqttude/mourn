@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { modEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "kick",
@@ -26,9 +25,8 @@ export const command: HybridCommand = {
     if (!target.kickable) return ctx.reply({ embeds: [errorEmbed("i can't kick that user.")] });
     try {
       await target.kick(`${ctx.user.tag}: ${reason}`);
-      const caseId = await logCase(guild.id, target.id, ctx.user.id, "kick", reason);
       return ctx.reply({
-        embeds: [modEmbed({ action: "kicked", target: target.user, moderator: ctx.user, reason, caseId })],
+        embeds: [modEmbed({ action: "kicked", target: target.user, moderator: ctx.user, reason })],
       });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });

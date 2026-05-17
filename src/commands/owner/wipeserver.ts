@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import type { HybridCommand } from "../../lib/command.js";
 import { config } from "../../config.js";
 import { db } from "../../db/index.js";
-import { guildSettings, economy, levels, warnings, modCases, tags, autoresponders, tickets, giveaways, wordFilter, modNotes, shopItems, userItems, reports } from "../../db/schema.js";
+import { guildSettings, economy, levels, warnings, tags, autoresponders, tickets, giveaways, wordFilter, modNotes, shopItems, userItems, reports } from "../../db/schema.js";
 
 export const command: HybridCommand = {
   name: "wipeserver",
@@ -23,7 +23,7 @@ export const command: HybridCommand = {
     if (confirm !== "CONFIRM") return ctx.reply({ content: "Type exactly `CONFIRM` to proceed." });
     if (!guildId) return ctx.reply({ content: "Provide a guild ID." });
     await ctx.defer(true);
-    const tables = [economy, levels, warnings, modCases, tags, autoresponders, tickets, giveaways, wordFilter, modNotes, shopItems, userItems, reports, guildSettings];
+    const tables = [economy, levels, warnings, tags, autoresponders, tickets, giveaways, wordFilter, modNotes, shopItems, userItems, reports, guildSettings];
     let wiped = 0;
     for (const table of tables) {
       try { await db.delete(table as any).where(eq((table as any).guildId, guildId)); wiped++; } catch { }

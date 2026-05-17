@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "stripall",
@@ -23,7 +22,6 @@ export const command: HybridCommand = {
     if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
     const roles = target.roles.cache.filter(r => r.id !== ctx.guild!.id);
     await target.roles.remove(roles, reason);
-    const caseId = await logCase(ctx.guild.id, target.id, ctx.user.id, "stripall", reason);
-    return ctx.reply({ embeds: [successEmbed(`Stripped all roles from **${target.user.tag}** — ${reason}\nCase #${caseId}`)] });
+    return ctx.reply({ embeds: [successEmbed(`Stripped all roles from **${target.user.tag}** — ${reason}`)] });
   },
 };

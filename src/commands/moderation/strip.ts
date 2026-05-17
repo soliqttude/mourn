@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "strip",
@@ -29,7 +28,6 @@ export const command: HybridCommand = {
     if (!removable.size) return ctx.reply({ embeds: [errorEmbed("No removable roles found.")] });
     try {
       await target.roles.remove(removable, reason);
-      await logCase(guild.id, target.user.id, ctx.user.id, "strip", reason);
       return ctx.reply({ embeds: [successEmbed(`Stripped **${removable.size}** role(s) from **${target.user.tag}**.`)] });
     } catch {
       return ctx.reply({ embeds: [errorEmbed("Failed to strip roles. Check my permissions.")] });

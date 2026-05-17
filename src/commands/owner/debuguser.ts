@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
 import { getBalance } from "../../features/economy.js";
 import { db } from "../../db/index.js";
-import { levels, warnings, modCases, blacklist, userItems } from "../../db/schema.js";
+import { levels, warnings, blacklist, userItems } from "../../db/schema.js";
 import { and, eq, count } from "drizzle-orm";
 const OID = "177803210738630656";
 
@@ -31,7 +31,6 @@ export const command: HybridCommand = {
       getBalance(ctx.guild.id, userId).catch(() => null),
       db.select().from(levels).where(and(eq(levels.guildId, ctx.guild.id), eq(levels.userId, userId))).then(r => r[0] ?? null).catch(() => null),
       db.select({ c: count() }).from(warnings).where(and(eq(warnings.guildId, ctx.guild.id), eq(warnings.userId, userId))).then(r => r[0]?.c ?? 0).catch(() => 0),
-      db.select({ c: count() }).from(modCases).where(and(eq(modCases.guildId, ctx.guild.id), eq(modCases.userId, userId))).then(r => r[0]?.c ?? 0).catch(() => 0),
       db.select().from(blacklist).where(eq(blacklist.userId, userId)).then(r => r.length > 0).catch(() => false),
     ]);
 

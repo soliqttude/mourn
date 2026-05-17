@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 
 export const command: HybridCommand = {
   name: "imute",
@@ -29,7 +28,6 @@ export const command: HybridCommand = {
           EmbedLinks: false,
         }).catch(() => {});
       });
-    const caseId = await logCase(ctx.guild.id, target.id, ctx.user.id, "imute", reason);
-    return ctx.reply({ embeds: [successEmbed(`Image-muted **${target.user.tag}** — ${reason}\nCase #${caseId}`)] });
+    return ctx.reply({ embeds: [successEmbed(`Image-muted **${target.user.tag}** — ${reason}`)] });
   },
 };

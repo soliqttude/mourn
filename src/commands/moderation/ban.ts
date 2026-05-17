@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { modEmbed, errorEmbed } from "../../lib/embeds.js";
-import { logCase } from "../../features/modcase.js";
 import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
 
 export const command: HybridCommand = {
@@ -30,9 +29,8 @@ export const command: HybridCommand = {
     if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("i can't ban that user — they may have a higher role.")] });
     try {
       await guild.members.ban(target.id, { reason: `${ctx.user.tag}: ${reason}` });
-      const caseId = await logCase(guild.id, target.id, ctx.user.id, "ban", reason);
       return ctx.reply({
-        embeds: [modEmbed({ action: "banned", target, moderator: ctx.user, reason, caseId })],
+        embeds: [modEmbed({ action: "banned", target, moderator: ctx.user, reason })],
       });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed(cleanError(err))] });
