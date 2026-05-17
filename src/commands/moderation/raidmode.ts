@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "raidmode",
   aliases: ["antiraid"],
   description: "Toggle raid mode on/off. Run once to enable, again to disable.",
+  usage: "raidmode",
+  examples: ["raidmode"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

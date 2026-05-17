@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "membercount",
   aliases: ["mc", "members", "serverpop"],
   description: "Show the server's member statistics.",
+  usage: "membercount",
+  examples: ["membercount"],
   category: "utility",
   guildOnly: true,
   options: [],

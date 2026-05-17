@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "highfive",
   aliases: ["hi5", "hive"],
   description: "High five someone!",
+  usage: "highfive [user]",
+  examples: ["highfive"],
   category: "fun",
   options: [{ name: "user", description: "User to high five", type: ApplicationCommandOptionType.User, required: true }],
   async execute(ctx) {

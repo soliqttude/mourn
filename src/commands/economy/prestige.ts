@@ -14,6 +14,8 @@ export const command: HybridCommand = {
   name: "prestige",
   aliases: ["pres", "rankup"],
   description: "Reset your level and economy in exchange for a prestige badge.",
+  usage: "prestige",
+  examples: ["prestige"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

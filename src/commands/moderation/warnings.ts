@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "warnings",
   aliases: ["warns"],
   description: "View warnings for a member.",
+  usage: "warnings [user]",
+  examples: ["warnings"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

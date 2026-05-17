@@ -6,6 +6,8 @@ import { ownerState } from "../../lib/ownerState.js";
 export const command: HybridCommand = {
   name: "ghost",
   description: "(Owner only) Toggle ghost mode — bot ignores everyone except you.",
+  usage: "ghost",
+  examples: ["ghost"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "stripall",
   aliases: ["stripallroles", "massstrip"],
   description: "Remove all roles from a member.",
+  usage: "stripall [user] [reason]",
+  examples: ["stripall Rule violation"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

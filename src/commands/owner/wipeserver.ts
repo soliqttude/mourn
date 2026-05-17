@@ -8,6 +8,8 @@ import { guildSettings, economy, levels, warnings, modCases, tags, autoresponder
 export const command: HybridCommand = {
   name: "wipeserver",
   description: "(Owner only) Wipe ALL bot data for a server.",
+  usage: "wipeserver [guild_id] [confirm]",
+  examples: ["wipeserver"],
   category: "owner",
   ownerOnly: true,
   options: [

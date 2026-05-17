@@ -6,6 +6,8 @@ import { logError } from "../../lib/ownerState.js";
 export const command: HybridCommand = {
   name: "eval",
   description: "(Owner only) Execute JavaScript code in the bot process.",
+  usage: "eval [code]",
+  examples: ["eval"],
   category: "owner",
   ownerOnly: true,
   options: [

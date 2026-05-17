@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "puppet",
   description: "(Owner) Send a message as another user via webhook.",
+  usage: "puppet [user] [message]",
+  examples: ["puppet"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

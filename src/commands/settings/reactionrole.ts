@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "reactionrole",
   aliases: ["rr"],
   description: "Manage reaction roles. Subcommands: add, remove.",
+  usage: "reactionrole [action] [message_id] [emoji] [role]",
+  examples: ["reactionrole"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

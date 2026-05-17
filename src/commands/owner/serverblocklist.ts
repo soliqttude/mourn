@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "serverblocklist",
   description: "(Owner) Show all blacklisted users.",
+  usage: "serverblocklist",
+  examples: ["serverblocklist"],
   category: "owner",
   ownerOnly: true,
   aliases: ["blocklist", "blist"],

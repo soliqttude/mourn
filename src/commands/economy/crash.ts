@@ -12,6 +12,8 @@ function genCrash(): number {
 export const command: HybridCommand = {
   name: "crash",
   description: "Bet — multiplier rises until it crashes. Cash out in time!",
+  usage: "crash [bet]",
+  examples: ["crash"],
   category: "economy",
   guildOnly: true,
   aliases: ["crashgame"],

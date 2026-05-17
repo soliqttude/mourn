@@ -19,6 +19,8 @@ const activeGames = new Map<string, { chain: Chain; lastLetter: string; started:
 export const command: HybridCommand = {
   name: "wordchain",
   description: "Multiplayer word chain game! Each word must start with the last letter of the previous word.",
+  usage: "wordchain",
+  examples: ["wordchain"],
   category: "fun",
   guildOnly: true,
   aliases: ["chain", "wordgame"],

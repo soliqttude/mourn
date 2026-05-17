@@ -17,6 +17,8 @@ const prompts = [
 export const command: HybridCommand = {
   name: "neverhaveiever",
   description: "Get a never have I ever prompt.",
+  usage: "neverhaveiever",
+  examples: ["neverhaveiever"],
   category: "fun",
   aliases: ["nhie"],
   async execute(ctx) {

@@ -5,6 +5,8 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "emojiinfo",
   description: "Get info about a custom emoji.",
+  usage: "emojiinfo [emoji]",
+  examples: ["emojiinfo"],
   category: "utility",
   guildOnly: true,
   aliases: ["ei"],

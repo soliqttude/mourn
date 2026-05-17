@@ -34,6 +34,8 @@ function pickQuote(): [string, string] {
 export const command: HybridCommand = {
   name: "dailyquote",
   description: "Get today's daily quote. Same for everyone, refreshes at midnight.",
+  usage: "dailyquote",
+  examples: ["dailyquote"],
   category: "fun",
   aliases: ["quote", "dq"],
   async execute(ctx) {

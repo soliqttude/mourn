@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "botlist",
   description: "Show all bots in this server.",
+  usage: "botlist",
+  examples: ["botlist"],
   category: "utility",
   guildOnly: true,
   aliases: ["bots2", "listbots", "showbots"],

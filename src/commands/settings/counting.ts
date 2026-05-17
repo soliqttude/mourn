@@ -9,6 +9,8 @@ import { eq } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "counting",
   description: "Manage the counting game.",
+  usage: "counting",
+  examples: ["counting"],
   category: "settings",
   guildOnly: true,
   options: [

@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "numberrace",
   aliases: ["numrace", "countrace"],
   description: "First person to type the secret number wins coins! Open to everyone.",
+  usage: "numberrace [prize]",
+  examples: ["numberrace"],
   category: "fun",
   guildOnly: true,
   options: [

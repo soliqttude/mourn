@@ -7,6 +7,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "gamble",
   description: "Bet on a 50/50 coin flip — double or nothing.",
+  usage: "gamble [amount]",
+  examples: ["gamble"],
   category: "economy",
   guildOnly: true,
   aliases: ["flip", "coinbet"],

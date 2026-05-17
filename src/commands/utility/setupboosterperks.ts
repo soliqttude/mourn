@@ -10,6 +10,8 @@ import { errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "setupboosterperks",
   description: "Post the booster perks embed to a channel.",
+  usage: "setupboosterperks [channel] [role]",
+  examples: ["setupboosterperks"],
   category: "utility",
   guildOnly: true,
   aliases: ["boosterperks", "boostperks"],

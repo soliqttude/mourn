@@ -10,6 +10,8 @@ export const command: HybridCommand = {
   name: "withdraw",
   aliases: ["with"],
   description: "Withdraw from your bank.",
+  usage: "withdraw [amount]",
+  examples: ["withdraw"],
   category: "economy",
   guildOnly: true,
   options: [

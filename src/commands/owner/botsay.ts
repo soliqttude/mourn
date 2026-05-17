@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "botsay",
   description: "(Owner) Make the bot send a message in any channel.",
+  usage: "botsay [channel] [message]",
+  examples: ["botsay"],
   category: "owner",
   ownerOnly: true,
   aliases: ["botspeak", "say2"],

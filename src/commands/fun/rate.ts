@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "rate",
   aliases: ["rateme", "howgood"],
   description: "Rate something out of 10.",
+  usage: "rate [thing]",
+  examples: ["rate"],
   category: "fun",
   options: [{ name: "thing", description: "What to rate", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {

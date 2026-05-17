@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "setboost",
   description: "Configure the boost notification.",
+  usage: "setboost [channel]",
+  examples: ["setboost"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

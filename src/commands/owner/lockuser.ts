@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "lockuser",
   aliases: ["ulock"],
   description: "(Owner only) Lock or unlock a user from using bot commands globally.",
+  usage: "lockuser [action] [user_id]",
+  examples: ["lockuser"],
   category: "owner",
   ownerOnly: true,
   options: [

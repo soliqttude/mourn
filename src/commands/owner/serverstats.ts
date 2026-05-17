@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "serverstats",
   description: "(Owner) Deep stats for every server the bot is in.",
+  usage: "serverstats",
+  examples: ["serverstats"],
   category: "owner",
   ownerOnly: true,
   aliases: ["guildstats", "allstats"],

@@ -10,6 +10,8 @@ export const command: HybridCommand = {
   name: "spouse",
   aliases: ["partner", "waifu", "hubby"],
   description: "See who you're married to.",
+  usage: "spouse",
+  examples: ["spouse"],
   category: "fun",
   guildOnly: true,
   async execute(ctx) {

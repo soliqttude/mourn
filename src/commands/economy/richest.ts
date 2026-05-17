@@ -7,6 +7,8 @@ import { eq, desc, sql } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "richest",
   description: "Show the richest members in the server.",
+  usage: "richest",
+  examples: ["richest"],
   category: "economy",
   guildOnly: true,
   aliases: ["wealthy", "balancetop"],

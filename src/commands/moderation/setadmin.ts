@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "setadmin",
   aliases: ["adminrole", "setadminrole"],
   description: "Give or remove the admin role from a member.",
+  usage: "setadmin [user] [role]",
+  examples: ["setadmin"],
   category: "moderation",
   permission: "owner",
   guildOnly: true,

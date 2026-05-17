@@ -32,6 +32,8 @@ const ACHIEVEMENTS: Achievement[] = [
 export const command: HybridCommand = {
   name: "achievements",
   description: "See your earned achievements.",
+  usage: "first steps [user]",
+  examples: ["first steps"],
   category: "fun",
   guildOnly: true,
   aliases: ["badges"],

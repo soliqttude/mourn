@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "suggestchannel",
   description: "Set the suggestions channel.",
+  usage: "suggestchannel [channel]",
+  examples: ["suggestchannel"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "untimeout",
   aliases: ["unmute"],
   description: "Remove a timeout from a member.",
+  usage: "untimeout [user]",
+  examples: ["untimeout"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

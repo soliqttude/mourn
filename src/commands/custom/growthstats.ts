@@ -4,6 +4,8 @@ import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "growthstats",
   description: "See Bleed's growth across all servers.",
+  usage: "growthstats",
+  examples: ["growthstats"],
   category: "custom",
   aliases: ["growth", "reach"],
   async execute(ctx) {

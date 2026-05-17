@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "dance",
   aliases: ["bust", "boogie"],
   description: "Dance!",
+  usage: "dance",
+  examples: ["dance"],
   category: "fun",
   async execute(ctx) {
     const gif = await getGif("dance");

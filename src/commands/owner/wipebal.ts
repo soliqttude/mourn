@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "wipebal",
   description: "(Owner) Wipe the wallet balance of a user (not bank).",
+  usage: "wipebal [user]",
+  examples: ["wipebal"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

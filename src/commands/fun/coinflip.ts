@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "coinflip",
   aliases: ["cf", "flip"],
   description: "Flip a coin.",
+  usage: "coinflip",
+  examples: ["coinflip"],
   category: "fun",
   permission: "everyone",
   async execute(ctx) {

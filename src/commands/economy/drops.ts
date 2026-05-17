@@ -7,6 +7,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "drops",
   description: "Check if there's an active coin drop in this server.",
+  usage: "drops",
+  examples: ["drops"],
   category: "economy",
   guildOnly: true,
   aliases: ["drop", "checkdrop"],

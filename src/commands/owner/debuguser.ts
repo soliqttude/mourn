@@ -10,6 +10,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "debuguser",
   description: "(Owner) Dump full DB record for a user.",
+  usage: "debuguser [user]",
+  examples: ["debuguser"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

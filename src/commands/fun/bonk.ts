@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "bonk",
   aliases: ["bap", "boop"],
   description: "Bonk someone. Go to horny jail.",
+  usage: "bonk [user]",
+  examples: ["bonk"],
   category: "fun",
   guildOnly: true,
   options: [{ name: "user", description: "User to bonk", type: ApplicationCommandOptionType.User, required: true }],

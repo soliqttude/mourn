@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "role",
   aliases: ["giverole", "gr", "addrole"],
   description: "Add or remove a role from a member.",
+  usage: "role [user] [role]",
+  examples: ["role"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

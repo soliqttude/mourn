@@ -9,6 +9,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "bankrupt",
   description: "(Owner) Wipe a user's balance to zero.",
+  usage: "bankrupt [user]",
+  examples: ["bankrupt"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

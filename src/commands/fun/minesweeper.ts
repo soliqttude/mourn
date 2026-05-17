@@ -9,6 +9,8 @@ const NUMS = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️�
 export const command: HybridCommand = {
   name: "minesweeper",
   description: "Generate a minesweeper board to share. Uses Discord spoiler tiles.",
+  usage: "minesweeper [size]",
+  examples: ["minesweeper"],
   category: "fun",
   options: [
     { name: "size", description: "Board size: small (5x5), medium (8x8), large (10x10)", type: ApplicationCommandOptionType.String, required: false,

@@ -6,6 +6,8 @@ import { updateGuildSettings, getGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "levelstoggle",
   description: "Toggle the leveling system on or off.",
+  usage: "levelstoggle",
+  examples: ["levelstoggle"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

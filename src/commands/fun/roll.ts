@@ -5,6 +5,8 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "roll",
   description: "Roll a dice. Optionally specify sides (default 6).",
+  usage: "roll [sides]",
+  examples: ["roll"],
   category: "fun",
   aliases: ["dice"],
   options: [{ name: "sides", description: "Number of sides (default 6)", type: ApplicationCommandOptionType.Integer, required: false }],

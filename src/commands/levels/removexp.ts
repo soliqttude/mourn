@@ -9,6 +9,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "removexp",
   description: "Remove XP from a user.",
+  usage: "removexp [user] [amount]",
+  examples: ["removexp"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

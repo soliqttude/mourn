@@ -19,6 +19,8 @@ export const command: HybridCommand = {
   name: "dig",
   aliases: ["excavate", "pickaxe"],
   description: "Dig for buried treasure.",
+  usage: "dig",
+  examples: ["dig"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

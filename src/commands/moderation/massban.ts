@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "massban",
   aliases: ["mban", "bulkban"],
   description: "Ban multiple users by ID (space-separated list).",
+  usage: "massban [ids] [reason]",
+  examples: ["massban Rule violation"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "globalcooldown",
   description: "(Owner) Toggle global cooldown bypass — all economy cooldowns ignored.",
+  usage: "globalcooldown",
+  examples: ["globalcooldown"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "iunmute",
   aliases: ["imageunmute", "iumute"],
   description: "Re-allow images/attachments for a user.",
+  usage: "iunmute [user]",
+  examples: ["iunmute"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

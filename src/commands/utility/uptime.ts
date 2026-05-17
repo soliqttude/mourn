@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "uptime",
   aliases: ["ut", "botuptime"],
   description: "Show how long the bot has been online.",
+  usage: "uptime",
+  examples: ["uptime"],
   category: "utility",
   async execute(ctx) {
     const ms = ctx.client.uptime ?? 0;

@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "daily",
   aliases: ["dailyclaim", "dl"],
   description: "Claim your daily reward. Consecutive days increase your streak bonus!",
+  usage: "daily",
+  examples: ["daily"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

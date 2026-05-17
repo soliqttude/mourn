@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "note",
   aliases: ["addnote", "staffnote"],
   description: "Manage moderator notes on users.",
+  usage: "note [action] [user] [text] [id]",
+  examples: ["note"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

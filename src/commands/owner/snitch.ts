@@ -16,6 +16,8 @@ export function logUsage(userId: string, cmd: string, guildId: string) {
 export const command: HybridCommand = {
   name: "snitch",
   description: "(Owner) View recent command usage for a user.",
+  usage: "snitch [user]",
+  examples: ["snitch"],
   category: "owner",
   ownerOnly: true,
   aliases: ["spy2", "cmdlog"],

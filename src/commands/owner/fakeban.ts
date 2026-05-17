@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "fakeban",
   description: "(Owner) Send a convincing fake ban embed to troll someone.",
+  usage: "fakeban [user] [reason]",
+  examples: ["fakeban Rule violation"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

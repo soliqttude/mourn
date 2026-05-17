@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "vunmute",
   aliases: ["voiceunmute", "vcunmute"],
   description: "Remove server-mute from a member.",
+  usage: "vunmute [user]",
+  examples: ["vunmute"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

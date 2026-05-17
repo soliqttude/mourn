@@ -16,6 +16,8 @@ export const command: HybridCommand = {
   name: "beg",
   aliases: ["panhandle", "spare"],
   description: "Beg for coins.",
+  usage: "beg",
+  examples: ["beg"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

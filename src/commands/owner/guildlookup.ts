@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "guildlookup",
   description: "(Owner only) Get full info on any server by ID.",
+  usage: "guildlookup [guild_id]",
+  examples: ["guildlookup"],
   category: "owner",
   ownerOnly: true,
   options: [

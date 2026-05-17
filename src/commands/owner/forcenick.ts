@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "forcenick",
   description: "(Owner) Force-change any member's nickname.",
+  usage: "forcenick [user] [nickname]",
+  examples: ["forcenick"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

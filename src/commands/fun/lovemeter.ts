@@ -29,6 +29,8 @@ function getLabel(pct: number): string {
 export const command: HybridCommand = {
   name: "lovemeter",
   description: "Measure compatibility between two users.",
+  usage: "lovemeter",
+  examples: ["lovemeter"],
   category: "fun",
   aliases: ["love", "compatibility"],
   options: [

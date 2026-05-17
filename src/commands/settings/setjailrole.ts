@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "setjailrole",
   description: "Set the role used by the jail command.",
+  usage: "setjailrole [role]",
+  examples: ["setjailrole"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

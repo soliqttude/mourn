@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "spinwheel",
   description: "Spin a custom wheel and pick a random option.",
+  usage: "spinwheel [options]",
+  examples: ["spinwheel"],
   category: "fun",
   aliases: ["spin", "choose"],
   options: [

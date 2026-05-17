@@ -8,6 +8,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "shopremove",
   description: "Remove an item from the server shop by ID.",
+  usage: "shopremove [id]",
+  examples: ["shopremove"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

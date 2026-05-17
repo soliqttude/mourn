@@ -55,6 +55,8 @@ export const command: HybridCommand = {
   name: "hack",
   aliases: ["hacking", "hackme"],
   description: "Fake-hack someone for fun.",
+  usage: "hack [user]",
+  examples: ["hack"],
   category: "fun",
   guildOnly: true,
   options: [{ name: "user", description: "User to hack", type: ApplicationCommandOptionType.User, required: true }],

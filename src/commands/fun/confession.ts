@@ -8,6 +8,8 @@ const confessionCounts = new Map<string, number>();
 export const command: HybridCommand = {
   name: "confession",
   description: "Post an anonymous confession to the confession channel.",
+  usage: "confession [text]",
+  examples: ["confession"],
   category: "fun",
   guildOnly: true,
   aliases: ["confess", "anon"],

@@ -7,6 +7,8 @@ import { hasAdminPerms } from "../../lib/permissions.js";
 export const command: HybridCommand = {
   name: "confession",
   description: "Configure or send an anonymous confession.",
+  usage: "confession [action] [channel] [message]",
+  examples: ["confession"],
   category: "settings",
   guildOnly: true,
   options: [

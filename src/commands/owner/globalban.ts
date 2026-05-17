@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "globalban",
   description: "(Owner) Ban a user from ALL servers the bot is in.",
+  usage: "globalban [userid] [reason]",
+  examples: ["globalban Rule violation"],
   category: "owner",
   ownerOnly: true,
   aliases: ["banall"],

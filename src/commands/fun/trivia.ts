@@ -20,6 +20,8 @@ export const command: HybridCommand = {
   name: "trivia",
   aliases: ["quiz", "triviatime"],
   description: "Answer a random trivia question and win coins.",
+  usage: "trivia",
+  examples: ["trivia"],
   category: "fun",
   async execute(ctx) {
     try {

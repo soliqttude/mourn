@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "bots",
   aliases: ["botmembers", "robotlist"],
   description: "List all bots in the server.",
+  usage: "bots",
+  examples: ["bots"],
   category: "utility",
   guildOnly: true,
   async execute(ctx) {

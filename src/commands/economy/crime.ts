@@ -19,6 +19,8 @@ export const command: HybridCommand = {
   name: "crime",
   aliases: ["criminal", "cr"],
   description: "Commit a crime for coins — risky.",
+  usage: "crime",
+  examples: ["crime"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

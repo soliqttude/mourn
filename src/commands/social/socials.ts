@@ -9,6 +9,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "socials",
   description: "Manage social links. Usage: ,socials add <platform> <link> | ,socials remove <platform> | ,socials [@user]",
+  usage: "socials [subcommand] [platform] [link] [user]",
+  examples: ["socials"],
   category: "social",
   options: [
     { name: "subcommand", description: "add | remove | list", type: ApplicationCommandOptionType.String, required: false },

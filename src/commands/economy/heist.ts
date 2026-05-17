@@ -11,6 +11,8 @@ export const command: HybridCommand = {
   name: "heist",
   aliases: ["bankrob", "robbery"],
   description: "Organize a heist for a big payout — or lose it all.",
+  usage: "heist [bet]",
+  examples: ["heist"],
   category: "economy",
   guildOnly: true,
   options: [{ name: "bet", description: "Amount to risk", type: ApplicationCommandOptionType.Integer, required: true }],

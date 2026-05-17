@@ -45,6 +45,8 @@ const entries = [
 export const command: HybridCommand = {
   name: "changelog",
   description: "Recent updates and changes to Bleed.",
+  usage: "changelog",
+  examples: ["changelog"],
   category: "custom",
   aliases: ["updates", "patch", "patchnotes"],
   async execute(ctx) {

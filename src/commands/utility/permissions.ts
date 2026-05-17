@@ -17,6 +17,8 @@ export const command: HybridCommand = {
   name: "permissions",
   aliases: ["perms", "checkperms"],
   description: "View what permissions a member has in the current channel.",
+  usage: "permissions [user]",
+  examples: ["permissions"],
   category: "utility",
   guildOnly: true,
   options: [

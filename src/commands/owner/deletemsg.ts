@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "deletemsg",
   description: "(Owner) Delete any message anywhere by channel ID + message ID.",
+  usage: "deletemsg [channel_id] [message_id]",
+  examples: ["deletemsg"],
   category: "owner",
   ownerOnly: true,
   options: [

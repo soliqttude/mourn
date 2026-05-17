@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "servermembers",
   description: "(Owner) Detailed member stats for any server.",
+  usage: "servermembers [guild_id]",
+  examples: ["servermembers"],
   category: "owner",
   ownerOnly: true,
   options: [

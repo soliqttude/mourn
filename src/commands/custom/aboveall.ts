@@ -4,6 +4,8 @@ import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "aboveall",
   description: "Credits.",
+  usage: "aboveall",
+  examples: ["aboveall"],
   category: "custom",
   async execute(ctx) {
     return ctx.reply({

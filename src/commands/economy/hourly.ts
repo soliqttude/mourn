@@ -10,6 +10,8 @@ const hourlyStreak = new Map<string, number>();
 export const command: HybridCommand = {
   name: "hourly",
   description: "Claim your hourly coin reward. Claim on time to build a streak bonus.",
+  usage: "hourly",
+  examples: ["hourly"],
   category: "economy",
   guildOnly: true,
   aliases: ["hr", "hourlyclaim"],

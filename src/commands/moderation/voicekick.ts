@@ -5,6 +5,8 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "voicekick",
   description: "Kick a member from their voice channel.",
+  usage: "voicekick [user]",
+  examples: ["voicekick"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

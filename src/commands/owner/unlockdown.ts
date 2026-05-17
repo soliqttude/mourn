@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "unlockdown",
   description: "(Owner) Lift the server lockdown and restore text channel access.",
+  usage: "unlockdown",
+  examples: ["unlockdown"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

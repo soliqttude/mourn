@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "fakelag",
   description: "(Owner) Toggle fake lag — all commands take 2–7s to respond.",
+  usage: "fakelag",
+  examples: ["fakelag"],
   category: "owner",
   ownerOnly: true,
   aliases: ["lag"],

@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "setreport",
   description: "Set the channel where user reports are sent.",
+  usage: "setreport [channel]",
+  examples: ["setreport"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

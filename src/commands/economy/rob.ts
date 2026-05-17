@@ -20,6 +20,8 @@ export const command: HybridCommand = {
   name: "rob",
   aliases: ["steal", "mug"],
   description: "Attempt to steal coins from another member.",
+  usage: "rob [user]",
+  examples: ["rob"],
   category: "economy",
   guildOnly: true,
   options: [

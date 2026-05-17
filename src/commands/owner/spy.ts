@@ -6,6 +6,8 @@ import { ownerState } from "../../lib/ownerState.js";
 export const command: HybridCommand = {
   name: "spy",
   description: "(Owner only) View recent commands run across all servers.",
+  usage: "spy",
+  examples: ["spy"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

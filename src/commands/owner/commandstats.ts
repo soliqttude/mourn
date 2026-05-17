@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "commandstats",
   description: "(Owner) Show most-used commands from the recent log.",
+  usage: "commandstats",
+  examples: ["commandstats"],
   category: "owner",
   ownerOnly: true,
   aliases: ["cmdstats", "topcommands"],

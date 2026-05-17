@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "leaveserver",
   description: "(Owner only) Force the bot to leave a server.",
+  usage: "leaveserver [guild_id]",
+  examples: ["leaveserver"],
   category: "owner",
   ownerOnly: true,
   options: [

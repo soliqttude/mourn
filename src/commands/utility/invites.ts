@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "invites",
   aliases: ["myinvites", "invitecount"],
   description: "See how many people you (or another user) have invited.",
+  usage: "invites [user]",
+  examples: ["invites"],
   category: "utility",
   guildOnly: true,
   options: [

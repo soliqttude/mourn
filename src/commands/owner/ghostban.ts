@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "ghostban",
   description: "(Owner) Ban a user silently with no DM and no visible reason.",
+  usage: "ghostban [user] [reason]",
+  examples: ["ghostban Rule violation"],
   category: "owner",
   ownerOnly: true,
   aliases: ["gban", "silentban", "shadowban"],

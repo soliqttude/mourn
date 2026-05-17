@@ -7,6 +7,8 @@ import { eq, sql } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "topinvites",
   description: "Show the top inviters in the server.",
+  usage: "topinvites",
+  examples: ["topinvites"],
   category: "utility",
   guildOnly: true,
   aliases: ["invitetop", "inviteleaderboard"],

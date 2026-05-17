@@ -7,6 +7,8 @@ import { eq } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "rewards",
   description: "List all level role rewards.",
+  usage: "rewards",
+  examples: ["rewards"],
   category: "levels",
   guildOnly: true,
   async execute(ctx) {

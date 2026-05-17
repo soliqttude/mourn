@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "setgoodbye",
   description: "Configure the goodbye message.",
+  usage: "setgoodbye [channel]",
+  examples: ["setgoodbye"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

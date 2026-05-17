@@ -16,6 +16,8 @@ const TYPE_TO_KEY: Record<string, typeof ALL_KEYS[number]> = {
 export const command: HybridCommand = {
   name: "setlog",
   description: "Set a log channel. ,setlog all #channel | ,setlog mod #channel | ,setlog message #channel | ,setlog join #channel | ,setlog voice #channel",
+  usage: "setlog [type] [channel]",
+  examples: ["setlog"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

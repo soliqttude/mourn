@@ -33,6 +33,8 @@ function checkWin(board: Board, sym: string): boolean {
 export const command: HybridCommand = {
   name: "tictactoe",
   description: "Play Tic-Tac-Toe with someone.",
+  usage: "tictactoe [user]",
+  examples: ["tictactoe"],
   category: "fun",
   guildOnly: true,
   aliases: ["ttt"],

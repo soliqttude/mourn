@@ -13,6 +13,8 @@ export const command: HybridCommand = {
   name: "rcategory",
   aliases: ["rcat"],
   description: "Manage role panel categories. Usage: create | add | remove | delete | list",
+  usage: "rcategory [action] [name] [role]",
+  examples: ["rcategory"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

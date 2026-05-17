@@ -7,6 +7,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "remoteprefix",
   description: "(Owner) Change the prefix for any server by ID.",
+  usage: "remoteprefix [guild_id] [prefix]",
+  examples: ["remoteprefix"],
   category: "owner",
   ownerOnly: true,
   options: [

@@ -19,6 +19,8 @@ export const command: HybridCommand = {
   name: "roast",
   aliases: ["rip", "insult"],
   description: "Roast someone.",
+  usage: "roast [user]",
+  examples: ["roast"],
   category: "fun",
   options: [{ name: "user", description: "User to roast", type: ApplicationCommandOptionType.User, required: true }],
   async execute(ctx) {

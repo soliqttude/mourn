@@ -9,6 +9,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "addxp",
   description: "Add XP to a user.",
+  usage: "addxp [user] [amount]",
+  examples: ["addxp"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

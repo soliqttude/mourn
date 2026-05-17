@@ -8,6 +8,8 @@ import { and, eq } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "removereward",
   description: "Remove a level role reward.",
+  usage: "removereward [level]",
+  examples: ["removereward"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

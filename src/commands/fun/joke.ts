@@ -23,6 +23,8 @@ export const command: HybridCommand = {
   name: "joke",
   aliases: ["jokes", "funny"],
   description: "Get a random joke.",
+  usage: "joke",
+  examples: ["joke"],
   category: "fun",
   permission: "everyone",
   async execute(ctx) {

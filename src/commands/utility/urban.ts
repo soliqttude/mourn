@@ -5,6 +5,8 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "urban",
   description: "Look up a word on Urban Dictionary.",
+  usage: "urban [word]",
+  examples: ["urban"],
   category: "utility",
   aliases: ["ud"],
   options: [{ name: "word", description: "Word to look up", type: ApplicationCommandOptionType.String, required: true }],

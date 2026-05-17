@@ -93,6 +93,8 @@ function spinRow(disabled = false): ActionRowBuilder<ButtonBuilder> {
 export const command: HybridCommand = {
   name: "slots",
   description: "Spin the slot machine and win up to 15x your bet!",
+  usage: "slots [bet]",
+  examples: ["slots"],
   category: "economy",
   guildOnly: true,
   aliases: ["slot", "spin"],

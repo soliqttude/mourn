@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "panel",
   aliases: ["dashboard"],
   description: "Open the Bleed control panel.",
+  usage: "panel",
+  examples: ["panel"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

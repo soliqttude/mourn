@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "softban",
   aliases: ["sb", "sban"],
   description: "Ban then immediately unban a member, wiping their recent messages.",
+  usage: "softban [user] [reason]",
+  examples: ["softban Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

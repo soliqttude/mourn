@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "about",
   aliases: ["botinfo"],
   description: "About the Bleed bot.",
+  usage: "about",
+  examples: ["about"],
   category: "utility",
   async execute(ctx) {
     const guilds = ctx.client.guilds.cache.size;

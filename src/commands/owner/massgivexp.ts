@@ -9,6 +9,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "massgivexp",
   description: "(Owner) Give XP to all economy users in a server.",
+  usage: "massgivexp [guild_id] [amount]",
+  examples: ["massgivexp"],
   category: "owner",
   ownerOnly: true,
   options: [

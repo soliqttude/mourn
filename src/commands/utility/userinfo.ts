@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "userinfo",
   aliases: ["whois"],
   description: "Show information about a user.",
+  usage: "userinfo [user]",
+  examples: ["userinfo"],
   category: "utility",
   guildOnly: true,
   options: [

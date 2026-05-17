@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "donate",
   description: "Support Bleed's development.",
+  usage: "donate",
+  examples: ["donate"],
   category: "custom",
   aliases: ["support", "donor"],
   async execute(ctx) {

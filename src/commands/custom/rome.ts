@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "rome",
   aliases: ["blitz"],
   description: "Check out rome/blitz and his tools.",
+  usage: "rome",
+  examples: ["rome"],
   category: "custom",
   async execute(ctx) {
     return ctx.reply({

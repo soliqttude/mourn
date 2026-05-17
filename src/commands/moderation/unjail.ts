@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "unjail",
   aliases: ["uj", "release", "free"],
   description: "Remove the jail role from a member.",
+  usage: "unjail [user] [reason]",
+  examples: ["unjail Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "roleinfo",
   aliases: ["ri"],
   description: "Show information about a role.",
+  usage: "roleinfo [role]",
+  examples: ["roleinfo"],
   category: "utility",
   guildOnly: true,
   options: [

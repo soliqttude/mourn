@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "lockdown",
   description: "(Owner) Lock all text channels in the server for @everyone.",
+  usage: "lockdown",
+  examples: ["lockdown"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "divorce",
   aliases: ["breakup", "separate"],
   description: "Divorce your partner.",
+  usage: "divorce",
+  examples: ["divorce"],
   category: "fun",
   guildOnly: true,
   async execute(ctx) {

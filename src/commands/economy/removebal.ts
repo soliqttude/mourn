@@ -6,6 +6,8 @@ import { removeBalance, getBalance } from "../../features/economy.js";
 export const command: HybridCommand = {
   name: "removebal",
   description: "Remove coins from a user's balance (admin).",
+  usage: "removebal [user] [amount]",
+  examples: ["removebal"],
   category: "economy",
   permission: "admin",
   guildOnly: true,

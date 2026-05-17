@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "roleall",
   aliases: ["massrole", "giveroleall"],
   description: "Give a role to all members.",
+  usage: "roleall [role]",
+  examples: ["roleall"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

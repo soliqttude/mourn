@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "imute",
   aliases: ["imagemute", "imgmute"],
   description: "Prevent a user from sending images/attachments.",
+  usage: "imute [user] [reason]",
+  examples: ["imute Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

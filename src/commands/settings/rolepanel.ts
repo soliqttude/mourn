@@ -19,6 +19,8 @@ export const command: HybridCommand = {
   name: "reactionroles",
   aliases: ["rolepanel", "rp"],
   description: "Post the button role panel to a channel.",
+  usage: "reactionroles [channel]",
+  examples: ["reactionroles"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

@@ -23,6 +23,8 @@ export const command: HybridCommand = {
   name: "translate",
   aliases: ["tr", "lang", "tl"],
   description: "Translate text into another language.",
+  usage: "translate [text] [to] [from]",
+  examples: ["translate"],
   category: "utility",
   guildOnly: false,
   options: [

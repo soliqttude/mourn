@@ -120,6 +120,8 @@ const activeGames = new Map<string, MinesGame>();
 export const command: HybridCommand = {
   name: "mines",
   description: "Reveal gems and cash out before hitting a mine!",
+  usage: "mines [bet] [mines]",
+  examples: ["mines"],
   category: "economy",
   guildOnly: true,
   aliases: ["minesweeper"],

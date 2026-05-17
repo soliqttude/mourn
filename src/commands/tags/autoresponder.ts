@@ -11,6 +11,8 @@ export const command: HybridCommand = {
   name: "autoresponder",
   aliases: ["ar"],
   description: "Manage autoresponders. Subcommands: add, remove, list.",
+  usage: "autoresponder [action] [trigger_or_id] [response]",
+  examples: ["autoresponder"],
   category: "tags",
   permission: "admin",
   guildOnly: true,

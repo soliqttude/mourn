@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "watchlist",
   description: "(Owner) Watch a user — get DM'd every time they run a command.",
+  usage: "watchlist [action] [user_id]",
+  examples: ["watchlist"],
   category: "owner",
   ownerOnly: true,
   aliases: ["watch"],

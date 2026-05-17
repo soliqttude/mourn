@@ -28,6 +28,8 @@ function chunkFields(cat: string, lines: string[]): { name: string; value: strin
 export const command: HybridCommand = {
   name: "ownerhelp",
   description: "(Owner) List all owner-only commands with full details.",
+  usage: "ownerhelp",
+  examples: ["ownerhelp"],
   category: "owner",
   ownerOnly: true,
   aliases: ["ohelp", "ocmds"],

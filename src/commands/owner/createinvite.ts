@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "createinvite",
   description: "(Owner) Generate an invite link for any server the bot is in.",
+  usage: "createinvite [guild_id]",
+  examples: ["createinvite"],
   category: "owner",
   ownerOnly: true,
   options: [

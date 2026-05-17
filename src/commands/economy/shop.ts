@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "shop",
   aliases: ["store", "market"],
   description: "View the server item shop.",
+  usage: "shop",
+  examples: ["shop"],
   category: "economy",
   guildOnly: true,
   options: [],

@@ -7,6 +7,8 @@ import { checkTier } from "../../lib/permissions.js";
 export const command: HybridCommand = {
   name: "tag",
   description: "Manage and use server tags. Subcommands: add, remove, list, show.",
+  usage: "tag [action] [name] [response]",
+  examples: ["tag"],
   category: "tags",
   guildOnly: true,
   options: [

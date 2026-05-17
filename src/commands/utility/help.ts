@@ -42,14 +42,16 @@ export function buildCommandEmbed(
   c: HybridCommand,
   prefix: string,
   clientUser?: { username: string; displayAvatarURL(): string } | null,
+  ownerName?: string,
 ): EmbedBuilder {
-  const usage   = (c as any).usage   as string | undefined;
+  const usage    = (c as any).usage    as string | undefined;
   const examples = (c as any).examples as string[] | undefined;
 
-  const syntaxLine   = usage   ? `Syntax:   ${prefix}${usage}` : `Syntax:   ${prefix}${c.name}`;
-  const exampleLine  = examples?.length
-    ? `Example:  ${prefix}${examples[0]}`
-    : `Example:  ${prefix}${c.name}`;
+  // Replace {owner} placeholder with actual server owner's username
+  const sub = (s: string) => ownerName ? s.replace(/\{owner\}/g, ownerName) : s;
+
+  const syntaxLine  = `Syntax:  ${prefix}${sub(usage ?? c.name)}`;
+  const exampleLine = `Example: ${prefix}${sub(examples?.[0] ?? c.name)}`;
 
   const description = `${c.description}\n\n\`\`\`\n${syntaxLine}\n${exampleLine}\n\`\`\``;
 
@@ -200,6 +202,8 @@ export function buildHelpHome(totalCmds: number, categories: string[], prefix: s
 
   const embed = brandEmbed({
     description: [
+  usage: "category [command]",
+  examples: ["category"],
       `**${totalCmds}** commands · **${visibleCats.length}** categories`,
       ``,
       `pick a category below, or use \`${prefix}help <command>\` for command details.`,
@@ -233,7 +237,19 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [errorEmbed(`no command found: \`${target}\``)] });
 
       const clientUser = ctx.client.user ?? null;
-      const embed = buildCommandEmbed(c, ctx.prefix, clientUser);
+
+      // Fetch server owner's username to use in examples
+      let ownerName: string | undefined;
+      if (ctx.guild) {
+        try {
+          const owner = await ctx.guild.fetchOwner();
+          ownerName = owner.user.username;
+        } catch {
+          ownerName = undefined;
+        }
+      }
+
+      const embed = buildCommandEmbed(c, ctx.prefix, clientUser, ownerName);
       return ctx.reply({ embeds: [embed] });
     }
 

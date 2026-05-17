@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "voicemaster",
   aliases: ["vm"],
   description: "Set the voicemaster join-to-create hub.",
+  usage: "voicemaster [hub]",
+  examples: ["voicemaster"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

@@ -18,6 +18,8 @@ export const command: HybridCommand = {
   name: "work",
   aliases: ["job", "earn"],
   description: "Work for some coins.",
+  usage: "work",
+  examples: ["work"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

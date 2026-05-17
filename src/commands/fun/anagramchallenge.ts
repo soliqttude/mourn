@@ -20,6 +20,8 @@ function shuffle(w: string): string {
 export const command: HybridCommand = {
   name: "anagramchallenge",
   description: "Challenge someone to solve an anagram (first to type it wins coins).",
+  usage: "anagramchallenge [word]",
+  examples: ["anagramchallenge"],
   category: "fun",
   guildOnly: true,
   aliases: ["anagram"],

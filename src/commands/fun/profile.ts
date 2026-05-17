@@ -10,6 +10,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "profile",
   description: "View your full profile card.",
+  usage: "profile [user]",
+  examples: ["profile"],
   category: "fun",
   guildOnly: true,
   aliases: ["card", "stats"],

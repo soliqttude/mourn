@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "transferbal",
   description: "(Owner) Transfer coins from one user to another.",
+  usage: "transferbal [from] [to] [amount]",
+  examples: ["transferbal"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

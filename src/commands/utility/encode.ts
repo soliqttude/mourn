@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "encode",
   aliases: ["enc", "encodetext"],
   description: "Base64 encode text.",
+  usage: "encode [text]",
+  examples: ["encode"],
   category: "utility",
   options: [{ name: "text", description: "Text to encode", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {

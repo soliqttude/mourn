@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "invite",
   description: "Invite Bleed to your server.",
+  usage: "invite",
+  examples: ["invite"],
   category: "custom",
   async execute(ctx) {
     const link = config.botInviteUrl || null;

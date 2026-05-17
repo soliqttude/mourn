@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "ownerannounce",
   description: "(Owner only) Send an announcement embed to every server.",
+  usage: "ownerannounce [title] [body] [color]",
+  examples: ["ownerannounce"],
   category: "owner",
   ownerOnly: true,
   options: [

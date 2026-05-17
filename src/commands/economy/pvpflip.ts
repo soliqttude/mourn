@@ -7,6 +7,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "pvpflip",
   description: "Challenge another user to a coin flip bet.",
+  usage: "pvpflip [user] [amount]",
+  examples: ["pvpflip"],
   category: "economy",
   guildOnly: true,
   aliases: ["flip", "challenge"],

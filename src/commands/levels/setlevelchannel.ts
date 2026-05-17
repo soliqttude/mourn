@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "setlevelchannel",
   description: "Set the channel for level-up messages.",
+  usage: "setlevelchannel [channel]",
+  examples: ["setlevelchannel"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

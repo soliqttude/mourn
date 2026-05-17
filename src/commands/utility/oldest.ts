@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "oldest",
   aliases: ["oldestmembers", "firstjoins"],
   description: "Show the oldest members in the server.",
+  usage: "oldest",
+  examples: ["oldest"],
   category: "utility",
   guildOnly: true,
   async execute(ctx) {

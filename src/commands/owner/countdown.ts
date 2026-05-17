@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "countdown",
   description: "(Owner) Send a live countdown that edits itself each second.",
+  usage: "countdown [seconds] [message]",
+  examples: ["countdown"],
   category: "owner",
   ownerOnly: true,
   options: [

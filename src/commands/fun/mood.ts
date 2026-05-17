@@ -10,6 +10,8 @@ export const command: HybridCommand = {
   name: "mood",
   aliases: ["mymood", "feelings"],
   description: "Set your current mood (shows on your profile).",
+  usage: "mood [text]",
+  examples: ["mood"],
   category: "fun",
   guildOnly: true,
   options: [

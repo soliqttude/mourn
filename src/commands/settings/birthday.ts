@@ -8,6 +8,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "birthday",
   description: "Manage birthdays.",
+  usage: "birthday",
+  examples: ["birthday"],
   category: "settings",
   guildOnly: true,
   options: [

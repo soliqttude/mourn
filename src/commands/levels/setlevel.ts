@@ -9,6 +9,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "setlevel",
   description: "Set a user's level directly (admins only).",
+  usage: "setlevel [user] [level]",
+  examples: ["setlevel"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

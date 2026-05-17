@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "editsnipe",
   aliases: ["es"],
   description: "Snipe the last edited message.",
+  usage: "editsnipe",
+  examples: ["editsnipe"],
   category: "utility",
   guildOnly: true,
   async execute(ctx) {

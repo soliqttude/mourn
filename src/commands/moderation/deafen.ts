@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "deafen",
   aliases: ["deaf", "dv"],
   description: "Server-deafen a member in voice.",
+  usage: "deafen [user] [reason]",
+  examples: ["deafen Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

@@ -6,6 +6,8 @@ import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "automod",
   description: "Toggle automod features. ,automod | ,automod links | ,automod invites",
+  usage: "automod [feature]",
+  examples: ["automod"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

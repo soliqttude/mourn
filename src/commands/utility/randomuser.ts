@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "randomuser",
   description: "Ping a completely random member in the server.",
+  usage: "randomuser",
+  examples: ["randomuser"],
   category: "utility",
   guildOnly: true,
   aliases: ["randommember", "spinpick", "pickarandom"],

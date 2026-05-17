@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "firstjoin",
   description: "Show the first members to join this server.",
+  usage: "firstjoin",
+  examples: ["firstjoin"],
   category: "utility",
   guildOnly: true,
   aliases: ["earliest", "oldestembers", "firstmembers"],

@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "trollmode",
   description: "(Owner) Make every command a random fake error for a user.",
+  usage: "trollmode [user] [duration]",
+  examples: ["trollmode"],
   category: "owner",
   ownerOnly: true,
   aliases: ["troll"],

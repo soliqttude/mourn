@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "leaderboard",
   aliases: ["lb", "top"],
   description: "Top leveled members in the server.",
+  usage: "leaderboard",
+  examples: ["leaderboard"],
   category: "levels",
   guildOnly: true,
   async execute(ctx) {

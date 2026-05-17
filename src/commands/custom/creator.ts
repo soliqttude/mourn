@@ -4,6 +4,8 @@ import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "creator",
   description: "About the creator of Bleed.",
+  usage: "creator",
+  examples: ["creator"],
   category: "custom",
   aliases: ["dev", "developer", "author"],
   async execute(ctx) {

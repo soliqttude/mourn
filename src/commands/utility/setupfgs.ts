@@ -10,6 +10,8 @@ import { errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "setupfgs",
   description: "Post the FGS requirements & benefits embed.",
+  usage: "setupfgs [channel] [ticket_channel]",
+  examples: ["setupfgs"],
   category: "utility",
   guildOnly: true,
   aliases: ["fgs"],

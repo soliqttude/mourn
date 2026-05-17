@@ -5,6 +5,8 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "addemoji",
   description: "Add an emoji from a URL or attachment.",
+  usage: "addemoji [name] [url]",
+  examples: ["addemoji"],
   category: "utility",
   permission: "admin",
   guildOnly: true,

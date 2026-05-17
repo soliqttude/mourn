@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "cuddle",
   aliases: ["snuggle", "hug2"],
   description: "Cuddle with someone.",
+  usage: "cuddle [user]",
+  examples: ["cuddle"],
   category: "fun",
   guildOnly: true,
   options: [{ name: "user", description: "User to cuddle", type: ApplicationCommandOptionType.User, required: true }],

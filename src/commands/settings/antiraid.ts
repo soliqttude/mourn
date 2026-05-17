@@ -6,6 +6,8 @@ import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "antiraid",
   description: "Toggle anti-raid on/off, or configure it. ,antiraid | ,antiraid threshold 5 | ,antiraid action kick | ,antiraid joinage 7 | ,antiraid log #ch | ,antiraid lockdown",
+  usage: "antiraid [subcommand] [value] [channel]",
+  examples: ["antiraid"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "kick",
   aliases: ["k", "remove"],
   description: "Kick a member from the server.",
+  usage: "kick [user] [reason]",
+  examples: ["kick Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "jumbo",
   aliases: ["bigemoji", "enlargeemoji", "e"],
   description: "Enlarge a custom emoji.",
+  usage: "jumbo [emoji]",
+  examples: ["jumbo"],
   category: "utility",
   options: [{ name: "emoji", description: "Custom emoji to enlarge", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {

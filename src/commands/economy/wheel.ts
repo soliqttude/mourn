@@ -68,6 +68,8 @@ function makeResultEmbed(bet: number, idx: number) {
 export const command: HybridCommand = {
   name: "wheel",
   description: "Spin the fortune wheel for a random multiplier!",
+  usage: "wheel [bet]",
+  examples: ["wheel"],
   category: "economy",
   guildOnly: true,
   aliases: ["spinwheel", "fortunewheel", "fw"],

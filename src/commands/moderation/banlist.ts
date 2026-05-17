@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "banlist",
   aliases: ["bans", "banned"],
   description: "List all banned users in the server.",
+  usage: "banlist",
+  examples: ["banlist"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

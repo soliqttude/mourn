@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "admins",
   aliases: ["staff", "mods"],
   description: "List all members with administrator permissions.",
+  usage: "admins",
+  examples: ["admins"],
   category: "utility",
   guildOnly: true,
   options: [],

@@ -6,6 +6,8 @@ import { addBalance } from "../../features/economy.js";
 export const command: HybridCommand = {
   name: "addbal",
   description: "Add coins to a user's balance (admin).",
+  usage: "addbal [user] [amount]",
+  examples: ["addbal"],
   category: "economy",
   permission: "admin",
   guildOnly: true,

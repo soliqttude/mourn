@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "purge",
   aliases: ["clear"],
   description: "Bulk delete messages.",
+  usage: "purge [amount]",
+  examples: ["purge"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

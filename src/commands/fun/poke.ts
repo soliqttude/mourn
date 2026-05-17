@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "poke",
   aliases: ["prod", "jab"],
   description: "Poke someone.",
+  usage: "poke [user]",
+  examples: ["poke"],
   category: "fun",
   guildOnly: true,
   options: [{ name: "user", description: "User to poke", type: ApplicationCommandOptionType.User, required: true }],

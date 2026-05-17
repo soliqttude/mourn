@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "customcommand",
   aliases: ["cc"],
   description: "(Owner only) Manage server custom commands (stored as tags).",
+  usage: "customcommand [action] [name] [response]",
+  examples: ["customcommand"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

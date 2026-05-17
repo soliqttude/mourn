@@ -34,6 +34,8 @@ const TIPS = [
 export const command: HybridCommand = {
   name: "lucky",
   description: "Check your daily luck score — changes every 24 hours!",
+  usage: "lucky",
+  examples: ["lucky"],
   category: "fun",
   aliases: ["luckcheck", "luck", "myluck"],
   async execute(ctx) {

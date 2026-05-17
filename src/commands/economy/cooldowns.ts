@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "cooldowns",
   description: "Check your economy cooldowns.",
+  usage: "cooldowns",
+  examples: ["cooldowns"],
   category: "economy",
   guildOnly: true,
   aliases: ["cd", "timers"],

@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "botstats",
   description: "(Owner only) Full bot health and resource dashboard.",
+  usage: "botstats",
+  examples: ["botstats"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

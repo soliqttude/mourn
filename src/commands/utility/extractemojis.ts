@@ -7,6 +7,8 @@ const EMOJI_RE = /<(a?):(\w{2,32}):(\d{17,19})>/g;
 export const command: HybridCommand = {
   name: "extractemojis",
   description: "Reply to a message to steal all its custom emojis and add them here.",
+  usage: "extractemojis",
+  examples: ["extractemojis"],
   category: "utility",
   guildOnly: true,
   aliases: ["stealemojis", "masssteal", "bulksteal"],

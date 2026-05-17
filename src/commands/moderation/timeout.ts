@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "timeout",
   aliases: ["mute"],
   description: "Timeout a member.",
+  usage: "timeout [user] [duration] [reason]",
+  examples: ["timeout Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

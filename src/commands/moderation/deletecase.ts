@@ -8,6 +8,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "deletecase",
   description: "Delete a mod case.",
+  usage: "deletecase [case]",
+  examples: ["deletecase"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

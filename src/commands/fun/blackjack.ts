@@ -107,6 +107,8 @@ function makeRow(disabled = false, canDouble = false): ActionRowBuilder<ButtonBu
 export const command: HybridCommand = {
   name: "blackjack",
   description: "Play Blackjack — beat the dealer without going over 21.",
+  usage: "blackjack [bet]",
+  examples: ["blackjack"],
   category: "economy",
   guildOnly: true,
   aliases: ["bj"],

@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "partner",
   description: "Apply to partner your server with Bleed.",
+  usage: "partner [invite] [description]",
+  examples: ["partner"],
   category: "custom",
   guildOnly: true,
   options: [

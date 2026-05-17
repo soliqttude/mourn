@@ -10,6 +10,8 @@ const ROWS = 10;
 export const command: HybridCommand = {
   name: "towers",
   description: "Climb the tower — pick the safe tile each level. Cash out before you fall!",
+  usage: "towers [bet]",
+  examples: ["towers"],
   category: "economy",
   guildOnly: true,
   options: [{ name: "bet", description: "Amount to bet", type: ApplicationCommandOptionType.Integer, required: true }],

@@ -42,6 +42,8 @@ function makeSpin(reels: string[], spinning = false) {
 export const command: HybridCommand = {
   name: "jackpot",
   description: "High-stakes 6-reel jackpot. Match symbols for massive multipliers!",
+  usage: "jackpot [bet]",
+  examples: ["jackpot"],
   category: "economy",
   guildOnly: true,
   aliases: ["jackpotslots", "megaslots", "jp"],

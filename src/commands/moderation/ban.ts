@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "ban",
   aliases: ["b"],
   description: "Ban a member from the server.",
+  usage: "ban [user] [reason]",
+  examples: ["ban Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

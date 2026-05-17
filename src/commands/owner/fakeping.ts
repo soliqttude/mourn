@@ -5,6 +5,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "fakeping",
   description: "(Owner) Pretend the bot is lagging at 9999ms, then snap back.",
+  usage: "fakeping",
+  examples: ["fakeping"],
   category: "owner",
   ownerOnly: true,
   aliases: ["lagspike"],

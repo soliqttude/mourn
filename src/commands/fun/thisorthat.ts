@@ -18,6 +18,8 @@ const QUESTIONS = [
 export const command: HybridCommand = {
   name: "thisorthat",
   description: "This or That — pick your preference from random choices!",
+  usage: "thisorthat",
+  examples: ["thisorthat"],
   category: "fun",
   aliases: ["tot", "wouldyourather", "wyr"],
   async execute(ctx) {

@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "activeservers",
   description: "(Owner) Rank all guilds by commands run in the recent log.",
+  usage: "activeservers",
+  examples: ["activeservers"],
   category: "owner",
   ownerOnly: true,
   aliases: ["serveractivity", "topservers"],

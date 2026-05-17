@@ -7,6 +7,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "serverconfig",
   description: "(Owner) Dump the full settings for any server by ID.",
+  usage: "serverconfig [guild_id]",
+  examples: ["serverconfig"],
   category: "owner",
   ownerOnly: true,
   options: [

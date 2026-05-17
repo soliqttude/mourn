@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "embed",
   aliases: ["buildembed", "embedbuilder"],
   description: "Send a custom embed message.",
+  usage: "embed [title] [description] [color]",
+  examples: ["embed"],
   category: "utility",
   permission: "mod",
   guildOnly: true,

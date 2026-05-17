@@ -8,6 +8,8 @@ import { eq, or, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "marry",
   description: "Propose to someone.",
+  usage: "marry [user]",
+  examples: ["marry"],
   category: "fun",
   guildOnly: true,
   aliases: ["propose"],

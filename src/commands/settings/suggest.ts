@@ -9,6 +9,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "suggest",
   description: "Submit a suggestion.",
+  usage: "suggest [suggestion]",
+  examples: ["suggest"],
   category: "settings",
   guildOnly: true,
   options: [{ name: "suggestion", description: "Your suggestion", type: ApplicationCommandOptionType.String, required: true }],

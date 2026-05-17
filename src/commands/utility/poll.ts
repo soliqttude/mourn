@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "poll",
   aliases: ["vote", "createpoll"],
   description: "Create a yes/no poll.",
+  usage: "poll [question]",
+  examples: ["poll"],
   category: "utility",
   guildOnly: true,
   options: [

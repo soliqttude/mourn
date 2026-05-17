@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "jail",
   aliases: ["jl", "imprison"],
   description: "Assign the jail role to a member.",
+  usage: "jail [user] [reason]",
+  examples: ["jail Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

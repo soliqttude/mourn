@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "mock",
   aliases: ["spongebob", "sponge"],
   description: "Mock someone with SpOnGeBoB text.",
+  usage: "mock [text]",
+  examples: ["mock"],
   category: "fun",
   options: [{ name: "text", description: "Text to mock", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {

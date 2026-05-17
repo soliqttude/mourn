@@ -7,6 +7,8 @@ import { shopItems } from "../../db/schema.js";
 export const command: HybridCommand = {
   name: "shopadd",
   description: "Add an item to the server shop.",
+  usage: "shopadd [name] [price] [description] [role] [stock]",
+  examples: ["shopadd"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

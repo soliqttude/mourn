@@ -13,6 +13,8 @@ import { errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "setuplaw",
   description: "Post the server rules embed with creation date, founder, and quick-link buttons.",
+  usage: "setuplaw [chat_url] [roles_url]",
+  examples: ["setuplaw"],
   category: "utility",
   guildOnly: true,
   aliases: ["serverlaw", "laws", "rules"],

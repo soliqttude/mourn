@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "say",
   aliases: ["echo", "announce"],
   description: "Make the bot send a message.",
+  usage: "say [text]",
+  examples: ["say"],
   category: "utility",
   permission: "mod",
   guildOnly: true,

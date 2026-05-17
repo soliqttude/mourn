@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "balance",
   aliases: ["bal", "money"],
   description: "Check your or another user's balance.",
+  usage: "balance [user]",
+  examples: ["balance"],
   category: "economy",
   guildOnly: true,
   options: [

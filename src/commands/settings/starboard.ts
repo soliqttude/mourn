@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "starboard",
   description: "Configure the starboard.",
+  usage: "starboard [channel] [threshold] [emoji]",
+  examples: ["starboard"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

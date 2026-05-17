@@ -70,6 +70,8 @@ function makeResultEmbed(bet: number, pos: number, mult: number, path: string[],
 export const command: HybridCommand = {
   name: "plinko",
   description: "Drop the ball through the pegs and land on a multiplier!",
+  usage: "plinko [bet]",
+  examples: ["plinko"],
   category: "economy",
   guildOnly: true,
   aliases: ["plnk"],

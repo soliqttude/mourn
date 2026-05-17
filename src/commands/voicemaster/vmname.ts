@@ -8,6 +8,8 @@ import { voicemasterChannels } from "../../db/schema.js";
 export const command: HybridCommand = {
   name: "vmname",
   description: "Rename your voicemaster channel.",
+  usage: "vmname [name]",
+  examples: ["vmname"],
   category: "voicemaster",
   guildOnly: true,
   options: [

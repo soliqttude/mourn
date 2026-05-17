@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "newest",
   aliases: ["newmembers", "latestjoins"],
   description: "Show the newest members in the server.",
+  usage: "newest",
+  examples: ["newest"],
   category: "utility",
   guildOnly: true,
   async execute(ctx) {

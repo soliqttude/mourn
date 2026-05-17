@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "remind",
   aliases: ["remindme", "reminder"],
   description: "Set a personal reminder.",
+  usage: "remind [duration] [message]",
+  examples: ["remind"],
   category: "utility",
   options: [
     { name: "duration", description: "Duration (e.g. 10m, 1h)", type: ApplicationCommandOptionType.String, required: true },

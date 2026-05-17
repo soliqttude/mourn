@@ -5,6 +5,8 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "removeemoji",
   description: "Remove an emoji from the server.",
+  usage: "removeemoji [emoji]",
+  examples: ["removeemoji"],
   category: "utility",
   permission: "admin",
   guildOnly: true,

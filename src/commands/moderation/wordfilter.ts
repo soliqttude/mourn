@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "wordfilter",
   aliases: ["filter", "wf", "badwords"],
   description: "Manage the server word filter.",
+  usage: "wordfilter [action] [word]",
+  examples: ["wordfilter"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

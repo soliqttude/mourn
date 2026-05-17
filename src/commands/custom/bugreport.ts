@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "bugreport",
   description: "Report a bug with Bleed.",
+  usage: "bugreport [description]",
+  examples: ["bugreport"],
   category: "custom",
   aliases: ["bug"],
   options: [{ name: "description", description: "Describe the bug", type: ApplicationCommandOptionType.String, required: true }],

@@ -21,6 +21,8 @@ export const command: HybridCommand = {
   name: "hunt",
   aliases: ["hunting", "chase"],
   description: "Go hunting for coins.",
+  usage: "🐇 rabbit",
+  examples: ["🐇 rabbit"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

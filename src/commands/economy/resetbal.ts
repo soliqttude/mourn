@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "resetbal",
   aliases: ["resetbalance", "resetmoney"],
   description: "Reset a user's balance to 0 (admin).",
+  usage: "resetbal [user]",
+  examples: ["resetbal"],
   category: "economy",
   permission: "admin",
   guildOnly: true,

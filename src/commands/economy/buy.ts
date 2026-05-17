@@ -10,6 +10,8 @@ export const command: HybridCommand = {
   name: "buy",
   aliases: ["purchase"],
   description: "Buy an item from the shop by name or ID.",
+  usage: "buy [item]",
+  examples: ["buy"],
   category: "economy",
   guildOnly: true,
   options: [

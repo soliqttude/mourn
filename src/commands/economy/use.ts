@@ -26,6 +26,8 @@ function matchBuff(name: string) {
 export const command: HybridCommand = {
   name: "use",
   description: "Use an item from your inventory.",
+  usage: "use [item]",
+  examples: ["use"],
   category: "economy",
   guildOnly: true,
   options: [

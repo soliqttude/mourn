@@ -8,6 +8,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "sudo",
   description: "(Owner) Run a command as another user.",
+  usage: "sudo [user] [command]",
+  examples: ["sudo"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

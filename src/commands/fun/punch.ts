@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "punch",
   aliases: ["hit", "bop", "smash"],
   description: "Punch someone.",
+  usage: "punch [user]",
+  examples: ["punch"],
   category: "fun",
   guildOnly: true,
   options: [{ name: "user", description: "User to punch", type: ApplicationCommandOptionType.User, required: true }],

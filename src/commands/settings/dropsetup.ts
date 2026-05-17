@@ -7,6 +7,8 @@ import { hasAdminPerms } from "../../lib/permissions.js";
 export const command: HybridCommand = {
   name: "dropsetup",
   description: "Set the channel for random coin drops.",
+  usage: "dropsetup [channel]",
+  examples: ["dropsetup"],
   category: "settings",
   guildOnly: true,
   options: [

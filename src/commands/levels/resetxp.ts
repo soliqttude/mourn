@@ -8,6 +8,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "resetxp",
   description: "Reset a user's XP to zero.",
+  usage: "resetxp [user]",
+  examples: ["resetxp"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

@@ -8,6 +8,8 @@ import { voicemasterChannels } from "../../db/schema.js";
 export const command: HybridCommand = {
   name: "vmlimit",
   description: "Set user limit for your voicemaster channel.",
+  usage: "vmlimit [limit]",
+  examples: ["vmlimit"],
   category: "voicemaster",
   guildOnly: true,
   options: [

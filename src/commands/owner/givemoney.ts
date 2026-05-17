@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "givemoney",
   description: "(Owner) Give any amount of coins to a user.",
+  usage: "givemoney [user] [amount]",
+  examples: ["givemoney"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

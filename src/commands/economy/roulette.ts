@@ -98,6 +98,8 @@ async function doSpin(i: any, choice: string, bet: number, msg: any, guild: any)
 export const command: HybridCommand = {
   name: "roulette",
   description: "Spin the roulette! Pick Red, Black, Green, or a number 0-36.",
+  usage: "roulette [bet] [choice]",
+  examples: ["roulette"],
   category: "economy",
   guildOnly: true,
   aliases: ["rl"],

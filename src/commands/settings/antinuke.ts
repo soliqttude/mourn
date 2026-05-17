@@ -10,6 +10,8 @@ import { invalidateWhitelistCache } from "../../features/antinuke.js";
 export const command: HybridCommand = {
   name: "antinuke",
   description: "Toggle anti-nuke on/off, or configure it. ,antinuke | ,antinuke action ban | ,antinuke threshold 3 | ,antinuke log #ch | ,antinuke whitelist @user",
+  usage: "antinuke [subcommand] [value] [user] [channel]",
+  examples: ["antinuke"],
   category: "settings",
   permission: "owner",
   guildOnly: true,

@@ -10,6 +10,8 @@ export const command: HybridCommand = {
   name: "deposit",
   aliases: ["dep"],
   description: "Deposit cash into your bank.",
+  usage: "deposit [amount]",
+  examples: ["deposit"],
   category: "economy",
   guildOnly: true,
   options: [

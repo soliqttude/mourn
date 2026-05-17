@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "antighostping",
   aliases: ["ghostping"],
   description: "Toggle anti-ghost-ping detection on/off.",
+  usage: "antighostping",
+  examples: ["antighostping"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

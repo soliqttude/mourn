@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "meme",
   aliases: ["dankmeme", "memes"],
   description: "Get a random meme.",
+  usage: "meme",
+  examples: ["meme"],
   category: "fun",
   async execute(ctx) {
     try {

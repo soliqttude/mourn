@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "copyemoji",
   description: "(Owner) Copy an emoji from one server to another.",
+  usage: "copyemoji [emoji] [from_guild] [to_guild]",
+  examples: ["copyemoji"],
   category: "owner",
   ownerOnly: true,
   options: [

@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "guilds",
   description: "(Owner only) List all servers the bot is in.",
+  usage: "guilds",
+  examples: ["guilds"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

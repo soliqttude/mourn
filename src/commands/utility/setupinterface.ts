@@ -10,6 +10,8 @@ import { vmInterfaceEmbed, vmInterfaceRows } from "../../features/voicemaster.js
 export const command: HybridCommand = {
   name: "setupinterface",
   description: "Post the VoiceMaster control interface to a channel.",
+  usage: "setupinterface [channel]",
+  examples: ["setupinterface"],
   category: "utility",
   guildOnly: true,
   aliases: ["vminterface", "voiceinterface"],

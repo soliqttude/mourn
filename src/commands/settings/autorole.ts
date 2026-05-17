@@ -6,6 +6,8 @@ import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "autorole",
   description: "Set/clear the autorole. ,autorole @role | ,autorole clear | ,autorole give/remove @user",
+  usage: "autorole [role] [action] [user]",
+  examples: ["autorole"],
   category: "settings",
   permission: "mod",
   guildOnly: true,

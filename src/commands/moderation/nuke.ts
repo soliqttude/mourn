@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "nuke",
   aliases: ["clearchannel", "wipe"],
   description: "Clone this channel and delete the original, wiping all messages.",
+  usage: "nuke",
+  examples: ["nuke"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

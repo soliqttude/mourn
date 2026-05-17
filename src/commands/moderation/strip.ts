@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "strip",
   aliases: ["striprole", "removerole"],
   description: "Remove all assignable roles from a member.",
+  usage: "strip [user] [reason]",
+  examples: ["strip Rule violation"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

@@ -15,6 +15,8 @@ function rollTwo() {
 export const command: HybridCommand = {
   name: "dicegame",
   description: "Roll 2 dice vs the house. Higher total wins 2x. Tie = refund.",
+  usage: "dicegame [bet]",
+  examples: ["dicegame"],
   category: "economy",
   guildOnly: true,
   aliases: ["dicebet", "diceroll", "dice"],

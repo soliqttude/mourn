@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "afk",
   aliases: ["away", "brb"],
   description: "Mark yourself AFK.",
+  usage: "afk [reason]",
+  examples: ["afk Rule violation"],
   category: "utility",
   guildOnly: true,
   options: [

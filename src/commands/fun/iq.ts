@@ -15,6 +15,8 @@ export const command: HybridCommand = {
   name: "iq",
   aliases: ["iqtest", "brains"],
   description: "Check someone's IQ.",
+  usage: "iq [user]",
+  examples: ["iq"],
   category: "fun",
   options: [{ name: "user", description: "User to check", type: ApplicationCommandOptionType.User, required: false }],
   async execute(ctx) {

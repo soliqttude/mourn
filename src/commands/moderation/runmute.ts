@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "runmute",
   aliases: ["reactunmute", "unreactionmute"],
   description: "Re-allow reactions for a user.",
+  usage: "runmute [user]",
+  examples: ["runmute"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

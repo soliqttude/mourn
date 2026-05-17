@@ -10,6 +10,8 @@ import { invalidateBlacklist } from "../../lib/blacklistCache.js";
 export const command: HybridCommand = {
   name: "blacklist",
   description: "(Owner only) Blacklist or unblacklist a user from using the bot.",
+  usage: "blacklist [action] [user_id] [reason]",
+  examples: ["blacklist Rule violation"],
   category: "owner",
   ownerOnly: true,
   options: [

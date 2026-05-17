@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "antispam",
   aliases: ["spamprotect", "aspam"],
   description: "Toggle antispam on/off. Run with no args to toggle, or pass `status` to check.",
+  usage: "antispam [action]",
+  examples: ["antispam"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "userhistory",
   description: "(Owner) Show all commands a user has run from the log.",
+  usage: "userhistory [user_id]",
+  examples: ["userhistory"],
   category: "owner",
   ownerOnly: true,
   aliases: ["cmdhistory", "userlogs"],

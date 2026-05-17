@@ -19,6 +19,8 @@ export const command: HybridCommand = {
   name: "mine",
   aliases: ["mining"],
   description: "Mine for resources and coins.",
+  usage: "mine",
+  examples: ["mine"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

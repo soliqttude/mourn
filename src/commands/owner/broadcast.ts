@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "broadcast",
   description: "(Owner only) Broadcast a message to every server.",
+  usage: "broadcast [message]",
+  examples: ["broadcast"],
   category: "owner",
   ownerOnly: true,
   options: [

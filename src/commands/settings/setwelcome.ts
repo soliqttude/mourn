@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "setwelcome",
   description: "Set the channel to send welcome messages in.",
+  usage: "setwelcome [channel]",
+  examples: ["setwelcome"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

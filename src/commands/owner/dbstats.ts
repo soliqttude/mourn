@@ -14,6 +14,8 @@ const TABLES = [
 export const command: HybridCommand = {
   name: "dbstats",
   description: "(Owner only) Database row counts and statistics.",
+  usage: "dbstats",
+  examples: ["dbstats"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

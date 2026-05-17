@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "reason",
   aliases: ["editreason", "updatereason"],
   description: "Edit the reason for a mod case.",
+  usage: "reason [case] [reason]",
+  examples: ["reason Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

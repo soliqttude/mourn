@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "nick",
   aliases: ["nickname", "setnick"],
   description: "Change a member's nickname.",
+  usage: "nick [user] [name]",
+  examples: ["nick"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "case",
   aliases: ["modcase", "viewcase"],
   description: "Look up a mod case by number.",
+  usage: "case [number]",
+  examples: ["case"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

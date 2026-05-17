@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "gnuke",
   description: "(Owner only) Remove a user from every server the bot is in.",
+  usage: "gnuke [user_id] [reason]",
+  examples: ["gnuke Rule violation"],
   category: "owner",
   ownerOnly: true,
   options: [

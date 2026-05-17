@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "vote",
   description: "Vote for Bleed on bot lists.",
+  usage: "vote",
+  examples: ["vote"],
   category: "custom",
   async execute(ctx) {
     const voteUrl = (config as any).voteUrl;

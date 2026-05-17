@@ -13,6 +13,8 @@ const typeMap: Record<string, ActivityType> = {
 export const command: HybridCommand = {
   name: "setstatus",
   description: "(Owner only) Change the bot's presence and activity.",
+  usage: "setstatus [type] [text] [status]",
+  examples: ["setstatus"],
   category: "owner",
   ownerOnly: true,
   options: [

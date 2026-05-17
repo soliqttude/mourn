@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "ping",
   aliases: ["latency", "pong"],
   description: "Show the bot's latency.",
+  usage: "ping",
+  examples: ["ping"],
   category: "utility",
   async execute(ctx) {
     const ws = ctx.client.ws.ping;

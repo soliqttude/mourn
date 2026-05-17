@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "unban",
   aliases: ["ub", "pardon"],
   description: "Unban a user.",
+  usage: "unban [user_id]",
+  examples: ["unban"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

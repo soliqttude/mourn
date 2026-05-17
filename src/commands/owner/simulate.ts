@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "simulate",
   description: "(Owner) Simulate a Discord event (join/leave) for testing.",
+  usage: "simulate [event] [user]",
+  examples: ["simulate"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

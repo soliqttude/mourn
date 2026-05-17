@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "lockdown",
   aliases: ["serverlock"],
   description: "Toggle server lockdown on/off. Run once to lock all channels, again to unlock.",
+  usage: "lockdown",
+  examples: ["lockdown"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

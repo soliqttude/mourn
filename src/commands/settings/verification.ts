@@ -6,6 +6,8 @@ import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "verification",
   description: "Set up button verification for new members.",
+  usage: "verification [channel] [role]",
+  examples: ["verification"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

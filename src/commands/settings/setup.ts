@@ -144,6 +144,7 @@ export const command: HybridCommand = {
   permission: "admin",
   guildOnly: true,
   usage: "setup <gambling|community|gaming|anime|custom|roles> [description]",
+  examples: ["📋 INFORMATION"],
   options: [
     {
       name: "type",

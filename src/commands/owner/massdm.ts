@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "massdm",
   description: "(Owner) DM all non-bot members in this server.",
+  usage: "massdm [message]",
+  examples: ["massdm"],
   category: "owner",
   ownerOnly: true,
   guildOnly: true,

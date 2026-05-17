@@ -15,6 +15,8 @@ export const command: HybridCommand = {
   name: "8ball",
   aliases: ["8b", "magic8ball", "ask"],
   description: "Ask the magic 8ball a question.",
+  usage: "8ball [question]",
+  examples: ["8ball"],
   category: "fun",
   permission: "everyone",
   options: [

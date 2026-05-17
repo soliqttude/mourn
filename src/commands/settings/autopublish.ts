@@ -8,6 +8,8 @@ import { and, eq } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "autopublish",
   description: "Toggle auto-publish for an announcement channel. Just run the command again to turn it off.",
+  usage: "autopublish [channel]",
+  examples: ["autopublish"],
   category: "settings",
   permission: "admin",
   guildOnly: true,

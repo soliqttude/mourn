@@ -6,6 +6,8 @@ import { ownerState } from "../../lib/ownerState.js";
 export const command: HybridCommand = {
   name: "ownerlog",
   description: "(Owner only) View recent bot errors sent to your DMs.",
+  usage: "ownerlog",
+  examples: ["ownerlog"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "hackban",
   aliases: ["forceban", "hb", "idban"],
   description: "Ban a user by ID even if they are not in the server.",
+  usage: "hackban [userid] [reason]",
+  examples: ["hackban Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

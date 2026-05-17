@@ -5,6 +5,8 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "rolecolor",
   description: "Change a role's color.",
+  usage: "rolecolor [role] [color]",
+  examples: ["rolecolor"],
   category: "utility",
   permission: "admin",
   guildOnly: true,

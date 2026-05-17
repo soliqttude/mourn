@@ -6,6 +6,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "compare",
   description: "Compare your economy stats head-to-head with another user.",
+  usage: "compare [user]",
+  examples: ["compare"],
   category: "economy",
   guildOnly: true,
   aliases: ["vs", "statsvs"],

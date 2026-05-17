@@ -5,6 +5,8 @@ import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "qrcode",
   description: "Generate a QR code for text or a URL.",
+  usage: "qrcode [text]",
+  examples: ["qrcode"],
   category: "utility",
   aliases: ["qr"],
   options: [{ name: "text", description: "Text or URL to encode", type: ApplicationCommandOptionType.String, required: true }],

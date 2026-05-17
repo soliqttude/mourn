@@ -6,6 +6,8 @@ import { ownerState } from "../../lib/ownerState.js";
 export const command: HybridCommand = {
   name: "maintenance",
   description: "(Owner only) Toggle maintenance mode.",
+  usage: "maintenance",
+  examples: ["maintenance"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

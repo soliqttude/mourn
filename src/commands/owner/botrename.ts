@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "botrename",
   description: "(Owner only) Change the bot's username and/or avatar.",
+  usage: "botrename [username] [avatar_url]",
+  examples: ["botrename"],
   category: "owner",
   ownerOnly: true,
   options: [

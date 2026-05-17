@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "hardban",
   aliases: ["hban", "permban"],
   description: "Permanently ban a user and delete all accessible message history.",
+  usage: "hardban [user] [reason]",
+  examples: ["hardban Rule violation"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

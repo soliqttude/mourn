@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "rmute",
   aliases: ["reactionmute", "reactmute"],
   description: "Prevent a user from adding reactions.",
+  usage: "rmute [user] [reason]",
+  examples: ["rmute Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

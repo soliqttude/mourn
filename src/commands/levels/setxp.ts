@@ -18,6 +18,8 @@ function calcLevel(xp: number): number {
 export const command: HybridCommand = {
   name: "setxp",
   description: "Set a user's XP to a specific amount (admins only).",
+  usage: "setxp [user] [amount]",
+  examples: ["setxp"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

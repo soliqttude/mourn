@@ -8,6 +8,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "coinfreeze",
   description: "(Owner) Freeze or unfreeze all economy commands in a server.",
+  usage: "coinfreeze [guild_id]",
+  examples: ["coinfreeze"],
   category: "owner",
   ownerOnly: true,
   options: [

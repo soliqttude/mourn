@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "rank",
   aliases: ["level", "lvl"],
   description: "Check your or another user's level.",
+  usage: "rank [user]",
+  examples: ["rank"],
   category: "levels",
   guildOnly: true,
   options: [

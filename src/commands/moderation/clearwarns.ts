@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "clearwarns",
   aliases: ["clearwarnings", "cw", "delwarns"],
   description: "Clear all warnings for a member.",
+  usage: "clearwarns [user]",
+  examples: ["clearwarns"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

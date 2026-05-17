@@ -27,6 +27,8 @@ const dares = [
 export const command: HybridCommand = {
   name: "truthordare",
   description: "Get a truth or dare prompt.",
+  usage: "truthordare [type]",
+  examples: ["truthordare"],
   category: "fun",
   aliases: ["tod"],
   options: [{ name: "type", description: "truth or dare", type: ApplicationCommandOptionType.String, required: false,

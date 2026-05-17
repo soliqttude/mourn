@@ -8,6 +8,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "highlight",
   description: "Get DM'd when a keyword is mentioned.",
+  usage: "highlight",
+  examples: ["highlight"],
   category: "utility",
   guildOnly: true,
   aliases: ["hl"],

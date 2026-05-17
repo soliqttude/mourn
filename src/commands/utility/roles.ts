@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "roles",
   aliases: ["serverroles", "allroles"],
   description: "List all roles in the server.",
+  usage: "roles",
+  examples: ["roles"],
   category: "utility",
   guildOnly: true,
   async execute(ctx) {

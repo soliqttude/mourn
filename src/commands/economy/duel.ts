@@ -7,6 +7,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "duel",
   description: "Challenge another user to a coin flip duel. Loser pays the winner!",
+  usage: "duel [user] [bet]",
+  examples: ["duel"],
   category: "economy",
   guildOnly: true,
   aliases: ["challenge", "bet"],

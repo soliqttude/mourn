@@ -12,6 +12,8 @@ const ALIASES: Record<string, string> = {
 export const command: HybridCommand = {
   name: "timezone",
   description: "Show the current time in any timezone.",
+  usage: "timezone [zone]",
+  examples: ["timezone"],
   category: "utility",
   aliases: ["tz", "time2", "localtime"],
   options: [

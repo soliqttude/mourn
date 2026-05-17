@@ -9,6 +9,8 @@ import { eq, and } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "gend",
   description: "End a giveaway early.",
+  usage: "gend [id]",
+  examples: ["gend"],
   category: "giveaway",
   permission: "mod",
   guildOnly: true,

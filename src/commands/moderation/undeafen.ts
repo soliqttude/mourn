@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "undeafen",
   aliases: ["undeaf", "undv"],
   description: "Remove server-deafen from a member.",
+  usage: "undeafen [user]",
+  examples: ["undeafen"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

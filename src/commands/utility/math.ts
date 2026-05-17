@@ -5,6 +5,8 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "math",
   description: "Evaluate a math expression.",
+  usage: "math [expression]",
+  examples: ["math"],
   category: "utility",
   aliases: ["calc", "calculate"],
   options: [{ name: "expression", description: "Math expression", type: ApplicationCommandOptionType.String, required: true }],

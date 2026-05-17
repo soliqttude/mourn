@@ -10,6 +10,8 @@ export const command: HybridCommand = {
   name: "give",
   aliases: ["pay"],
   description: "Give coins to another user.",
+  usage: "give [user] [amount]",
+  examples: ["give"],
   category: "economy",
   guildOnly: true,
   options: [

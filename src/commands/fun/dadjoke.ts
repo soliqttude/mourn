@@ -4,6 +4,8 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "dadjoke",
   description: "Get a random dad joke.",
+  usage: "dadjoke",
+  examples: ["dadjoke"],
   category: "fun",
   aliases: ["dad"],
   async execute(ctx) {

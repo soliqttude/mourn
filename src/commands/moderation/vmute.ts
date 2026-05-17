@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "vmute",
   aliases: ["voicemute", "vcmute"],
   description: "Server-mute a member in voice.",
+  usage: "vmute [user] [reason]",
+  examples: ["vmute Rule violation"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

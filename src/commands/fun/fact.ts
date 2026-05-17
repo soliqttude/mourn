@@ -16,6 +16,8 @@ export const command: HybridCommand = {
   name: "fact",
   aliases: ["funfact", "randomfact"],
   description: "Get a random fun fact.",
+  usage: "fact",
+  examples: ["fact"],
   category: "fun",
   guildOnly: false,
   options: [],

@@ -68,6 +68,8 @@ function makeResultEmbed(bet: number, picks: number[], drawn: Set<number>) {
 export const command: HybridCommand = {
   name: "keno",
   description: "Pick 1-10 numbers (1-40). Match the drawn numbers to win!",
+  usage: "keno [bet] [numbers]",
+  examples: ["keno"],
   category: "economy",
   guildOnly: true,
   options: [

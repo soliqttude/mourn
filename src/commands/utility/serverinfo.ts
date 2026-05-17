@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "serverinfo",
   aliases: ["guildinfo", "si"],
   description: "Show information about this server.",
+  usage: "serverinfo",
+  examples: ["serverinfo"],
   category: "utility",
   guildOnly: true,
   async execute(ctx) {

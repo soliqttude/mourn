@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "streak",
   aliases: ["dailystreak", "combo"],
   description: "Check your daily claim streak.",
+  usage: "streak",
+  examples: ["streak"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "pp",
   aliases: ["ppsize", "dicksize", "ppcheck"],
   description: "Check someone's pp size.",
+  usage: "pp [user]",
+  examples: ["pp"],
   category: "fun",
   options: [{ name: "user", description: "User to check", type: ApplicationCommandOptionType.User, required: false }],
   async execute(ctx) {

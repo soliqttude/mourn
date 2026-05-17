@@ -5,6 +5,8 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "timestamp",
   description: "Generate Discord timestamp formats for a date.",
+  usage: "timestamp [date]",
+  examples: ["timestamp"],
   category: "utility",
   aliases: ["ts", "time"],
   options: [{ name: "date", description: "Date string (e.g. 2025-12-25) or Unix timestamp", type: ApplicationCommandOptionType.String, required: false }],

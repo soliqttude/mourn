@@ -6,6 +6,8 @@ import { vmPanelEmbed, vmPanelButtons } from "../../features/voicemaster.js";
 export const command: HybridCommand = {
   name: "vmpanel",
   description: "Send the voicemaster control panel here.",
+  usage: "vmpanel",
+  examples: ["vmpanel"],
   category: "voicemaster",
   permission: "admin",
   guildOnly: true,

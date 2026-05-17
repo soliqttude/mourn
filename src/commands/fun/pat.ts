@@ -7,6 +7,8 @@ export const command: HybridCommand = {
   name: "pat",
   aliases: ["headpat", "pets"],
   description: "Pat someone on the head.",
+  usage: "pat [user]",
+  examples: ["pat"],
   category: "fun",
   guildOnly: true,
   options: [{ name: "user", description: "User to pat", type: ApplicationCommandOptionType.User, required: true }],

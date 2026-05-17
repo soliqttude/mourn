@@ -6,6 +6,8 @@ import { EmbedBuilder } from "discord.js";
 export const command: HybridCommand = {
   name: "color",
   description: "Preview a hex color.",
+  usage: "color [hex]",
+  examples: ["color"],
   category: "utility",
   aliases: ["hex", "colour"],
   options: [{ name: "hex", description: "Hex color code (e.g. #ff0000)", type: ApplicationCommandOptionType.String, required: true }],

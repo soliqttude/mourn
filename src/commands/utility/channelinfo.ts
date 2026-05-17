@@ -5,6 +5,8 @@ import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "channelinfo",
   description: "Get info about a channel.",
+  usage: "channelinfo [channel]",
+  examples: ["channelinfo"],
   category: "utility",
   guildOnly: true,
   aliases: ["ci"],

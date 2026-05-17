@@ -21,6 +21,8 @@ export const command: HybridCommand = {
   name: "ship",
   aliases: ["shiplove", "couple"],
   description: "Check the compatibility between two users.",
+  usage: "ship [user1] [user2]",
+  examples: ["ship"],
   category: "fun",
   options: [
     { name: "user1", description: "First user", type: ApplicationCommandOptionType.User, required: true },

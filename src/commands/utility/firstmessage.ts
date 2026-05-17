@@ -5,6 +5,8 @@ import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "firstmessage",
   description: "Jump link to the first message in a channel.",
+  usage: "firstmessage [channel]",
+  examples: ["firstmessage"],
   category: "utility",
   guildOnly: true,
   aliases: ["firstmsg"],

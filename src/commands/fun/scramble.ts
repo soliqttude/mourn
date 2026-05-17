@@ -24,6 +24,8 @@ export const command: HybridCommand = {
   name: "scramble",
   aliases: ["wordscramble", "unscramble"],
   description: "Unscramble the word before time runs out! First correct answer wins coins.",
+  usage: "scramble",
+  examples: ["scramble"],
   category: "fun",
   guildOnly: true,
   async execute(ctx) {

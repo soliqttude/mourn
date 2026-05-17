@@ -48,6 +48,8 @@ function buildGrid(revealed: boolean[], card: string[]) {
 export const command: HybridCommand = {
   name: "scratch",
   description: "Buy a scratch card! Reveal all tiles to see if you win.",
+  usage: "scratch [bet]",
+  examples: ["scratch"],
   category: "economy",
   guildOnly: true,
   aliases: ["scratchcard", "lotto"],

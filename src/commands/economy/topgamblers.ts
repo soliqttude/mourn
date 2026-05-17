@@ -8,6 +8,8 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 export const command: HybridCommand = {
   name: "topgamblers",
   description: "See the richest members in this server (wallet + bank combined).",
+  usage: "topgamblers",
+  examples: ["topgamblers"],
   category: "economy",
   guildOnly: true,
   aliases: ["richlist", "topmoney", "wealthiest"],

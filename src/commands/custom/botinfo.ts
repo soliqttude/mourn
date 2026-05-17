@@ -16,6 +16,8 @@ function formatUptime(ms: number): string {
 export const command: HybridCommand = {
   name: "botinfo",
   description: "Detailed stats about Bleed.",
+  usage: "botinfo",
+  examples: ["botinfo"],
   category: "custom",
   aliases: ["bi", "stats"],
   async execute(ctx) {

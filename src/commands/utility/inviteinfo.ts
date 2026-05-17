@@ -5,6 +5,8 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "inviteinfo",
   description: "Get info about a Discord invite link.",
+  usage: "inviteinfo [invite]",
+  examples: ["inviteinfo"],
   category: "utility",
   aliases: ["ii"],
   options: [{ name: "invite", description: "Invite link or code", type: ApplicationCommandOptionType.String, required: true }],

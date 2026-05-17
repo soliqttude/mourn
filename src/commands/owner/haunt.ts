@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "haunt",
   description: "(Owner) React 👻 to every message from a user.",
+  usage: "haunt [user] [duration]",
+  examples: ["haunt"],
   category: "owner",
   ownerOnly: true,
   options: [

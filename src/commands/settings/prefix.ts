@@ -6,6 +6,8 @@ import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
   name: "prefix",
   description: "View or change the server prefix.",
+  usage: "prefix [new_prefix]",
+  examples: ["prefix"],
   category: "settings",
   guildOnly: true,
   options: [

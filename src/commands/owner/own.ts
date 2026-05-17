@@ -6,6 +6,8 @@ import { commands } from "../../handlers/registry.js";
 export const command: HybridCommand = {
   name: "own",
   description: "Owner control panel.",
+  usage: "own",
+  examples: ["own"],
   category: "owner",
   ownerOnly: true,
   aliases: ["ownerpanel"],

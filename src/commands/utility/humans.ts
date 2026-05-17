@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "humans",
   aliases: ["realusers", "nonbots"],
   description: "Show the count of non-bot members.",
+  usage: "humans",
+  examples: ["humans"],
   category: "utility",
   guildOnly: true,
   async execute(ctx) {

@@ -9,6 +9,8 @@ import { ownerState } from "../../lib/ownerState.js";
 export const command: HybridCommand = {
   name: "expose",
   description: "(Owner only) Pull everything the bot knows about a user across all servers.",
+  usage: "expose [user_id]",
+  examples: ["expose"],
   category: "owner",
   ownerOnly: true,
   options: [

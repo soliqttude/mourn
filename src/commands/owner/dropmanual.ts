@@ -12,6 +12,8 @@ import { EmbedBuilder } from "discord.js";
 export const command: HybridCommand = {
   name: "dropmanual",
   description: "(Owner) Manually trigger a coin drop in a specific server.",
+  usage: "dropmanual [guild_id] [amount]",
+  examples: ["dropmanual"],
   category: "owner",
   ownerOnly: true,
   options: [

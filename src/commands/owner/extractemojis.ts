@@ -6,6 +6,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "guildemojis",
   description: "(Owner) List all emojis from a guild with download URLs.",
+  usage: "guildemojis [guild_id]",
+  examples: ["guildemojis"],
   category: "owner",
   ownerOnly: true,
   aliases: ["emojilist", "guildemojilist"],

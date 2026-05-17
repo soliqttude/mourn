@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "unroleall",
   aliases: ["massunrole", "removeroleall"],
   description: "Remove a role from all members.",
+  usage: "unroleall [role]",
+  examples: ["unroleall"],
   category: "moderation",
   permission: "admin",
   guildOnly: true,

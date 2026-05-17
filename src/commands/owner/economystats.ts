@@ -8,6 +8,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "economystats",
   description: "(Owner) Global economy stats across all servers.",
+  usage: "economystats",
+  examples: ["economystats"],
   category: "owner",
   ownerOnly: true,
   async execute(ctx) {

@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "ownersay",
   description: "(Owner only) Make the bot speak in any channel of any server.",
+  usage: "ownersay [channel_id] [message]",
+  examples: ["ownersay"],
   category: "owner",
   ownerOnly: true,
   options: [

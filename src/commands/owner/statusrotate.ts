@@ -7,6 +7,8 @@ const OID = "177803210738630656";
 export const command: HybridCommand = {
   name: "statusrotate",
   description: "(Owner) Manage a rotating list of bot statuses.",
+  usage: "statusrotate [action] [text] [interval]",
+  examples: ["statusrotate"],
   category: "owner",
   ownerOnly: true,
   aliases: ["rotatestatus", "statusloop"],

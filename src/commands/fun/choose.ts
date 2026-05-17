@@ -5,6 +5,8 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "choose",
   description: "Let the bot choose between options (separate with |).",
+  usage: "choose [options]",
+  examples: ["choose"],
   category: "fun",
   aliases: ["pick"],
   options: [{ name: "options", description: "Options separated by |", type: ApplicationCommandOptionType.String, required: true }],

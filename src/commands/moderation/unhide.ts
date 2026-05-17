@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "unhide",
   aliases: ["showchannel", "uch"],
   description: "Restore visibility of a hidden channel.",
+  usage: "unhide [channel]",
+  examples: ["unhide"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

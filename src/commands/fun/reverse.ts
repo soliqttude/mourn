@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "reverse",
   aliases: ["rev", "backwards"],
   description: "Reverse some text.",
+  usage: "reverse [text]",
+  examples: ["reverse"],
   category: "fun",
   options: [{ name: "text", description: "Text to reverse", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {

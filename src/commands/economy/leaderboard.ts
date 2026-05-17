@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "richest",
   aliases: ["topcoins", "ecotop"],
   description: "Top richest members in the server.",
+  usage: "richest",
+  examples: ["richest"],
   category: "economy",
   guildOnly: true,
   async execute(ctx) {

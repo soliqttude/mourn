@@ -9,6 +9,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "bio",
   description: "Set or view a profile bio. Usage: ,bio set <text> | ,bio clear | ,bio [@user]",
+  usage: "bio [subcommand] [text] [user]",
+  examples: ["bio"],
   category: "social",
   options: [
     { name: "subcommand", description: "set | clear", type: ApplicationCommandOptionType.String, required: false },

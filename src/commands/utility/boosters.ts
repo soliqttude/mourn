@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "boosters",
   aliases: ["serverboosts", "boostlist"],
   description: "List all current server boosters.",
+  usage: "boosters",
+  examples: ["boosters"],
   category: "utility",
   guildOnly: true,
   options: [],

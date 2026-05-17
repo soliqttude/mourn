@@ -14,6 +14,7 @@ export const command: HybridCommand = {
   permission: "mod",
   guildOnly: true,
   usage: "<@user>",
+  examples: ["cases"],
   options: [
     { name: "user", description: "User to look up", type: ApplicationCommandOptionType.User, required: true },
   ],

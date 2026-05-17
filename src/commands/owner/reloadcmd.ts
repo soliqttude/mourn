@@ -14,6 +14,8 @@ const CATEGORY_DIRS = ["economy", "fun", "moderation", "utility", "settings", "o
 export const command: HybridCommand = {
   name: "reloadcmd",
   description: "(Owner) Hot-reload a single command without restarting.",
+  usage: "reloadcmd [name]",
+  examples: ["reloadcmd"],
   category: "owner",
   ownerOnly: true,
   aliases: ["reload", "reloadcommand"],

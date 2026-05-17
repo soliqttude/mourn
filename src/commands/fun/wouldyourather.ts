@@ -17,6 +17,8 @@ const questions = [
 export const command: HybridCommand = {
   name: "wouldyourather",
   description: "Get a would you rather question.",
+  usage: "wouldyourather",
+  examples: ["wouldyourather"],
   category: "fun",
   aliases: ["wyr"],
   async execute(ctx) {

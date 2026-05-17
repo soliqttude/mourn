@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "hide",
   aliases: ["hidechannel", "hch"],
   description: "Hide a channel from @everyone.",
+  usage: "hide [channel]",
+  examples: ["hide"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

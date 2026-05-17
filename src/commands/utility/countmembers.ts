@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "countmembers",
   description: "Count how many members have a specific role.",
+  usage: "countmembers [role]",
+  examples: ["countmembers"],
   category: "utility",
   guildOnly: true,
   aliases: ["rolecount", "membercount2", "cmembers"],

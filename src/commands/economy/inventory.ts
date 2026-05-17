@@ -7,6 +7,8 @@ import { eq, and, inArray } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "inventory",
   description: "View your owned items.",
+  usage: "inventory",
+  examples: ["inventory"],
   category: "economy",
   aliases: ["inv"],
   guildOnly: true,

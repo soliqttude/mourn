@@ -9,6 +9,8 @@ export const command: HybridCommand = {
   name: "report",
   aliases: ["submitreport", "reportuser"],
   description: "Report a member to the server moderators.",
+  usage: "report [user] [reason]",
+  examples: ["report Rule violation"],
   category: "utility",
   guildOnly: true,
   options: [

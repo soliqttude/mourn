@@ -13,6 +13,8 @@ const cs = (c:{v:string;s:string}) => `${c.v}${c.s}`;
 export const command: HybridCommand = {
   name: "hilo",
   description: "Guess if the next card is higher or lower. Keep streaking to multiply!",
+  usage: "hilo [bet]",
+  examples: ["hilo"],
   category: "economy",
   guildOnly: true,
   aliases: ["highlow","hilow"],

@@ -5,6 +5,8 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "finduser",
   description: "(Owner only) Find any user and show where they share servers with the bot.",
+  usage: "finduser [user_id]",
+  examples: ["finduser"],
   category: "owner",
   ownerOnly: true,
   options: [

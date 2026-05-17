@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "inrole",
   aliases: ["roleusers", "membersinrole", "rolemembers"],
   description: "List all members who have a specific role.",
+  usage: "inrole [role]",
+  examples: ["inrole"],
   category: "utility",
   guildOnly: true,
   options: [

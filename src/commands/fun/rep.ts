@@ -8,6 +8,8 @@ export const command: HybridCommand = {
   name: "rep",
   aliases: ["reputation", "giverep"],
   description: "Give reputation to a user once per day.",
+  usage: "rep [user]",
+  examples: ["rep"],
   category: "fun",
   guildOnly: true,
   options: [

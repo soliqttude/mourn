@@ -7,6 +7,8 @@ import { levelRewards } from "../../db/schema.js";
 export const command: HybridCommand = {
   name: "addreward",
   description: "Add a role reward for reaching a level.",
+  usage: "addreward [level] [role]",
+  examples: ["addreward"],
   category: "levels",
   permission: "admin",
   guildOnly: true,

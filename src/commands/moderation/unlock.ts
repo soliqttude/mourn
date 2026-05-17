@@ -5,6 +5,8 @@ export const command: HybridCommand = {
   name: "unlock",
   aliases: ["unlockchannel", "ulch"],
   description: "Unlock the current channel.",
+  usage: "unlock",
+  examples: ["unlock"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

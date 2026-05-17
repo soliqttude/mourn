@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "drag",
   aliases: ["movemember", "move"],
   description: "Move a member to a different voice channel.",
+  usage: "drag [user] [channel]",
+  examples: ["drag"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

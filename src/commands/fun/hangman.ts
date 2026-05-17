@@ -22,6 +22,8 @@ export const command: HybridCommand = {
   name: "hangman",
   aliases: ["hm", "wordgame2"],
   description: "Play hangman! Guess the letters to reveal the word.",
+  usage: "hangman",
+  examples: ["hangman"],
   category: "fun",
   guildOnly: true,
   async execute(ctx) {

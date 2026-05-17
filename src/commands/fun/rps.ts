@@ -16,6 +16,8 @@ export const command: HybridCommand = {
   name: "rps",
   aliases: ["rockpaperscissors", "rockpaper"],
   description: "Play rock paper scissors against the bot.",
+  usage: "rps [choice]",
+  examples: ["rps"],
   category: "fun",
   permission: "everyone",
   options: [

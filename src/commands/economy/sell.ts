@@ -10,6 +10,8 @@ export const command: HybridCommand = {
   name: "sell",
   aliases: ["sellitem", "trade"],
   description: "Sell an item from your inventory for 50% of its price.",
+  usage: "sell [id]",
+  examples: ["sell"],
   category: "economy",
   guildOnly: true,
   options: [

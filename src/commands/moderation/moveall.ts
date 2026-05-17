@@ -6,6 +6,8 @@ export const command: HybridCommand = {
   name: "moveall",
   aliases: ["mvall", "massMove"],
   description: "Move all members from one voice channel to another.",
+  usage: "moveall [from] [to]",
+  examples: ["moveall"],
   category: "moderation",
   permission: "mod",
   guildOnly: true,

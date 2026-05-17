@@ -14,6 +14,8 @@ import { eq } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "setupshame",
   description: "Set the shame channel — messages with 3+ 😭 or 💀 reactions get posted there.",
+  usage: "setupshame [channel] [threshold]",
+  examples: ["setupshame"],
   category: "utility",
   guildOnly: true,
   aliases: ["shamechannel", "setshame"],
