@@ -141,36 +141,38 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
   if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(interaction);
 }
 
-function handleHelpButton(interaction: ButtonInteraction) {
-  // Fully synchronous — build payload first, then call update() with zero delay.
-  // No awaits before update() means we always respond within Discord's 3s window.
-  // The prefix is read from the guild settings cache (already populated) or falls
-  // back to the default — either way it's a synchronous Map lookup.
-  const parts = interaction.customId.split(":");
-  const action = parts[1];
+async function handleHelpButton(interaction: ButtonInteraction) {
+  try {
+    const parts = interaction.customId.split(":");
+    const action = parts[1];
+    const prefix = config.defaultPrefix;
+    const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
+    const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
 
-  const prefix = config.defaultPrefix;
+    if (action === "back" || action === "home") {
+      const { embed, rows } = buildHelpHome(visibleCmds.length, categories, prefix);
+      return await interaction.update({ embeds: [embed], components: rows as any[] });
+    }
 
-  const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
-  const categories = [...new Set(visibleCmds.map((c) => c.category))].sort();
+    if (action === "pg") {
+      const catIdx = parseInt(parts[2] ?? "0", 10);
+      const cmdPage = parseInt(parts[3] ?? "0", 10);
+      const { embed, row } = buildPagedCategoryEmbed(catIdx, categories, prefix, cmdPage);
+      return await interaction.update({ embeds: [embed], components: [row as any] });
+    }
 
-  if (action === "back" || action === "home") {
-    const { embed, rows } = buildHelpHome(visibleCmds.length, categories, prefix);
-    return interaction.update({ embeds: [embed], components: rows as any[] });
-  }
+    if (action === "cat") {
+      const category = parts[2];
+      if (!category) return await interaction.deferUpdate();
+      const { embed, row } = buildCategoryEmbed(category, prefix);
+      return await interaction.update({ embeds: [embed], components: [row as any] });
+    }
 
-  if (action === "pg") {
-    const catIdx = parseInt(parts[2] ?? "0", 10);
-    const cmdPage = parseInt(parts[3] ?? "0", 10);
-    const { embed, row } = buildPagedCategoryEmbed(catIdx, categories, prefix, cmdPage);
-    return interaction.update({ embeds: [embed], components: [row as any] });
-  }
-
-  if (action === "cat") {
-    const category = parts[2];
-    if (!category) return;
-    const { embed, row } = buildCategoryEmbed(category, prefix);
-    return interaction.update({ embeds: [embed], components: [row as any] });
+    // Unknown action — acknowledge so Discord doesn't show "failed"
+    await interaction.deferUpdate();
+  } catch (err) {
+    logger.error({ err }, "help button error");
+    try { await interaction.deferUpdate(); } catch { /* already acknowledged */ }
   }
 }
 
