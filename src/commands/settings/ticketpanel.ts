@@ -35,7 +35,7 @@ export const command: HybridCommand = {
       }
     }
 
-    const topics = (settings.ticketTopics ?? []) as TicketTopic[];
+    const topics = (Array.isArray((settings as any).ticketTopics) ? (settings as any).ticketTopics : []) as TicketTopic[];
 
     try {
       await createTicketPanel(ctx.channel as TextChannel, title, desc, topics);
