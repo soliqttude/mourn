@@ -4,11 +4,32 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { updateGuildSettings } from "../../db/settings.js";
 import { config } from "../../config.js";
 
+function validateImageUrl(url: string): void {
+  // Catch common Imgur mistakes: album/image page URLs instead of direct links
+  if (/^https?:\/\/(www\.)?imgur\.com\/(a|gallery)\//.test(url)) {
+    throw new Error(
+      "that's an imgur **album** link, not a direct image url.\n" +
+      "open the album, click the image you want, then copy the url from the address bar — it should look like `https://i.imgur.com/XXXXXXX.png`"
+    );
+  }
+  if (/^https?:\/\/(www\.)?imgur\.com\/[A-Za-z0-9]+$/.test(url)) {
+    const id = url.split("/").pop();
+    throw new Error(
+      `that's an imgur page link, not a direct image url.\n` +
+      `use the direct link instead: \`https://i.imgur.com/${id}.png\``
+    );
+  }
+}
+
 async function urlToDataUri(url: string): Promise<string> {
+  validateImageUrl(url);
   const res = await fetch(url, { headers: { "User-Agent": "BleedBot/1.0" } });
   if (!res.ok) throw new Error(`could not fetch image (${res.status})`);
   const ct = res.headers.get("content-type") ?? "image/png";
-  if (!ct.startsWith("image/")) throw new Error("url must point to an image");
+  if (!ct.startsWith("image/"))
+    throw new Error(
+      "that url doesn't point to an image — make sure it ends with `.png`, `.jpg`, `.gif`, or `.webp` and opens an image directly in your browser"
+    );
   const buf = await res.arrayBuffer();
   return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
 }
