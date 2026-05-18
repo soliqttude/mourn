@@ -1,5 +1,5 @@
 import { type Guild, type GuildMember } from "discord.js";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { inviteCache, inviteUses } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -78,10 +78,50 @@ export async function trackInviteUse(member: GuildMember) {
   return null;
 }
 
-export async function getInviteCount(guildId: string, userId: string) {
+export async function trackMemberLeave(guildId: string, userId: string) {
+  await db
+    .update(inviteUses)
+    .set({ leftAt: new Date() })
+    .where(
+      and(
+        eq(inviteUses.guildId, guildId),
+        eq(inviteUses.invitedUserId, userId),
+        isNull(inviteUses.leftAt)
+      )
+    );
+}
+
+export async function getInviteStats(guildId: string, userId: string) {
   const rows = await db
     .select()
     .from(inviteUses)
     .where(and(eq(inviteUses.guildId, guildId), eq(inviteUses.inviterId, userId)));
-  return rows.length;
+  const total = rows.length;
+  const left = rows.filter((r) => r.leftAt !== null).length;
+  return { total, joined: total - left, left };
+}
+
+export async function getTopInviters(guildId: string, limit = 10) {
+  const rows = await db
+    .select({
+      inviterId: inviteUses.inviterId,
+      total: sql<number>`count(*)`.mapWith(Number),
+      leftCount: sql<number>`count(*) filter (where ${inviteUses.leftAt} is not null)`.mapWith(Number),
+    })
+    .from(inviteUses)
+    .where(and(eq(inviteUses.guildId, guildId)))
+    .groupBy(inviteUses.inviterId)
+    .orderBy(sql`count(*) desc`)
+    .limit(limit);
+  return rows.map((r) => ({
+    inviterId: r.inviterId,
+    total: r.total,
+    joined: r.total - r.leftCount,
+    left: r.leftCount,
+  }));
+}
+
+export async function getInviteCount(guildId: string, userId: string) {
+  const { total } = await getInviteStats(guildId, userId);
+  return total;
 }

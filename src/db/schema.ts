@@ -182,7 +182,7 @@ export const inviteCache = pgTable("invite_cache",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.code] }) })
 );
 export const inviteUses = pgTable("invite_uses", {
-  id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), invitedUserId: text("invited_user_id").notNull(), inviterId: text("inviter_id"), code: text("code"), joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+  id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), invitedUserId: text("invited_user_id").notNull(), inviterId: text("inviter_id"), code: text("code"), joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(), leftAt: timestamp("left_at", { withTimezone: true }),
 });
 export const blacklist = pgTable("blacklist", {
   userId: text("user_id").primaryKey(), reason: text("reason"), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

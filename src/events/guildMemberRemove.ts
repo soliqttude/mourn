@@ -2,12 +2,15 @@ import type { Client, GuildMember, PartialGuildMember, TextChannel } from "disco
 import { brandEmbed } from "../lib/embeds.js";
 import { getGuildSettings } from "../db/settings.js";
 import { renderTemplate } from "../lib/template.js";
+import { trackMemberLeave } from "../features/invites.js";
 
 export const event = {
   name: "guildMemberRemove",
   async execute(client: Client, member: GuildMember | PartialGuildMember) {
     if (member.user.bot) return;
     const settings = await getGuildSettings(member.guild.id);
+
+    await trackMemberLeave(member.guild.id, member.id);
 
     if (settings.goodbyeChannel) {
       const ch = member.guild.channels.cache.get(settings.goodbyeChannel);
