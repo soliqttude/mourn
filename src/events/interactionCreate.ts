@@ -145,9 +145,12 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
 
 async function handleInvitesButton(interaction: ButtonInteraction) {
   try {
+    // format: invites:ACTION:CURRENT_PAGE:GUILD_ID:REQUESTER_ID
     const parts = interaction.customId.split(":");
     const action = parts[1];
-    const requesterId = parts[4] ?? parts[3];
+    const currentPage = parseInt(parts[2] ?? "0", 10);
+    const guildId = parts[3];
+    const requesterId = parts[4];
 
     if (interaction.user.id !== requesterId) {
       return interaction.reply({ content: "this isn't your leaderboard.", flags: MessageFlags.Ephemeral });
@@ -157,16 +160,15 @@ async function handleInvitesButton(interaction: ButtonInteraction) {
       return interaction.update({ components: [] });
     }
 
-    if (action === "pg") {
-      const page = parseInt(parts[2] ?? "0", 10);
-      const guildId = parts[3];
-      if (!guildId) return interaction.deferUpdate();
-      await interaction.deferUpdate();
-      const { embed, row } = await buildLeaderboardMessage(guildId, page, requesterId);
-      return interaction.editReply({ embeds: [embed], components: [row as any] });
-    }
+    let targetPage = currentPage;
+    if (action === "first") targetPage = 0;
+    else if (action === "prev") targetPage = currentPage - 1;
+    else if (action === "next") targetPage = currentPage + 1;
 
+    if (!guildId) return interaction.deferUpdate();
     await interaction.deferUpdate();
+    const { embed, row } = await buildLeaderboardMessage(guildId, targetPage, requesterId);
+    return interaction.editReply({ embeds: [embed], components: [row as any] });
   } catch (err) {
     logger.error({ err }, "invites button error");
     try { await interaction.deferUpdate(); } catch { /* already acked */ }

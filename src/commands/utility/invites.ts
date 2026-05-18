@@ -39,21 +39,21 @@ export async function buildLeaderboardMessage(
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
-      .setCustomId(`invites:pg:0:${guildId}:${requesterId}`)
+      .setCustomId(`invites:first:${p}:${guildId}:${requesterId}`)
       .setEmoji("⏮")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(p === 0),
     new ButtonBuilder()
-      .setCustomId(`invites:pg:${Math.max(0, p - 1)}:${guildId}:${requesterId}`)
+      .setCustomId(`invites:prev:${p}:${guildId}:${requesterId}`)
       .setEmoji("◀")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(p === 0),
     new ButtonBuilder()
-      .setCustomId(`invites:stop:${guildId}:${requesterId}`)
+      .setCustomId(`invites:stop:${p}:${guildId}:${requesterId}`)
       .setEmoji("⏹")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId(`invites:pg:${Math.min(totalPages - 1, p + 1)}:${guildId}:${requesterId}`)
+      .setCustomId(`invites:next:${p}:${guildId}:${requesterId}`)
       .setEmoji("▶")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(p >= totalPages - 1),
