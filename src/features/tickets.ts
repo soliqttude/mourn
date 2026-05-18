@@ -4,6 +4,7 @@ import {
   type ModalSubmitInteraction,
   type TextChannel,
   type Guild,
+  type GuildMember,
   ChannelType,
   PermissionFlagsBits,
   ActionRowBuilder,
@@ -14,6 +15,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
   AttachmentBuilder,
+  MessageFlags,
 } from "discord.js";
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
@@ -36,6 +38,14 @@ function ticketNum(n: number): string {
 }
 
 const footer = { text: "bleed · tickets" } as const;
+
+function isStaff(member: GuildMember | null | undefined, supportRoleId: string | null | undefined): boolean {
+  if (!member) return false;
+  const perms = member.permissions;
+  if (perms.has(PermissionFlagsBits.Administrator) || perms.has(PermissionFlagsBits.ManageGuild)) return true;
+  if (supportRoleId && member.roles.cache.has(supportRoleId)) return true;
+  return false;
+}
 
 async function incrementCount(guildId: string): Promise<number> {
   await db
@@ -82,6 +92,26 @@ function mgmtEmbed(num: number, openerId: string, topic?: string | null, reason?
     .setFooter(footer);
 }
 
+function closedMgmtEmbed(
+  num: number,
+  openerId: string,
+  closedById: string,
+  topic?: string | null,
+  closeReason?: string | null,
+): EmbedBuilder {
+  const lines: string[] = [
+    `**opened by** — <@${openerId}>`,
+    `**closed by** — <@${closedById}>`,
+  ];
+  if (topic) lines.push(`**topic** — ${topic.toLowerCase()}`);
+  if (closeReason) lines.push(`**close reason** — ${closeReason.toLowerCase()}`);
+  return new EmbedBuilder()
+    .setColor(0x2b2d31 as any)
+    .setAuthor({ name: `ticket closed · #${ticketNum(num)}` })
+    .setDescription(lines.join("\n"))
+    .setFooter(footer);
+}
+
 async function generateTranscript(ch: TextChannel): Promise<AttachmentBuilder> {
   const msgs = await ch.messages.fetch({ limit: 100 });
   const sorted = [...msgs.values()].reverse();
@@ -90,7 +120,12 @@ async function generateTranscript(ch: TextChannel): Promise<AttachmentBuilder> {
     const body = m.content || (m.embeds.length ? "[embed]" : "[attachment]");
     return `[${ts}] ${m.author.tag}: ${body}`;
   });
-  const text = [`transcript — #${ch.name}`, `exported ${new Date().toISOString()}`, "─".repeat(60), ...lines].join("\n");
+  const text = [
+    `transcript — #${ch.name}`,
+    `exported ${new Date().toISOString()}`,
+    "─".repeat(60),
+    ...lines,
+  ].join("\n");
   return new AttachmentBuilder(Buffer.from(text, "utf8"), { name: `transcript-${ch.name}.txt` });
 }
 
@@ -128,71 +163,96 @@ async function pushTranscript(
   }
 }
 
-async function lockCh(ch: TextChannel, openerId: string): Promise<void> {
-  await ch.permissionOverwrites.edit(openerId, { SendMessages: false }).catch(() => {});
-}
+// ── Core action internals ─────────────────────────────────────────────────────
+// These handle DB + channel state only — management message editing is done
+// by the caller before invoking these, so they never race with interactions.
 
-async function unlockCh(ch: TextChannel, openerId: string): Promise<void> {
-  await ch.permissionOverwrites.edit(openerId, { SendMessages: true, ViewChannel: true, ReadMessageHistory: true }).catch(() => {});
-}
-
-// ── Close / Reopen / Delete internals ─────────────────────────────────────────
-
-async function _close(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
+async function _doClose(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
   const ticket = await getTicketByChannel(ch.id);
-  if (!ticket || ticket.status === "closed") return;
+  if (!ticket) throw new Error("no ticket found for this channel");
+  if (ticket.status === "closed") throw new Error("ticket is already closed");
 
-  await lockCh(ch, ticket.openerId);
-  await db.update(tickets).set({ status: "closed", closedAt: new Date() }).where(eq(tickets.channelId, ch.id));
+  // Remove send/react from opener; keep view so they can read the transcript
+  await ch.permissionOverwrites
+    .edit(ticket.openerId, { SendMessages: false, AddReactions: false })
+    .catch((err) => logger.warn({ err }, "failed to lock opener perms on close"));
 
-  if (ticket.managementMessageId) {
-    const msg = await ch.messages.fetch(ticket.managementMessageId).catch(() => null);
-    if (msg) {
-      const e = mgmtEmbed(ticket.number, ticket.openerId, ticket.topic)
-        .setColor(0x2b2d31 as any)
-        .setAuthor({ name: `ticket closed · #${ticketNum(ticket.number)}` });
-      await msg.edit({ embeds: [e], components: [closedRow() as any] }).catch(() => {});
-    }
-  }
+  await db
+    .update(tickets)
+    .set({ status: "closed", closedAt: new Date() })
+    .where(eq(tickets.channelId, ch.id));
 
-  await ch.send({
-    embeds: [new EmbedBuilder().setColor(config.brandColor as any).setDescription(`ticket closed by <@${actorId}>`).setFooter(footer)],
-  }).catch(() => {});
+  // Rename so the channel list shows it's closed
+  await ch.setName(`closed-${ticketNum(ticket.number)}`).catch(() => {});
+
+  await ch
+    .send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(config.errorColor as any)
+          .setDescription(
+            `ticket closed by <@${actorId}>.\nuse the buttons above to reopen or delete this ticket.`,
+          )
+          .setFooter(footer),
+      ],
+    })
+    .catch(() => {});
 
   const settings = await getGuildSettings(guild.id);
   await pushTranscript(guild, ticket, ch, actorId, settings);
 }
 
-async function _reopen(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
+async function _doReopen(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
   const ticket = await getTicketByChannel(ch.id);
-  if (!ticket || ticket.status === "open") return;
+  if (!ticket) throw new Error("no ticket found for this channel");
+  if (ticket.status === "open") throw new Error("ticket is already open");
 
-  await unlockCh(ch, ticket.openerId);
-  await db.update(tickets).set({ status: "open", closedAt: null }).where(eq(tickets.channelId, ch.id));
+  await ch.permissionOverwrites
+    .edit(ticket.openerId, {
+      ViewChannel: true,
+      SendMessages: true,
+      ReadMessageHistory: true,
+      AttachFiles: true,
+      AddReactions: true,
+    })
+    .catch((err) => logger.warn({ err }, "failed to restore opener perms on reopen"));
 
-  if (ticket.managementMessageId) {
-    const msg = await ch.messages.fetch(ticket.managementMessageId).catch(() => null);
-    if (msg) {
-      const e = mgmtEmbed(ticket.number, ticket.openerId, ticket.topic);
-      await msg.edit({ embeds: [e], components: [openRow(!!ticket.claimerId) as any] }).catch(() => {});
-    }
-  }
+  await db
+    .update(tickets)
+    .set({ status: "open", closedAt: null })
+    .where(eq(tickets.channelId, ch.id));
 
-  await ch.send({
-    embeds: [new EmbedBuilder().setColor(config.successColor as any).setDescription(`ticket reopened by <@${actorId}>`).setFooter(footer)],
-  }).catch(() => {});
+  await ch.setName(`ticket-${ticketNum(ticket.number)}`).catch(() => {});
+
+  await ch
+    .send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(config.successColor as any)
+          .setDescription(`ticket reopened by <@${actorId}>.`)
+          .setFooter(footer),
+      ],
+    })
+    .catch(() => {});
 }
 
-async function _delete(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
+async function _doDelete(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
   const ticket = await getTicketByChannel(ch.id);
   if (!ticket) return;
   const settings = await getGuildSettings(guild.id);
   await pushTranscript(guild, ticket, ch, actorId, settings);
   await db.update(tickets).set({ status: "deleted" }).where(eq(tickets.channelId, ch.id));
-  await ch.send({
-    embeds: [new EmbedBuilder().setColor(config.errorColor as any).setDescription("deleting ticket...").setFooter(footer)],
-  }).catch(() => {});
-  setTimeout(() => ch.delete().catch(() => {}), 3_000);
+  await ch
+    .send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(config.errorColor as any)
+          .setDescription("deleting ticket in 5 seconds...")
+          .setFooter(footer),
+      ],
+    })
+    .catch(() => {});
+  setTimeout(() => ch.delete().catch(() => {}), 5_000);
 }
 
 // ── Panel creation ─────────────────────────────────────────────────────────────
@@ -214,7 +274,11 @@ export async function createTicketPanel(
   if (topics.length === 0) {
     components.push(
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId("ticket:open").setLabel("open ticket").setEmoji("🎟️").setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("ticket:open")
+          .setLabel("open ticket")
+          .setEmoji("🎟️")
+          .setStyle(ButtonStyle.Primary),
       ),
     );
   } else {
@@ -238,16 +302,23 @@ export async function createTicketPanel(
   }
 
   const sent = await channel.send({ embeds: [embed], components: components as any[] });
-  await db.insert(ticketPanels).values({ guildId: channel.guild.id, channelId: channel.id, messageId: sent.id }).onConflictDoNothing();
+  await db
+    .insert(ticketPanels)
+    .values({ guildId: channel.guild.id, channelId: channel.id, messageId: sent.id })
+    .onConflictDoNothing();
 }
 
 // ── Button handler ─────────────────────────────────────────────────────────────
 
 export async function handleTicketButton(client: Client, interaction: ButtonInteraction): Promise<void> {
   if (!interaction.guild) return;
+
   const parts = interaction.customId.split(":");
   const action = parts[1];
+  const ch = interaction.channel as TextChannel;
+  const member = interaction.member as GuildMember;
 
+  // ── open (from panel) ───────────────────────────────────────────────────────
   if (action === "open") {
     const rawTopic = parts[2] ? decodeURIComponent(parts[2]) : null;
     const modal = new ModalBuilder()
@@ -267,51 +338,127 @@ export async function handleTicketButton(client: Client, interaction: ButtonInte
     return interaction.showModal(modal);
   }
 
-  if (action === "claim") {
-    const ch = interaction.channel as TextChannel;
-    const ticket = await getTicketByChannel(ch.id);
-    if (!ticket) return;
-    await db.update(tickets).set({ claimerId: interaction.user.id }).where(eq(tickets.channelId, ch.id));
-    if (ticket.managementMessageId) {
-      const msg = await ch.messages.fetch(ticket.managementMessageId).catch(() => null);
-      if (msg) await msg.edit({ components: [openRow(true) as any] }).catch(() => {});
-    }
-    await interaction.reply({ embeds: [successEmbed(`ticket claimed by <@${interaction.user.id}>`)], ephemeral: true });
+  // ── all other actions require a valid ticket ───────────────────────────────
+  const ticket = await getTicketByChannel(ch.id);
+  if (!ticket) {
+    await interaction.reply({
+      embeds: [errorEmbed("this channel is not a ticket.")],
+      flags: MessageFlags.Ephemeral,
+    });
     return;
   }
 
+  const settings = await getGuildSettings(interaction.guild.id);
+  const staff = isStaff(member, settings.ticketSupportRole);
+
+  // ── claim ───────────────────────────────────────────────────────────────────
+  if (action === "claim") {
+    if (!staff) {
+      await interaction.reply({
+        embeds: [errorEmbed("only support staff can claim tickets.")],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    if (ticket.claimerId) {
+      await interaction.reply({
+        embeds: [errorEmbed(`already claimed by <@${ticket.claimerId}>.`)],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    await db.update(tickets).set({ claimerId: interaction.user.id }).where(eq(tickets.channelId, ch.id));
+    // update() both acks the button AND updates the message — no race
+    await interaction.update({ components: [openRow(true) as any] });
+    await ch.send({ embeds: [successEmbed(`ticket claimed by <@${interaction.user.id}>`)] }).catch(() => {});
+    return;
+  }
+
+  // ── unclaim ─────────────────────────────────────────────────────────────────
   if (action === "unclaim") {
-    const ch = interaction.channel as TextChannel;
-    const ticket = await getTicketByChannel(ch.id);
-    if (!ticket) return;
-    if (ticket.claimerId !== interaction.user.id) {
-      await interaction.reply({ embeds: [errorEmbed("you didn't claim this ticket.")], ephemeral: true });
+    if (!staff && ticket.claimerId !== interaction.user.id) {
+      await interaction.reply({
+        embeds: [errorEmbed("only the claimer or support staff can unclaim this ticket.")],
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
     await db.update(tickets).set({ claimerId: null }).where(eq(tickets.channelId, ch.id));
-    if (ticket.managementMessageId) {
-      const msg = await ch.messages.fetch(ticket.managementMessageId).catch(() => null);
-      if (msg) await msg.edit({ components: [openRow(false) as any] }).catch(() => {});
-    }
-    await interaction.reply({ embeds: [successEmbed(`<@${interaction.user.id}> unclaimed the ticket`)], ephemeral: true });
+    await interaction.update({ components: [openRow(false) as any] });
+    await ch.send({ embeds: [successEmbed(`<@${interaction.user.id}> unclaimed the ticket`)] }).catch(() => {});
     return;
   }
 
+  // ── close — show reason modal (modal submit handles the actual close) ───────
   if (action === "close") {
-    await interaction.deferUpdate().catch(() => {});
-    await _close(interaction.channel as TextChannel, interaction.user.id, interaction.guild);
-    return;
+    if (!staff && interaction.user.id !== ticket.openerId) {
+      await interaction.reply({
+        embeds: [errorEmbed("only support staff or the ticket opener can close this ticket.")],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    if (ticket.status === "closed") {
+      await interaction.reply({
+        embeds: [errorEmbed("ticket is already closed.")],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    const modal = new ModalBuilder().setCustomId("ticket:close_reason").setTitle("close ticket");
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId("reason")
+          .setLabel("reason for closing (optional)")
+          .setStyle(TextInputStyle.Short)
+          .setMaxLength(200)
+          .setRequired(false)
+          .setPlaceholder("resolved, spam, inactivity..."),
+      ),
+    );
+    return interaction.showModal(modal);
   }
 
+  // ── reopen ──────────────────────────────────────────────────────────────────
   if (action === "reopen") {
-    await interaction.deferUpdate().catch(() => {});
-    await _reopen(interaction.channel as TextChannel, interaction.user.id, interaction.guild);
+    if (!staff) {
+      await interaction.reply({
+        embeds: [errorEmbed("only support staff can reopen tickets.")],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    if (ticket.status === "open") {
+      await interaction.reply({
+        embeds: [errorEmbed("ticket is already open.")],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    // update() immediately swaps back to open embed + buttons
+    const embed = mgmtEmbed(ticket.number, ticket.openerId, ticket.topic);
+    await interaction.update({ embeds: [embed as any], components: [openRow(!!ticket.claimerId) as any] });
+    await _doReopen(ch, interaction.user.id, interaction.guild).catch((err) => {
+      logger.error({ err }, "ticket reopen failed");
+    });
     return;
   }
 
+  // ── delete ──────────────────────────────────────────────────────────────────
   if (action === "delete") {
+    if (!staff) {
+      await interaction.reply({
+        embeds: [errorEmbed("only support staff can delete tickets.")],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    // deferUpdate since the channel will be gone — no message to update
     await interaction.deferUpdate().catch(() => {});
-    await _delete(interaction.channel as TextChannel, interaction.user.id, interaction.guild);
+    await _doDelete(ch, interaction.user.id, interaction.guild).catch((err) => {
+      logger.error({ err }, "ticket delete failed");
+    });
     return;
   }
 }
@@ -320,6 +467,54 @@ export async function handleTicketButton(client: Client, interaction: ButtonInte
 
 export async function handleTicketModal(client: Client, interaction: ModalSubmitInteraction): Promise<void> {
   if (!interaction.guild) return;
+
+  // ── close reason modal ──────────────────────────────────────────────────────
+  if (interaction.customId === "ticket:close_reason") {
+    const reason = interaction.fields.getTextInputValue("reason").trim() || null;
+    const ch = interaction.channel as TextChannel;
+
+    const ticket = await getTicketByChannel(ch.id);
+    if (!ticket) {
+      await interaction.reply({
+        embeds: [errorEmbed("ticket not found.")],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    if (ticket.status === "closed") {
+      await interaction.reply({
+        embeds: [errorEmbed("ticket is already closed.")],
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    // ModalSubmitInteraction has no update() — ack with an ephemeral defer,
+    // then edit the management message directly via REST (bot has the perms).
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    const embed = closedMgmtEmbed(ticket.number, ticket.openerId, interaction.user.id, ticket.topic, reason);
+
+    if (ticket.managementMessageId) {
+      const msg = await ch.messages.fetch(ticket.managementMessageId).catch(() => null);
+      if (msg) {
+        await msg
+          .edit({ embeds: [embed as any], components: [closedRow() as any] })
+          .catch((err) => logger.warn({ err }, "failed to edit management message on close"));
+      }
+    }
+
+    // Lock channel, rename, send close msg, push transcript
+    await _doClose(ch, interaction.user.id, interaction.guild).catch((err) => {
+      logger.error({ err }, "ticket close failed after modal submit");
+    });
+
+    // Delete the silent ephemeral ack so no noise
+    await interaction.deleteReply().catch(() => {});
+    return;
+  }
+
+  // ── ticket create modal ─────────────────────────────────────────────────────
   if (!interaction.customId.startsWith("ticket:create")) return;
 
   const rawParts = interaction.customId.split(":");
@@ -338,6 +533,7 @@ export async function handleTicketModal(client: Client, interaction: ModalSubmit
         PermissionFlagsBits.SendMessages,
         PermissionFlagsBits.ReadMessageHistory,
         PermissionFlagsBits.AttachFiles,
+        PermissionFlagsBits.AddReactions,
       ],
     },
     {
@@ -348,6 +544,7 @@ export async function handleTicketModal(client: Client, interaction: ModalSubmit
         PermissionFlagsBits.ReadMessageHistory,
         PermissionFlagsBits.ManageChannels,
         PermissionFlagsBits.ManageMessages,
+        PermissionFlagsBits.AttachFiles,
       ],
     },
   ];
@@ -359,37 +556,50 @@ export async function handleTicketModal(client: Client, interaction: ModalSubmit
         PermissionFlagsBits.SendMessages,
         PermissionFlagsBits.ReadMessageHistory,
         PermissionFlagsBits.AttachFiles,
+        PermissionFlagsBits.AddReactions,
       ],
     });
   }
 
-  const channel = await interaction.guild.channels.create({
-    name: `ticket-${ticketNum(num)}`,
-    type: ChannelType.GuildText,
-    parent: settings.ticketCategory ?? undefined,
-    permissionOverwrites: overwrites,
-  });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const embed = mgmtEmbed(num, interaction.user.id, rawTopic, reason);
-  const content = settings.ticketSupportRole ? `<@&${settings.ticketSupportRole}>` : undefined;
-  const sent = await (channel as TextChannel).send({ content, embeds: [embed], components: [openRow(false) as any] });
+  try {
+    const channel = await interaction.guild.channels.create({
+      name: `ticket-${ticketNum(num)}`,
+      type: ChannelType.GuildText,
+      parent: settings.ticketCategory ?? undefined,
+      permissionOverwrites: overwrites,
+    });
 
-  await db.insert(tickets).values({
-    guildId: interaction.guild.id,
-    channelId: channel.id,
-    openerId: interaction.user.id,
-    topic: rawTopic ?? undefined,
-    number: num,
-    managementMessageId: sent.id,
-  });
+    const embed = mgmtEmbed(num, interaction.user.id, rawTopic, reason);
+    const content = settings.ticketSupportRole ? `<@&${settings.ticketSupportRole}>` : undefined;
+    const sent = await (channel as TextChannel).send({
+      content,
+      embeds: [embed],
+      components: [openRow(false) as any],
+    });
 
-  await interaction.reply({
-    embeds: [successEmbed(`ticket opened — <#${channel.id}>`)],
-    ephemeral: true,
-  });
+    await db.insert(tickets).values({
+      guildId: interaction.guild.id,
+      channelId: channel.id,
+      openerId: interaction.user.id,
+      topic: rawTopic ?? undefined,
+      number: num,
+      managementMessageId: sent.id,
+    });
+
+    await interaction.editReply({
+      embeds: [successEmbed(`ticket opened — <#${channel.id}>`)],
+    });
+  } catch (err) {
+    logger.error({ err }, "failed to create ticket");
+    await interaction.editReply({
+      embeds: [errorEmbed("failed to create ticket. please check the bot's channel permissions.")],
+    }).catch(() => {});
+  }
 }
 
-// ── Exported helpers for the /ticket command ───────────────────────────────────
+// ── Exported helpers for the /ticket slash command ────────────────────────────
 
 export { getTicketByChannel };
 
@@ -411,13 +621,27 @@ export async function ticketRename(ch: TextChannel, name: string): Promise<void>
 }
 
 export async function closeTicketCmd(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
-  await _close(ch, actorId, guild);
+  const ticket = await getTicketByChannel(ch.id);
+  if (!ticket) return;
+  const embed = closedMgmtEmbed(ticket.number, ticket.openerId, actorId, ticket.topic);
+  if (ticket.managementMessageId) {
+    const msg = await ch.messages.fetch(ticket.managementMessageId).catch(() => null);
+    if (msg) await msg.edit({ embeds: [embed as any], components: [closedRow() as any] }).catch(() => {});
+  }
+  await _doClose(ch, actorId, guild);
 }
 
 export async function reopenTicketCmd(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
-  await _reopen(ch, actorId, guild);
+  const ticket = await getTicketByChannel(ch.id);
+  if (!ticket) return;
+  const embed = mgmtEmbed(ticket.number, ticket.openerId, ticket.topic);
+  if (ticket.managementMessageId) {
+    const msg = await ch.messages.fetch(ticket.managementMessageId).catch(() => null);
+    if (msg) await msg.edit({ embeds: [embed as any], components: [openRow(!!ticket.claimerId) as any] }).catch(() => {});
+  }
+  await _doReopen(ch, actorId, guild);
 }
 
 export async function deleteTicketCmd(ch: TextChannel, actorId: string, guild: Guild): Promise<void> {
-  await _delete(ch, actorId, guild);
+  await _doDelete(ch, actorId, guild);
 }
