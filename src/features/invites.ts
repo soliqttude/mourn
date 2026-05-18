@@ -1,5 +1,5 @@
 import { type Guild, type GuildMember } from "discord.js";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, isNotNull, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { inviteCache, inviteUses } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
