@@ -3,6 +3,8 @@ import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed } from "../../lib/embeds.js";
 import { getInviteStats, getTopInviters } from "../../features/invites.js";
 
+const MEDALS = ["🥇", "🥈", "🥉"];
+
 export const command: HybridCommand = {
   name: "invites",
   aliases: ["myinvites", "invitecount", "inviteleaderboard", "topinvites", "invitetop"],
@@ -21,50 +23,58 @@ export const command: HybridCommand = {
 
     if (!target) {
       const rows = await getTopInviters(ctx.guild.id, 10);
+
       if (!rows.length) {
         return ctx.reply({
           embeds: [
             brandEmbed({
-              title: "Invite Leaderboard",
-              description: "No invite data yet. Members need to join through tracked invites first.",
-              page: "Invites",
+              authorName: ctx.guild.name,
+              authorIcon: ctx.guild.iconURL() ?? undefined,
+              description: "no invite data yet — members need to join through tracked invites first.",
+              page: "invites",
             }),
           ],
         });
       }
 
-      const list = rows
-        .filter((r) => r.inviterId !== null)
-        .map(
-          (r, i) =>
-            `**${i + 1}.** <@${r.inviterId}> — **${r.total}** invited · **${r.joined}** here · **${r.left}** left`
-        )
-        .join("\n");
+      const totalTracked = rows.reduce((s, r) => s + r.total, 0);
+
+      const list = rows.map((r, i) => {
+        const pos = MEDALS[i] ?? `\`${i + 1}.\``;
+        return `${pos} <@${r.inviterId}> — **${r.total}** invited · 🟢 **${r.joined}** · 🔴 **${r.left}**`;
+      }).join("\n");
 
       return ctx.reply({
         embeds: [
           brandEmbed({
-            title: `🏆 Invite Leaderboard — ${ctx.guild.name}`,
-            description: list || "No data.",
-            page: "Invites",
+            authorName: `${ctx.guild.name} — invite leaderboard`,
+            authorIcon: ctx.guild.iconURL() ?? undefined,
+            thumbnail: ctx.guild.iconURL({ size: 256 }) ?? undefined,
+            description: list,
+            page: `${totalTracked} total tracked`,
           }),
         ],
       });
     }
 
     const stats = await getInviteStats(ctx.guild.id, target.id);
+    const leaveRate = stats.total > 0 ? Math.round((stats.left / stats.total) * 100) : 0;
 
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: `Invites — ${target.username}`,
-          description: [
-            `**Total invited:** ${stats.total}`,
-            `**Still in server:** ${stats.joined}`,
-            `**Left:** ${stats.left}`,
-          ].join("\n"),
-          thumbnail: target.displayAvatarURL(),
-          page: "Invites",
+          authorName: `${target.username} — invites`,
+          authorIcon: target.displayAvatarURL(),
+          thumbnail: target.displayAvatarURL({ size: 256 }),
+          fields: [
+            { name: "total", value: `**${stats.total}**`, inline: true },
+            { name: "🟢 joined", value: `**${stats.joined}**`, inline: true },
+            { name: "🔴 left", value: `**${stats.left}**`, inline: true },
+          ],
+          description: stats.total === 0
+            ? "no invites tracked yet."
+            : `**${leaveRate}%** of invited members have left.`,
+          page: "invites",
         }),
       ],
     });

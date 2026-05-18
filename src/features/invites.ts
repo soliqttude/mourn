@@ -109,12 +109,12 @@ export async function getTopInviters(guildId: string, limit = 10) {
       leftCount: sql<number>`count(*) filter (where ${inviteUses.leftAt} is not null)`.mapWith(Number),
     })
     .from(inviteUses)
-    .where(and(eq(inviteUses.guildId, guildId)))
+    .where(and(eq(inviteUses.guildId, guildId), isNotNull(inviteUses.inviterId)))
     .groupBy(inviteUses.inviterId)
     .orderBy(sql`count(*) desc`)
     .limit(limit);
   return rows.map((r) => ({
-    inviterId: r.inviterId,
+    inviterId: r.inviterId!,
     total: r.total,
     joined: r.total - r.leftCount,
     left: r.leftCount,
