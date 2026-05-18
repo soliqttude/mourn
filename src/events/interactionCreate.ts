@@ -21,6 +21,7 @@ import { isBlacklisted } from "../lib/blacklistCache.js";
 import { handlePanelInteraction } from "../panels/router.js";
 import { cleanError } from "../lib/format.js";
 import { buildHelpHome, buildPagedCategoryEmbed, buildCategoryEmbed } from "../commands/utility/help.js";
+import { buildLeaderboardMessage } from "../commands/utility/invites.js";
 
 async function safeFollowUp(
   interaction: ButtonInteraction | ChatInputCommandInteraction,
@@ -127,6 +128,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
 async function handleButton(client: Client, interaction: ButtonInteraction) {
   const id = interaction.customId;
   if (id.startsWith("help:")) return handleHelpButton(interaction);
+  if (id.startsWith("invites:")) return handleInvitesButton(interaction);
   if (id.startsWith("panel:")) return handlePanelInteraction(client, interaction);
   const { handleTicketButton } = await import("../features/tickets.js");
   if (id.startsWith("ticket:")) return handleTicketButton(client, interaction);
@@ -139,6 +141,36 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
   if (id.startsWith("role:")) return handleRoleButton(interaction);
   if (id.startsWith("trivia_")) return handleTriviaButton(interaction);
   if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(interaction);
+}
+
+async function handleInvitesButton(interaction: ButtonInteraction) {
+  try {
+    const parts = interaction.customId.split(":");
+    const action = parts[1];
+    const requesterId = parts[4] ?? parts[3];
+
+    if (interaction.user.id !== requesterId) {
+      return interaction.reply({ content: "this isn't your leaderboard.", flags: MessageFlags.Ephemeral });
+    }
+
+    if (action === "stop") {
+      return interaction.update({ components: [] });
+    }
+
+    if (action === "pg") {
+      const page = parseInt(parts[2] ?? "0", 10);
+      const guildId = parts[3];
+      if (!guildId) return interaction.deferUpdate();
+      await interaction.deferUpdate();
+      const { embed, row } = await buildLeaderboardMessage(guildId, page, requesterId);
+      return interaction.editReply({ embeds: [embed], components: [row as any] });
+    }
+
+    await interaction.deferUpdate();
+  } catch (err) {
+    logger.error({ err }, "invites button error");
+    try { await interaction.deferUpdate(); } catch { /* already acked */ }
+  }
 }
 
 async function handleHelpButton(interaction: ButtonInteraction) {

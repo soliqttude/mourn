@@ -276,8 +276,13 @@ const STATEMENTS: string[] = [
     content TEXT NOT NULL,
     PRIMARY KEY (guild_id, command, type)
   )`,
-  // Invite tracking — left_at column
+  // Invite tracking columns
   `ALTER TABLE invite_uses ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ`,
+  `ALTER TABLE invite_uses ADD COLUMN IF NOT EXISTS is_fake BOOLEAN NOT NULL DEFAULT false`,
+  `CREATE TABLE IF NOT EXISTS invite_bonus (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, bonus INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (guild_id, user_id)
+  )`,
   // Ticket system v2
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_count INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_topics JSONB NOT NULL DEFAULT '[]'`,

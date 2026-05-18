@@ -1,9 +1,66 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ApplicationCommandOptionType,
+} from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed } from "../../lib/embeds.js";
 import { getInviteStats, getTopInviters } from "../../features/invites.js";
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+const PAGE_SIZE = 10;
+
+export async function buildLeaderboardMessage(
+  guildId: string,
+  page: number,
+  requesterId: string,
+) {
+  const allRows = await getTopInviters(guildId);
+  const totalPages = Math.max(1, Math.ceil(allRows.length / PAGE_SIZE));
+  const p = Math.max(0, Math.min(page, totalPages - 1));
+  const pageRows = allRows.slice(p * PAGE_SIZE, (p + 1) * PAGE_SIZE);
+  const startIdx = p * PAGE_SIZE;
+
+  const description =
+    pageRows.length === 0
+      ? "no invite data yet — members need to join through tracked invites first."
+      : pageRows
+          .map((r, i) => {
+            const total = r.regular + r.left + r.fake + r.bonus;
+            return `**${startIdx + i + 1}.** <@${r.inviterId}> • **${total}** invite${total !== 1 ? "s" : ""}. (**${r.regular}** regular, **${r.left}** left, **${r.fake}** fake, **${r.bonus}** bonus)`;
+          })
+          .join("\n");
+
+  const embed = brandEmbed({
+    title: "Invites Leaderboard",
+    description,
+    page: `Page ${p + 1}`,
+  });
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`invites:pg:0:${guildId}:${requesterId}`)
+      .setEmoji("⏮")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(p === 0),
+    new ButtonBuilder()
+      .setCustomId(`invites:pg:${Math.max(0, p - 1)}:${guildId}:${requesterId}`)
+      .setEmoji("◀")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(p === 0),
+    new ButtonBuilder()
+      .setCustomId(`invites:stop:${guildId}:${requesterId}`)
+      .setEmoji("⏹")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`invites:pg:${Math.min(totalPages - 1, p + 1)}:${guildId}:${requesterId}`)
+      .setEmoji("▶")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(p >= totalPages - 1),
+  );
+
+  return { embed, row, page: p, totalPages };
+}
 
 export const command: HybridCommand = {
   name: "invites",
@@ -14,7 +71,12 @@ export const command: HybridCommand = {
   category: "utility",
   guildOnly: true,
   options: [
-    { name: "user", description: "User to check invites for", type: ApplicationCommandOptionType.User, required: false },
+    {
+      name: "user",
+      description: "User to check invites for",
+      type: ApplicationCommandOptionType.User,
+      required: false,
+    },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
@@ -22,58 +84,21 @@ export const command: HybridCommand = {
     const target = await ctx.getUser("user");
 
     if (!target) {
-      const rows = await getTopInviters(ctx.guild.id, 10);
-
-      if (!rows.length) {
-        return ctx.reply({
-          embeds: [
-            brandEmbed({
-              authorName: ctx.guild.name,
-              authorIcon: ctx.guild.iconURL() ?? undefined,
-              description: "no invite data yet — members need to join through tracked invites first.",
-              page: "invites",
-            }),
-          ],
-        });
-      }
-
-      const totalTracked = rows.reduce((s, r) => s + r.total, 0);
-
-      const list = rows.map((r, i) => {
-        const pos = MEDALS[i] ?? `\`${i + 1}.\``;
-        return `${pos} <@${r.inviterId}> — **${r.total}** invited · 🟢 **${r.joined}** · 🔴 **${r.left}**`;
-      }).join("\n");
-
-      return ctx.reply({
-        embeds: [
-          brandEmbed({
-            authorName: `${ctx.guild.name} — invite leaderboard`,
-            authorIcon: ctx.guild.iconURL() ?? undefined,
-            thumbnail: ctx.guild.iconURL({ size: 256 }) ?? undefined,
-            description: list,
-            page: `${totalTracked} total tracked`,
-          }),
-        ],
-      });
+      const { embed, row } = await buildLeaderboardMessage(ctx.guild.id, 0, ctx.user.id);
+      return ctx.reply({ embeds: [embed], components: [row as any] });
     }
 
     const stats = await getInviteStats(ctx.guild.id, target.id);
-    const leaveRate = stats.total > 0 ? Math.round((stats.left / stats.total) * 100) : 0;
+    const total = stats.regular + stats.left + stats.fake + stats.bonus;
 
     return ctx.reply({
       embeds: [
         brandEmbed({
-          authorName: `${target.username} — invites`,
+          title: "Invites",
+          authorName: target.username,
           authorIcon: target.displayAvatarURL(),
           thumbnail: target.displayAvatarURL({ size: 256 }),
-          fields: [
-            { name: "total", value: `**${stats.total}**`, inline: true },
-            { name: "🟢 joined", value: `**${stats.joined}**`, inline: true },
-            { name: "🔴 left", value: `**${stats.left}**`, inline: true },
-          ],
-          description: stats.total === 0
-            ? "no invites tracked yet."
-            : `**${leaveRate}%** of invited members have left.`,
+          description: `**${total}** invite${total !== 1 ? "s" : ""}. (**${stats.regular}** regular, **${stats.left}** left, **${stats.fake}** fake, **${stats.bonus}** bonus)`,
           page: "invites",
         }),
       ],

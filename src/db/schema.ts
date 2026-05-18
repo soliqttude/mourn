@@ -182,8 +182,12 @@ export const inviteCache = pgTable("invite_cache",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.code] }) })
 );
 export const inviteUses = pgTable("invite_uses", {
-  id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), invitedUserId: text("invited_user_id").notNull(), inviterId: text("inviter_id"), code: text("code"), joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(), leftAt: timestamp("left_at", { withTimezone: true }),
+  id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), invitedUserId: text("invited_user_id").notNull(), inviterId: text("inviter_id"), code: text("code"), joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(), leftAt: timestamp("left_at", { withTimezone: true }), isFake: boolean("is_fake").default(false).notNull(),
 });
+export const inviteBonus = pgTable("invite_bonus",
+  { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), bonus: integer("bonus").default(0).notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
+);
 export const blacklist = pgTable("blacklist", {
   userId: text("user_id").primaryKey(), reason: text("reason"), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
