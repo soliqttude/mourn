@@ -343,3 +343,15 @@ export const invokeMessages = pgTable("invoke_messages",
   },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.command, t.type] }) })
 );
+
+// ── Counters ─────────────────────────────────────────────────────────────────
+export const counters = pgTable("counters",
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    channelId: text("channel_id").notNull(),
+    type: text("type").notNull(),
+    template: text("template").notNull(),
+  },
+  (t) => ({ guildIdx: index("counters_guild_idx").on(t.guildId) })
+);
