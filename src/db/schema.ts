@@ -354,3 +354,9 @@ export const counters = pgTable("counters",
   },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.type] }) })
 );
+
+// ── Last.fm Accounts ─────────────────────────────────────────────────────────
+export const lastfmAccounts = pgTable('lastfm_accounts', {
+  userId:   text('user_id').primaryKey(),
+  username: text('username').notNull(),
+});

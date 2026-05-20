@@ -4,17 +4,19 @@ import { getGuildSettings } from "../db/settings.js";
 
 export const event = {
   name: "guildBanAdd",
-  async execute(client: Client, ban: GuildBan) {
+  async execute(_client: Client, ban: GuildBan) {
     const settings = await getGuildSettings(ban.guild.id);
     if (!settings.modLogChannel) return;
     const ch = ban.guild.channels.cache.get(settings.modLogChannel);
     if (!ch?.isTextBased()) return;
+
     const embed = brandEmbed({
-      title: "🔨 Member Banned",
-      description: `<@${ban.user.id}> (${ban.user.tag})\n**Reason:** ${ban.reason ?? "No reason"}`,
-      page: "Logs",
-      thumbnail: ban.user.displayAvatarURL(),
+      description: `**reason** — ${ban.reason?.toLowerCase() ?? "no reason provided"}`,
+      thumbnail: ban.user.displayAvatarURL({ size: 256 }),
+      authorName: `banned — ${ban.user.username}`,
+      authorIcon: ban.user.displayAvatarURL({ size: 64 }),
     });
+    embed.setTimestamp();
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };

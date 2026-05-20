@@ -4,17 +4,19 @@ import { getGuildSettings } from "../db/settings.js";
 
 export const event = {
   name: "guildBanRemove",
-  async execute(client: Client, ban: GuildBan) {
+  async execute(_client: Client, ban: GuildBan) {
     const settings = await getGuildSettings(ban.guild.id);
     if (!settings.modLogChannel) return;
     const ch = ban.guild.channels.cache.get(settings.modLogChannel);
     if (!ch?.isTextBased()) return;
+
     const embed = brandEmbed({
-      title: "🕊️ Member Unbanned",
-      description: `<@${ban.user.id}> (${ban.user.tag})`,
-      page: "Logs",
-      thumbnail: ban.user.displayAvatarURL(),
+      description: `**user** — <@${ban.user.id}> (\`${ban.user.username}\`)`,
+      thumbnail: ban.user.displayAvatarURL({ size: 256 }),
+      authorName: `unbanned — ${ban.user.username}`,
+      authorIcon: ban.user.displayAvatarURL({ size: 64 }),
     });
+    embed.setTimestamp();
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
