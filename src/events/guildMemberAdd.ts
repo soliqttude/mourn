@@ -1,5 +1,4 @@
 import type { Client, GuildMember, TextChannel } from "discord.js";
-import { EmbedBuilder } from "discord.js";
 import { brandEmbed } from "../lib/embeds.js";
 import { getGuildSettings } from "../db/settings.js";
 import { trackInviteUse } from "../features/invites.js";
@@ -17,13 +16,20 @@ export const event = {
     if (settings.welcomeChannel) {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
-        const embed = new EmbedBuilder()
-          .setDescription(`welcome to ${member.guild.name} 👀 !!\n-# enjoy your stay 🤙`)
-          .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
-          .setColor(0x111116);
+        const welcome = (settings as any).welcomeMessage
+          ? (settings as any).welcomeMessage
+              .replace("{user}", `<@${member.id}>`)
+              .replace("{server}", member.guild.name)
+          : null;
+
+        const embed = brandEmbed({
+          description: welcome ?? `welcome to **${member.guild.name}**, <@${member.id}>`,
+          thumbnail: member.user.displayAvatarURL({ size: 256 }),
+          authorName: member.user.globalName ?? member.user.username,
+          authorIcon: member.user.displayAvatarURL({ size: 64 }),
+        });
 
         await (ch as TextChannel).send({
-          content: `welcome, <@${member.id}>`,
           embeds: [embed],
           allowedMentions: { users: [member.id] },
         }).catch(() => {});
@@ -34,14 +40,20 @@ export const event = {
       const ch = member.guild.channels.cache.get(settings.joinLogChannel);
       if (ch?.isTextBased()) {
         const accountAge = Math.floor((Date.now() - member.user.createdTimestamp) / 86_400_000);
+        const lines = [
+          `<@${member.id}> **${member.user.username}** (\`${member.id}\`)`,
+          `**account age** — ${accountAge}d`,
+          `**members** — ${member.guild.memberCount}`,
+          inviter ? `**invited by** — <@${inviter.inviterId}> (\`${inviter.code}\`)` : null,
+        ].filter(Boolean).join("\n");
+
         const embed = brandEmbed({
-          title: "\uD83D\uDCE5 Member Joined",
-          description: `<@${member.id}> (${member.user.tag})\n**Account age:** ${accountAge} days\n**Member count:** ${member.guild.memberCount}${
-            inviter ? `\n**Invited by:** <@${inviter.inviterId}> (\`${inviter.code}\`)` : ""
-          }`,
-          page: "Logs",
-          thumbnail: member.user.displayAvatarURL(),
+          description: lines,
+          thumbnail: member.user.displayAvatarURL({ size: 256 }),
+          authorName: "member joined",
+          authorIcon: member.user.displayAvatarURL({ size: 64 }),
         });
+        embed.setTimestamp();
         await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
       }
     }

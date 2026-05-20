@@ -4,10 +4,10 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "banner",
-  aliases: ["userbanner", "profilebanner", "ub"],
+  aliases: ["userbanner", "ub"],
   description: "Show a user's banner.",
   usage: "banner [user]",
-  examples: ["banner"],
+  examples: ["banner", "banner @user"],
   category: "utility",
   options: [
     { name: "user", description: "User", type: ApplicationCommandOptionType.User, required: false },
@@ -15,14 +15,14 @@ export const command: HybridCommand = {
   async execute(ctx) {
     const t = (await ctx.getUser("user")) ?? ctx.user;
     const fetched = await ctx.client.users.fetch(t.id, { force: true });
-    const url = fetched.bannerURL({ size: 1024 });
-    if (!url) return ctx.reply({ embeds: [errorEmbed("That user has no banner.")] });
+    const url = fetched.bannerURL({ size: 4096 });
+    if (!url) return ctx.reply({ embeds: [errorEmbed("that user has no banner.")] });
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: `${t.tag}'s banner`,
           image: url,
-          page: "Banner",
+          authorName: t.globalName ?? t.username,
+          authorIcon: t.displayAvatarURL({ size: 64 }),
         }),
       ],
     });
