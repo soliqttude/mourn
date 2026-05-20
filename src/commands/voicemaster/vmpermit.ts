@@ -1,0 +1,27 @@
+import { ApplicationCommandOptionType } from "discord.js";
+import { eq } from "drizzle-orm";
+import type { HybridCommand } from "../../lib/command.js";
+import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { db } from "../../db/index.js";
+import { voicemasterChannels } from "../../db/schema.js";
+
+export const command: HybridCommand = {
+  name: "vmpermit",
+  aliases: ["vpermit", "vmallow"],
+  description: "Allow a member to join your locked voice channel.",
+  usage: "vmpermit [user]",
+  examples: ["vmpermit @user"],
+  category: "voicemaster",
+  guildOnly: true,
+  options: [{ name: "user", description: "User to permit", type: ApplicationCommandOptionType.User, required: true }],
+  async execute(ctx) {
+    if (!ctx.guild || !ctx.member?.voice.channel) return ctx.reply({ embeds: [errorEmbed("you must be in a voice channel.")] });
+    const vc = ctx.member.voice.channel;
+    const rows = await db.select().from(voicemasterChannels).where(eq(voicemasterChannels.channelId, vc.id));
+    if (!rows[0] || rows[0].ownerId !== ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you don't own this voice channel.")] });
+    const target = await ctx.getUser("user", true);
+    if (!target) return ctx.reply({ embeds: [errorEmbed("user not found.")] });
+    await vc.permissionOverwrites.edit(target.id, { Connect: true, ViewChannel: true });
+    return ctx.reply({ embeds: [successEmbed(`permitted **${target.username}** to join your channel.`)] });
+  },
+};
