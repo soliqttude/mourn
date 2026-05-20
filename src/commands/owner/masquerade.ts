@@ -1,41 +1,23 @@
-import {
-  ApplicationCommandOptionType,
-  EmbedBuilder,
-  PermissionFlagsBits,
-} from "discord.js";
+import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
 import { config } from "../../config.js";
 
-const OID = config.ownerId;
-
 /**
  * ,masquerade @user <message>
- * Uses a temporary webhook to post a message that looks exactly like it came
- * from <user> — their avatar, their server display name, everything.
- * The webhook is created, fired, then deleted so it leaves no trace.
+ * Creates a ghost webhook, sends as the target user (their avatar + display
+ * name), then instantly deletes the webhook — no trace left behind.
  */
 export const command: HybridCommand = {
   name: "masquerade",
-  description: "(Owner) Send a message as any user using a ghost webhook.",
+  description: "(Owner) Send a message as any user via a ghost webhook.",
   usage: "masquerade [user] [message]",
   examples: ["masquerade @someone hey what's up"],
   category: "owner",
   ownerOnly: true,
-  noSlash: false,
   options: [
-    {
-      name: "target",
-      description: "User to impersonate",
-      type: ApplicationCommandOptionType.User,
-      required: true,
-    },
-    {
-      name: "message",
-      description: "Message to send as them",
-      type: ApplicationCommandOptionType.String,
-      required: true,
-    },
+    { name: "target",  description: "User to impersonate", type: ApplicationCommandOptionType.User,   required: true },
+    { name: "message", description: "Message to send",     type: ApplicationCommandOptionType.String, required: true },
   ],
   async execute(ctx) {
     if (ctx.user.id !== config.ownerId) {
@@ -47,43 +29,30 @@ export const command: HybridCommand = {
 
     if (!target) return ctx.reply({ embeds: [errorEmbed("couldn't resolve that user.")] });
     if (!text)   return ctx.reply({ embeds: [errorEmbed("provide a message to send.")] });
-    if (!ctx.channel || !ctx.guild) {
-      return ctx.reply({ embeds: [errorEmbed("must be used in a server channel.")] });
+    if (!ctx.channel || !ctx.guild) return ctx.reply({ embeds: [errorEmbed("must be used in a server channel.")] });
+
+    if (!ctx.guild.members.me?.permissions.has(PermissionFlagsBits.ManageWebhooks)) {
+      return ctx.reply({ embeds: [errorEmbed("i need **Manage Webhooks** permission.")] });
     }
 
-    // Need manage webhooks permission
-    const botMember = ctx.guild.members.me;
-    if (!botMember?.permissions.has(PermissionFlagsBits.ManageWebhooks)) {
-      return ctx.reply({ embeds: [errorEmbed("i need **Manage Webhooks** permission to do this.")] });
-    }
-
-    // Resolve display name + avatar in this guild
-    const member = ctx.guild.members.cache.get(target.id);
+    const member      = ctx.guild.members.cache.get(target.id);
     const displayName = member?.displayName ?? target.username;
     const avatarUrl   = member?.displayAvatarURL({ size: 256, extension: "png" })
                         ?? target.displayAvatarURL({ size: 256, extension: "png" });
 
-    // Silently delete the invoking prefix message
     if (ctx.source === "prefix" && "delete" in ctx.raw) {
       (ctx.raw as any).delete().catch(() => {});
     } else if (ctx.source === "slash") {
-      // Defer ephemerally — we'll ack after
       await ctx.defer(true);
     }
 
-    let webhook: Awaited<ReturnType<typeof ctx.channel.createWebhook>> | null = null;
+    let webhook: any = null;
     try {
-      webhook = await (ctx.channel as any).createWebhook({
-        name:   displayName,
-        avatar: avatarUrl,
-        reason: "masquerade (owner cmd)",
-      });
-
+      webhook = await (ctx.channel as any).createWebhook({ name: displayName, avatar: avatarUrl, reason: "masquerade" });
       await webhook.send({ content: text });
-    } catch (err) {
-      return ctx.reply({ embeds: [errorEmbed("failed to send — check my permissions.")] });
+    } catch {
+      return ctx.reply({ embeds: [errorEmbed("failed — check my permissions.")] });
     } finally {
-      // Always delete the webhook to leave no trace
       if (webhook) webhook.delete().catch(() => {});
     }
 
