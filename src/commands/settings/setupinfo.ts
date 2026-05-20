@@ -13,22 +13,12 @@ export const command: HybridCommand = {
   name: "setupinfo",
   description: "Post the 3 server info embeds (Role Info, Exclusive Roles, Boost Perks).",
   usage: "setupinfo [roles-url] [ticket-url]",
-  examples: ["setupinfo", "setupinfo https://discord.gg/... https://discord.gg/..."],
+  examples: ["setupinfo", "setupinfo https://discord.gg/roles https://discord.gg/ticket"],
   category: "settings",
   ownerOnly: true,
   options: [
-    {
-      name: "roles_url",
-      description: "Link for the Roles button",
-      type: ApplicationCommandOptionType.String,
-      required: false,
-    },
-    {
-      name: "ticket_url",
-      description: "Link for the Ticket button",
-      type: ApplicationCommandOptionType.String,
-      required: false,
-    },
+    { name: "roles_url",  description: "Link for the Roles button",  type: ApplicationCommandOptionType.String, required: false },
+    { name: "ticket_url", description: "Link for the Ticket button", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
     if (ctx.user.id !== config.ownerId) {
@@ -39,7 +29,7 @@ export const command: HybridCommand = {
     const rolesUrl  = ctx.getString("roles_url")  ?? ctx.args[0] ?? "https://discord.gg/placeholder";
     const ticketUrl = ctx.getString("ticket_url") ?? ctx.args[1] ?? "https://discord.gg/placeholder";
 
-    // ── Embed 1 — Role Info ───────────────────────────────────────────────────
+    // Embed 1 — Role Info
     const roleInfo = new EmbedBuilder()
       .setColor(null as any)
       .setAuthor({ name: "👑  Role Info" })
@@ -65,7 +55,7 @@ export const command: HybridCommand = {
       .setTimestamp()
       .setFooter({ text: config.embedFooter });
 
-    // ── Embed 2 — Exclusive Roles ─────────────────────────────────────────────
+    // Embed 2 — Exclusive Roles
     const exclusiveRoles = new EmbedBuilder()
       .setColor(null as any)
       .setAuthor({ name: "✅  Exclusive roles" })
@@ -75,7 +65,7 @@ export const command: HybridCommand = {
           "",
           "to obtain this role you must have",
           "",
-          "<:tiktok:1> 20k+ on tiktok",
+          "🎵 20k+ on tiktok",
           "📷 20k+ on instagram",
           "",
           "**ogs** — @ogs",
@@ -102,7 +92,7 @@ export const command: HybridCommand = {
       .setTimestamp()
       .setFooter({ text: config.embedFooter });
 
-    // ── Embed 3 — Boost Perks ─────────────────────────────────────────────────
+    // Embed 3 — Boost Perks
     const boostPerks = new EmbedBuilder()
       .setColor(null as any)
       .setAuthor({ name: "🛵  Boost Perks" })
@@ -124,29 +114,18 @@ export const command: HybridCommand = {
       .setFooter({ text: config.embedFooter });
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setLabel("roles")
-        .setEmoji("↗️")
-        .setStyle(ButtonStyle.Link)
-        .setURL(rolesUrl),
-      new ButtonBuilder()
-        .setLabel("ticket")
-        .setEmoji("↗️")
-        .setStyle(ButtonStyle.Link)
-        .setURL(ticketUrl),
+      new ButtonBuilder().setLabel("roles").setEmoji("↗️").setStyle(ButtonStyle.Link).setURL(rolesUrl),
+      new ButtonBuilder().setLabel("ticket").setEmoji("↗️").setStyle(ButtonStyle.Link).setURL(ticketUrl),
     );
 
-    // Delete invoking message if prefix command
     if (ctx.source === "prefix" && "delete" in ctx.raw) {
       (ctx.raw as any).delete().catch(() => {});
     }
 
-    // Send all 3 embeds; last one gets the buttons
     await ctx.channel.send({ embeds: [roleInfo] });
     await ctx.channel.send({ embeds: [exclusiveRoles] });
     await ctx.channel.send({ embeds: [boostPerks], components: [row] });
 
-    // Silent ack for slash
     if (ctx.source === "slash") {
       return ctx.reply({ content: "posted.", ephemeral: true } as any);
     }
