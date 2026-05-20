@@ -1,4 +1,4 @@
-# Bleed built by geico  @udrs on discord
+# Bleed built by geico  @udrs on discord hahaha
 
   A feature-rich Discord bot for community and utility server management, built with discord.js v14 and TypeScript.
 
