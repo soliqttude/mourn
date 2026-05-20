@@ -14,13 +14,35 @@ import {
   resolveRole,
   resolveUser,
 } from "./parsing.js";
+import { getEmbedStyle, EMOJIS } from "./embeds.js";
 
-function normalize(content: ReplyContent): any {
+// ── Inject "emoji @user: " prefix into styled embeds ──────────────────────────
+function injectMention(embeds: unknown[], userMention: string): unknown[] {
+  if (!embeds?.length) return embeds;
+  return embeds.map((eb) => {
+    if (!(eb instanceof EmbedBuilder)) return eb;
+    const style = getEmbedStyle(eb);
+    if (!style || style === "brand" || style === "mod") return eb;
+    const desc = (eb.data as any).description ?? "";
+    const emoji =
+      style === "success" ? EMOJIS.check :
+      style === "error"   ? EMOJIS.warn  :
+      style === "warn"    ? EMOJIS.warn  :
+      style === "action"  ? EMOJIS.plus  : "";
+    eb.setDescription(`${emoji} ${userMention}: ${desc}`);
+    return eb;
+  });
+}
+
+function normalize(content: ReplyContent, userMention?: string): any {
   if (typeof content === "string") return { content };
   const out: any = { ...content };
   if (out.ephemeral) {
     out.flags = MessageFlags.Ephemeral;
     delete out.ephemeral;
+  }
+  if (out.embeds && userMention) {
+    out.embeds = injectMention(out.embeds, userMention);
   }
   return out;
 }
@@ -31,6 +53,7 @@ export async function buildSlashContext(
   prefix: string
 ): Promise<CommandContext> {
   const opts = interaction.options;
+  const mention = `<@${interaction.user.id}>`;
   return {
     client,
     guild: interaction.guild,
@@ -57,17 +80,16 @@ export async function buildSlashContext(
     getBoolean: (n, r) => opts.getBoolean(n, r ?? false),
     getUser: async (n, r) => opts.getUser(n, r ?? false),
     getMember: async (n) => (opts.getMember(n) as GuildMember) ?? null,
-    getChannel: (n) =>
-      (opts.getChannel(n) as GuildTextBasedChannel) ?? null,
+    getChannel: (n) => (opts.getChannel(n) as GuildTextBasedChannel) ?? null,
     getRole: (n) => opts.getRole(n) ?? null,
     reply: async (c) => {
-      const payload = normalize(c);
+      const payload = normalize(c, mention);
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);
       }
       return interaction.reply(payload);
     },
-    followUp: async (c) => interaction.followUp(normalize(c)),
+    followUp: async (c) => interaction.followUp(normalize(c, mention)),
     defer: async (eph) =>
       interaction.deferReply(
         eph ? ({ flags: MessageFlags.Ephemeral } as any) : ({} as any)
@@ -84,6 +106,7 @@ export async function buildPrefixContext(
   optionDefs: { name: string; type: number }[]
 ): Promise<CommandContext> {
   const argMap = mapArgs(optionDefs, args);
+  const mention = `<@${message.author.id}>`;
   return {
     client,
     guild: message.guild,
@@ -138,12 +161,15 @@ export async function buildPrefixContext(
       return resolveRole(message.guild, v);
     },
     reply: async (c) => {
-      const payload = normalize(c);
+      const payload = normalize(c, mention);
       delete payload.flags;
-      return message.reply({ ...payload, allowedMentions: payload.allowedMentions ?? { parse: [] } });
+      return message.reply({
+        ...payload,
+        allowedMentions: payload.allowedMentions ?? { parse: [] },
+      });
     },
     followUp: async (c) => {
-      const payload = normalize(c);
+      const payload = normalize(c, mention);
       delete payload.flags;
       return (message.channel as GuildTextBasedChannel).send(payload);
     },

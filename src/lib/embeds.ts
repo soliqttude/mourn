@@ -1,74 +1,97 @@
 import { EmbedBuilder, type Guild, type User } from "discord.js";
-import { config } from "../config.js";
 
-// ── Colour palette ─────────────────────────────────────────────────────────────
-// null  = no sidebar color — embeds blend into Discord (bleed-style premium look)
-// Muted tones only for status embeds; never bright neons.
+// ── Bleed-style color palette ──────────────────────────────────────────────────
 const C = {
-  brand:   null,          // no color — native Discord feel
-  success: 0x2a9d54,      // muted green
-  error:   0xc0392b,      // muted red
-  warn:    0xe67e22,      // muted amber
-  info:    0x2f3136,      // near-black — subtle info
-  mod:     0x111114,      // near-black for mod actions
+  success: 0x57F287,  // bright green
+  error:   0xFFA500,  // golden yellow (bleed uses yellow not red)
+  action:  0x5865F2,  // discord blurple
+  mod:     0x2b2d31,  // near-black for mod actions
 } as const;
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-export interface EmbedOpts {
-  title?:       string;
-  description?: string;
-  page?:        string;
-  guild?:       Guild | null;
-  user?:        User | null;
-  thumbnail?:   string;
-  image?:       string;
-  fields?:      { name: string; value: string; inline?: boolean }[];
-  color?:       number | null;
-  authorName?:  string;
-  authorIcon?:  string;
+// ── Custom emoji config ────────────────────────────────────────────────────────
+// After uploading emojis to Discord Developer Portal → Your App → Emojis,
+// set these env vars in Railway: EMOJI_CHECK, EMOJI_WARN, EMOJI_PLUS, EMOJI_CROSS
+export const EMOJIS = {
+  check: process.env.EMOJI_CHECK ?? "✅",
+  warn:  process.env.EMOJI_WARN  ?? "⚠️",
+  plus:  process.env.EMOJI_PLUS  ?? "➕",
+  cross: process.env.EMOJI_CROSS ?? "❌",
+  info:  process.env.EMOJI_INFO  ?? "ℹ️",
+} as const;
+
+// ── Embed style tracking — contextFactory reads this to inject user mention ────
+export type EmbedStyle = "success" | "error" | "warn" | "action" | "mod" | "brand";
+const _styles = new WeakMap<EmbedBuilder, EmbedStyle>();
+export function getEmbedStyle(eb: EmbedBuilder): EmbedStyle | undefined {
+  return _styles.get(eb);
 }
 
-interface ModEmbedOpts {
-  action:     string;
-  target:     User;
-  moderator:  User;
-  reason:     string;
-  duration?:  string;
-}
-
-// ── Footer helper ─────────────────────────────────────────────────────────────
-function footer(page?: string): { text: string; iconURL?: string } {
-  return {
-    text: page
-      ? `${config.embedFooter}  ·  ${page.toLowerCase()}`
-      : config.embedFooter.toLowerCase(),
-  };
-}
-
-// ── Base builder — shared setup for every embed ───────────────────────────────
 function base(color: number | null = null): EmbedBuilder {
-  const eb = new EmbedBuilder().setTimestamp();
-  // Discord.js requires a number for setColor; null removes the sidebar
+  const eb = new EmbedBuilder();
   if (color !== null) eb.setColor(color);
   return eb;
 }
 
-// ── Exports ───────────────────────────────────────────────────────────────────
+// ── Styled embeds (contextFactory auto-injects "emoji @user: " prefix) ─────────
 
-/**
- * Primary embed — no sidebar color, clean and native-feeling.
- * Use for all standard command responses.
- */
+/** Green sidebar — "✅ @user: message" */
+export function successEmbed(message: string, _page?: unknown): EmbedBuilder {
+  const eb = base(C.success).setDescription(message.toLowerCase());
+  _styles.set(eb, "success");
+  return eb;
+}
+
+/** Yellow sidebar — "⚠️ @user: message" */
+export function errorEmbed(message: string, _page?: unknown): EmbedBuilder {
+  const eb = base(C.error).setDescription(message.toLowerCase());
+  _styles.set(eb, "error");
+  return eb;
+}
+
+/** Yellow sidebar — "⚠️ @user: message" (alias for errorEmbed) */
+export function warnEmbed(message: string, _page?: unknown): EmbedBuilder {
+  const eb = base(C.error).setDescription(message.toLowerCase());
+  _styles.set(eb, "warn");
+  return eb;
+}
+
+/** Blurple sidebar — "➕ @user: message" */
+export function actionEmbed(message: string, _page?: unknown): EmbedBuilder {
+  const eb = base(C.action).setDescription(message.toLowerCase());
+  _styles.set(eb, "action");
+  return eb;
+}
+
+/** No sidebar — plain info, no user mention injected */
+export function infoEmbed(message: string, _title?: unknown, _page?: unknown): EmbedBuilder {
+  const eb = new EmbedBuilder().setDescription(message);
+  _styles.set(eb, "brand");
+  return eb;
+}
+
+// ── Brand embed — help/info commands, no auto-inject ──────────────────────────
+export interface EmbedOpts {
+  title?:       string;
+  description?: string;
+  fields?:      { name: string; value: string; inline?: boolean }[];
+  color?:       number | null;
+  authorName?:  string;
+  authorIcon?:  string;
+  thumbnail?:   string;
+  image?:       string;
+  guild?:       Guild | null;
+  user?:        User | null;
+  page?:        string;
+}
+
 export function brandEmbed(opts: EmbedOpts = {}): EmbedBuilder {
-  const eb = base(opts.color !== undefined ? opts.color : C.brand)
-    .setFooter(footer(opts.page));
-
+  const eb = new EmbedBuilder();
+  if (opts.color !== undefined && opts.color !== null) eb.setColor(opts.color);
   if (opts.description) eb.setDescription(opts.description);
+  if (opts.title) eb.setTitle(opts.title);
   if (opts.fields?.length) eb.addFields(opts.fields);
-  if (opts.thumbnail)   eb.setThumbnail(opts.thumbnail);
-  if (opts.image)       eb.setImage(opts.image);
-
-  // Author — prefer explicit opts, then guild, then user
+  if (opts.thumbnail) eb.setThumbnail(opts.thumbnail);
+  if (opts.image) eb.setImage(opts.image);
   if (opts.authorName) {
     eb.setAuthor({ name: opts.authorName, iconURL: opts.authorIcon });
   } else if (opts.guild) {
@@ -76,61 +99,31 @@ export function brandEmbed(opts: EmbedOpts = {}): EmbedBuilder {
   } else if (opts.user) {
     eb.setAuthor({ name: opts.user.username, iconURL: opts.user.displayAvatarURL() });
   }
-
+  _styles.set(eb, "brand");
   return eb;
 }
 
-/**
- * Success embed — muted green sidebar, no emoji prefix, lowercase text.
- */
-export function successEmbed(message: string, page?: string): EmbedBuilder {
-  return base(C.success)
-    .setDescription(message.toLowerCase())
-    .setFooter(footer(page));
+// ── Mod action embed ───────────────────────────────────────────────────────────
+export interface ModEmbedOpts {
+  action:     string;
+  target:     User;
+  moderator:  User;
+  reason:     string;
+  duration?:  string;
 }
 
-/**
- * Error embed — muted red sidebar, no emoji prefix, lowercase text.
- */
-export function errorEmbed(message: string, page?: string): EmbedBuilder {
-  return base(C.error)
-    .setDescription(message.toLowerCase())
-    .setFooter(footer(page));
-}
-
-/**
- * Info embed — subtle dark sidebar for informational responses.
- */
-export function infoEmbed(message: string, _title?: string, page?: string): EmbedBuilder {
-  return base(C.info)
-    .setDescription(message.toLowerCase())
-    .setFooter(footer(page));
-}
-
-/**
- * Warn embed — muted amber sidebar.
- */
-export function warnEmbed(message: string, page?: string): EmbedBuilder {
-  return base(C.warn)
-    .setDescription(message.toLowerCase())
-    .setFooter(footer(page));
-}
-
-/**
- * Mod action embed — near-black, author = "action · target", clean field list.
- * Used by ban, kick, mute, warn, etc.
- */
 export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
   const lines: string[] = [
     `**reason** — ${opts.reason.toLowerCase()}`,
     `**moderator** — ${opts.moderator.username.toLowerCase()}`,
   ];
   if (opts.duration) lines.push(`**duration** — ${opts.duration.toLowerCase()}`);
-  return base(C.mod)
+  const eb = base(C.mod)
     .setAuthor({
-      name:    `${opts.action.toLowerCase()}  ·  ${opts.target.username.toLowerCase()}`,
+      name:    `${opts.action.toLowerCase()} — ${opts.target.username.toLowerCase()}`,
       iconURL: opts.target.displayAvatarURL(),
     })
-    .setDescription(lines.join("\n"))
-    .setFooter(footer("moderation"));
+    .setDescription(lines.join("\n"));
+  _styles.set(eb, "mod");
+  return eb;
 }
