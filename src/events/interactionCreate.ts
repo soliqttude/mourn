@@ -12,7 +12,7 @@ import {
 } from "discord.js";
 import { findCommand, commands } from "../handlers/registry.js";
 import { buildSlashContext } from "../lib/contextFactory.js";
-import { errorEmbed, brandEmbed, successEmbed } from "../lib/embeds.js";
+import { errorEmbed, successEmbed, brandEmbed, getEmbedStyle, EMOJIS } from "../lib/embeds.js";
 import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
@@ -22,6 +22,24 @@ import { handlePanelInteraction } from "../panels/router.js";
 import { cleanError } from "../lib/format.js";
 import { buildHelpHome, buildPagedCategoryEmbed, buildCategoryEmbed } from "../commands/utility/help.js";
 import { buildLeaderboardMessage } from "../commands/utility/invites.js";
+import { EmbedBuilder } from "discord.js";
+
+// Inject "emoji @user: " into styled embeds — used in button handlers that bypass contextFactory
+function applyMention(embeds: EmbedBuilder[], userId: string): EmbedBuilder[] {
+  const mention = `<@${userId}>`;
+  return embeds.map((eb) => {
+    const style = getEmbedStyle(eb);
+    if (!style || style === "brand" || style === "mod") return eb;
+    const desc = (eb.data as any).description ?? "";
+    const emoji =
+      style === "success" ? EMOJIS.check :
+      style === "error"   ? EMOJIS.warn  :
+      style === "warn"    ? EMOJIS.warn  :
+      style === "action"  ? EMOJIS.plus  : "";
+    eb.setDescription(`${emoji} ${mention}: ${desc}`);
+    return eb;
+  });
+}
 
 async function safeFollowUp(
   interaction: ButtonInteraction | ChatInputCommandInteraction,
@@ -73,25 +91,17 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
     if (blacklisted) {
       return interaction.reply({
         embeds: [
-          new (await import("discord.js")).EmbedBuilder()
-            .setColor(0xED4245)
-            .setTitle("⛔  You're Blacklisted")
-            .setDescription(
-              [
-                "You have been **blacklisted** from using Bleed and cannot use any commands.",
-                "",
-                reason ? `**Reason:** ${reason}` : "",
-                "",
-                "If you believe this is a mistake, contact the developer.",
-              ].filter(Boolean).join("\n")
-            )
-            .setFooter({ text: "Bleed" })
-            .setTimestamp(),
+          errorEmbed(
+            reason
+              ? `you are blacklisted from bleed.\n**reason** — ${reason}`
+              : "you are blacklisted from bleed."
+          ),
         ],
         flags: MessageFlags.Ephemeral,
       });
     }
   }
+
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
     if (!checkTier(interaction.member as any, cmd.permission)) {
       return interaction.reply({
@@ -113,7 +123,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   } catch (err) {
     logger.error({ err, cmd: cmd.name }, "slash command error");
     const payload: any = {
-      embeds: [errorEmbed(cleanError(err))],
+      embeds: applyMention([errorEmbed(cleanError(err))], interaction.user.id),
       flags: MessageFlags.Ephemeral,
     };
     try {
@@ -145,7 +155,6 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
 
 async function handleInvitesButton(interaction: ButtonInteraction) {
   try {
-    // format: invites:ACTION:CURRENT_PAGE:GUILD_ID:REQUESTER_ID
     const parts = interaction.customId.split(":");
     const action = parts[1];
     const currentPage = parseInt(parts[2] ?? "0", 10);
@@ -153,7 +162,10 @@ async function handleInvitesButton(interaction: ButtonInteraction) {
     const requesterId = parts[4];
 
     if (interaction.user.id !== requesterId) {
-      return interaction.reply({ content: "this isn't your leaderboard.", flags: MessageFlags.Ephemeral });
+      return interaction.reply({
+        embeds: applyMention([errorEmbed("this isn't your leaderboard.")], interaction.user.id),
+        flags: MessageFlags.Ephemeral,
+      });
     }
 
     if (action === "stop") {
@@ -202,7 +214,6 @@ async function handleHelpButton(interaction: ButtonInteraction) {
       return await interaction.update({ embeds: [embed], components: [row as any] });
     }
 
-    // Unknown action — acknowledge so Discord doesn't show "failed"
     await interaction.deferUpdate();
   } catch (err) {
     logger.error({ err }, "help button error");
@@ -219,7 +230,10 @@ async function handleTriviaButton(interaction: ButtonInteraction) {
   const guildId = parts[5] ?? interaction.guildId ?? "";
 
   if (interaction.user.id !== userId) {
-    return interaction.reply({ content: "that's not your trivia question.", flags: 64 });
+    return interaction.reply({
+      embeds: applyMention([errorEmbed("that's not your trivia question.")], interaction.user.id),
+      flags: MessageFlags.Ephemeral,
+    });
   }
   if (chosen === correct) {
     await interaction.update({ components: [] }).catch(() => {});
@@ -228,12 +242,18 @@ async function handleTriviaButton(interaction: ButtonInteraction) {
       await addBalance(guildId, userId, reward).catch(() => {});
     }
     return safeFollowUp(interaction, {
-      embeds: [successEmbed(`✅ correct! the answer was **${correct}**. +${reward} coins 🪙`)],
+      embeds: applyMention(
+        [successEmbed(`correct! the answer was **${correct}**. +${reward} coins`)],
+        interaction.user.id
+      ),
     });
   } else {
     await interaction.update({ components: [] }).catch(() => {});
     return safeFollowUp(interaction, {
-      embeds: [errorEmbed(`❌ wrong. the correct answer was **${correct}**.`)],
+      embeds: applyMention(
+        [errorEmbed(`wrong. the correct answer was **${correct}**.`)],
+        interaction.user.id
+      ),
     });
   }
 }
@@ -247,13 +267,21 @@ async function handleRoleButton(interaction: ButtonInteraction) {
   const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
   if (!member) return;
   const role = interaction.guild.roles.cache.get(roleId);
-  if (!role) return interaction.editReply({ content: "Role not found." }).catch(() => {});
+  if (!role) {
+    return interaction.editReply({
+      embeds: applyMention([errorEmbed("role not found.")], interaction.user.id),
+    }).catch(() => {});
+  }
   if (member.roles.cache.has(roleId)) {
     await member.roles.remove(roleId).catch(() => {});
-    return interaction.editReply({ content: `removed **${role.name}**` }).catch(() => {});
+    return interaction.editReply({
+      embeds: applyMention([successEmbed(`removed **${role.name}**.`)], interaction.user.id),
+    }).catch(() => {});
   } else {
     await member.roles.add(roleId).catch(() => {});
-    return interaction.editReply({ content: `gave you **${role.name}**` }).catch(() => {});
+    return interaction.editReply({
+      embeds: applyMention([successEmbed(`gave you **${role.name}**.`)], interaction.user.id),
+    }).catch(() => {});
   }
 }
 

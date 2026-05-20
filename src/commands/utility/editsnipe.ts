@@ -5,7 +5,7 @@ import { getSnipe } from "../../features/snipes.js";
 export const command: HybridCommand = {
   name: "editsnipe",
   aliases: ["es"],
-  description: "Snipe the last edited message.",
+  description: "Snipe the last edited message in this channel.",
   usage: "editsnipe",
   examples: ["editsnipe"],
   category: "utility",
@@ -13,18 +13,12 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.channel) return;
     const snipe = getSnipe(ctx.channel.id, "edit");
-    if (!snipe) return ctx.reply({ embeds: [errorEmbed("Nothing to snipe.")] });
-    return ctx.reply({
-      embeds: [
-        brandEmbed({
-          title: `Edit by ${snipe.authorTag}`,
-          fields: [
-            { name: "Before", value: snipe.content.slice(0, 1000) || "*(empty)*" },
-            { name: "After", value: (snipe.after ?? "").slice(0, 1000) || "*(empty)*" },
-          ],
-          page: "EditSnipe",
-        }),
-      ],
+    if (!snipe) return ctx.reply({ embeds: [errorEmbed("nothing to editsnipe.")] });
+    const embed = brandEmbed({
+      description: snipe.content || "*(no text content)*",
     });
+    embed.setAuthor({ name: snipe.authorTag });
+    embed.setTimestamp(new Date(snipe.at));
+    return ctx.reply({ embeds: [embed] });
   },
 };

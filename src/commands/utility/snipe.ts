@@ -5,7 +5,7 @@ import { getSnipe } from "../../features/snipes.js";
 export const command: HybridCommand = {
   name: "snipe",
   aliases: ["s"],
-  description: "Snipe the last deleted message.",
+  description: "Snipe the last deleted message in this channel.",
   usage: "snipe",
   examples: ["snipe"],
   category: "utility",
@@ -13,15 +13,16 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.channel) return;
     const snipe = getSnipe(ctx.channel.id, "delete");
-    if (!snipe) return ctx.reply({ embeds: [errorEmbed("Nothing to snipe.")] });
-    return ctx.reply({
-      embeds: [
-        brandEmbed({
-          title: `Sniped from ${snipe.authorTag}`,
-          description: `${snipe.content || "*(no content)*"}\n\n<t:${Math.floor(snipe.at / 1000)}:R>`,
-          page: "Snipe",
-        }),
-      ],
+    if (!snipe) return ctx.reply({ embeds: [errorEmbed("nothing to snipe.")] });
+    const embed = brandEmbed({
+      description: snipe.content || "*(no text content)*",
     });
+    embed.setAuthor({
+      name: snipe.authorTag,
+      iconURL: `https://cdn.discordapp.com/avatars/${snipe.authorId}/${snipe.authorId}.png`,
+    });
+    embed.setTimestamp(new Date(snipe.at));
+    if (snipe.attachments?.[0]) embed.setImage(snipe.attachments[0]);
+    return ctx.reply({ embeds: [embed] });
   },
 };
