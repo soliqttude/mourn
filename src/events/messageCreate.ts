@@ -20,7 +20,6 @@ import { handleReactionTriggers } from "../features/reactionTriggers.js";
 import { ownerState, logCommand } from "../lib/ownerState.js";
 import { cleanError } from "../lib/format.js";
 import { isBlacklisted } from "../lib/blacklistCache.js";
-import { EmbedBuilder } from "discord.js";
 import { db } from "../db/index.js";
 import { commandAliases } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
@@ -68,21 +67,9 @@ export const event = {
     if (!isBotOwner(message.author.id)) {
       const { blacklisted, reason } = await isBlacklisted(message.author.id);
       if (blacklisted) {
-        const embed = new EmbedBuilder()
-          .setColor(0xED4245)
-          .setTitle("⛔  You're Blacklisted")
-          .setDescription(
-            [
-              "You have been **blacklisted** from using Bleed and cannot use any commands.",
-              "",
-              reason ? `**Reason:** ${reason}` : "",
-              "",
-              "If you believe this is a mistake, contact the developer.",
-            ].filter(Boolean).join("\n")
-          )
-          .setFooter({ text: "Bleed" })
-          .setTimestamp();
-        message.author.send({ embeds: [embed] }).catch(() => {});
+        message.author.send({
+          embeds: [errorEmbed(reason ? `you are blacklisted from bleed.\n**reason** — ${reason}` : "you are blacklisted from bleed.")],
+        }).catch(() => {});
         return;
       }
     }
