@@ -11,6 +11,42 @@ export const event = {
     const settings = await getGuildSettings(member.guild.id);
 
     await handleAntiraidJoin(member, settings);
+
+    // ── Join Gate: avatar check ───────────────────────────────────────────────
+    const avatarCheck = (settings as any).antiraidAvatarCheck ?? false;
+    if (avatarCheck && !member.user.avatar) {
+      const action = (settings as any).antiraidAction ?? "kick";
+      const reason = "join gate: no avatar";
+      if (action === "ban") await member.ban({ reason }).catch(() => {});
+      else await member.kick(reason).catch(() => {});
+      const logCh = (settings as any).antiraidLogChannel ? member.guild.channels.cache.get((settings as any).antiraidLogChannel) : null;
+      if (logCh?.isTextBased()) {
+        await (logCh as TextChannel).send({
+          embeds: [brandEmbed({ description: `⛔ **${member.user.username}** was ${action}ned — no avatar (join gate).` })],
+        }).catch(() => {});
+      }
+      return;
+    }
+
+    // ── Join Gate: minimum account age ────────────────────────────────────────
+    const minAge = (settings as any).antiraidMinAge ?? 0;
+    if (minAge > 0) {
+      const accountAgeDays = (Date.now() - member.user.createdTimestamp) / 86_400_000;
+      if (accountAgeDays < minAge) {
+        const action = (settings as any).antiraidAction ?? "kick";
+        const reason = `join gate: account too new (${Math.floor(accountAgeDays)}d < ${minAge}d required)`;
+        if (action === "ban") await member.ban({ reason }).catch(() => {});
+        else await member.kick(reason).catch(() => {});
+        const logCh = (settings as any).antiraidLogChannel ? member.guild.channels.cache.get((settings as any).antiraidLogChannel) : null;
+        if (logCh?.isTextBased()) {
+          await (logCh as TextChannel).send({
+            embeds: [brandEmbed({ description: `⛔ **${member.user.username}** was ${action}ned — account only ${Math.floor(accountAgeDays)} days old (minimum: ${minAge}d).` })],
+          }).catch(() => {});
+        }
+        return;
+      }
+    }
+
     const inviter = await trackInviteUse(member);
 
     if (settings.welcomeChannel) {
@@ -43,6 +79,7 @@ export const event = {
         const lines = [
           `<@${member.id}> **${member.user.username}** (\`${member.id}\`)`,
           `**account age** — ${accountAge}d`,
+          `**has avatar** — ${member.user.avatar ? "yes" : "no"}`,
           `**members** — ${member.guild.memberCount}`,
           inviter ? `**invited by** — <@${inviter.inviterId}> (\`${inviter.code}\`)` : null,
         ].filter(Boolean).join("\n");

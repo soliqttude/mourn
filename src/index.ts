@@ -49,6 +49,8 @@ async function main() {
     startTempBanLoop(client);
     startDropLoop(client);
     startAutoMessageLoop(client);
+    startSocialNotificationLoop(client);
+    setupMusic(client);
   });
 
   process.on("unhandledRejection", (err) => { logger.error({ err }, "Unhandled rejection"); });

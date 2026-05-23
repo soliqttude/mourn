@@ -84,6 +84,20 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`Auto-lockdown on raid is now **${enabled ? "enabled" : "disabled"}**.`)] });
     }
 
+    
+    if (sub === 'avatar') {
+      const enabled = rawValue === 'on' ? true : rawValue === 'off' ? false : !(settings as any).antiraidAvatarCheck;
+      await updateGuildSettings(ctx.guild.id, { antiraidAvatarCheck: enabled } as any);
+      return ctx.reply({ embeds: [successEmbed(`avatar check (kick members with no avatar) is now \${enabled ? 'enabled' : 'disabled'}.`)] });
+    }
+
+    if (sub === 'minage' || sub === 'minage') {
+      const n = parseInt(rawValue);
+      if (isNaN(n) || n < 0 || n > 365) return ctx.reply({ embeds: [errorEmbed('min age must be 0–365 days (0 = disabled).')] });
+      await updateGuildSettings(ctx.guild.id, { antiraidMinAge: n } as any);
+      return ctx.reply({ embeds: [successEmbed(n === 0 ? 'minimum account age check disabled.' : `minimum account age set to \${n} days.`)] });
+    }
+
     return ctx.reply({ embeds: [brandEmbed({
       title: "Anti-Raid",
       description: [

@@ -289,6 +289,53 @@ const STATEMENTS: string[] = [
   `ALTER TABLE tickets ADD COLUMN IF NOT EXISTS topic TEXT`,
   `ALTER TABLE tickets ADD COLUMN IF NOT EXISTS number INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE tickets ADD COLUMN IF NOT EXISTS management_message_id TEXT`,
+
+  // ── Vanity Roles ───────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS vanity_config (
+    guild_id TEXT PRIMARY KEY, vanity TEXT NOT NULL, channel_id TEXT, message TEXT
+  )`,
+  `CREATE TABLE IF NOT EXISTS vanity_roles (
+    guild_id TEXT NOT NULL, role_id TEXT NOT NULL, PRIMARY KEY (guild_id, role_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS vanity_members (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, PRIMARY KEY (guild_id, user_id)
+  )`,
+  // ── Social Notifications ────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS social_subscriptions (
+    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    platform TEXT NOT NULL, target TEXT NOT NULL, message TEXT,
+    last_post_id TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS social_subs_guild_idx ON social_subscriptions (guild_id)`,
+  // ── Paginated Embeds ────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS paginated_embeds (
+    message_id TEXT PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    pages JSONB NOT NULL DEFAULT '[]', current_page INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  // ── Events Toggle ───────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS events_settings (
+    guild_id TEXT NOT NULL, event TEXT NOT NULL, enabled BOOLEAN NOT NULL DEFAULT true,
+    PRIMARY KEY (guild_id, event)
+  )`,
+  // ── Managed Webhooks ────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS managed_webhooks (
+    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, identifier TEXT NOT NULL,
+    webhook_id TEXT NOT NULL, webhook_token TEXT NOT NULL, channel_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS webhook_guild_ident_idx ON managed_webhooks (guild_id, identifier)`,
+  // ── Music Settings ──────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS music_settings (
+    guild_id TEXT PRIMARY KEY, dj_role_id TEXT, autoplay BOOLEAN NOT NULL DEFAULT false
+  )`,
+  // ── Fortnite Watches ────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS fortnite_watches (
+    user_id TEXT NOT NULL, cosmetic TEXT NOT NULL, PRIMARY KEY (user_id, cosmetic)
+  )`,
+  // ── Antiraid join-gate additions ────────────────────────────────────────────
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_avatar_check BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_min_age INTEGER NOT NULL DEFAULT 0`,
 ];
 
 export async function runMigrations(): Promise<void> {

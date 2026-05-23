@@ -11,25 +11,59 @@ function resolveVars(text: string, ctx: ScriptingContext): string {
   const user = ctx.user instanceof Object && "user" in ctx.user ? (ctx.user as GuildMember).user : ctx.user as User | null | undefined;
   const member = ctx.user instanceof Object && "roles" in ctx.user ? ctx.user as GuildMember : null;
   const guild = ctx.guild;
+  const now = new Date();
 
   const replacements: Record<string, string> = {
-    "{user}": user?.displayName ?? user?.username ?? "Unknown",
-    "{user.mention}": user ? `<@${user.id}>` : "Unknown",
-    "{user.name}": user?.username ?? "Unknown",
-    "{user.id}": user?.id ?? "0",
-    "{user.avatar}": user?.displayAvatarURL() ?? "",
-    "{user.tag}": user?.tag ?? "Unknown#0000",
-    "{user.created_at}": user ? `<t:${Math.floor(user.createdTimestamp / 1000)}:R>` : "",
-    "{guild}": guild?.name ?? "Unknown",
-    "{guild.name}": guild?.name ?? "Unknown",
-    "{guild.id}": guild?.id ?? "0",
-    "{guild.icon}": guild?.iconURL() ?? "",
-    "{guild.member_count}": guild?.memberCount?.toString() ?? "0",
-    "{guild.boost_count}": guild?.premiumSubscriptionCount?.toString() ?? "0",
-    "{channel}": ctx.channel ? `<#${ctx.channel.id}>` : "Unknown",
-    "{channel.name}": ctx.channel?.name ?? "Unknown",
-    "{channel.id}": ctx.channel?.id ?? "0",
-    "{member.joined_at}": member ? `<t:${Math.floor((member.joinedTimestamp ?? 0) / 1000)}:R>` : "",
+    // ── User ──────────────────────────────────────────────────────────────────
+    "{user}":                user?.displayName ?? user?.username ?? "Unknown",
+    "{user.mention}":        user ? `<@${user.id}>` : "Unknown",
+    "{user.name}":           user?.username ?? "Unknown",
+    "{user.id}":             user?.id ?? "0",
+    "{user.avatar}":         user?.displayAvatarURL() ?? "",
+    "{user.tag}":            user?.tag ?? "Unknown#0000",
+    "{user.discriminator}":  user?.discriminator ?? "0",
+    "{user.globalname}":     user?.globalName ?? user?.username ?? "Unknown",
+    "{user.created_at}":     user ? `<t:${Math.floor(user.createdTimestamp / 1000)}:R>` : "",
+    "{user.created_at.full}":user ? `<t:${Math.floor(user.createdTimestamp / 1000)}:F>` : "",
+    "{user.bot}":            user?.bot ? "yes" : "no",
+    "{user.banner}":         (user as any)?.bannerURL?.() ?? "",
+    // ── Member ────────────────────────────────────────────────────────────────
+    "{member.joined_at}":    member ? `<t:${Math.floor((member.joinedTimestamp ?? 0) / 1000)}:R>` : "",
+    "{member.joined_at.full}":member ? `<t:${Math.floor((member.joinedTimestamp ?? 0) / 1000)}:F>` : "",
+    "{member.nickname}":     member?.nickname ?? user?.username ?? "Unknown",
+    "{member.roles}":        member ? member.roles.cache.filter(r => r.id !== member.guild.id).map(r => `<@&${r.id}>`).join(", ") || "none" : "none",
+    "{member.top_role}":     member ? `<@&${member.roles.highest.id}>` : "none",
+    "{member.boost}":        member?.premiumSince ? `<t:${Math.floor(member.premiumSince.getTime() / 1000)}:R>` : "not boosting",
+    "{member.display_avatar}":member?.displayAvatarURL() ?? user?.displayAvatarURL() ?? "",
+    // ── Guild ─────────────────────────────────────────────────────────────────
+    "{guild}":               guild?.name ?? "Unknown",
+    "{guild.name}":          guild?.name ?? "Unknown",
+    "{guild.id}":            guild?.id ?? "0",
+    "{guild.icon}":          guild?.iconURL() ?? "",
+    "{guild.banner}":        guild?.bannerURL() ?? "",
+    "{guild.member_count}":  guild?.memberCount?.toString() ?? "0",
+    "{guild.boost_count}":   guild?.premiumSubscriptionCount?.toString() ?? "0",
+    "{guild.boost_level}":   guild?.premiumTier?.toString() ?? "0",
+    "{guild.created_at}":    guild ? `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>` : "",
+    "{guild.owner}":         guild?.ownerId ? `<@${guild.ownerId}>` : "Unknown",
+    "{guild.description}":   guild?.description ?? "",
+    "{guild.vanity}":        guild?.vanityURLCode ? `discord.gg/${guild.vanityURLCode}` : "none",
+    "{guild.channel_count}": guild?.channels.cache.size.toString() ?? "0",
+    "{guild.role_count}":    guild?.roles.cache.size.toString() ?? "0",
+    "{guild.emoji_count}":   guild?.emojis.cache.size.toString() ?? "0",
+    // ── Channel ───────────────────────────────────────────────────────────────
+    "{channel}":             ctx.channel ? `<#${ctx.channel.id}>` : "Unknown",
+    "{channel.name}":        ctx.channel?.name ?? "Unknown",
+    "{channel.id}":          ctx.channel?.id ?? "0",
+    "{channel.mention}":     ctx.channel ? `<#${ctx.channel.id}>` : "Unknown",
+    // ── Time ─────────────────────────────────────────────────────────────────
+    "{time}":                `<t:${Math.floor(now.getTime() / 1000)}:T>`,
+    "{date}":                `<t:${Math.floor(now.getTime() / 1000)}:D>`,
+    "{timestamp}":           `<t:${Math.floor(now.getTime() / 1000)}:F>`,
+    "{unix}":                String(Math.floor(now.getTime() / 1000)),
+    // ── Misc ──────────────────────────────────────────────────────────────────
+    "{newline}":             "\n",
+    "{nl}":                  "\n",
     ...(ctx.extra ?? {}),
   };
 

@@ -360,3 +360,83 @@ export const lastfmAccounts = pgTable('lastfm_accounts', {
   userId:   text('user_id').primaryKey(),
   username: text('username').notNull(),
 });
+
+// ── Vanity Roles ──────────────────────────────────────────────────────────────
+export const vanityConfig = pgTable("vanity_config", {
+  guildId: text("guild_id").primaryKey(),
+  vanity: text("vanity").notNull(),
+  channelId: text("channel_id"),
+  message: text("message"),
+});
+export const vanityRoles = pgTable("vanity_roles",
+  { guildId: text("guild_id").notNull(), roleId: text("role_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.roleId] }) })
+);
+export const vanityMembers = pgTable("vanity_members",
+  { guildId: text("guild_id").notNull(), userId: text("user_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
+);
+
+// ── Social Notifications ──────────────────────────────────────────────────────
+export const socialSubscriptions = pgTable("social_subscriptions",
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    channelId: text("channel_id").notNull(),
+    platform: text("platform").notNull(),
+    target: text("target").notNull(),
+    message: text("message"),
+    lastPostId: text("last_post_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({ guildIdx: index("social_subs_guild_idx").on(t.guildId) })
+);
+
+// ── Paginated Embeds ──────────────────────────────────────────────────────────
+export const paginatedEmbeds = pgTable("paginated_embeds",
+  {
+    messageId: text("message_id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    channelId: text("channel_id").notNull(),
+    pages: jsonb("pages").$type<string[]>().default([]).notNull(),
+    currentPage: integer("current_page").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  }
+);
+
+// ── Events Toggle ─────────────────────────────────────────────────────────────
+export const eventsSettings = pgTable("events_settings",
+  {
+    guildId: text("guild_id").notNull(),
+    event: text("event").notNull(),
+    enabled: boolean("enabled").default(true).notNull(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.event] }) })
+);
+
+// ── Bot-managed Webhooks ──────────────────────────────────────────────────────
+export const managedWebhooks = pgTable("managed_webhooks",
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    identifier: text("identifier").notNull(),
+    webhookId: text("webhook_id").notNull(),
+    webhookToken: text("webhook_token").notNull(),
+    channelId: text("channel_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({ guildIdentIdx: index("webhook_guild_ident_idx").on(t.guildId, t.identifier) })
+);
+
+// ── Music Settings ────────────────────────────────────────────────────────────
+export const musicSettings = pgTable("music_settings", {
+  guildId: text("guild_id").primaryKey(),
+  djRoleId: text("dj_role_id"),
+  autoplay: boolean("autoplay").default(false).notNull(),
+});
+
+// ── Fortnite Watch ────────────────────────────────────────────────────────────
+export const fortniteWatches = pgTable("fortnite_watches",
+  { userId: text("user_id").notNull(), cosmetic: text("cosmetic").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.userId, t.cosmetic] }) })
+);
