@@ -1,6 +1,6 @@
 import {
   pgTable, text, bigint, integer, boolean, timestamp, jsonb,
-  serial, primaryKey, index, real,
+  serial, primaryKey, index,
 } from "drizzle-orm/pg-core";
 
 export const guildSettings = pgTable("guild_settings", {
@@ -54,8 +54,6 @@ export const guildSettings = pgTable("guild_settings", {
   bumpChannel: text("bump_channel"),
   bumpRoleId: text("bump_role_id"),
   serverType: text("server_type"),
-  dropChannel: text("drop_channel"),
-  economyFrozen: boolean("economy_frozen").default(false).notNull(),
   // ── New columns ──────────────────────────────────────────────────────────────
   imageMuteRole: text("image_mute_role"),
   reactionMuteRole: text("reaction_mute_role"),
@@ -126,20 +124,6 @@ export const remindersTable = pgTable("reminders", {
   id: serial("id").primaryKey(), userId: text("user_id").notNull(), channelId: text("channel_id").notNull(), guildId: text("guild_id"), message: text("message").notNull(), remindAt: timestamp("remind_at", { withTimezone: true }).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const economy = pgTable("economy",
-  {
-    guildId: text("guild_id").notNull(),
-    userId: text("user_id").notNull(),
-    balance: bigint("balance", { mode: "number" }).default(0).notNull(),
-    bank: bigint("bank", { mode: "number" }).default(0).notNull(),
-    lastDaily: timestamp("last_daily", { withTimezone: true }),
-    lastRob: timestamp("last_rob", { withTimezone: true }),
-    streak: integer("streak").default(0).notNull(),
-    streakUpdatedAt: timestamp("streak_updated_at", { withTimezone: true }),
-    prestige: integer("prestige").default(0).notNull(),
-  },
-  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
-);
 
 export const userRep = pgTable("user_rep",
   {
@@ -152,22 +136,7 @@ export const userRep = pgTable("user_rep",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
 );
 
-export const activeBuffs = pgTable("active_buffs", {
-  id: serial("id").primaryKey(),
-  guildId: text("guild_id").notNull(),
-  userId: text("user_id").notNull(),
-  buffType: text("buff_type").notNull(),
-  multiplier: real("multiplier").default(1.5).notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-},
-  (t) => ({ guildUserIdx: index("active_buffs_guild_user_idx").on(t.guildId, t.userId) })
-);
 
-export const userMood = pgTable("user_mood",
-  { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), mood: text("mood").notNull(), updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull() },
-  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
-);
 
 export const levels = pgTable("levels",
   { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), xp: integer("xp").default(0).notNull(), level: integer("level").default(0).notNull(), lastMessageAt: timestamp("last_message_at", { withTimezone: true }) },
@@ -231,14 +200,6 @@ export const modNotes = pgTable("mod_notes",
 export const tempBans = pgTable("temp_bans",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), reason: text("reason").notNull(), unbanAt: timestamp("unban_at", { withTimezone: true }).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildIdx: index("temp_bans_guild_idx").on(t.guildId) })
-);
-export const shopItems = pgTable("shop_items",
-  { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), name: text("name").notNull(), description: text("description").default("").notNull(), price: bigint("price", { mode: "number" }).default(100).notNull(), roleId: text("role_id"), stock: integer("stock").default(-1).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
-  (t) => ({ guildIdx: index("shop_items_guild_idx").on(t.guildId) })
-);
-export const userItems = pgTable("user_items",
-  { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), itemId: integer("item_id").notNull(), quantity: integer("quantity").default(1).notNull() },
-  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId, t.itemId] }) })
 );
 export const reports = pgTable("reports",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), reporterId: text("reporter_id").notNull(), targetId: text("target_id").notNull(), reason: text("reason").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
