@@ -8,7 +8,6 @@ import { registerSlashCommands } from "./handlers/slashRegister.js";
 import { startReminderLoop } from "./features/reminders.js";
 import { startGiveawayLoop } from "./features/giveaway.js";
 import { startTempBanLoop } from "./features/tempbans.js";
-import { startDropLoop } from "./features/drops.js";
 import { startAutoMessageLoop } from "./features/autoMessages.js";
 
 async function main() {
@@ -47,7 +46,6 @@ async function main() {
     startReminderLoop(client);
     startGiveawayLoop(client);
     startTempBanLoop(client);
-    startDropLoop(client);
     startAutoMessageLoop(client);
     startSocialNotificationLoop(client);
     setupMusic(client);
