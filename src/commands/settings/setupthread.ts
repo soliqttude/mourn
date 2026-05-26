@@ -3,6 +3,7 @@ import {
   ChannelType,
   PermissionFlagsBits,
   EmbedBuilder,
+  Message,
   type TextChannel,
   type AnyThreadChannel,
 } from "discord.js";
@@ -721,9 +722,9 @@ export const command: HybridCommand = {
     });
 
     // Ack silently if prefix command
-    if (ctx.isPrefix) {
+    if (ctx.source === "prefix") {
       try {
-        await ctx.message?.react("✅");
+        await (ctx.raw as Message).react("✅");
       } catch {
         /* ignore */
       }
