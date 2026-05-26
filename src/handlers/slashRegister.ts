@@ -27,7 +27,6 @@ const PINNED_COMMANDS = new Set([
 const CATEGORY_CAPS: Record<string, number> = {
   fun:         21,
   moderation:  20,
-  economy:     18,
   utility:     15,
   settings:    10,
   levels:       8,
@@ -35,7 +34,7 @@ const CATEGORY_CAPS: Record<string, number> = {
   tags:         2,
   voicemaster:  3,
 };
-// Total: 21+20+18+15+10+8+3+2+3 = 100
+// Total: 21+20+15+10+8+3+2+3 = 82  (≤100 limit)
 
 function hasUserOption(cmd: { options?: { type: number }[] }): boolean {
   return (cmd.options ?? []).some(
