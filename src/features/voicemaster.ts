@@ -80,34 +80,34 @@ export function vmInterfaceEmbed(guild: { name: string; iconURL: () => string | 
     .addFields({
       name: "Button Usage",
       value: [
-        "🔒 — **Lock** the voice channel",
-        "🔓 — **Unlock** the voice channel",
-        "🔇 — **Ghost** the voice channel",
-        "👁️ — **Reveal** the voice channel",
-        "🎙️ — **Claim** the voice channel",
-        "🔌 — **Disconnect** a member",
-        "🎮 — **Start** an activity",
-        "ℹ️ — **View** channel information",
-        "➕ — **Increase** the user limit",
-        "➖ — **Decrease** the user limit",
+        "<:lock:1508834911669194905> — **Lock** the voice channel",
+        "<:unlock:1508834923279159316> — **Unlock** the voice channel",
+        "<:ghost:1508834920783675431> — **Ghost** the voice channel",
+        "<:unghost:1508834916194844743> — **Reveal** the voice channel",
+        "<:claim:1508834918011113493> — **Claim** the voice channel",
+        "<:disconnect:1508834914899071007> — **Disconnect** a member",
+        "<:activity:1508834913242320956> — **Start** an activity",
+        "<:info:1508834870493712465> — **View** channel information",
+        "<:increase:1508835132704952551> — **Increase** the user limit",
+        "<:decrease:1508835134718345479> — **Decrease** the user limit",
       ].join("\n"),
     });
 }
 
 export function vmInterfaceRows() {
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId("vm:lock").setEmoji("🔒").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("vm:unlock").setEmoji("🔓").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("vm:ghost").setEmoji("🔇").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("vm:reveal").setEmoji("👁️").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("vm:claim").setEmoji("🎙️").setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:lock").setEmoji({ id: '1508834911669194905', name: 'lock' }).setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:unlock").setEmoji({ id: '1508834923279159316', name: 'unlock' }).setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:ghost").setEmoji({ id: '1508834920783675431', name: 'ghost' }).setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:reveal").setEmoji({ id: '1508834916194844743', name: 'unghost' }).setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:claim").setEmoji({ id: '1508834918011113493', name: 'claim' }).setStyle(ButtonStyle.Secondary),
   );
   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId("vm:disconnect").setEmoji("🔌").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("vm:start").setEmoji("🎮").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("vm:view").setEmoji("ℹ️").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("vm:increase").setEmoji("➕").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("vm:decrease").setEmoji("➖").setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:disconnect").setEmoji({ id: '1508834914899071007', name: 'disconnect' }).setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:start").setEmoji({ id: '1508834913242320956', name: 'activity' }).setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:view").setEmoji({ id: '1508834870493712465', name: 'info' }).setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:increase").setEmoji({ id: '1508835132704952551', name: 'increase' }).setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("vm:decrease").setEmoji({ id: '1508835134718345479', name: 'decrease' }).setStyle(ButtonStyle.Secondary),
   );
   return [row1, row2];
 }
@@ -120,16 +120,16 @@ export function vmPanelEmbed() {
     .addFields({
       name: "Button Usage",
       value: [
-        "🔒 — **Lock** the voice channel",
-        "🔓 — **Unlock** the voice channel",
-        "🔇 — **Ghost** the voice channel",
-        "👁️ — **Reveal** the voice channel",
-        "🎙️ — **Claim** the voice channel",
-        "🔌 — **Disconnect** a member",
-        "🎮 — **Start** an activity",
-        "ℹ️ — **View** channel information",
-        "➕ — **Increase** the user limit",
-        "➖ — **Decrease** the user limit",
+        "<:lock:1508834911669194905> — **Lock** the voice channel",
+        "<:unlock:1508834923279159316> — **Unlock** the voice channel",
+        "<:ghost:1508834920783675431> — **Ghost** the voice channel",
+        "<:unghost:1508834916194844743> — **Reveal** the voice channel",
+        "<:claim:1508834918011113493> — **Claim** the voice channel",
+        "<:disconnect:1508834914899071007> — **Disconnect** a member",
+        "<:activity:1508834913242320956> — **Start** an activity",
+        "<:info:1508834870493712465> — **View** channel information",
+        "<:increase:1508835132704952551> — **Increase** the user limit",
+        "<:decrease:1508835134718345479> — **Decrease** the user limit",
       ].join("\n"),
     });
 }
