@@ -1,21 +1,19 @@
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed } from "../../lib/embeds.js";
-import { config } from "../../config.js";
+
+const VOTE_URL = "https://top.gg/bot/1499466116768993461";
 
 export const command: HybridCommand = {
   name: "vote",
-  description: "Vote for Bleed on bot lists.",
+  description: "Vote for bestmourn on top.gg.",
   usage: "vote",
   examples: ["vote"],
   category: "custom",
   async execute(ctx) {
-    const voteUrl = (config as any).voteUrl;
     return ctx.reply({
       embeds: [brandEmbed({
-        title: "vote for bleed.",
-        description: voteUrl
-          ? `support the bot by voting:\n\n[**vote here**](${voteUrl})\n${voteUrl}\n\nvoting helps bleed grow. it takes 10 seconds.`
-          : "voting isn't set up yet — it's coming soon.\n\nyou can still help by sharing bleed with your friends.",
+        title: "vote for bestmourn.",
+        description: `support the bot by voting:\n\n[**vote here**](${VOTE_URL})\n${VOTE_URL}\n\nvoting helps bestmourn grow. it takes 10 seconds.`,
         page: "Vote",
       })],
     });
