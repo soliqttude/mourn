@@ -10,7 +10,6 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { commands, findCommand } from "../../handlers/registry.js";
 
 export const CAT_EMOJI: Record<string, string> = {
-  economy:     "💰",
   fun:         "🎉",
   moderation:  "🛡️",
   settings:    "⚙️",
@@ -24,7 +23,6 @@ export const CAT_EMOJI: Record<string, string> = {
 };
 
 export const CAT_LABEL: Record<string, string> = {
-  economy:     "Economy",
   fun:         "Fun",
   moderation:  "Moderation",
   settings:    "Settings",
