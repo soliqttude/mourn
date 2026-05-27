@@ -1,9 +1,10 @@
-import { EmbedBuilder, type GuildMember, type Guild, type User, type TextChannel } from "discord.js";
+import { EmbedBuilder, type GuildMember, type Guild, type User, type TextChannel, type Client } from "discord.js";
 
 export interface ScriptingContext {
   user?: User | GuildMember | null;
   guild?: Guild | null;
   channel?: TextChannel | null;
+  client?: Client | null;
   extra?: Record<string, string>;
 }
 
@@ -46,6 +47,29 @@ function applyNewlines(text: string): string {
   return text
     .replace(/\s*\/e\s*/g, "\n")
     .replace(/\\n/g, "\n");
+}
+
+// ── :emojiname: → guild/application emoji string ──────────────────────────────
+function resolveEmojis(text: string, ctx: ScriptingContext): string {
+  const guild  = ctx.guild;
+  const client = ctx.client;
+  if (!guild && !client) return text;
+
+  return text.replace(/:([a-zA-Z0-9_]+):/g, (match, name: string) => {
+    const lower = name.toLowerCase();
+    // 1. Guild emojis first
+    if (guild) {
+      const ge = guild.emojis.cache.find(e => e.name?.toLowerCase() === lower);
+      if (ge) return ge.toString();
+    }
+    // 2. Application (bot) emojis
+    if (client) {
+      const ae = client.application?.emojis?.cache?.find(e => e.name?.toLowerCase() === lower);
+      if (ae) return ae.toString();
+    }
+    // 3. Leave as-is (standard unicode shortcodes Discord handles itself)
+    return match;
+  });
 }
 
 // ── Variable substitution ─────────────────────────────────────────────────────
@@ -252,7 +276,10 @@ export function parseScript(
   raw: string,
   ctx: ScriptingContext = {},
 ): { embeds: EmbedBuilder[]; content?: string } {
-  const resolved = resolveVars(raw, ctx);
+  // 1. Substitute {variables}
+  const withVars = resolveVars(raw, ctx);
+  // 2. Resolve :emojiname: shortcodes against guild + application emoji caches
+  const resolved = resolveEmojis(withVars, ctx);
 
   if (!resolved.includes("{embed}")) {
     return { embeds: [], content: applyNewlines(resolved) };
