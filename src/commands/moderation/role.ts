@@ -1,6 +1,9 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { errorEmbed } from "../../lib/embeds.js";
+
+const ADD_EMOJI = "<:add:1508824458842869963>";
+const REM_EMOJI = "➖";
 
 export const command: HybridCommand = {
   name: "role",
@@ -28,10 +31,16 @@ export const command: HybridCommand = {
     try {
       if (target.roles.cache.has(role.id)) {
         await target.roles.remove(role.id);
-        return ctx.reply({ embeds: [successEmbed(`Removed <@&${role.id}> from <@${target.id}>.`)] });
+        return ctx.reply({
+          content: `${REM_EMOJI} <@${ctx.user.id}>: Removed <@&${role.id}> from <@${target.id}>.`,
+          allowedMentions: { parse: [] },
+        });
       }
       await target.roles.add(role.id);
-      return ctx.reply({ embeds: [successEmbed(`Added <@&${role.id}> to <@${target.id}>.`)] });
+      return ctx.reply({
+        content: `${ADD_EMOJI} <@${ctx.user.id}>: Added <@&${role.id}> to <@${target.id}>.`,
+        allowedMentions: { parse: [] },
+      });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
     }
