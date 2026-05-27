@@ -1,9 +1,10 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
 
 const ADD_EMOJI = "<:add:1508824458842869963>";
-const REM_EMOJI = "➖";
+const REM_EMOJI = "<:add:1508824458842869963>";
+const BLUE = 0x3f85f5;
 
 export const command: HybridCommand = {
   name: "role",
@@ -32,13 +33,21 @@ export const command: HybridCommand = {
       if (target.roles.cache.has(role.id)) {
         await target.roles.remove(role.id);
         return ctx.reply({
-          content: `${REM_EMOJI} <@${ctx.user.id}>: Removed <@&${role.id}> from <@${target.id}>.`,
+          embeds: [
+            new EmbedBuilder()
+              .setColor(BLUE)
+              .setDescription(`${REM_EMOJI} <@${ctx.user.id}>: Removed <@&${role.id}> from <@${target.id}>.`),
+          ],
           allowedMentions: { parse: [] },
         });
       }
       await target.roles.add(role.id);
       return ctx.reply({
-        content: `${ADD_EMOJI} <@${ctx.user.id}>: Added <@&${role.id}> to <@${target.id}>.`,
+        embeds: [
+          new EmbedBuilder()
+            .setColor(BLUE)
+            .setDescription(`${ADD_EMOJI} <@${ctx.user.id}>: Added <@&${role.id}> to <@${target.id}>.`),
+        ],
         allowedMentions: { parse: [] },
       });
     } catch (err) {
