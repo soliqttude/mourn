@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   type Guild,
+  type Client,
 } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
@@ -11,7 +12,7 @@ import { errorEmbed } from "../../lib/embeds.js";
 const COLOR = 0x2b2d31;
 const OWNER_ID = "1492017858182385684";
 
-// Custom emoji IDs
+// Custom emoji IDs (application emojis uploaded to the bot)
 const E = {
   roleInfo:       "1509210164501283037", // IMG_9884 — crown
   exclusiveRoles: "1509210329882820850", // IMG_9886
@@ -21,8 +22,19 @@ const E = {
   instagram:      "1509211074648604692",
 };
 
-function emoji(id: string, g: Guild, fallback = ""): string {
-  return g.emojis.cache.get(id)?.toString() ?? fallback;
+// Hardcoded button channel IDs (on the other server)
+const ROLES_CHANNEL_ID  = "1506054003069550603";
+const TICKET_CHANNEL_ID = "1506054005279822095";
+
+function emoji(id: string, client: Client, g: Guild, fallback = ""): string {
+  // 1. Try application (bot) emojis — works with discord.js ≥ 14.16
+  const appEmoji = client.application?.emojis?.cache?.get(id);
+  if (appEmoji) return appEmoji.toString();
+  // 2. Try guild emojis
+  const guildEmoji = g.emojis.cache.get(id);
+  if (guildEmoji) return guildEmoji.toString();
+  // 3. Fallback
+  return fallback;
 }
 
 function role(name: string, g: Guild): string {
@@ -39,13 +51,16 @@ function ch(name: string, g: Guild): string {
   return found ? `<#${found.id}>` : `**#${name}**`;
 }
 
-function chLink(name: string, g: Guild): string {
-  const found = g.channels.cache.find(
-    (c) => c.name.toLowerCase() === name.toLowerCase()
-  );
-  return found
-    ? `https://discord.com/channels/${g.id}/${found.id}`
-    : "https://discord.gg/CdUtYSFC3U";
+/** Find a channel across all guilds the bot is in and return a Discord deep link */
+function globalChLink(channelId: string, client: Client): string {
+  for (const guild of client.guilds.cache.values()) {
+    const channel = guild.channels.cache.get(channelId);
+    if (channel) {
+      return `https://discord.com/channels/${guild.id}/${channelId}`;
+    }
+  }
+  // Fallback: Discord still routes correctly if guild ID matches
+  return `https://discord.com/channels/0/${channelId}`;
 }
 
 export const command: HybridCommand = {
@@ -63,13 +78,19 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const g = ctx.guild;
+    const client = ctx.client;
 
-    const eRoleInfo       = emoji(E.roleInfo, g, "👑");
-    const eExclusive      = emoji(E.exclusiveRoles, g, "✅");
-    const eFriendGroups   = emoji(E.friendGroups, g, "👥");
-    const eBoostPerks     = emoji(E.boostPerks, g, "🎯");
-    const eTiktok         = emoji(E.tiktok, g, "🎵");
-    const eInstagram      = emoji(E.instagram, g, "📸");
+    // Fetch application emojis if not already cached
+    if (!client.application?.emojis?.cache?.size) {
+      try { await client.application?.emojis?.fetch(); } catch { /* ignore */ }
+    }
+
+    const eRoleInfo     = emoji(E.roleInfo,       client, g, "👑");
+    const eExclusive    = emoji(E.exclusiveRoles,  client, g, "✅");
+    const eFriendGroups = emoji(E.friendGroups,    client, g, "👥");
+    const eBoostPerks   = emoji(E.boostPerks,      client, g, "🎯");
+    const eTiktok       = emoji(E.tiktok,          client, g, "🎵");
+    const eInstagram    = emoji(E.instagram,       client, g, "📸");
 
     // ── Embed 1: Role Info ───────────────────────────────────────────────────
     const roleInfoEmbed = new EmbedBuilder()
@@ -156,14 +177,15 @@ export const command: HybridCommand = {
       );
 
     // ── Buttons ──────────────────────────────────────────────────────────────
-    const rolesUrl  = chLink("roles", g);
-    const ticketUrl = chLink("ticket", g) !== "https://discord.gg/CdUtYSFC3U"
-      ? chLink("ticket", g)
-      : chLink("tickets", g);
-
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setLabel("roles").setStyle(ButtonStyle.Link).setURL(rolesUrl),
-      new ButtonBuilder().setLabel("ticket").setStyle(ButtonStyle.Link).setURL(ticketUrl)
+      new ButtonBuilder()
+        .setLabel("roles")
+        .setStyle(ButtonStyle.Link)
+        .setURL(globalChLink(ROLES_CHANNEL_ID, client)),
+      new ButtonBuilder()
+        .setLabel("ticket")
+        .setStyle(ButtonStyle.Link)
+        .setURL(globalChLink(TICKET_CHANNEL_ID, client))
     );
 
     // ── Send ─────────────────────────────────────────────────────────────────
