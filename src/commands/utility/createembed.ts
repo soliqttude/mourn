@@ -15,7 +15,6 @@ export const command: HybridCommand = {
   examples: [
     "ce #general {embed}$v{title: Hello}$v{description: World}$v{color: #5865f2}",
     "ce {embed}$v{description: line1 /e line2}$v{color: blurple}$v{image: https://...}",
-    "ce #welcome {embed}$v{description: Welcome!}$v{color: green}{embed}$v{field: Rules && Read #rules && true}",
   ],
   options: [
     {
@@ -35,14 +34,10 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
 
-    // ── Resolve target channel ────────────────────────────────────────────────
-    // Slash: use channel option if provided, else current channel
-    // Prefix: first arg is a channel mention/ID → use it; otherwise current channel
     let target = ctx.getChannel("channel") as any;
     let code   = ctx.getString("code") ?? "";
 
     if (!target && ctx.args.length > 0) {
-      // Check if first arg looks like a channel mention or ID
       const first = ctx.args[0]!;
       if (/^(<#)?\d{17,20}>?$/.test(first)) {
         const resolved = resolveChannel(ctx.guild, first);
@@ -57,10 +52,7 @@ export const command: HybridCommand = {
       }
     }
 
-    // Fall back to current channel
-    if (!target) {
-      target = ctx.channel;
-    }
+    if (!target) target = ctx.channel;
 
     if (!target?.isTextBased()) {
       return ctx.reply({ embeds: [errorEmbed("couldn't resolve a text channel.")] });
@@ -70,37 +62,27 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("provide embed scripting code.")] });
     }
 
-    // ── Parse the script ──────────────────────────────────────────────────────
     const { embeds, content } = parseScript(code, {
       user:    ctx.member ?? ctx.user ?? undefined,
       guild:   ctx.guild,
       channel: ctx.channel as any,
+      client:  ctx.client,
     });
 
     if (embeds.length === 0 && !content) {
       return ctx.reply({ embeds: [errorEmbed("no embeds or content parsed from the script.")] });
     }
 
-    // ── Send ──────────────────────────────────────────────────────────────────
     try {
-      await target.send({
-        content:  content ?? undefined,
-        embeds,
-      });
+      await target.send({ content: content ?? undefined, embeds });
     } catch {
       return ctx.reply({ embeds: [errorEmbed("failed to send — check my permissions in that channel.")] });
     }
 
-    // ── Delete the command message (like bleed does) ──────────────────────────
-    if (ctx.message) {
-      try { await ctx.message.delete(); } catch { /* no permission, ignore */ }
-    }
-
-    // For slash interactions, acknowledge silently
-    if (!ctx.message) {
-      try {
-        await ctx.reply({ content: "✓", ephemeral: true } as any);
-      } catch { /* already acknowledged */ }
+    if (ctx.source === "prefix") {
+      try { await (ctx.raw as import("discord.js").Message).delete(); } catch { /* ignore */ }
+    } else {
+      try { await ctx.reply({ content: "✓", ephemeral: true } as any); } catch { /* ignore */ }
     }
   },
 };
