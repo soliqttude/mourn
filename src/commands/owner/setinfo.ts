@@ -12,28 +12,23 @@ import { errorEmbed } from "../../lib/embeds.js";
 const COLOR = 0x2b2d31;
 const OWNER_ID = "1492017858182385684";
 
-// Custom emoji IDs (application emojis uploaded to the bot)
 const E = {
-  roleInfo:       "1509210164501283037", // IMG_9884 — crown
-  exclusiveRoles: "1509210329882820850", // IMG_9886
-  friendGroups:   "1509210163272486922", // IMG_9885
-  boostPerks:     "1509210165893660863", // IMG_9883
+  roleInfo:       "1509210164501283037",
+  exclusiveRoles: "1509210329882820850",
+  friendGroups:   "1509210163272486922",
+  boostPerks:     "1509210165893660863",
   tiktok:         "1509211073025146951",
   instagram:      "1509211074648604692",
 };
 
-// Hardcoded button channel IDs (on the other server)
 const ROLES_CHANNEL_ID  = "1506054003069550603";
 const TICKET_CHANNEL_ID = "1506054005279822095";
 
 function emoji(id: string, client: Client, g: Guild, fallback = ""): string {
-  // 1. Try application (bot) emojis — works with discord.js ≥ 14.16
   const appEmoji = client.application?.emojis?.cache?.get(id);
   if (appEmoji) return appEmoji.toString();
-  // 2. Try guild emojis
   const guildEmoji = g.emojis.cache.get(id);
   if (guildEmoji) return guildEmoji.toString();
-  // 3. Fallback
   return fallback;
 }
 
@@ -51,15 +46,11 @@ function ch(name: string, g: Guild): string {
   return found ? `<#${found.id}>` : `**#${name}**`;
 }
 
-/** Find a channel across all guilds the bot is in and return a Discord deep link */
 function globalChLink(channelId: string, client: Client): string {
   for (const guild of client.guilds.cache.values()) {
     const channel = guild.channels.cache.get(channelId);
-    if (channel) {
-      return `https://discord.com/channels/${guild.id}/${channelId}`;
-    }
+    if (channel) return `https://discord.com/channels/${guild.id}/${channelId}`;
   }
-  // Fallback: Discord still routes correctly if guild ID matches
   return `https://discord.com/channels/0/${channelId}`;
 }
 
@@ -80,7 +71,6 @@ export const command: HybridCommand = {
     const g = ctx.guild;
     const client = ctx.client;
 
-    // Fetch application emojis if not already cached
     if (!client.application?.emojis?.cache?.size) {
       try { await client.application?.emojis?.fetch(); } catch { /* ignore */ }
     }
@@ -103,13 +93,11 @@ export const command: HybridCommand = {
           "",
           "**Staff Roles**",
           `${role("above", g)} ${role("manager", g)} ${role("admin", g)} ${role("mod", g)} ${role("trial mod", g)}`,
-          "",
-          `to join our staff team check ${ch("mail", g)} for applications`,
+          `-# to join our staff team check ${ch("mail", g)} for applications`,
           "",
           "**Helpers**",
           `${role("event manager", g)} ${role("pms", g)} ${role("uploader", g)}`,
-          "",
-          `dm <@${OWNER_ID}> for more info`,
+          `-# dm <@${OWNER_ID}> for more info`,
         ].join("\n")
       );
 
@@ -120,24 +108,24 @@ export const command: HybridCommand = {
       .setDescription(
         [
           `**famous** - ${role("famous", g)}`,
-          "to obtain this role you must have",
-          `${eTiktok} 1k+ on tiktok`,
-          `${eInstagram} 1k+ on instagram`,
+          `-# to obtain this role you must have`,
+          `-# ${eTiktok} 1k+ on tiktok`,
+          `-# ${eInstagram} 1k+ on instagram`,
           "",
           `**ogs** - ${role("ogs", g)}`,
-          "this role isn't obtainable, was only given to certain people during the start of the server",
+          "-# this role isn't obtainable, was only given to certain people during the start of the server",
           "",
           `**donators** - ${role("donators", g)}`,
-          "role is obtainable by donating to the server as in hosting giveaways",
+          "-# role is obtainable by donating to the server as in hosting giveaways",
           "",
           `**special** - ${role("special", g)}`,
-          "this role is given to a certain amount of people",
+          "-# this role is given to a certain amount of people",
           "",
           `**chrome** - ${role("chrome", g)} & **hello kitty** - ${role("hello kitty", g)}`,
-          `both are given to members that main our server and are ${role("actives", g)}`,
+          `-# both are given to members that main our server and are ${role("actives", g)}`,
           "",
           `**goated** - ${role("goated", g)}`,
-          "this role will only be obtainable for a limited amount of time. type tiktok in chat for more details.",
+          "-# this role will only be obtainable for a limited amount of time. type tiktok in chat for more details.",
         ].join("\n")
       );
 
@@ -149,14 +137,13 @@ export const command: HybridCommand = {
         [
           "**Requirements**",
           "",
-          "∙ must be active",
-          "∙ in total of 4+ members",
-          "∙ must rep /depend",
+          "-# ∙ must be active",
+          "-# ∙ in total of 4+ members",
           "",
           "**Benefits**",
           "",
-          "∙ custom group role",
-          `∙ chance at high roles (if active) make a ticket in ${ch("help", g)} for more info`,
+          "-# ∙ custom group role",
+          `-# ∙ chance at high roles (if active) make a ticket in ${ch("help", g)} for more info`,
         ].join("\n")
       );
 
@@ -167,12 +154,12 @@ export const command: HybridCommand = {
       .setDescription(
         [
           `${role("bank", g)} role`,
-          "∙ instant pic perms + vc perms",
-          "∙ custom role",
-          "→",
-          "`,br create (name)`",
-          "`,br color (#hex)` (example: `,br color #000000`)",
-          "`,br icon (icon or emoji of your choice)`",
+          "-# ∙ instant pic perms + vc perms",
+          "-# ∙ custom role",
+          "-# →",
+          "-# `,br create (name)`",
+          "-# `,br color (#hex)` (example: `,br color #000000`)",
+          "-# `,br icon (icon or emoji of your choice)`",
         ].join("\n")
       );
 
