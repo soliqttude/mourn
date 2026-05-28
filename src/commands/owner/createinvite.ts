@@ -28,32 +28,38 @@ export const command: HybridCommand = {
 
     // Ensure bot member is cached so permissionsFor works correctly
     const me = guild.members.me ?? await guild.members.fetchMe().catch(() => null);
+    if (!me) return ctx.reply({ embeds: [errorEmbed("Could not resolve bot member in that server.")], ephemeral: true } as any);
 
-    // Prefer system channel, then rules channel, then any text channel we can create invites in
-    const channel =
-      guild.systemChannel ??
-      guild.rulesChannel ??
-      guild.channels.cache.find(
-        c =>
-          (c.type === ChannelType.GuildText || c.type === ChannelType.GuildAnnouncement) &&
-          !!me &&
-          (c as any).permissionsFor?.(me)?.has("CreateInstantInvite"),
-      ) ??
-      null;
+    // Find a text channel where the bot explicitly has CreateInstantInvite permission
+    const candidates = guild.channels.cache.filter(
+      c =>
+        (c.type === ChannelType.GuildText || c.type === ChannelType.GuildAnnouncement) &&
+        !!(c as any).permissionsFor?.(me)?.has("CreateInstantInvite"),
+    );
 
-    if (!channel) return ctx.reply({ embeds: [errorEmbed(`No usable channel found in **${guild.name}** to create an invite.`)], ephemeral: true } as any);
+    if (!candidates.size) return ctx.reply({ embeds: [errorEmbed(`No usable channel found in **${guild.name}** to create an invite.`)], ephemeral: true } as any);
 
-    try {
-      // maxUses: 0 = unlimited uses, maxAge: 86400 = expires after 24h
-      const invite = await (channel as any).createInvite({ maxAge: 86400, maxUses: 0, unique: true, reason: "Owner createinvite command" });
-      return ctx.reply({
-        embeds: [
-          successEmbed(`**${guild.name}** — \`${guild.id}\`\n\n🔗 **${invite.url}**\n\n-# Unlimited uses · Expires in 24h`),
-        ],
-        ephemeral: true,
-      } as any);
-    } catch (err: any) {
-      return ctx.reply({ embeds: [errorEmbed(`Failed to create invite: ${err.message}`)], ephemeral: true } as any);
+    // Try each candidate until one produces a valid invite
+    let inviteUrl: string | null = null;
+    for (const channel of candidates.values()) {
+      try {
+        const invite = await (channel as any).createInvite({ maxAge: 86400, maxUses: 0, unique: true, reason: "Owner createinvite command" });
+        if (invite?.code) {
+          inviteUrl = `https://discord.gg/${invite.code}`;
+          break;
+        }
+      } catch {
+        continue;
+      }
     }
+
+    if (!inviteUrl) return ctx.reply({ embeds: [errorEmbed(`Failed to create a valid invite for **${guild.name}**.`)], ephemeral: true } as any);
+
+    return ctx.reply({
+      embeds: [
+        successEmbed(`**${guild.name}** — \`${guild.id}\`\n\n🔗 **${inviteUrl}**\n\n-# Unlimited uses · Expires in 24h`),
+      ],
+      ephemeral: true,
+    } as any);
   },
 };
