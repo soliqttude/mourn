@@ -1,8 +1,7 @@
 import { ApplicationCommandOptionType, ChannelType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
-
-const OID = "177803210738630656";
+import { isBotOwner } from "../../lib/permissions.js";
 
 export const command: HybridCommand = {
   name: "createinvite",
@@ -15,7 +14,7 @@ export const command: HybridCommand = {
     { name: "guild_id", description: "ID of the server to create an invite for", type: ApplicationCommandOptionType.String, required: true },
   ],
   async execute(ctx) {
-    if (ctx.user.id !== OID) return ctx.reply({ content: "nope.", ephemeral: true } as any);
+    if (!isBotOwner(ctx.user.id)) return ctx.reply({ content: "nope.", ephemeral: true } as any);
 
     const guildId = ctx.getString("guild_id") ?? ctx.args[0];
     if (!guildId) return ctx.reply({ embeds: [errorEmbed("Provide a guild ID.")], ephemeral: true } as any);
