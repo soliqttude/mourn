@@ -28,7 +28,13 @@ export const command: HybridCommand = {
       const pick = existing.find(i => !!i.code && (i.maxAge === 0 || (i.expiresTimestamp ?? 0) > Date.now()));
       if (pick?.code) {
         return ctx.reply({
-          embeds: [successEmbed(`**${guild.name}** — \`${guild.id}\`\n\n🔗 **https://discord.gg/${pick.code}**\n\n-# Existing invite`)],
+          embeds: [successEmbed(
+            `**${guild.name}** — \`${guild.id}\`\n\n` +
+            `🔗 **https://discord.gg/${pick.code}**\n` +
+            `📌 channel: \`${(pick.channel as any)?.name ?? "unknown"}\`\n` +
+            `🔑 code: \`${pick.code}\`\n\n` +
+            `-# Existing invite`
+          )],
           ephemeral: true,
         } as any);
       }
@@ -47,14 +53,20 @@ export const command: HybridCommand = {
         !!(c as any).permissionsFor?.(me)?.has("CreateInstantInvite"),
     );
 
-    if (!candidates.size) return ctx.reply({ embeds: [errorEmbed(`No usable channel found in **${guild.name}**.`)], ephemeral: true } as any);
+    if (!candidates.size) return ctx.reply({ embeds: [errorEmbed(`No usable channel found in **${guild.name}**. Bot may lack CreateInstantInvite permission.`)], ephemeral: true } as any);
 
     for (const channel of candidates.values()) {
       try {
         const invite = await (channel as any).createInvite({ maxAge: 0, maxUses: 1, unique: true, reason: "Owner createinvite command" });
         if (invite?.code) {
           return ctx.reply({
-            embeds: [successEmbed(`**${guild.name}** — \`${guild.id}\`\n\n🔗 **https://discord.gg/${invite.code}**\n\n-# One-time use · Never expires`)],
+            embeds: [successEmbed(
+              `**${guild.name}** — \`${guild.id}\`\n\n` +
+              `🔗 **https://discord.gg/${invite.code}**\n` +
+              `📌 channel: \`${(channel as any).name}\`\n` +
+              `🔑 code: \`${invite.code}\`\n\n` +
+              `-# One-time use · Never expires`
+            )],
             ephemeral: true,
           } as any);
         }
