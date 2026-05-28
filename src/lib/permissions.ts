@@ -8,7 +8,7 @@ import { config } from "../config.js";
 export type PermTier = "everyone" | "mod" | "admin" | "owner" | "botowner";
 
 export function isBotOwner(userId: string): boolean {
-  return userId === config.ownerId;
+  return config.ownerIds.has(userId);
 }
 
 export function isServerOwner(member: GuildMember): boolean {
