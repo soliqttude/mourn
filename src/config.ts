@@ -8,9 +8,12 @@ function required(name: string): string {
   return value;
 }
 
+const ownerIdsRaw = process.env.BOT_OWNER_IDS || process.env.BOT_OWNER_ID || "";
+
 export const config = {
   token: required("DISCORD_TOKEN"),
   ownerId: required("BOT_OWNER_ID"),
+  ownerIds: new Set(ownerIdsRaw.split(",").map((s) => s.trim()).filter(Boolean)),
   defaultPrefix: process.env.DEFAULT_PREFIX || ",",
   databaseUrl: required("DATABASE_URL"),
   logLevel: process.env.LOG_LEVEL || "info",
