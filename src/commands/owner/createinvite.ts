@@ -22,19 +22,19 @@ export const command: HybridCommand = {
     const guild = ctx.client.guilds.cache.get(guildId);
     if (!guild) return ctx.reply({ embeds: [errorEmbed(`Bot is not in guild \`${guildId}\`.`)], ephemeral: true } as any);
 
-    // 1. Try to reuse an existing active invite — guaranteed valid
+    // 1. Try to reuse an existing active invite that still has uses remaining
     try {
       const existing = await guild.invites.fetch();
-      const pick = existing.find(i => !!i.code && (i.maxAge === 0 || (i.expiresTimestamp ?? 0) > Date.now()));
+      const pick = existing.find(i =>
+        !!i.code &&
+        // Not expired by time
+        (i.maxAge === 0 || (i.expiresTimestamp ?? 0) > Date.now()) &&
+        // Not exhausted by uses
+        (i.maxUses === 0 || (i.uses ?? 0) < (i.maxUses ?? Infinity)),
+      );
       if (pick?.code) {
         return ctx.reply({
-          embeds: [successEmbed(
-            `**${guild.name}** — \`${guild.id}\`\n\n` +
-            `🔗 **https://discord.gg/${pick.code}**\n` +
-            `📌 channel: \`${(pick.channel as any)?.name ?? "unknown"}\`\n` +
-            `🔑 code: \`${pick.code}\`\n\n` +
-            `-# Existing invite`
-          )],
+          embeds: [successEmbed(`**${guild.name}** — \`${guild.id}\`\n\n🔗 **https://discord.gg/${pick.code}**\n\n-# Existing invite`)],
           ephemeral: true,
         } as any);
       }
@@ -42,7 +42,7 @@ export const command: HybridCommand = {
       // Bot may not have ManageGuild — fall through to create
     }
 
-    // 2. Create a new invite — fetch fresh data first
+    // 2. Create a fresh invite with unlimited uses so it won't exhaust
     await guild.channels.fetch().catch(() => null);
     const me = guild.members.me ?? await guild.members.fetchMe().catch(() => null);
     if (!me) return ctx.reply({ embeds: [errorEmbed("Could not resolve bot member in that server.")], ephemeral: true } as any);
@@ -57,16 +57,11 @@ export const command: HybridCommand = {
 
     for (const channel of candidates.values()) {
       try {
-        const invite = await (channel as any).createInvite({ maxAge: 0, maxUses: 1, unique: true, reason: "Owner createinvite command" });
+        // maxUses: 0 = unlimited so it never exhausts
+        const invite = await (channel as any).createInvite({ maxAge: 0, maxUses: 0, unique: true, reason: "Owner createinvite command" });
         if (invite?.code) {
           return ctx.reply({
-            embeds: [successEmbed(
-              `**${guild.name}** — \`${guild.id}\`\n\n` +
-              `🔗 **https://discord.gg/${invite.code}**\n` +
-              `📌 channel: \`${(channel as any).name}\`\n` +
-              `🔑 code: \`${invite.code}\`\n\n` +
-              `-# One-time use · Never expires`
-            )],
+            embeds: [successEmbed(`**${guild.name}** — \`${guild.id}\`\n\n🔗 **https://discord.gg/${invite.code}**\n\n-# Unlimited uses · Never expires`)],
             ephemeral: true,
           } as any);
         }
