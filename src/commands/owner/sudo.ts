@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed, successEmbed } from "../../lib/embeds.js";
 import { findCommand } from "../../handlers/registry.js";
 import { buildPrefixContext } from "../../lib/contextFactory.js";
-const OID = "177803210738630656";
+import { isBotOwner } from "../../lib/permissions.js";
 
 export const command: HybridCommand = {
   name: "sudo",
@@ -19,7 +19,7 @@ export const command: HybridCommand = {
     { name: "command", description: "Command + args to run", type: ApplicationCommandOptionType.String, required: true },
   ],
   async execute(ctx) {
-    if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
+    if (!isBotOwner(ctx.user.id)) return ctx.reply({ content: "nope." });
     if (!ctx.guild) return;
 
     const targetUser = await ctx.getUser("user");
@@ -33,7 +33,7 @@ export const command: HybridCommand = {
 
     const raw = ctx.raw as any;
     const message = raw.channel ? raw : null;
-    if (!message) return ctx.reply({ embeds: [errorEmbed("Can only sudo via prefix.") ]});
+    if (!message) return ctx.reply({ embeds: [errorEmbed("Can only sudo via prefix.")] });
 
     const fakeMsg = Object.create(message);
     fakeMsg.author = targetUser;
