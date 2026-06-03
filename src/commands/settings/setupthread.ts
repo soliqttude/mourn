@@ -717,7 +717,7 @@ export const command: HybridCommand = {
           .setColor(COLOR)
           .setTitle("🧰 Server Setup Directory")
           .setDescription(updated)
-          .setFooter({ text: "mourn setup directory" }),
+          .setFooter({ text: "mourn • setup directory" }),
       ],
     });
 
