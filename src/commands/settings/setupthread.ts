@@ -11,7 +11,6 @@ import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
 
 const COLOR = 0x2b2d31;
-const MOURN_INVITE = "https://discord.com/oauth2/authorize?client_id=1499466116768993461";
 const SUPPORT = "https://discord.gg/CdUtYSFC3U";
 
 interface ThreadDef {
@@ -634,7 +633,7 @@ export const command: HybridCommand = {
   options: [],
 
   async execute(ctx) {
-    if (!ctx.guild) return;
+    if (!ctx.guild || !ctx.channel) return;
 
     const channel = ctx.channel as TextChannel;
 
@@ -658,7 +657,8 @@ export const command: HybridCommand = {
       PermissionFlagsBits.SendMessages,
       PermissionFlagsBits.EmbedLinks,
     ];
-    const missing = needed.filter((p) => !channel.permissionsFor(me).has(p));
+    const perms = channel.permissionsFor(me);
+    const missing = needed.filter((p) => !perms?.has(p));
     if (missing.length) {
       return ctx.reply({
         embeds: [
