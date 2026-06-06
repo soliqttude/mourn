@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>mournbot</h1>
+  <h1>bleed</h1>
   <p>A powerful, feature-rich Discord bot built for community servers — hybrid prefix + slash commands out of the box.</p>
   <p>
     <img src="https://img.shields.io/badge/discord.js-v14-5865F2?style=flat-square&logo=discord&logoColor=white" />
@@ -13,7 +13,7 @@
 
 ## Overview
 
-mournbot is a hybrid Discord bot — every command works as both a **slash command** and a **prefix command** (default prefix: `,`). Built on discord.js v14, TypeScript, and PostgreSQL via Drizzle ORM.
+bleed is a hybrid Discord bot — every command works as both a **slash command** and a **prefix command** (default prefix: `,`). Built on discord.js v14, TypeScript, and PostgreSQL via Drizzle ORM.
 
 ---
 
