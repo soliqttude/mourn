@@ -15,7 +15,7 @@ export const command: HybridCommand = {
     if (!ctx.channel) return;
     await (ctx.channel as TextChannel).send({
       embeds: [vmPanelEmbed()],
-      components: [vmPanelButtons()],
+      components: vmPanelButtons(),
     });
     return ctx.reply({ embeds: [successEmbed("Panel sent.")], ephemeral: true });
   },
