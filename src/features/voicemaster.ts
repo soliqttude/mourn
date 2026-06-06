@@ -136,7 +136,7 @@ export function vmPanelEmbed() {
 }
 
 export function vmPanelButtons() {
-  return vmInterfaceRows()[0]!;
+  return vmInterfaceRows();
 }
 
 export async function handleVMButton(_client: Client, interaction: ButtonInteraction) {
