@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, type TextChannel } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
@@ -33,7 +33,8 @@ export const command: HybridCommand = {
   description: "Manage log channels. Subcommands: add, remove, list, reset",
   usage: "logging <add|remove|list|reset> [type] [channel]",
   examples: [
-    "logging add message #logs",
+    "logging add all #logs",
+    "logging add message #msg-logs",
     "logging add member #joins",
     "logging add moderation #mod-logs",
     "logging add voice #voice-logs",
@@ -62,7 +63,7 @@ export const command: HybridCommand = {
     },
     {
       name: "type",
-      description: "message | member | moderation | voice | role | server",
+      description: "all | message | member | moderation | voice | role | server",
       type: ApplicationCommandOptionType.String,
       required: false,
     },
@@ -82,21 +83,10 @@ export const command: HybridCommand = {
     if (sub === "list") {
       const fields = ALL_KEYS.map(({ key, label, emoji }) => {
         const val = (settings as any)[key] as string | null;
-        return {
-          name: `${emoji}  ${label}`,
-          value: val ? `<#${val}>` : "`not set`",
-          inline: true,
-        };
+        return { name: `${emoji}  ${label}`, value: val ? `<#${val}>` : "`not set`", inline: true };
       });
       return ctx.reply({
-        embeds: [
-          brandEmbed({
-            title: "Logging Channels",
-            description: "Current log channel configuration for this server.",
-            fields,
-            page: "Logs",
-          }),
-        ],
+        embeds: [brandEmbed({ title: "Logging Channels", description: "Current log channel configuration.", fields, page: "Logs" })],
       });
     }
 
@@ -109,31 +99,60 @@ export const command: HybridCommand = {
 
     // ── ADD / REMOVE ──────────────────────────────────────────────────────────
     if (sub !== "add" && sub !== "remove") {
-      return ctx.reply({
-        embeds: [errorEmbed("Usage: `logging <add|remove|list|reset> [type] [channel]`")],
-      });
+      return ctx.reply({ embeds: [errorEmbed("Usage: `logging <add|remove|list|reset> [type] [channel]`")] });
     }
 
     const typeRaw = (ctx.getString("type") ?? ctx.args[1] ?? "").toLowerCase();
+
+    // ── ALL shortcut ──────────────────────────────────────────────────────────
+    if (typeRaw === "all") {
+      if (sub === "remove") {
+        const patch = Object.fromEntries(ALL_KEYS.map(({ key }) => [key, null]));
+        await updateGuildSettings(ctx.guild.id, patch as any);
+        return ctx.reply({ embeds: [successEmbed("All log channels have been removed.")] });
+      }
+
+      const channel =
+        ctx.getChannel("channel") ??
+        (() => {
+          const raw = ctx.args[2]?.replace(/[<#>]/g, "");
+          return raw ? { id: raw } : null;
+        })();
+
+      if (!channel) return ctx.reply({ embeds: [errorEmbed("Please provide a channel.")] });
+
+      const patch = Object.fromEntries(ALL_KEYS.map(({ key }) => [key, channel.id]));
+      await updateGuildSettings(ctx.guild.id, patch as any);
+
+      return ctx.reply({
+        embeds: [
+          brandEmbed({
+            title: "All Logs Set",
+            description: `All log types are now pointing to <#${channel.id}>.`,
+            fields: ALL_KEYS.map(({ emoji, label }) => ({
+              name: `${emoji}  ${label}`,
+              value: `<#${channel.id}>`,
+              inline: true,
+            })),
+            page: "Logs",
+          }),
+        ],
+      });
+    }
+
+    // ── single type ───────────────────────────────────────────────────────────
     const entry = TYPE_MAP[typeRaw];
     if (!entry) {
       return ctx.reply({
-        embeds: [
-          errorEmbed(
-            `Invalid type \`${typeRaw}\`.\n\nValid types: \`message\`, \`member\`, \`moderation\`, \`voice\`, \`role\`, \`server\``
-          ),
-        ],
+        embeds: [errorEmbed(`Invalid type \`${typeRaw}\`.\n\nValid types: \`all\`, \`message\`, \`member\`, \`moderation\`, \`voice\`, \`role\`, \`server\``)],
       });
     }
 
     if (sub === "remove") {
       await updateGuildSettings(ctx.guild.id, { [entry.key]: null } as any);
-      return ctx.reply({
-        embeds: [successEmbed(`${entry.emoji} **${entry.label}** log channel removed.`)],
-      });
+      return ctx.reply({ embeds: [successEmbed(`${entry.emoji} **${entry.label}** log channel removed.`)] });
     }
 
-    // add
     const channel =
       ctx.getChannel("channel") ??
       (() => {
@@ -141,17 +160,11 @@ export const command: HybridCommand = {
         return raw ? { id: raw } : null;
       })();
 
-    if (!channel) {
-      return ctx.reply({ embeds: [errorEmbed("Please provide a channel.")] });
-    }
+    if (!channel) return ctx.reply({ embeds: [errorEmbed("Please provide a channel.")] });
 
     await updateGuildSettings(ctx.guild.id, { [entry.key]: channel.id } as any);
     return ctx.reply({
-      embeds: [
-        successEmbed(
-          `${entry.emoji} **${entry.label}** logs will now be sent to <#${channel.id}>.`
-        ),
-      ],
+      embeds: [successEmbed(`${entry.emoji} **${entry.label}** logs → <#${channel.id}>.`)],
     });
   },
 };
