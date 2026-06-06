@@ -10,6 +10,8 @@ export const guildSettings = pgTable("guild_settings", {
   msgLogChannel: text("msg_log_channel"),
   joinLogChannel: text("join_log_channel"),
   voiceLogChannel: text("voice_log_channel"),
+  roleLogChannel: text("role_log_channel"),
+  serverLogChannel: text("server_log_channel"),
   welcomeChannel: text("welcome_channel"),
   welcomeMessage: text("welcome_message"),
   goodbyeChannel: text("goodbye_channel"),
