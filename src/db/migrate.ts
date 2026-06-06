@@ -336,6 +336,10 @@ const STATEMENTS: string[] = [
   // ── Antiraid join-gate additions ────────────────────────────────────────────
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_avatar_check BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_min_age INTEGER NOT NULL DEFAULT 0`,
+  // ── Logging channel additions ───────────────────────────────────────────────
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS role_log_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS server_log_channel TEXT`,
+
 ];
 
 export async function runMigrations(): Promise<void> {
