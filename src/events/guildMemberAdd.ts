@@ -3,6 +3,10 @@ import { brandEmbed } from "../lib/embeds.js";
 import { getGuildSettings } from "../db/settings.js";
 import { trackInviteUse } from "../features/invites.js";
 import { handleAntiraidJoin } from "../features/antiraid.js";
+import { db } from "../db/index.js";
+import { welcomeChannels } from "../db/schema.js";
+import { eq } from "drizzle-orm";
+import { parseScript } from "../lib/scripting.js";
 
 export const event = {
   name: "guildMemberAdd",
@@ -49,7 +53,37 @@ export const event = {
 
     const inviter = await trackInviteUse(member);
 
-    if (settings.welcomeChannel) {
+    // ── Multi-channel welcome (welcomeChannels table, full embed scripting) ────
+    const welcomeRows = await db
+      .select()
+      .from(welcomeChannels)
+      .where(eq(welcomeChannels.guildId, member.guild.id));
+
+    for (const row of welcomeRows) {
+      const ch = member.guild.channels.cache.get(row.channelId);
+      if (!ch?.isTextBased()) continue;
+
+      const { embeds, content, components } = parseScript(row.message, {
+        user: member,
+        guild: member.guild,
+        channel: ch as TextChannel,
+        client,
+        extra: {
+          "{inviter}": inviter?.inviterId ? `<@${inviter.inviterId}>` : "unknown",
+          "{invite_code}": inviter?.code ?? "unknown",
+        },
+      });
+
+      await (ch as TextChannel).send({
+        content: content ?? undefined,
+        embeds: embeds.length ? embeds : undefined,
+        components: components.length ? components : undefined,
+        allowedMentions: { users: [member.id] },
+      }).catch(() => {});
+    }
+
+    // ── Legacy single-channel fallback (settings.welcomeChannel) ─────────────
+    if (welcomeRows.length === 0 && settings.welcomeChannel) {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
         const welcome = (settings as any).welcomeMessage
