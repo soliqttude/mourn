@@ -403,3 +403,130 @@ export const fortniteWatches = pgTable("fortnite_watches",
   { userId: text("user_id").notNull(), cosmetic: text("cosmetic").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.userId, t.cosmetic] }) })
 );
+
+// ── Sticky Messages ───────────────────────────────────────────────────────────
+export const stickyMessages = pgTable("sticky_messages",
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), lastMessageId: text("last_message_id") },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
+);
+
+// ── Image-Only Channels ───────────────────────────────────────────────────────
+export const imgonlyChannels = pgTable("imgonly_channels",
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
+);
+
+// ── Pins Config ───────────────────────────────────────────────────────────────
+export const pinsConfig = pgTable("pins_config", {
+  guildId: text("guild_id").primaryKey(),
+  archiveChannel: text("archive_channel"),
+  enabled: boolean("enabled").default(false).notNull(),
+  unpinOnArchive: boolean("unpin_on_archive").default(false).notNull(),
+});
+
+// ── Global Ignores ────────────────────────────────────────────────────────────
+export const globalIgnores = pgTable("global_ignores",
+  { guildId: text("guild_id").notNull(), targetId: text("target_id").notNull(), targetType: text("target_type").default("member").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.targetId] }) })
+);
+
+// ── Disabled Commands ─────────────────────────────────────────────────────────
+export const disabledCommands = pgTable("disabled_commands",
+  { guildId: text("guild_id").notNull(), targetId: text("target_id").notNull(), targetType: text("target_type").default("channel").notNull(), command: text("command").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.targetId, t.command] }) })
+);
+
+// ── Disabled Modules ──────────────────────────────────────────────────────────
+export const disabledModules = pgTable("disabled_modules",
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), module: text("module").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId, t.module] }) })
+);
+
+// ── Booster Role Shares ───────────────────────────────────────────────────────
+export const boosterRoleShares = pgTable("booster_role_shares",
+  { guildId: text("guild_id").notNull(), ownerId: text("owner_id").notNull(), sharedWithId: text("shared_with_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.ownerId, t.sharedWithId] }) })
+);
+
+// ── Booster Role Filter ───────────────────────────────────────────────────────
+export const boosterRoleFilter = pgTable("booster_role_filter",
+  { guildId: text("guild_id").notNull(), word: text("word").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.word] }) })
+);
+
+// ── Log Ignores ───────────────────────────────────────────────────────────────
+export const logIgnores = pgTable("log_ignores",
+  { guildId: text("guild_id").notNull(), targetId: text("target_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.targetId] }) })
+);
+
+// ── Welcome Channels (multi) ──────────────────────────────────────────────────
+export const welcomeChannels = pgTable("welcome_channels",
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
+);
+
+// ── Goodbye Channels (multi) ──────────────────────────────────────────────────
+export const goodbyeChannels = pgTable("goodbye_channels",
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
+);
+
+// ── Boost Channels (multi) ────────────────────────────────────────────────────
+export const boostChannels = pgTable("boost_channels",
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
+);
+
+// ── Suggest Extended Config ───────────────────────────────────────────────────
+export const suggestExtended = pgTable("suggest_extended", {
+  guildId: text("guild_id").primaryKey(),
+  threadsEnabled: boolean("threads_enabled").default(false).notNull(),
+  upvoteEmoji: text("upvote_emoji").default("👍").notNull(),
+  downvoteEmoji: text("downvote_emoji").default("👎").notNull(),
+  reviewChannel: text("review_channel"),
+  reviewEnabled: boolean("review_enabled").default(false).notNull(),
+  ignoreIds: jsonb("ignore_ids").$type<string[]>().default([]).notNull(),
+});
+
+// ── Badge Config ──────────────────────────────────────────────────────────────
+export const badgeConfig = pgTable("badge_config", {
+  guildId: text("guild_id").primaryKey(),
+  channelId: text("channel_id"),
+  message: text("message"),
+  enabled: boolean("enabled").default(false).notNull(),
+});
+
+// ── Badge Roles ───────────────────────────────────────────────────────────────
+export const badgeRoles = pgTable("badge_roles",
+  { guildId: text("guild_id").notNull(), roleId: text("role_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.roleId] }) })
+);
+
+// ── Reposter Config ───────────────────────────────────────────────────────────
+export const reposterConfig = pgTable("reposter_config", {
+  guildId: text("guild_id").primaryKey(),
+  prefixEnabled: boolean("prefix_enabled").default(true).notNull(),
+  suppressEmbeds: boolean("suppress_embeds").default(false).notNull(),
+  showEmbed: boolean("show_embed").default(true).notNull(),
+  strictMode: boolean("strict_mode").default(false).notNull(),
+  deleteOriginal: boolean("delete_original").default(false).notNull(),
+});
+
+// ── User Prefixes (personal prefix per user) ──────────────────────────────────
+export const userPrefixes = pgTable("user_prefixes", {
+  userId: text("user_id").primaryKey(),
+  prefix: text("prefix").notNull(),
+});
+
+// ── Filter Exempts ────────────────────────────────────────────────────────────
+export const filterExempts = pgTable("filter_exempts",
+  { guildId: text("guild_id").notNull(), filterType: text("filter_type").notNull(), roleId: text("role_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.filterType, t.roleId] }) })
+);
+
+// ── Filter Whitelist ──────────────────────────────────────────────────────────
+export const filterWhitelist = pgTable("filter_whitelist",
+  { guildId: text("guild_id").notNull(), filterType: text("filter_type").notNull(), value: text("value").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.filterType, t.value] }) })
+);
