@@ -340,6 +340,128 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS role_log_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS server_log_channel TEXT`,
 
+
+  // ── Sticky Messages ──────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS sticky_messages (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    message TEXT NOT NULL, last_message_id TEXT,
+    PRIMARY KEY (guild_id, channel_id)
+  )`,
+  // ── Image-Only Channels ───────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS imgonly_channels (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, PRIMARY KEY (guild_id, channel_id)
+  )`,
+  // ── Pins Config ───────────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS pins_config (
+    guild_id TEXT PRIMARY KEY, archive_channel TEXT,
+    enabled BOOLEAN NOT NULL DEFAULT false, unpin_on_archive BOOLEAN NOT NULL DEFAULT false
+  )`,
+  // ── Global Ignores ────────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS global_ignores (
+    guild_id TEXT NOT NULL, target_id TEXT NOT NULL,
+    target_type TEXT NOT NULL DEFAULT 'member', PRIMARY KEY (guild_id, target_id)
+  )`,
+  // ── Disabled Commands ─────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS disabled_commands (
+    guild_id TEXT NOT NULL, target_id TEXT NOT NULL,
+    target_type TEXT NOT NULL DEFAULT 'channel', command TEXT NOT NULL,
+    PRIMARY KEY (guild_id, target_id, command)
+  )`,
+  // ── Disabled Modules ──────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS disabled_modules (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, module TEXT NOT NULL,
+    PRIMARY KEY (guild_id, channel_id, module)
+  )`,
+  // ── Booster Role Shares ───────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS booster_role_shares (
+    guild_id TEXT NOT NULL, owner_id TEXT NOT NULL, shared_with_id TEXT NOT NULL,
+    PRIMARY KEY (guild_id, owner_id, shared_with_id)
+  )`,
+  // ── Booster Role Filter ───────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS booster_role_filter (
+    guild_id TEXT NOT NULL, word TEXT NOT NULL, PRIMARY KEY (guild_id, word)
+  )`,
+  // ── Log Ignores ───────────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS log_ignores (
+    guild_id TEXT NOT NULL, target_id TEXT NOT NULL, PRIMARY KEY (guild_id, target_id)
+  )`,
+  // ── Welcome Channels (multi) ──────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS welcome_channels (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, message TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (guild_id, channel_id)
+  )`,
+  // ── Goodbye Channels (multi) ──────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS goodbye_channels (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, message TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (guild_id, channel_id)
+  )`,
+  // ── Boost Channels (multi) ────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS boost_channels (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, message TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (guild_id, channel_id)
+  )`,
+  // ── Suggest Extended ─────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS suggest_extended (
+    guild_id TEXT PRIMARY KEY, threads_enabled BOOLEAN NOT NULL DEFAULT false,
+    upvote_emoji TEXT NOT NULL DEFAULT '👍', downvote_emoji TEXT NOT NULL DEFAULT '👎',
+    review_channel TEXT, review_enabled BOOLEAN NOT NULL DEFAULT false,
+    ignore_ids JSONB NOT NULL DEFAULT '[]'
+  )`,
+  // ── Badge Config ──────────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS badge_config (
+    guild_id TEXT PRIMARY KEY, channel_id TEXT, message TEXT,
+    enabled BOOLEAN NOT NULL DEFAULT false
+  )`,
+  // ── Badge Roles ───────────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS badge_roles (
+    guild_id TEXT NOT NULL, role_id TEXT NOT NULL, PRIMARY KEY (guild_id, role_id)
+  )`,
+  // ── Reposter Config ───────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS reposter_config (
+    guild_id TEXT PRIMARY KEY, prefix_enabled BOOLEAN NOT NULL DEFAULT true,
+    suppress_embeds BOOLEAN NOT NULL DEFAULT false, show_embed BOOLEAN NOT NULL DEFAULT true,
+    strict_mode BOOLEAN NOT NULL DEFAULT false, delete_original BOOLEAN NOT NULL DEFAULT false
+  )`,
+  // ── User Prefixes ─────────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS user_prefixes (
+    user_id TEXT PRIMARY KEY, prefix TEXT NOT NULL
+  )`,
+  // ── Filter Exempts ────────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS filter_exempts (
+    guild_id TEXT NOT NULL, filter_type TEXT NOT NULL, role_id TEXT NOT NULL,
+    PRIMARY KEY (guild_id, filter_type, role_id)
+  )`,
+  // ── Filter Whitelist ──────────────────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS filter_whitelist (
+    guild_id TEXT NOT NULL, filter_type TEXT NOT NULL, value TEXT NOT NULL,
+    PRIMARY KEY (guild_id, filter_type, value)
+  )`,
+  // ── New guildSettings columns ─────────────────────────────────────────────────
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS starboard_selfstar BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS starboard_color TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS starboard_timestamp BOOLEAN NOT NULL DEFAULT true`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS starboard_jump BOOLEAN NOT NULL DEFAULT true`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS starboard_attachments BOOLEAN NOT NULL DEFAULT true`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS clownboard_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS clownboard_threshold INTEGER NOT NULL DEFAULT 5`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_message TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_thankyou TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_autolock BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS bump_autoclean BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS fortnite_shop_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS fortnite_shop_ping_role TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS fortnite_shop_voting BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS voicemaster_join_role TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS voicemaster_vc_role TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS levels_stack_roles BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_message TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_mode TEXT NOT NULL DEFAULT 'channel'`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS xp_rate INTEGER NOT NULL DEFAULT 100`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS caps_filter_enabled BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spoilers_filter_enabled BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS emoji_filter_enabled BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS music_files_filter_enabled BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS mass_mention_enabled BOOLEAN NOT NULL DEFAULT false`,
 ];
 
 export async function runMigrations(): Promise<void> {
