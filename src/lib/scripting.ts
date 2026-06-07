@@ -37,10 +37,15 @@ export interface ScriptingContext {
 // ── Named colours ─────────────────────────────────────────────────────────────
 const NAMED_COLORS: Record<string, number> = {
   red: 0xe74c3c, blue: 0x3498db, green: 0x2ecc71, yellow: 0xf1c40f, orange: 0xe67e22,
-  purple: 0x9b59b6, pink: 0xe91e8c, white: 0xffffff, black: 0x000000, blurple: 0x5865f2,
-  greyple: 0x99aab5, darkgrey: 0x2c2f33, darkgray: 0x2c2f33, navy: 0x34495e,
-  aqua: 0x1abc9c, gold: 0xf1c40f, magenta: 0xe91e63, luminous: 0xfee75c,
-  fuchsia: 0xeb459e, invisible: 0x2b2d31, invis: 0x2b2d31,
+  purple: 0x9b59b6, pink: 0xe91e8c, white: 0xffffff, black: 0x000000,
+  blurple: 0x5865f2, greyple: 0x99aab5,
+  grey: 0x99aab5, gray: 0x99aab5,
+  darkgrey: 0x2c2f33, darkgray: 0x2c2f33,
+  navy: 0x34495e, aqua: 0x1abc9c, teal: 0x1abc9c, cyan: 0x00bcd4,
+  gold: 0xf1c40f, magenta: 0xe91e63, luminous: 0xfee75c,
+  fuchsia: 0xeb459e, lime: 0x57f287, mint: 0x2ecc71,
+  invisible: 0x2b2d31, invis: 0x2b2d31, dark: 0x2b2d31,
+  default: 0x000000, embed: 0x2b2d31,
 };
 
 function parseColor(val: string): number | null {
@@ -52,6 +57,7 @@ function parseColor(val: string): number | null {
 }
 
 function applyNewlines(text: string): string {
+  // Support /e and \n (escaped) as newlines; real newlines are already \n
   return text.replace(/\s*\/e\s*/g, "\n").replace(/\\n/g, "\n");
 }
 
@@ -177,14 +183,31 @@ function resolveVars(text: string, ctx: ScriptingContext): string {
 }
 
 // ── Button style resolver ─────────────────────────────────────────────────────
+// Matches bleed.bot types: Link, Blurple, Green, Grey, Red
 function resolveButtonStyle(raw: string): ButtonStyle {
   switch (raw.toLowerCase().trim()) {
-    case "primary":   case "blurple": case "blue": return ButtonStyle.Primary;
-    case "success":   case "green":               return ButtonStyle.Success;
-    case "danger":    case "red":                 return ButtonStyle.Danger;
-    case "link":      case "url":                 return ButtonStyle.Link;
+    case "blurple": case "primary": case "blue":  return ButtonStyle.Primary;
+    case "green":   case "success":               return ButtonStyle.Success;
+    case "red":     case "danger":                return ButtonStyle.Danger;
+    case "link":    case "url":                   return ButtonStyle.Link;
+    case "grey":    case "gray": case "secondary":
     default:                                      return ButtonStyle.Secondary;
   }
+}
+
+// ── Extract value from a {key: value} chunk robustly ─────────────────────────
+// Handles values with nested braces (already-resolved vars like <@id>) and newlines
+function extractKeyValue(chunk: string): { key: string; val: string } | null {
+  const trimmed = chunk.trim();
+  if (!trimmed.startsWith("{")) return null;
+  // Find the first colon
+  const colonIdx = trimmed.indexOf(":");
+  if (colonIdx === -1) return null;
+  const key = trimmed.slice(1, colonIdx).trim().toLowerCase();
+  // Value is everything after the colon, strip trailing }
+  let val = trimmed.slice(colonIdx + 1).trimStart();
+  if (val.endsWith("}")) val = val.slice(0, -1);
+  return { key, val: val.trimEnd() };
 }
 
 // ── Parse one embed block ─────────────────────────────────────────────────────
@@ -200,14 +223,10 @@ function parseEmbedBlock(
   const chunks = body.split(/\$v(?=\{)/);
 
   for (const chunk of chunks) {
-    const trimmed = chunk.trim();
-    if (!trimmed.startsWith("{")) continue;
-    const inner = trimmed.replace(/^\{/, "").replace(/\}$/, "");
-    const colon = inner.indexOf(":");
-    if (colon === -1) continue;
-    const key = inner.slice(0, colon).trim().toLowerCase();
-    const raw = inner.slice(colon + 1).trim();
-    const val = applyNewlines(raw);
+    const kv = extractKeyValue(chunk);
+    if (!kv) continue;
+    const { key, val: rawVal } = kv;
+    const val = applyNewlines(rawVal);
 
     switch (key) {
       case "title":       eb.setTitle(val.slice(0, 256)); break;
@@ -218,6 +237,7 @@ function parseEmbedBlock(
       case "url": try { eb.setURL(val); } catch { /* ignore */ } break;
       case "image": try { eb.setImage(val); } catch { /* ignore */ } break;
       case "thumbnail": try { eb.setThumbnail(val); } catch { /* ignore */ } break;
+      // {timestamp} — no args needed, or pass a unix timestamp
       case "timestamp":
         eb.setTimestamp(!val || val === "now" ? undefined : parseInt(val) * 1000); break;
       case "footer": {
@@ -260,20 +280,38 @@ function parseEmbedBlock(
         }
         break;
       }
-      // ── Button: {button: Label && https://... && style}
-      // style is optional: primary | secondary | success | danger | link
+      // ── Button — matches bleed.bot syntax: {button: type && label && url && enabled|disabled}
+      // type: Link | Blurple | Green | Grey | Red
+      // enabled|disabled is optional (default: enabled)
       case "button": {
         const parts = val.split("&&").map(s => s.trim());
-        const label = parts[0] ?? "";
-        const urlOrId = parts[1] ?? "";
-        const stylePart = parts[2] ?? "secondary";
-        if (!label) break;
-        const isLink = urlOrId.startsWith("http");
-        const btn = new ButtonBuilder().setLabel(label.slice(0, 80));
-        if (isLink) {
-          btn.setStyle(ButtonStyle.Link).setURL(urlOrId);
+        const BUTTON_TYPES = ["link", "blurple", "green", "grey", "gray", "red", "primary", "secondary", "success", "danger", "url"];
+        let btnStyle: string, label: string, urlOrId: string, enabledPart: string;
+
+        if (parts.length >= 3 && BUTTON_TYPES.includes(parts[0]?.toLowerCase())) {
+          // Bleed format: type && label && url && enabled|disabled
+          btnStyle    = parts[0] ?? "link";
+          label       = parts[1] ?? "";
+          urlOrId     = parts[2] ?? "";
+          enabledPart = parts[3]?.toLowerCase() ?? "enabled";
         } else {
-          btn.setStyle(resolveButtonStyle(stylePart)).setCustomId(urlOrId || `btn_${Date.now()}_${Math.random()}`);
+          // Legacy format: label && url && style (backward compat)
+          label       = parts[0] ?? "";
+          urlOrId     = parts[1] ?? "";
+          btnStyle    = parts[2] ?? "link";
+          enabledPart = "enabled";
+        }
+
+        if (!label) break;
+        const disabled = enabledPart === "disabled";
+        const style = resolveButtonStyle(btnStyle);
+        const btn = new ButtonBuilder().setLabel(label.slice(0, 80));
+        if (disabled) btn.setDisabled(true);
+
+        if (style === ButtonStyle.Link || urlOrId.startsWith("http")) {
+          try { btn.setStyle(ButtonStyle.Link).setURL(urlOrId); } catch { break; }
+        } else {
+          btn.setStyle(style).setCustomId(urlOrId || `btn_${Date.now()}_${Math.random().toString(36).slice(2)}`);
         }
         pendingButtons.push(btn);
         break;
