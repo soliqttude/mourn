@@ -304,12 +304,16 @@ export function parseScript(
     return { embeds: [], content: applyNewlines(resolved), components: [] };
   }
 
-  const segments = resolved.split("{embed}").filter(s => s.trim().length > 0);
+  // Text before the first {embed} is plain message content, not an embed block
+  const parts = resolved.split("{embed}");
+  const plainText = parts[0].trim();
+  const embedSegments = parts.slice(1).filter(s => s.trim().length > 0);
+
   const embeds: EmbedBuilder[] = [];
-  let content: string | undefined;
+  let content: string | undefined = plainText ? applyNewlines(plainText) : undefined;
   const allComponents: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  for (const seg of segments) {
+  for (const seg of embedSegments) {
     const { eb, content: c, buttons } = parseEmbedBlock(seg, ctx);
     embeds.push(eb);
     if (c && !content) content = c;
