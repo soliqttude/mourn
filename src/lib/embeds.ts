@@ -2,15 +2,13 @@ import { EmbedBuilder, type Guild, type User } from "discord.js";
 
 // ── Bleed-style color palette ──────────────────────────────────────────────────
 const C = {
-  success: 0x57F287,  // bright green
-  error:   0xFFA500,  // golden yellow (bleed uses yellow not red)
-  action:  0x5865F2,  // discord blurple
-  mod:     0x2b2d31,  // near-black for mod actions
+  success: 0x57F287,
+  error:   0xFFA500,
+  action:  0x5865F2,
+  mod:     0x2b2d31,
 } as const;
 
 // ── Custom emoji config ────────────────────────────────────────────────────────
-// After uploading emojis to Discord Developer Portal → Your App → Emojis,
-// set these env vars in Railway: EMOJI_CHECK, EMOJI_WARN, EMOJI_PLUS, EMOJI_CROSS
 export const EMOJIS = {
   check: process.env.EMOJI_CHECK ?? "✅",
   warn:  process.env.EMOJI_WARN  ?? "⚠️",
@@ -19,7 +17,7 @@ export const EMOJIS = {
   info:  process.env.EMOJI_INFO  ?? "ℹ️",
 } as const;
 
-// ── Embed style tracking — contextFactory reads this to inject user mention ────
+// ── Embed style tracking ───────────────────────────────────────────────────────
 export type EmbedStyle = "success" | "error" | "warn" | "action" | "mod" | "brand";
 const _styles = new WeakMap<EmbedBuilder, EmbedStyle>();
 export function getEmbedStyle(eb: EmbedBuilder): EmbedStyle | undefined {
@@ -32,44 +30,37 @@ function base(color: number | null = null): EmbedBuilder {
   return eb;
 }
 
-// ── Styled embeds (contextFactory auto-injects "emoji @user: " prefix) ─────────
-
-/** Green sidebar — "✅ @user: message" */
 export function successEmbed(message: string, _page?: unknown): EmbedBuilder {
   const eb = base(C.success).setDescription(message.toLowerCase());
   _styles.set(eb, "success");
   return eb;
 }
 
-/** Yellow sidebar — "⚠️ @user: message" */
 export function errorEmbed(message: string, _page?: unknown): EmbedBuilder {
   const eb = base(C.error).setDescription(message.toLowerCase());
   _styles.set(eb, "error");
   return eb;
 }
 
-/** Yellow sidebar — "⚠️ @user: message" (alias for errorEmbed) */
 export function warnEmbed(message: string, _page?: unknown): EmbedBuilder {
   const eb = base(C.error).setDescription(message.toLowerCase());
   _styles.set(eb, "warn");
   return eb;
 }
 
-/** Blurple sidebar — "➕ @user: message" */
 export function actionEmbed(message: string, _page?: unknown): EmbedBuilder {
   const eb = base(C.action).setDescription(message.toLowerCase());
   _styles.set(eb, "action");
   return eb;
 }
 
-/** No sidebar — plain info, no user mention injected */
 export function infoEmbed(message: string, _title?: unknown, _page?: unknown): EmbedBuilder {
   const eb = new EmbedBuilder().setDescription(message);
   _styles.set(eb, "brand");
   return eb;
 }
 
-// ── Brand embed — help/info commands, no auto-inject ──────────────────────────
+// ── Brand embed ────────────────────────────────────────────────────────────────
 export interface EmbedOpts {
   title?:       string;
   description?: string;
@@ -128,10 +119,11 @@ export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
   return eb;
 }
 
-// ── Help embed — Bleed.bot style ───────────────────────────────────────────────
+// ── Help embed — Bleed.bot style (bot PFP in author) ──────────────────────────
 export function helpEmbed(
   cmd: { name: string; description: string; usage?: string },
   prefix: string,
+  botAvatarURL?: string,
 ): EmbedBuilder {
   const usageLine = cmd.usage ? `${prefix}${cmd.usage}` : `${prefix}${cmd.name}`;
 
@@ -139,22 +131,22 @@ export function helpEmbed(
     s
       .replace(/\(member\)/gi, "remandment")
       .replace(/\[member\]/gi, "remandment")
-      .replace(/\(user\)/gi, "remandment")
-      .replace(/\[user\]/gi, "remandment")
+      .replace(/\(user\)/gi,   "remandment")
+      .replace(/\[user\]/gi,   "remandment")
       .replace(/\(target\)/gi, "remandment")
       .replace(/\[target\]/gi, "remandment")
       .replace(/\(duration\)/gi, "30m")
       .replace(/\[duration\]/gi, "30m")
-      .replace(/\(reason\)/gi, "too awesome")
-      .replace(/\[reason\]/gi, "too awesome")
+      .replace(/\(time\)/gi,     "30m")
+      .replace(/\[time\]/gi,     "30m")
+      .replace(/\(reason\)/gi,  "too awesome")
+      .replace(/\[reason\]/gi,  "too awesome")
       .replace(/\(channel\)/gi, "#general")
       .replace(/\[channel\]/gi, "#general")
-      .replace(/\(role\)/gi, "Members")
-      .replace(/\[role\]/gi, "Members")
-      .replace(/\(amount\)/gi, "1000")
-      .replace(/\[amount\]/gi, "1000")
-      .replace(/\(time\)/gi, "30m")
-      .replace(/\[time\]/gi, "30m")
+      .replace(/\(role\)/gi,    "Members")
+      .replace(/\[role\]/gi,    "Members")
+      .replace(/\(amount\)/gi,  "1000")
+      .replace(/\[amount\]/gi,  "1000")
       .replace(/\[\w+\]/g, "...")
       .replace(/\(\w+\)/g, "...");
 
@@ -163,7 +155,7 @@ export function helpEmbed(
 
   const eb = new EmbedBuilder()
     .setColor(0x2b2d31)
-    .setAuthor({ name: "bleed help" })
+    .setAuthor({ name: "bleed help", iconURL: botAvatarURL })
     .setTitle(`Command: ${cmd.name}`)
     .setDescription(`${cmd.description}\n\`\`\`\n${code}\n\`\`\``);
   _styles.set(eb, "brand");
