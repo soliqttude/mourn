@@ -1,34 +1,21 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { EmbedBuilder, ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "slowmode",
-  aliases: ["sm", "slow", "ratelimit"],
-  description: "Set slowmode for this channel (in seconds, 0 to disable).",
-  usage: "slowmode [seconds]",
-  examples: ["slowmode"],
+  description: "Set channel slowmode.",
   category: "moderation",
-  permission: "mod",
+  aliases: ["ratelimit", "rl"],
   guildOnly: true,
-  options: [
-    { name: "seconds", description: "Slowmode (0-21600)", type: ApplicationCommandOptionType.Number, required: true },
-  ],
+  userPermissions: ["ManageChannels"],
+  options: [{ name: "seconds", description: "Slowmode seconds (0 to disable)", type: ApplicationCommandOptionType.Integer, required: true }, { name: "channel", description: "Target channel", type: ApplicationCommandOptionType.Channel, required: false }],
   async execute(ctx) {
-    const sec = ctx.getNumber("seconds", true);
-    if (sec === null || sec < 0 || sec > 21600) {
-      return ctx.reply({ embeds: [errorEmbed("Seconds must be 0-21600.")] });
-    }
-    if (!ctx.channel || !("setRateLimitPerUser" in ctx.channel)) {
-      return ctx.reply({ embeds: [errorEmbed("Cannot set slowmode here.")] });
-    }
-    try {
-      await (ctx.channel as any).setRateLimitPerUser(sec);
-      return ctx.reply({
-        embeds: [successEmbed(sec === 0 ? "Slowmode disabled." : `Slowmode set to **${sec}s**.`)],
-      });
-    } catch (err) {
-      return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
-    }
+    if (!ctx.guild) return;
+    const secs = ctx.getNumber("seconds") ?? parseInt(ctx.args[0] ?? "0");
+    const ch = (ctx.getChannel ? ctx.getChannel("channel") : null) ?? ctx.channel as any;
+    if (!ch?.setRateLimitPerUser) return ctx.reply({ content: "Invalid channel.", ephemeral: true } as any);
+    await ch.setRateLimitPerUser(secs, `Set by ${ctx.user.tag}`);
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setDescription(secs === 0 ? `✅ Slowmode disabled in <#${ch.id}>.` : `✅ Slowmode set to **${secs}s** in <#${ch.id}>.`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };

@@ -1,18 +1,19 @@
+import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed, successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { config } from "../../config.js";
+
 export const command: HybridCommand = {
-  name:"numberguess",description:"Guess a number 1-100 in 5 tries.",category:"fun",aliases:["numguess","guessnumber"],
-  async execute(ctx){
-    if(!ctx.channel)return;
-    const secret=Math.floor(Math.random()*100)+1;let tries=5;
-    await ctx.reply({embeds:[brandEmbed({title:"🔢 Number Guess",description:"I'm thinking of a number **1-100**.\nType your guess! **5 tries.**",page:"Fun"})]});
-    const col=ctx.channel.createMessageCollector?.({filter:(m:any)=>m.author.id===ctx.user.id&&!isNaN(parseInt(m.content)),time:60000});
-    col?.on("collect",async(m:any)=>{
-      const g=parseInt(m.content);tries--;
-      if(g===secret){col.stop();return m.reply({embeds:[successEmbed(`🎉 Correct! It was **${secret}**.`)]});}
-      if(tries===0){col.stop();return m.reply({embeds:[errorEmbed(`Out of tries! It was **${secret}**.`)]});}
-      await m.reply({embeds:[brandEmbed({title:g<secret?"📈 Too Low!":"📉 Too High!",description:`**${tries}** tries left.`,page:"Fun"})]});
-    });
-    col?.on("end",(_:any,r:string)=>{if(r==="time")ctx.followUp({embeds:[errorEmbed(`⏰ Time's up! It was **${secret}**.`)]}).catch(()=>{});});
+  name: "numberguess",
+  description: "Start a number guessing game.",
+  category: "fun",
+  aliases: ["numguess", "guessnum"],
+  options: [{ name: "guess", description: "Your guess (1-100)", type: ApplicationCommandOptionType.Integer, required: true }],
+  async execute(ctx) {
+    const guess = ctx.getNumber("guess") ?? parseInt(ctx.args[0] ?? "0");
+    if (!guess || guess < 1 || guess > 100) return ctx.reply({ content: "Guess a number between 1 and 100.", ephemeral: true } as any);
+    const num = Math.floor(Math.random() * 100) + 1;
+    const diff = Math.abs(num - guess);
+    const hint = diff === 0 ? "🎯 Exact match!" : diff <= 5 ? "🔥 Very close!" : diff <= 15 ? "😐 Getting warmer..." : "❄️ Way off!";
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(diff === 0 ? 0x00e676 : 0xffd700).setTitle("🔢 Number Guess").addFields({ name: "Your Guess", value: guess.toString(), inline: true },{ name: "Number Was", value: num.toString(), inline: true },{ name: "Result", value: hint, inline: false }).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };

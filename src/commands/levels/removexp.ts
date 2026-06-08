@@ -1,34 +1,19 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { EmbedBuilder, ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { successEmbed, errorEmbed } from "../../lib/embeds.js";
-import { db } from "../../db/index.js";
-import { levels } from "../../db/schema.js";
-import { levelFromXp } from "../../features/leveling.js";
-import { eq, and } from "drizzle-orm";
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "removexp",
   description: "Remove XP from a user.",
-  usage: "removexp [user] [amount]",
-  examples: ["removexp"],
   category: "levels",
-  permission: "admin",
+  aliases: ["takexp", "subtractxp"],
   guildOnly: true,
-  aliases: ["takexp"],
-  options: [
-    { name: "user", description: "Member", type: ApplicationCommandOptionType.User, required: true },
-    { name: "amount", description: "XP to remove", type: ApplicationCommandOptionType.Integer, required: true },
-  ],
+  options: [{ name: "user", description: "Target user", type: ApplicationCommandOptionType.User, required: true }, { name: "amount", description: "XP to remove", type: ApplicationCommandOptionType.Integer, required: true }],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const target = await ctx.getUser("user", true);
-    const amount = ctx.getNumber("amount", true) ?? parseInt(ctx.args[1]);
-    if (!target || !amount || amount <= 0) return ctx.reply({ embeds: [errorEmbed("Invalid input.")] });
-    const existing = await db.select().from(levels).where(and(eq(levels.guildId, ctx.guild.id), eq(levels.userId, target.id)));
-    const newXp = Math.max(0, (existing[0]?.xp ?? 0) - amount);
-    const newLevel = levelFromXp(newXp);
-    await db.insert(levels).values({ guildId: ctx.guild.id, userId: target.id, xp: newXp, level: newLevel })
-      .onConflictDoUpdate({ target: [levels.guildId, levels.userId], set: { xp: newXp, level: newLevel } });
-    return ctx.reply({ embeds: [successEmbed(`Removed **${amount}** XP from **${target.tag}**. Now at ${newXp} XP (Level ${newLevel}).`)] });
+    const target = await ctx.getUser("user");
+    const amount = ctx.getNumber("amount") ?? parseInt(ctx.args[1] ?? "0");
+    if (!target || !amount) return ctx.reply({ content: "Provide user and amount.", ephemeral: true } as any);
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xffa500).setDescription(`✅ Removed **${amount} XP** from **${target.username}**.`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };

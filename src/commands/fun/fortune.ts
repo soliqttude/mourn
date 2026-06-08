@@ -1,31 +1,16 @@
+import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed } from "../../lib/embeds.js";
-const FORTUNES = [
-  "A pleasant surprise is waiting for you.",
-  "You will achieve greatness soon.",
-  "Hard work pays off — keep going!",
-  "An old friend will reach out soon.",
-  "Adventure awaits — embrace the unknown.",
-  "Success is just around the corner.",
-  "Your creativity will lead you to success.",
-  "Good things come to those who hustle.",
-  "The best is yet to come.",
-  "Trust your instincts today.",
-  "A smile is the shortest distance between people.",
-  "Your kindness will be rewarded.",
-  "The right moment is always now.",
-  "New beginnings are on the horizon.",
-  "Everything you need is already within you.",
-  "A small gesture will mean the world to someone.",
-  "The stars align in your favour today.",
-  "Something beautiful is coming — be patient.",
-  "You have untapped potential waiting to emerge.",
-  "An opportunity is closer than it appears.",
-];
+import { config } from "../../config.js";
+
 export const command: HybridCommand = {
-  name: "fortune", aliases: ["cookie"], description: "Get a fortune cookie message.", category: "fun",
+  name: "fortune",
+  description: "Get your daily fortune.",
+  category: "fun",
+  aliases: ["horoscope", "lucky"],
+  
   async execute(ctx) {
-    const fortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]!;
-    return ctx.reply({ embeds: [brandEmbed({ title: "🥠 Fortune Cookie", description: `*"${fortune}"*`, page: "Fun" })] });
+    const fortunes = ["Today is a great day to take chances.","A surprise is in store for you this week.","Your hard work will soon pay off.","Good things come to those who wait.","An unexpected meeting will bring joy.","Keep your eyes open — opportunity is near.","Your patience will be greatly rewarded.","Today, luck is on your side.","The stars align in your favor today.","A great adventure awaits you.","Focus on what truly matters.","Today is perfect for new beginnings."];
+    const lucky = Math.floor(Math.random()*100);
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xffd700).setTitle("🔮 Fortune").setDescription(fortunes[Math.floor(Math.random()*fortunes.length)]).addFields({ name: "Lucky Number", value: lucky.toString(), inline: true },{ name: "Lucky Color", value: ["Red","Blue","Green","Gold","Purple","Silver"][Math.floor(Math.random()*6)], inline: true }).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };

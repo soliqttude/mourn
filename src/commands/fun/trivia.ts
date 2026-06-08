@@ -1,62 +1,24 @@
+import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-
-interface TriviaQuestion {
-  question: string;
-  correct_answer: string;
-  incorrect_answers: string[];
-  category: string;
-  difficulty: string;
-}
-
-function decode(str: string): string {
-  return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-}
-
-const REWARDS: Record<string, number> = { easy: 50, medium: 100, hard: 175 };
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "trivia",
-  aliases: ["quiz", "triviatime"],
-  description: "Answer a random trivia question and win coins.",
-  usage: "trivia",
-  examples: ["trivia"],
+  description: "Get a trivia question.",
   category: "fun",
+  aliases: ["quiz"],
+  
   async execute(ctx) {
     try {
       const res = await fetch("https://opentdb.com/api.php?amount=1&type=multiple");
-      const data = await res.json() as { results: TriviaQuestion[] };
+      const data = await res.json() as any;
       const q = data.results[0];
-      if (!q) return ctx.reply({ embeds: [errorEmbed("couldn't fetch a question right now.")] });
-
-      const diff = decode(q.difficulty).toLowerCase();
-      const reward = REWARDS[diff] ?? 50;
-      const guildId = ctx.guild?.id ?? "0";
-
-      const answers = [...q.incorrect_answers, q.correct_answer].map(decode).sort(() => Math.random() - 0.5);
-      const labels = ["A", "B", "C", "D"];
-      const correctLabel = labels[answers.indexOf(decode(q.correct_answer))];
-
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        answers.map((ans, i) =>
-          new ButtonBuilder()
-            .setCustomId(`trivia_${labels[i]}_${correctLabel}_${ctx.user.id}_${reward}_${guildId}`)
-            .setLabel(`${labels[i]}: ${ans}`)
-            .setStyle(ButtonStyle.Secondary)
-        )
-      );
-
-      await ctx.reply({
-        embeds: [brandEmbed({
-          title: `trivia — ${diff.toUpperCase()} (+${reward} coins)`,
-          description: `**category:** ${decode(q.category)}\n\n${decode(q.question)}`,
-          page: "Trivia",
-        })],
-        components: [row as any],
-      });
+      const answers = [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5);
+      const letters = ["A","B","C","D"];
+      const formatted = answers.map((a: string, i: number) => `**${letters[i]}.** ${a}`).join("\n");
+      return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle("🧠 Trivia").addFields({ name: "Category", value: q.category, inline: true },{ name: "Difficulty", value: q.difficulty, inline: true },{ name: "Question", value: q.question.replace(/&amp;/g,"&").replace(/&quot;/g,'"') },{ name: "Options", value: formatted },{ name: "Answer", value: `||**${q.correct_answer}**||` }).setFooter({ text: config.embedFooter }).setTimestamp()] });
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("couldn't fetch trivia right now.")] });
+      return ctx.reply({ content: "Could not fetch trivia. Try again.", ephemeral: true } as any);
     }
   },
 };

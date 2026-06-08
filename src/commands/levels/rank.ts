@@ -1,35 +1,17 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { EmbedBuilder, ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed } from "../../lib/embeds.js";
-import { getLevel, levelFromXp, xpForLevel } from "../../features/leveling.js";
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "rank",
-  aliases: ["level", "lvl"],
-  description: "Check your or another user's level.",
-  usage: "rank [user]",
-  examples: ["rank"],
+  description: "View your or another user's rank.",
   category: "levels",
+  aliases: ["level", "xp", "lvl"],
   guildOnly: true,
-  options: [
-    { name: "user", description: "User", type: ApplicationCommandOptionType.User, required: false },
-  ],
+  options: [{ name: "user", description: "User to check", type: ApplicationCommandOptionType.User, required: false }],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const target = (await ctx.getUser("user")) ?? ctx.user;
-    const data = await getLevel(ctx.guild.id, target.id);
-    const xp = data?.xp ?? 0;
-    const level = levelFromXp(xp);
-    const need = xpForLevel(level);
-    return ctx.reply({
-      embeds: [
-        brandEmbed({
-          title: `${target.username} — Level ${level}`,
-          description: `XP: **${xp.toLocaleString()}**\nNext level needs ~${need} more.`,
-          thumbnail: target.displayAvatarURL({ size: 256 }),
-          page: "Levels",
-        }),
-      ],
-    });
+    const target = await ctx.getUser("user") ?? ctx.user;
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle(`📊 ${target.username}'s Rank`).setDescription("Rank card coming soon. XP tracking is active.").setThumbnail(target.displayAvatarURL()).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };

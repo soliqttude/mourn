@@ -1,28 +1,15 @@
+import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed } from "../../lib/embeds.js";
-
-const prompts = [
-  "Never have I ever lied about being busy to avoid hanging out.",
-  "Never have I ever cried at a movie and refused to admit it.",
-  "Never have I ever stalked someone's profile for way too long.",
-  "Never have I ever screenshot a conversation to show someone else.",
-  "Never have I ever talked to myself out loud when stressed.",
-  "Never have I ever pretended to be asleep to avoid a conversation.",
-  "Never have I ever sent a message to the wrong person.",
-  "Never have I ever lied about reading a book or watching a show.",
-  "Never have I ever left someone on read on purpose.",
-  "Never have I ever Googled myself.",
-];
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "neverhaveiever",
-  description: "Get a never have I ever prompt.",
-  usage: "neverhaveiever",
-  examples: ["neverhaveiever"],
+  description: "Get a never have I ever question.",
   category: "fun",
-  aliases: ["nhie"],
+  aliases: ["nhie", "neverhave"],
+  
   async execute(ctx) {
-    const prompt = prompts[Math.floor(Math.random() * prompts.length)];
-    return ctx.reply({ embeds: [brandEmbed({ title: "🤚 Never Have I Ever", description: prompt, page: "Fun" })] });
+    const questions = ["Never have I ever lied on my resume.","Never have I ever gone skinny dipping.","Never have I ever pretended to laugh at a joke I didn't get.","Never have I ever stalked someone on social media.","Never have I ever stayed up for more than 40 hours straight.","Never have I ever eaten food I dropped on the floor.","Never have I ever sent a text to the wrong person.","Never have I ever faked being busy to avoid someone.","Never have I ever cried at a movie.","Never have I ever blamed someone else for something I did."];
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xe74c3c).setTitle("🤚 Never Have I Ever").setDescription(questions[Math.floor(Math.random()*questions.length)]).setFooter({ text: "React 👍 if you have, 👎 if you haven't • " + config.embedFooter }).setTimestamp()] });
   },
 };

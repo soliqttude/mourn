@@ -1,32 +1,16 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed } from "../../lib/embeds.js";
-
-const roasts = [
-  "You're the reason they put instructions on shampoo.",
-  "I'd agree with you but then we'd both be wrong.",
-  "You're proof that evolution can go in reverse.",
-  "Your WiFi password is probably 'password123'.",
-  "You have the energy of a dying laptop at 1%.",
-  "You're not stupid — you just have bad luck thinking.",
-  "You bring everyone so much joy when you leave the room.",
-  "If brains were gasoline, you couldn't power a mosquito's scooter.",
-  "You're like a cloud. When you disappear, it's a beautiful day.",
-  "Some people are a waste of two brain cells.",
-];
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "roast",
-  aliases: ["rip", "insult"],
-  description: "Roast someone.",
-  usage: "roast [user]",
-  examples: ["roast"],
+  description: "Roast a user (all in good fun).",
   category: "fun",
-  options: [{ name: "user", description: "User to roast", type: ApplicationCommandOptionType.User, required: true }],
+  aliases: ["burn"],
+  options: [{ name: "user", description: "User to roast", type: ApplicationCommandOptionType.User, required: false }],
   async execute(ctx) {
-    const target = await ctx.getUser("user", true);
-    if (!target) return;
-    const roast = roasts[Math.floor(Math.random() * roasts.length)];
-    return ctx.reply({ embeds: [brandEmbed({ title: `🔥 ${target.username} got roasted`, description: roast, page: "Fun" })] });
+    const target = await ctx.getUser("user") ?? ctx.user;
+    const roasts = ["I'd roast you, but my parents told me not to burn trash.","You're not stupid; you just have bad luck thinking.","I'd agree with you, but then we'd both be wrong.","You bring everyone so much joy — when you leave the room.","I'm jealous of people who've never met you.","Some day you'll go far... and I hope you stay there.","You're the reason the gene pool needs a lifeguard.","I'd call you a tool, but that implies you're useful.","You have your whole life to be an idiot. Take a day off!","I thought of you today. It reminded me to take out the trash."];
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xff6600).setTitle("🔥 Roasted").setDescription(`<@${target.id}>, ${roasts[Math.floor(Math.random()*roasts.length)]}`).setFooter({ text: "All in good fun! • " + config.embedFooter }).setTimestamp()] });
   },
 };

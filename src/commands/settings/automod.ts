@@ -1,55 +1,23 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed } from "../../lib/embeds.js";
+import { config } from "../../config.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 
 export const command: HybridCommand = {
   name: "automod",
-  description: "Toggle automod features. ,automod | ,automod links | ,automod invites",
-  usage: "automod [feature]",
-  examples: ["automod"],
+  description: "Configure auto-moderation settings.",
   category: "settings",
-  permission: "admin",
+  aliases: ["automoderation"],
   guildOnly: true,
-  options: [
-    { name: "feature", description: "Which feature to toggle: links | invites (blank = main automod)", type: ApplicationCommandOptionType.String, required: false },
-  ],
+  userPermissions: ["ManageGuild"],
+  options: [{ name: "feature", description: "spam, links, invites, or caps", type: ApplicationCommandOptionType.String, required: true }, { name: "enabled", description: "Enable or disable", type: ApplicationCommandOptionType.Boolean, required: true }],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const feature = (ctx.getString("feature") ?? ctx.args[0] ?? "").toLowerCase().trim();
-    const settings = await getGuildSettings(ctx.guild.id);
-
-    if (feature === "links") {
-      const enabled = !settings.linkFilterEnabled;
-      await updateGuildSettings(ctx.guild.id, { linkFilterEnabled: enabled });
-      const s = await getGuildSettings(ctx.guild.id);
-      return ctx.reply({ embeds: [status(s, `Link filter → **${enabled ? "on" : "off"}**`)] });
-    }
-
-    if (feature === "invites") {
-      const enabled = !settings.inviteFilterEnabled;
-      await updateGuildSettings(ctx.guild.id, { inviteFilterEnabled: enabled });
-      const s = await getGuildSettings(ctx.guild.id);
-      return ctx.reply({ embeds: [status(s, `Invite filter → **${enabled ? "on" : "off"}**`)] });
-    }
-
-    // blank = toggle main automod
-    const enabled = !settings.automodEnabled;
-    await updateGuildSettings(ctx.guild.id, { automodEnabled: enabled });
-    const s = await getGuildSettings(ctx.guild.id);
-    return ctx.reply({ embeds: [status(s, `Automod → **${enabled ? "on" : "off"}**`)] });
+    const feature = (ctx.getString("feature") ?? ctx.args[0] ?? "").toLowerCase();
+    const enabled = ctx.getBoolean ? ctx.getBoolean("enabled") : ctx.args[1] === "true";
+    const valid = ["spam","links","invites","caps"];
+    if (!valid.includes(feature)) return ctx.reply({ content: `Feature must be one of: ${valid.join(", ")}`, ephemeral: true } as any);
+    await updateGuildSettings(ctx.guild.id, { [`automod_${feature}`]: enabled } as any);
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setTitle("⚙️ AutoMod").setDescription(`✅ AutoMod **${feature}** detection ${enabled ? "enabled" : "disabled"}.`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };
-
-function status(s: Awaited<ReturnType<typeof import("../../db/settings.js").getGuildSettings>>, changed: string) {
-  return brandEmbed({
-    title: "Automod",
-    description: changed,
-    fields: [
-      { name: "automod",      value: s.automodEnabled      ? "on" : "off", inline: true },
-      { name: "link filter",  value: s.linkFilterEnabled    ? "on" : "off", inline: true },
-      { name: "invite filter",value: s.inviteFilterEnabled  ? "on" : "off", inline: true },
-    ],
-    page: "Automod",
-  });
-}

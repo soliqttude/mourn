@@ -530,3 +530,22 @@ export const filterWhitelist = pgTable("filter_whitelist",
   { guildId: text("guild_id").notNull(), filterType: text("filter_type").notNull(), value: text("value").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.filterType, t.value] }) })
 );
+
+
+// ── Economy ───────────────────────────────────────────────────────────────────
+export const economyTable = pgTable("economy", {
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  balance: integer("balance").notNull().default(0),
+  bank: integer("bank").notNull().default(0),
+  bankCap: integer("bank_cap").notNull().default(10000),
+  lastDaily: timestamp("last_daily"),
+  lastWork: timestamp("last_work"),
+  lastCrime: timestamp("last_crime"),
+  lastRob: timestamp("last_rob"),
+  lastFish: timestamp("last_fish"),
+  lastHunt: timestamp("last_hunt"),
+  lastMine: timestamp("last_mine"),
+  lastWeekly: timestamp("last_weekly"),
+  lastBeg: timestamp("last_beg"),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));

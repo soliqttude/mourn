@@ -1,33 +1,21 @@
+import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "nuke",
-  aliases: ["clearchannel", "wipe"],
-  description: "Clone this channel and delete the original, wiping all messages.",
-  usage: "nuke",
-  examples: ["nuke"],
+  description: "Clone and delete the current channel, wiping all messages.",
   category: "moderation",
-  permission: "admin",
+  aliases: ["purgeall","channelreset"],
   guildOnly: true,
-  options: [],
+  userPermissions: ["ManageChannels"],
   async execute(ctx) {
-    const guild = ctx.guild;
-    if (!guild) return;
-    const channel = ctx.channel as any;
-    if (!channel?.clone) return ctx.reply({ embeds: [errorEmbed("Cannot nuke this channel type.")] });
-    if (ctx.source === "slash") await ctx.defer(true);
-    try {
-      const pos: number = channel.rawPosition ?? 0;
-      const cloned = await channel.clone({ reason: `Nuked by ${ctx.user.tag}` });
-      try { await cloned.setPosition(pos); } catch { /* ignore */ }
-      await channel.delete(`Nuked by ${ctx.user.tag}`);
-      await cloned.send({ embeds: [successEmbed("💥 This channel was nuked.")] });
-      if (ctx.source === "slash") {
-        try { await ctx.reply({ content: "✅ Channel nuked.", ephemeral: true } as any); } catch { /* interaction expired or already replied */ }
-      }
-    } catch {
-      try { return ctx.reply({ embeds: [errorEmbed("Failed to nuke. Check my permissions.")] }); } catch { /* channel deleted */ }
-    }
+    if (!ctx.guild || !ctx.channel || ctx.channel.type === 1) return;
+    const ch = ctx.channel as any;
+    const position = ch.position;
+    const clone = await ch.clone({ reason: `Nuked by ${ctx.user.tag}` });
+    await clone.setPosition(position);
+    await ch.delete();
+    await clone.send({ embeds: [new EmbedBuilder().setColor(0xff4444).setTitle("💥 Channel Nuked").setDescription("This channel has been nuked. All previous messages were deleted.").setFooter({ text: `Nuked by ${ctx.user.tag} • ${config.embedFooter}` }).setTimestamp()] });
   },
 };

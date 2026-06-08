@@ -1,41 +1,21 @@
+import { EmbedBuilder, ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { successEmbed } from "../../lib/embeds.js";
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "lockdown",
-  aliases: ["serverlock"],
-  description: "Toggle server lockdown on/off. Run once to lock all channels, again to unlock.",
-  usage: "lockdown",
-  examples: ["lockdown"],
+  description: "Lock a channel, preventing members from sending messages.",
   category: "moderation",
-  permission: "admin",
+  aliases: ["lock", "lockch"],
   guildOnly: true,
-  options: [],
+  userPermissions: ["ManageChannels"],
+  options: [{ name: "channel", description: "Channel to lock", type: ApplicationCommandOptionType.Channel, required: false }, { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false }],
   async execute(ctx) {
     if (!ctx.guild) return;
-    await ctx.defer();
-    const everyone = ctx.guild.roles.everyone;
-    const channels = ctx.guild.channels.cache.filter(c => c.isTextBased() && c.type !== 11 && c.type !== 12);
-
-    const lockedCount = channels.filter(ch => {
-      const overwrite = (ch as any).permissionOverwrites?.cache?.get(everyone.id);
-      return overwrite?.deny?.has("SendMessages");
-    }).size;
-
-    const locking = lockedCount < channels.size / 2;
-
-    let done = 0, failed = 0;
-    for (const [, ch] of channels) {
-      try {
-        await (ch as any).permissionOverwrites.edit(everyone, { SendMessages: locking ? false : null });
-        done++;
-      } catch {
-        failed++;
-      }
-    }
-
-    return ctx.reply({
-      embeds: [successEmbed(`${locking ? "🔒 Locked" : "🔓 Unlocked"} **${done}** channels${failed ? `, failed on **${failed}**` : ""}.`)],
-    });
+    const ch = (ctx.getChannel ? ctx.getChannel("channel") : null) ?? ctx.channel as any;
+    const reason = ctx.getString("reason") ?? ctx.args.join(" ") ?? "No reason provided.";
+    if (!ch?.permissionOverwrites) return ctx.reply({ content: "Invalid channel.", ephemeral: true } as any);
+    await ch.permissionOverwrites.edit(ctx.guild.roles.everyone, { SendMessages: false }, { reason: `Locked by ${ctx.user.tag}: ${reason}` });
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xff4444).setTitle("🔒 Channel Locked").setDescription(`<#${ch.id}> has been locked.\n**Reason:** ${reason}`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };

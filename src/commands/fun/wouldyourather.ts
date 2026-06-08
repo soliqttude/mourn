@@ -1,28 +1,16 @@
+import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed } from "../../lib/embeds.js";
-
-const questions = [
-  ["Have no internet for a week", "Have no money for a week"],
-  ["Always be late", "Always be an hour early"],
-  ["Be famous but hated", "Be unknown but loved"],
-  ["Lose your memories", "Lose your ability to make new ones"],
-  ["Only speak in rhymes", "Only speak in questions"],
-  ["Have no phone for a month", "Have no music for a year"],
-  ["Be too hot all the time", "Be too cold all the time"],
-  ["Know when you'll die", "Know how you'll die"],
-  ["Be able to fly but only at walking speed", "Be able to run at 200mph but not fly"],
-  ["Live in the past", "Live in the future"],
-];
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "wouldyourather",
   description: "Get a would you rather question.",
-  usage: "wouldyourather",
-  examples: ["wouldyourather"],
   category: "fun",
-  aliases: ["wyr"],
+  aliases: ["wyr", "rather"],
+  
   async execute(ctx) {
-    const [a, b] = questions[Math.floor(Math.random() * questions.length)]!;
-    return ctx.reply({ embeds: [brandEmbed({ title: "🤔 Would You Rather...", description: `**A)** ${a}\n\n**B)** ${b}`, page: "Fun" })] });
+    const options = [["be invisible","be able to fly"],["never use social media again","never watch another movie/TV show again"],["have unlimited money","have unlimited time"],["be famous","be smart"],["live in the past","live in the future"],["only eat sweet food forever","only eat savoury food forever"],["be able to speak every language","be able to play every instrument"],["have no internet","have no phone"],["fight 100 duck-sized horses","fight 1 horse-sized duck"],["always be hot","always be cold"]];
+    const [a, b] = options[Math.floor(Math.random()*options.length)];
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x9b59b6).setTitle("🤔 Would You Rather").setDescription(`**A)** ${a}\n\n**OR**\n\n**B)** ${b}`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };

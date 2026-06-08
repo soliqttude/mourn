@@ -1,19 +1,18 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed } from "../../lib/embeds.js";
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "pp",
-  aliases: ["ppsize", "dicksize", "ppcheck"],
-  description: "Check someone's pp size.",
-  usage: "pp [user]",
-  examples: ["pp"],
+  description: "Measure someone's pp size (just for fun).",
   category: "fun",
-  options: [{ name: "user", description: "User to check", type: ApplicationCommandOptionType.User, required: false }],
+  aliases: ["ppsize", "dong"],
+  options: [{ name: "user", description: "User to measure", type: ApplicationCommandOptionType.User, required: false }],
   async execute(ctx) {
-    const target = (await ctx.getUser("user")) ?? ctx.user;
-    const size = Number(BigInt(target.id) % 15n);
+    const target = await ctx.getUser("user") ?? ctx.user;
+    const seed = target.id.split("").reduce((a,c)=>a+c.charCodeAt(0),0);
+    const size = seed % 21;
     const bar = "8" + "=".repeat(size) + "D";
-    return ctx.reply({ embeds: [brandEmbed({ title: `${target.username}'s pp`, description: `\`${bar}\` (${size} inches)`, page: "Fun" })] });
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xff69b4).setTitle("📏 PP Size").setDescription(`**${target.username}'s pp:**\n\`${bar}\` (${size} cm)`).setFooter({ text: "Not real • " + config.embedFooter }).setTimestamp()] });
   },
 };

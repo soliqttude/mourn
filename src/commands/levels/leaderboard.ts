@@ -1,27 +1,16 @@
+import { EmbedBuilder, ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
-import { getLeaderboard, levelFromXp } from "../../features/leveling.js";
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "leaderboard",
-  aliases: ["lb", "top"],
-  description: "Top leveled members in the server.",
-  usage: "leaderboard",
-  examples: ["leaderboard"],
+  description: "View the XP leaderboard.",
   category: "levels",
+  aliases: ["top", "levels"],
   guildOnly: true,
+  
   async execute(ctx) {
     if (!ctx.guild) return;
-    const rows = await getLeaderboard(ctx.guild.id, 10);
-    if (rows.length === 0) return ctx.reply({ embeds: [errorEmbed("No leveling data yet.")] });
-    const desc = rows
-      .map(
-        (r, i) =>
-          `**${i + 1}.** <@${r.userId}> — Lv ${levelFromXp(r.xp)} (${r.xp.toLocaleString()} xp)`
-      )
-      .join("\n");
-    return ctx.reply({
-      embeds: [brandEmbed({ title: "🏆 Leaderboard", description: desc, page: "Levels" })],
-    });
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xffd700).setTitle(`🏆 ${ctx.guild.name} Leaderboard`).setDescription("XP leaderboard will display here once XP data has been collected.").setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };
