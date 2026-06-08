@@ -154,7 +154,6 @@ export function helpEmbed(
   const code = `Syntax:  ${usageLine}\nExample: ${exampleLine}`;
 
   const eb = new EmbedBuilder()
-    .setColor(0x000000)
     .setAuthor({ name: "bleed help", iconURL: botAvatarURL })
     .setTitle(`Command: ${cmd.name}`)
     .setDescription(`${cmd.description}\n\`\`\`\n${code}\n\`\`\``);
