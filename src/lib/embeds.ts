@@ -5,7 +5,7 @@ const C = {
   success: 0x57F287,
   error:   0xFFA500,
   action:  0x5865F2,
-  mod:     0x2b2d31,
+  mod:     0x000000,
 } as const;
 
 // ── Custom emoji config ────────────────────────────────────────────────────────
@@ -154,7 +154,7 @@ export function helpEmbed(
   const code = `Syntax:  ${usageLine}\nExample: ${exampleLine}`;
 
   const eb = new EmbedBuilder()
-    .setColor(0x2b2d31)
+    .setColor(0x000000)
     .setAuthor({ name: "bleed help", iconURL: botAvatarURL })
     .setTitle(`Command: ${cmd.name}`)
     .setDescription(`${cmd.description}\n\`\`\`\n${code}\n\`\`\``);
