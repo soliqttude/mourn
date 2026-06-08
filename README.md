@@ -41,7 +41,7 @@ bleed is a hybrid Discord bot — every command works as both a **slash command*
 - **Node.js** 20+
 - **PostgreSQL** database (Railway, Supabase, Neon, or local)
 
----
+--- best free bot fr
 
 ## Setup
 
