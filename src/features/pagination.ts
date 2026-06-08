@@ -8,9 +8,21 @@ import { config } from "../config.js";
 
 export function buildNavRow(current: number, total: number, messageId: string): ActionRowBuilder<ButtonBuilder> {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(`page:prev:${messageId}`).setEmoji("⬅️").setStyle(ButtonStyle.Secondary).setDisabled(current === 0),
-    new ButtonBuilder().setCustomId(`page:info:${messageId}`).setLabel(`${current + 1} / ${total}`).setStyle(ButtonStyle.Primary).setDisabled(true),
-    new ButtonBuilder().setCustomId(`page:next:${messageId}`).setEmoji("➡️").setStyle(ButtonStyle.Secondary).setDisabled(current === total - 1),
+    new ButtonBuilder()
+      .setCustomId(`page:prev:${messageId}`)
+      .setLabel("←")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(current === 0),
+    new ButtonBuilder()
+      .setCustomId(`page:info:${messageId}`)
+      .setLabel(`${current + 1} / ${total}`)
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true),
+    new ButtonBuilder()
+      .setCustomId(`page:next:${messageId}`)
+      .setLabel("→")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(current === total - 1),
   );
 }
 
