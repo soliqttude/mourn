@@ -127,3 +127,45 @@ export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
   _styles.set(eb, "mod");
   return eb;
 }
+
+// ── Help embed — Bleed.bot style ───────────────────────────────────────────────
+export function helpEmbed(
+  cmd: { name: string; description: string; usage?: string },
+  prefix: string,
+): EmbedBuilder {
+  const usageLine = cmd.usage ? `${prefix}${cmd.usage}` : `${prefix}${cmd.name}`;
+
+  const fill = (s: string) =>
+    s
+      .replace(/\(member\)/gi, "remandment")
+      .replace(/\[member\]/gi, "remandment")
+      .replace(/\(user\)/gi, "remandment")
+      .replace(/\[user\]/gi, "remandment")
+      .replace(/\(target\)/gi, "remandment")
+      .replace(/\[target\]/gi, "remandment")
+      .replace(/\(duration\)/gi, "30m")
+      .replace(/\[duration\]/gi, "30m")
+      .replace(/\(reason\)/gi, "too awesome")
+      .replace(/\[reason\]/gi, "too awesome")
+      .replace(/\(channel\)/gi, "#general")
+      .replace(/\[channel\]/gi, "#general")
+      .replace(/\(role\)/gi, "Members")
+      .replace(/\[role\]/gi, "Members")
+      .replace(/\(amount\)/gi, "1000")
+      .replace(/\[amount\]/gi, "1000")
+      .replace(/\(time\)/gi, "30m")
+      .replace(/\[time\]/gi, "30m")
+      .replace(/\[\w+\]/g, "...")
+      .replace(/\(\w+\)/g, "...");
+
+  const exampleLine = fill(usageLine);
+  const code = `Syntax:  ${usageLine}\nExample: ${exampleLine}`;
+
+  const eb = new EmbedBuilder()
+    .setColor(0x2b2d31)
+    .setAuthor({ name: "mournbot help" })
+    .setTitle(`Command: ${cmd.name}`)
+    .setDescription(`${cmd.description}\n\`\`\`\n${code}\n\`\`\``);
+  _styles.set(eb, "brand");
+  return eb;
+}

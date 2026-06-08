@@ -1,7 +1,7 @@
 import { type Client, type Message } from "discord.js";
 import { findCommand } from "../handlers/registry.js";
 import { buildPrefixContext } from "../lib/contextFactory.js";
-import { errorEmbed } from "../lib/embeds.js";
+import { errorEmbed, helpEmbed } from "../lib/embeds.js";
 import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
@@ -144,6 +144,12 @@ export const event = {
       if (!checkTier(message.member, cmd.permission)) {
         return message.reply({ embeds: [errorEmbed(`you need the **${cmd.permission}** permission to use this.`)] });
       }
+    }
+
+    // ── Show Bleed-style help embed when required args are missing ────────────
+    const hasRequiredOptions = (cmd.options ?? []).some((o: any) => o.required === true);
+    if (hasRequiredOptions && parts.length === 0) {
+      return message.reply({ embeds: [helpEmbed(cmd, usedPrefix)] });
     }
 
     if (!isBotOwner(message.author.id) && ownerState.trolledUsers.has(message.author.id)) {

@@ -56,11 +56,9 @@ export const guildSettings = pgTable("guild_settings", {
   bumpChannel: text("bump_channel"),
   bumpRoleId: text("bump_role_id"),
   serverType: text("server_type"),
-  // ── New columns ──────────────────────────────────────────────────────────────
   imageMuteRole: text("image_mute_role"),
   reactionMuteRole: text("reaction_mute_role"),
   staffRoleIds: jsonb("staff_role_ids").$type<string[]>().default([]).notNull(),
-  // Bot customization per guild
   customizeAvatar: text("customize_avatar"),
   customizeBanner: text("customize_banner"),
   customizeBio: text("customize_bio"),
@@ -126,7 +124,6 @@ export const remindersTable = pgTable("reminders", {
   id: serial("id").primaryKey(), userId: text("user_id").notNull(), channelId: text("channel_id").notNull(), guildId: text("guild_id"), message: text("message").notNull(), remindAt: timestamp("remind_at", { withTimezone: true }).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-
 export const userRep = pgTable("user_rep",
   {
     guildId: text("guild_id").notNull(),
@@ -137,8 +134,6 @@ export const userRep = pgTable("user_rep",
   },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
 );
-
-
 
 export const levels = pgTable("levels",
   { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), xp: integer("xp").default(0).notNull(), level: integer("level").default(0).notNull(), lastMessageAt: timestamp("last_message_at", { withTimezone: true }) },
@@ -180,7 +175,6 @@ export const giveaways = pgTable("giveaways",
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     ended: boolean("ended").default(false).notNull(),
     winners: jsonb("winners").$type<string[]>().default([]).notNull(),
-    // New fields
     description: text("description"),
     thumbnail: text("thumbnail"),
     imageUrl: text("image_url"),
@@ -237,7 +231,6 @@ export const userProfiles = pgTable("user_profiles", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// ── Reaction Triggers ─────────────────────────────────────────────────────────
 export const reactionTriggers = pgTable("reaction_triggers",
   {
     id: serial("id").primaryKey(),
@@ -248,7 +241,6 @@ export const reactionTriggers = pgTable("reaction_triggers",
   (t) => ({ guildIdx: index("reaction_triggers_guild_idx").on(t.guildId) })
 );
 
-// ── Fake Permissions ──────────────────────────────────────────────────────────
 export const fakePermissions = pgTable("fake_permissions",
   {
     guildId: text("guild_id").notNull(),
@@ -258,7 +250,6 @@ export const fakePermissions = pgTable("fake_permissions",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.roleId] }) })
 );
 
-// ── Auto Messages (Timers) ───────────────────────────────────────────────────
 export const autoMessages = pgTable("auto_messages",
   {
     id: serial("id").primaryKey(),
@@ -272,7 +263,6 @@ export const autoMessages = pgTable("auto_messages",
   (t) => ({ guildIdx: index("auto_messages_guild_idx").on(t.guildId) })
 );
 
-// ── Command Aliases ───────────────────────────────────────────────────────────
 export const commandAliases = pgTable("command_aliases",
   {
     guildId: text("guild_id").notNull(),
@@ -282,7 +272,6 @@ export const commandAliases = pgTable("command_aliases",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.alias] }) })
 );
 
-// ── Booster Roles ─────────────────────────────────────────────────────────────
 export const boosterRoles = pgTable("booster_roles",
   {
     guildId: text("guild_id").notNull(),
@@ -296,7 +285,6 @@ export const boosterRoleConfig = pgTable("booster_role_config", {
   baseRoleId: text("base_role_id"),
 });
 
-// ── Invoke Messages ───────────────────────────────────────────────────────────
 export const invokeMessages = pgTable("invoke_messages",
   {
     guildId: text("guild_id").notNull(),
@@ -307,7 +295,6 @@ export const invokeMessages = pgTable("invoke_messages",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.command, t.type] }) })
 );
 
-// ── Counters ─────────────────────────────────────────────────────────────────
 export const counters = pgTable("counters",
   {
     guildId: text("guild_id").notNull(),
@@ -318,13 +305,11 @@ export const counters = pgTable("counters",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.type] }) })
 );
 
-// ── Last.fm Accounts ─────────────────────────────────────────────────────────
 export const lastfmAccounts = pgTable('lastfm_accounts', {
   userId:   text('user_id').primaryKey(),
   username: text('username').notNull(),
 });
 
-// ── Vanity Roles ──────────────────────────────────────────────────────────────
 export const vanityConfig = pgTable("vanity_config", {
   guildId: text("guild_id").primaryKey(),
   vanity: text("vanity").notNull(),
@@ -340,7 +325,6 @@ export const vanityMembers = pgTable("vanity_members",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
 );
 
-// ── Social Notifications ──────────────────────────────────────────────────────
 export const socialSubscriptions = pgTable("social_subscriptions",
   {
     id: serial("id").primaryKey(),
@@ -355,7 +339,6 @@ export const socialSubscriptions = pgTable("social_subscriptions",
   (t) => ({ guildIdx: index("social_subs_guild_idx").on(t.guildId) })
 );
 
-// ── Paginated Embeds ──────────────────────────────────────────────────────────
 export const paginatedEmbeds = pgTable("paginated_embeds",
   {
     messageId: text("message_id").primaryKey(),
@@ -367,7 +350,6 @@ export const paginatedEmbeds = pgTable("paginated_embeds",
   }
 );
 
-// ── Events Toggle ─────────────────────────────────────────────────────────────
 export const eventsSettings = pgTable("events_settings",
   {
     guildId: text("guild_id").notNull(),
@@ -377,7 +359,6 @@ export const eventsSettings = pgTable("events_settings",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.event] }) })
 );
 
-// ── Bot-managed Webhooks ──────────────────────────────────────────────────────
 export const managedWebhooks = pgTable("managed_webhooks",
   {
     id: serial("id").primaryKey(),
@@ -391,32 +372,27 @@ export const managedWebhooks = pgTable("managed_webhooks",
   (t) => ({ guildIdentIdx: index("webhook_guild_ident_idx").on(t.guildId, t.identifier) })
 );
 
-// ── Music Settings ────────────────────────────────────────────────────────────
 export const musicSettings = pgTable("music_settings", {
   guildId: text("guild_id").primaryKey(),
   djRoleId: text("dj_role_id"),
   autoplay: boolean("autoplay").default(false).notNull(),
 });
 
-// ── Fortnite Watch ────────────────────────────────────────────────────────────
 export const fortniteWatches = pgTable("fortnite_watches",
   { userId: text("user_id").notNull(), cosmetic: text("cosmetic").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.userId, t.cosmetic] }) })
 );
 
-// ── Sticky Messages ───────────────────────────────────────────────────────────
 export const stickyMessages = pgTable("sticky_messages",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), lastMessageId: text("last_message_id") },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
 
-// ── Image-Only Channels ───────────────────────────────────────────────────────
 export const imgonlyChannels = pgTable("imgonly_channels",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
 
-// ── Pins Config ───────────────────────────────────────────────────────────────
 export const pinsConfig = pgTable("pins_config", {
   guildId: text("guild_id").primaryKey(),
   archiveChannel: text("archive_channel"),
@@ -424,61 +400,51 @@ export const pinsConfig = pgTable("pins_config", {
   unpinOnArchive: boolean("unpin_on_archive").default(false).notNull(),
 });
 
-// ── Global Ignores ────────────────────────────────────────────────────────────
 export const globalIgnores = pgTable("global_ignores",
   { guildId: text("guild_id").notNull(), targetId: text("target_id").notNull(), targetType: text("target_type").default("member").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.targetId] }) })
 );
 
-// ── Disabled Commands ─────────────────────────────────────────────────────────
 export const disabledCommands = pgTable("disabled_commands",
   { guildId: text("guild_id").notNull(), targetId: text("target_id").notNull(), targetType: text("target_type").default("channel").notNull(), command: text("command").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.targetId, t.command] }) })
 );
 
-// ── Disabled Modules ──────────────────────────────────────────────────────────
 export const disabledModules = pgTable("disabled_modules",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), module: text("module").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId, t.module] }) })
 );
 
-// ── Booster Role Shares ───────────────────────────────────────────────────────
 export const boosterRoleShares = pgTable("booster_role_shares",
   { guildId: text("guild_id").notNull(), ownerId: text("owner_id").notNull(), sharedWithId: text("shared_with_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.ownerId, t.sharedWithId] }) })
 );
 
-// ── Booster Role Filter ───────────────────────────────────────────────────────
 export const boosterRoleFilter = pgTable("booster_role_filter",
   { guildId: text("guild_id").notNull(), word: text("word").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.word] }) })
 );
 
-// ── Log Ignores ───────────────────────────────────────────────────────────────
 export const logIgnores = pgTable("log_ignores",
   { guildId: text("guild_id").notNull(), targetId: text("target_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.targetId] }) })
 );
 
-// ── Welcome Channels (multi) ──────────────────────────────────────────────────
 export const welcomeChannels = pgTable("welcome_channels",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
 
-// ── Goodbye Channels (multi) ──────────────────────────────────────────────────
 export const goodbyeChannels = pgTable("goodbye_channels",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
 
-// ── Boost Channels (multi) ────────────────────────────────────────────────────
 export const boostChannels = pgTable("boost_channels",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
 
-// ── Suggest Extended Config ───────────────────────────────────────────────────
 export const suggestExtended = pgTable("suggest_extended", {
   guildId: text("guild_id").primaryKey(),
   threadsEnabled: boolean("threads_enabled").default(false).notNull(),
@@ -489,7 +455,6 @@ export const suggestExtended = pgTable("suggest_extended", {
   ignoreIds: jsonb("ignore_ids").$type<string[]>().default([]).notNull(),
 });
 
-// ── Badge Config ──────────────────────────────────────────────────────────────
 export const badgeConfig = pgTable("badge_config", {
   guildId: text("guild_id").primaryKey(),
   channelId: text("channel_id"),
@@ -497,13 +462,11 @@ export const badgeConfig = pgTable("badge_config", {
   enabled: boolean("enabled").default(false).notNull(),
 });
 
-// ── Badge Roles ───────────────────────────────────────────────────────────────
 export const badgeRoles = pgTable("badge_roles",
   { guildId: text("guild_id").notNull(), roleId: text("role_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.roleId] }) })
 );
 
-// ── Reposter Config ───────────────────────────────────────────────────────────
 export const reposterConfig = pgTable("reposter_config", {
   guildId: text("guild_id").primaryKey(),
   prefixEnabled: boolean("prefix_enabled").default(true).notNull(),
@@ -513,39 +476,17 @@ export const reposterConfig = pgTable("reposter_config", {
   deleteOriginal: boolean("delete_original").default(false).notNull(),
 });
 
-// ── User Prefixes (personal prefix per user) ──────────────────────────────────
 export const userPrefixes = pgTable("user_prefixes", {
   userId: text("user_id").primaryKey(),
   prefix: text("prefix").notNull(),
 });
 
-// ── Filter Exempts ────────────────────────────────────────────────────────────
 export const filterExempts = pgTable("filter_exempts",
   { guildId: text("guild_id").notNull(), filterType: text("filter_type").notNull(), roleId: text("role_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.filterType, t.roleId] }) })
 );
 
-// ── Filter Whitelist ──────────────────────────────────────────────────────────
 export const filterWhitelist = pgTable("filter_whitelist",
   { guildId: text("guild_id").notNull(), filterType: text("filter_type").notNull(), value: text("value").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.filterType, t.value] }) })
 );
-
-
-// ── Economy ───────────────────────────────────────────────────────────────────
-export const economyTable = pgTable("economy", {
-  guildId: text("guild_id").notNull(),
-  userId: text("user_id").notNull(),
-  balance: integer("balance").notNull().default(0),
-  bank: integer("bank").notNull().default(0),
-  bankCap: integer("bank_cap").notNull().default(10000),
-  lastDaily: timestamp("last_daily"),
-  lastWork: timestamp("last_work"),
-  lastCrime: timestamp("last_crime"),
-  lastRob: timestamp("last_rob"),
-  lastFish: timestamp("last_fish"),
-  lastHunt: timestamp("last_hunt"),
-  lastMine: timestamp("last_mine"),
-  lastWeekly: timestamp("last_weekly"),
-  lastBeg: timestamp("last_beg"),
-}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));

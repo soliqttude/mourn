@@ -68,7 +68,7 @@ export const event = {
   },
 };
 
-const SLOW_CATEGORIES = new Set(["moderation", "economy", "levels", "giveaway"]);
+const SLOW_CATEGORIES = new Set(["moderation", "levels", "giveaway"]);
 
 async function handleSlashCommand(client: Client, interaction: ChatInputCommandInteraction) {
   const cmd = findCommand(interaction.commandName);
@@ -226,8 +226,6 @@ async function handleTriviaButton(interaction: ButtonInteraction) {
   const chosen = parts[1];
   const correct = parts[2];
   const userId = parts[3];
-  const reward = parseInt(parts[4] ?? "50", 10);
-  const guildId = parts[5] ?? interaction.guildId ?? "";
 
   if (interaction.user.id !== userId) {
     return interaction.reply({
@@ -235,20 +233,15 @@ async function handleTriviaButton(interaction: ButtonInteraction) {
       flags: MessageFlags.Ephemeral,
     });
   }
+  await interaction.update({ components: [] }).catch(() => {});
   if (chosen === correct) {
-    await interaction.update({ components: [] }).catch(() => {});
-    if (guildId) {
-      const { addBalance } = await import("../features/economy.js");
-      await addBalance(guildId, userId, reward).catch(() => {});
-    }
     return safeFollowUp(interaction, {
       embeds: applyMention(
-        [successEmbed(`correct! the answer was **${correct}**. +${reward} coins`)],
+        [successEmbed(`correct! the answer was **${correct}**.`)],
         interaction.user.id
       ),
     });
   } else {
-    await interaction.update({ components: [] }).catch(() => {});
     return safeFollowUp(interaction, {
       embeds: applyMention(
         [errorEmbed(`wrong. the correct answer was **${correct}**.`)],
