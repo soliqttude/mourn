@@ -163,7 +163,7 @@ export function helpEmbed(
 
   const eb = new EmbedBuilder()
     .setColor(0x2b2d31)
-    .setAuthor({ name: "mournbot help" })
+    .setAuthor({ name: "bleed help" })
     .setTitle(`Command: ${cmd.name}`)
     .setDescription(`${cmd.description}\n\`\`\`\n${code}\n\`\`\``);
   _styles.set(eb, "brand");
