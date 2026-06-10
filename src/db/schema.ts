@@ -28,9 +28,16 @@ export const guildSettings = pgTable("guild_settings", {
   antiraidAction: text("antiraid_action").default("kick").notNull(),
   antiraidLogChannel: text("antiraid_log_channel"),
   antiraidLockOnRaid: boolean("antiraid_lock_on_raid").default(false).notNull(),
+  antiraidRequireAvatar: boolean("antiraid_require_avatar").default(false).notNull(),
+  antiraidManualState: boolean("antiraid_manual_state").default(false).notNull(),
   automodEnabled: boolean("automod_enabled").default(false).notNull(),
   linkFilterEnabled: boolean("link_filter_enabled").default(false).notNull(),
   inviteFilterEnabled: boolean("invite_filter_enabled").default(false).notNull(),
+  capsFilterEnabled: boolean("caps_filter_enabled").default(false).notNull(),
+  spoilersFilterEnabled: boolean("spoilers_filter_enabled").default(false).notNull(),
+  massMentionEnabled: boolean("mass_mention_enabled").default(false).notNull(),
+  emojiFilterEnabled: boolean("emoji_filter_enabled").default(false).notNull(),
+  musicFilesFilterEnabled: boolean("music_files_filter_enabled").default(false).notNull(),
   starboardChannel: text("starboard_channel"),
   starboardEmoji: text("starboard_emoji").default("⭐").notNull(),
   starboardThreshold: integer("starboard_threshold").default(3).notNull(),
@@ -38,9 +45,12 @@ export const guildSettings = pgTable("guild_settings", {
   voicemasterCategory: text("voicemaster_category"),
   ticketCategory: text("ticket_category"),
   ticketSupportRole: text("ticket_support_role"),
+  ticketTraineeRole: text("ticket_trainee_role"),
   ticketLogChannel: text("ticket_log_channel"),
   ticketCount: integer("ticket_count").default(0).notNull(),
   ticketTopics: jsonb("ticket_topics").$type<Array<{ name: string; emoji?: string; description?: string }>>().default([]).notNull(),
+  ticketInactivityHours: integer("ticket_inactivity_hours"),
+  ticketNamingTemplate: text("ticket_naming_template"),
   levelsEnabled: boolean("levels_enabled").default(true).notNull(),
   levelUpChannel: text("level_up_channel"),
   jailRole: text("jail_role"),
@@ -70,6 +80,11 @@ export const antinukeWhitelist = pgTable("antinuke_whitelist",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }),
 );
 
+export const antinukeAdmins = pgTable("antinuke_admins",
+  { guildId: text("guild_id").notNull(), userId: text("user_id").notNull() },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }),
+);
+
 export const warnings = pgTable("warnings",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), reason: text("reason").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildUserIdx: index("warnings_guild_user_idx").on(t.guildId, t.userId) })
@@ -79,7 +94,19 @@ export const tags = pgTable("tags",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.name] }) })
 );
 export const autoresponders = pgTable("autoresponders",
-  { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), trigger: text("trigger").notNull(), response: text("response").notNull(), matchType: text("match_type").default("contains").notNull(), createdBy: text("created_by").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    trigger: text("trigger").notNull(),
+    response: text("response").notNull(),
+    matchType: text("match_type").default("contains").notNull(),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    exclusiveChannelId: text("exclusive_channel_id"),
+    exclusiveRoleId: text("exclusive_role_id"),
+    rewardRoleAdd: text("reward_role_add"),
+    rewardRoleRemove: text("reward_role_remove"),
+  },
   (t) => ({ guildIdx: index("ar_guild_idx").on(t.guildId) })
 );
 export const reactionRoles = pgTable("reaction_roles",
@@ -111,11 +138,31 @@ export const tickets = pgTable("tickets", {
   claimerId: text("claimer_id"),
   status: text("status").default("open").notNull(),
   topic: text("topic"),
+  closeReason: text("close_reason"),
   number: integer("number").default(0).notNull(),
   managementMessageId: text("management_message_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
+  lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).defaultNow(),
 });
+
+export const ticketForms = pgTable("ticket_forms",
+  {
+    id: serial("id").primaryKey(),
+    guildId: text("guild_id").notNull(),
+    topic: text("topic"),
+    fields: jsonb("fields").$type<Array<{
+      label: string;
+      style: "short" | "paragraph";
+      required?: boolean;
+      placeholder?: string;
+      minLength?: number;
+      maxLength?: number;
+    }>>().default([]).notNull(),
+  },
+  (t) => ({ guildIdx: index("ticket_forms_guild_idx").on(t.guildId) })
+);
+
 export const afk = pgTable("afk",
   { guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), message: text("message").notNull(), since: timestamp("since", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) })
@@ -210,7 +257,7 @@ export const birthdays = pgTable("birthdays",
   (t) => ({ pk: primaryKey({ columns: [t.userId, t.guildId] }) })
 );
 export const suggestions = pgTable("suggestions",
-  { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), messageId: text("message_id").notNull(), channelId: text("channel_id").notNull(), content: text("content").notNull(), upvotes: integer("upvotes").default(0).notNull(), downvotes: integer("downvotes").default(0).notNull(), status: text("status").default("pending").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), messageId: text("message_id").notNull(), channelId: text("channel_id").notNull(), content: text("content").notNull(), upvotes: integer("upvotes").default(0).notNull(), downvotes: integer("downvotes").default(0).notNull(), status: text("status").default("pending").notNull(), reviewMessageId: text("review_message_id"), staffNote: text("staff_note"), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildIdx: index("suggestions_guild_idx").on(t.guildId) })
 );
 export const countingData = pgTable("counting_data",

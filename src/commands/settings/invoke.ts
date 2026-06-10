@@ -6,12 +6,16 @@ import { invokeMessages } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { invalidateInvokeCache } from "../../features/invokeMessages.js";
 
-const SUPPORTED_COMMANDS = ["ban", "kick", "mute", "warn", "timeout", "softban", "hackban", "hardban", "jail"];
+const SUPPORTED_COMMANDS = [
+  "ban", "kick", "mute", "warn", "timeout", "softban", "hackban", "hardban",
+  "jail", "unjail", "unban", "untimeout", "tempban", "imute", "iunmute",
+  "rmute", "runmute", "vmute", "vunmute", "strip",
+];
 
 export const command: HybridCommand = {
   name: "invoke",
   aliases: ["invokemsg", "invokeresponse"],
-  description: "Customize the bot's response message (and/or DM to the target) when a moderation command is used.",
+  description: "Customize bot response messages when moderation commands are used.",
   category: "settings",
   permission: "admin",
   guildOnly: true,
@@ -19,6 +23,7 @@ export const command: HybridCommand = {
   examples: [
     "invoke set ban message You have been banned from {guild} by {moderator}",
     "invoke set ban dm {embed}$v{title: Banned}$v{description: You were banned from {guild}}",
+    "invoke set kick dm {embed}$v{color: red}$v{description: You were kicked from {guild}.}",
     "invoke remove ban message",
     "invoke list",
     "invoke variables",
@@ -50,77 +55,82 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
 
-    const action = ctx.getString("action");
+    const action = ctx.getString("action") ?? ctx.args[0] ?? "";
 
     if (action === "variables") {
       return ctx.reply({
         embeds: [brandEmbed({
           description: [
-            "**invoke message variables**",
-            "",
-            "use these in your invoke messages:",
+            "**invoke variables**\n",
             "```",
-            "{user}           → target username",
-            "{user.mention}   → @target",
-            "{user.id}        → target user ID",
-            "{guild}          → server name",
-            "{moderator}      → moderator username",
+            "{user}              → target username",
+            "{user.mention}      → @target",
+            "{user.id}           → target user ID",
+            "{user.tag}          → target tag",
+            "{guild}             → server name",
+            "{guild.id}          → server ID",
+            "{guild.count}       → member count",
+            "{moderator}         → moderator username",
             "{moderator.mention} → @moderator",
-            "{channel}        → current channel",
-            "```",
-            "",
+            "{moderator.id}      → moderator ID",
+            "{channel}           → channel mention",
+            "{reason}            → action reason",
+            "{duration}          → action duration",
+            "```\n",
             "**embed scripting:**",
             "```",
-            "{embed}$v{title: My Title}$v{description: Hello {user}}$v{color: #ff0099}",
+            "{embed}$v{title: Banned from {guild}}$v{color: red}$v{description: You were banned.}",
+            "```\n",
+            "**conditionals:**",
+            "```",
+            "{if:{reason}==no reason provided}",
+            "  No reason was given.",
+            "{else}",
+            "  Reason: {reason}",
+            "{/if}",
             "```",
           ].join("\n"),
-          page: "settings",
         })],
       });
     }
 
     if (action === "list") {
       const rows = await db.select().from(invokeMessages).where(eq(invokeMessages.guildId, guild.id));
-      if (!rows.length)
-        return ctx.reply({ embeds: [errorEmbed("no invoke messages configured.")] });
-
-      const lines = rows.map((r) => {
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no invoke messages configured.")] });
+      const lines = rows.map(r => {
         const preview = r.content.length > 45 ? r.content.slice(0, 45) + "…" : r.content;
         return `**${r.command}** (${r.type}) — \`${preview}\``;
       });
       return ctx.reply({
-        embeds: [brandEmbed({ description: `**invoke messages (${rows.length})**\n\n${lines.join("\n")}`, page: "settings" })],
+        embeds: [brandEmbed({ description: `**invoke messages (${rows.length})**\n\n${lines.join("\n")}` })],
       });
     }
 
-    const cmdName = ctx.getString("command")?.toLowerCase();
-    if (!cmdName)
-      return ctx.reply({ embeds: [errorEmbed(`please specify a command. supported: ${SUPPORTED_COMMANDS.join(", ")}`)] });
-    if (!SUPPORTED_COMMANDS.includes(cmdName))
-      return ctx.reply({ embeds: [errorEmbed(`unsupported command.\n\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
+    const cmdName = (ctx.getString("command") ?? ctx.args[1] ?? "").toLowerCase();
+    if (!cmdName) return ctx.reply({ embeds: [errorEmbed(`specify a command.\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
+    if (!SUPPORTED_COMMANDS.includes(cmdName)) return ctx.reply({ embeds: [errorEmbed(`unsupported command.\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
 
-    const type = ctx.getString("type");
-    if (!type || !["message", "dm"].includes(type))
-      return ctx.reply({ embeds: [errorEmbed("please specify type: `message` or `dm`.")] });
+    const type = ctx.getString("type") ?? ctx.args[2] ?? "";
+    if (!type || !["message", "dm"].includes(type)) return ctx.reply({ embeds: [errorEmbed("specify type: `message` or `dm`.")] });
 
     if (action === "remove") {
-      await db.delete(invokeMessages)
-        .where(and(eq(invokeMessages.guildId, guild.id), eq(invokeMessages.command, cmdName), eq(invokeMessages.type, type)));
+      await db.delete(invokeMessages).where(and(eq(invokeMessages.guildId, guild.id), eq(invokeMessages.command, cmdName), eq(invokeMessages.type, type)));
       invalidateInvokeCache(guild.id);
-      return ctx.reply({ embeds: [successEmbed(`removed invoke ${type} for \`${cmdName}\`.`, "settings")] });
+      return ctx.reply({ embeds: [successEmbed(`removed invoke ${type} for \`${cmdName}\`.`)] });
     }
 
     if (action === "set") {
-      const content = ctx.getString("content");
-      if (!content) return ctx.reply({ embeds: [errorEmbed("please provide the message content.")] });
-
+      const content = ctx.rawArgs
+        ? ctx.rawArgs.split(" ").slice(2).join(" ")
+        : (ctx.getString("content") ?? "");
+      if (!content) return ctx.reply({ embeds: [errorEmbed("provide the message content.")] });
       await db.insert(invokeMessages).values({ guildId: guild.id, command: cmdName, type, content })
         .onConflictDoUpdate({
           target: [invokeMessages.guildId, invokeMessages.command, invokeMessages.type],
           set: { content },
         });
       invalidateInvokeCache(guild.id);
-      return ctx.reply({ embeds: [successEmbed(`invoke ${type} for \`${cmdName}\` has been set.`, "settings")] });
+      return ctx.reply({ embeds: [successEmbed(`invoke ${type} for \`${cmdName}\` set.`)] });
     }
 
     return ctx.reply({ embeds: [errorEmbed("invalid action.")] });

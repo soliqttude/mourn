@@ -5,46 +5,56 @@ import { db } from "../../db/index.js";
 import { disabledModules } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 
-const MODULES = ["moderation", "music", "leveling", "utility", "fun", "social", "lastfm", "tickets", "giveaways", "automod"];
+const KNOWN_MODULES = [
+  "moderation", "automod", "logging", "welcome", "goodbye", "invites",
+  "levels", "tags", "autoresponders", "tickets", "giveaways", "starboard",
+  "voicemaster", "reaction-roles", "counting", "highlights", "social",
+  "music", "economy", "fun", "utility", "info",
+];
 
 export const command: HybridCommand = {
   name: "disablemodule",
-  aliases: ["disablemod"],
-  description: "Disable a module in a channel.",
-  usage: "disablemodule <channel|all|list> <module>",
-  examples: ["disablemodule #general music", "disablemodule all fun", "disablemodule list"],
+  aliases: ["moduleoff"],
+  description: "Disable an entire feature module in a channel.",
+  usage: "disablemodule <module> [#channel] | disablemodule list | disablemodule modules",
+  examples: ["disablemodule fun #general", "disablemodule levels", "disablemodule list", "disablemodule modules"],
   category: "settings",
   permission: "admin",
   guildOnly: true,
+  userPermissions: ["ManageGuild"],
   options: [
-    { name: "target", description: "Channel, 'all', or 'list'", type: ApplicationCommandOptionType.String, required: true },
-    { name: "module", description: `Module: ${MODULES.join(" | ")}`, type: ApplicationCommandOptionType.String, required: false },
+    { name: "module", description: "Module name, list, or modules", type: ApplicationCommandOptionType.String, required: true },
+    { name: "channel", description: "Channel to disable in (default: current)", type: ApplicationCommandOptionType.Channel, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const rawTarget = (ctx.getString("target") ?? ctx.args[0] ?? "").toLowerCase();
-    const mod = (ctx.getString("module") ?? ctx.args[1] ?? "").toLowerCase();
+    const mod = (ctx.getString("module") ?? ctx.args[0] ?? "").toLowerCase();
 
-    if (rawTarget === "list") {
+    if (mod === "modules") {
+      return ctx.reply({ embeds: [brandEmbed({ title: "available modules", description: KNOWN_MODULES.map(m => `\`${m}\``).join(", ") })] });
+    }
+
+    if (mod === "list") {
       const rows = await db.select().from(disabledModules).where(eq(disabledModules.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no disabled modules.")] });
-      const grouped: Record<string, string[]> = {};
-      for (const r of rows) { (grouped[`<#${r.channelId}>`] ??= []).push(`\`${r.module}\``); }
-      const lines = Object.entries(grouped).map(([k, v]) => `${k}: ${v.join(", ")}`);
-      return ctx.reply({ embeds: [brandEmbed({ title: "Disabled Modules", description: lines.join("\n") })] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no modules disabled.")] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "disabled modules", description: rows.map(r => `**${r.module}** in <#${r.channelId}>`).join("\n") })] });
     }
 
-    if (!mod || !MODULES.includes(mod)) return ctx.reply({ embeds: [errorEmbed(`unknown module. available: ${MODULES.join(", ")}`)] });
+    const ch = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, "")) ?? ctx.channel;
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("invalid channel.")] });
 
-    if (rawTarget === "all") {
-      for (const [, ch] of ctx.guild.channels.cache.filter(c => c.isTextBased())) {
-        await db.insert(disabledModules).values({ guildId: ctx.guild.id, channelId: ch.id, module: mod }).onConflictDoNothing();
-      }
-      return ctx.reply({ embeds: [successEmbed(`module \`${mod}\` disabled in all channels.`)] });
+    const existing = await db.select().from(disabledModules).where(and(
+      eq(disabledModules.guildId, ctx.guild.id),
+      eq(disabledModules.channelId, ch.id),
+      eq(disabledModules.module, mod),
+    ));
+
+    if (existing.length) {
+      await db.delete(disabledModules).where(and(eq(disabledModules.guildId, ctx.guild.id), eq(disabledModules.channelId, ch.id), eq(disabledModules.module, mod)));
+      return ctx.reply({ embeds: [successEmbed(`**${mod}** re-enabled in <#${ch.id}>.`)] });
     }
 
-    const channelId = rawTarget.replace(/[<#>]/g, "");
-    await db.insert(disabledModules).values({ guildId: ctx.guild.id, channelId, module: mod }).onConflictDoNothing();
-    return ctx.reply({ embeds: [successEmbed(`module \`${mod}\` disabled in <#${channelId}>.`)] });
+    await db.insert(disabledModules).values({ guildId: ctx.guild.id, channelId: ch.id, module: mod }).onConflictDoNothing();
+    return ctx.reply({ embeds: [successEmbed(`**${mod}** disabled in <#${ch.id}>.`)] });
   },
 };
