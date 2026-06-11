@@ -462,6 +462,37 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS emoji_filter_enabled BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS music_files_filter_enabled BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS mass_mention_enabled BOOLEAN NOT NULL DEFAULT false`,
+
+  // ── Antiraid v2 ───────────────────────────────────────────────────────────
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_require_avatar BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_manual_state BOOLEAN NOT NULL DEFAULT false`,
+
+  // ── Ticket v2 ─────────────────────────────────────────────────────────────
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_trainee_role TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_inactivity_hours INTEGER`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_naming_template TEXT`,
+  `ALTER TABLE tickets ADD COLUMN IF NOT EXISTS close_reason TEXT`,
+  `ALTER TABLE tickets ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ DEFAULT now()`,
+  `CREATE TABLE IF NOT EXISTS ticket_forms (
+    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, topic TEXT,
+    fields JSONB NOT NULL DEFAULT '[]'
+  )`,
+  `CREATE INDEX IF NOT EXISTS ticket_forms_guild_idx ON ticket_forms (guild_id)`,
+
+  // ── Autoresponder v2 ──────────────────────────────────────────────────────
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS exclusive_channel_id TEXT`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS exclusive_role_id TEXT`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS reward_role_add TEXT`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS reward_role_remove TEXT`,
+
+  // ── Suggestions v2 ────────────────────────────────────────────────────────
+  `ALTER TABLE suggestions ADD COLUMN IF NOT EXISTS review_message_id TEXT`,
+  `ALTER TABLE suggestions ADD COLUMN IF NOT EXISTS staff_note TEXT`,
+
+  // ── Antinuke admin delegation ─────────────────────────────────────────────
+  `CREATE TABLE IF NOT EXISTS antinuke_admins (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, PRIMARY KEY (guild_id, user_id)
+  )`,
 ];
 
 export async function runMigrations(): Promise<void> {
