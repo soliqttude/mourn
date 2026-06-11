@@ -1,4 +1,5 @@
 import { DisTube, type Queue, type Song } from "distube";
+import { YouTubePlugin } from "@distube/youtube";
 import { type Client, type TextChannel, EmbedBuilder } from "discord.js";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
@@ -70,6 +71,7 @@ export function setupMusic(client: Client): void {
     ffmpeg: {
       path: ffmpegPath ?? "ffmpeg",
     },
+    plugins: [new YouTubePlugin()],
   });
 
   distube
