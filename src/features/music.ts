@@ -105,11 +105,18 @@ export function setupMusic(client: Client): void {
     .on("disconnect", (queue: Queue) => {
       logger.debug({ guildId: queue.id }, "distube disconnected");
     })
-    .on("error", (error: Error, queue: Queue) => {
-      logger.warn({ err: error }, "distube error");
+    .on("error", (queue: Queue, error: Error) => {
+      // FIX: DisTube v5 error event is (queue, error) — was previously swapped causing silent failures
+      logger.warn({ err: error, guildId: queue?.id }, "distube error");
       const ch = queue?.textChannel as TextChannel | undefined;
       if (ch) {
-        ch.send({ embeds: [new EmbedBuilder().setColor(0xffa500).setDescription(`music error: ${error.message}`)] }).catch(() => {});
+        ch.send({
+          embeds: [new EmbedBuilder()
+            .setColor(0xffa500)
+            .setTitle("⚠️ Music Error")
+            .setDescription(`\`\`\`${error.message}\`\`\``)
+          ]
+        }).catch(() => {});
       }
     });
 }
