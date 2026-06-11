@@ -1,4 +1,4 @@
-import { DisTube, type Queue, type Song } from "distube";
+import { DisTube, type Queue, type Song, type Playlist } from "distube";
 import { YouTubePlugin } from "@distube/youtube";
 import { type Client, type TextChannel, EmbedBuilder } from "discord.js";
 import { eq } from "drizzle-orm";
@@ -64,23 +64,20 @@ export function formatTime(seconds: number): string {
 export function setupMusic(client: Client): void {
   distube = new DisTube(client, {
     emitNewSongOnly: true,
-    leaveOnEmpty: true,
-    leaveOnFinish: true,
-    leaveOnStop: true,
-    savePreviousSongs: false,
+    plugins: [new YouTubePlugin()],
     ffmpeg: {
       path: ffmpegPath ?? "ffmpeg",
+      args: { global: {}, input: {}, output: {} },
     },
-    plugins: [new YouTubePlugin()],
   });
 
   distube
-    .on("playSong", (queue, song) => {
+    .on("playSong", (queue: Queue, song: Song) => {
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
       ch.send({ embeds: [nowPlayingEmbed(song, queue)] }).catch(() => {});
     })
-    .on("addSong", (queue, song) => {
+    .on("addSong", (queue: Queue, song: Song) => {
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
       ch.send({
@@ -89,7 +86,7 @@ export function setupMusic(client: Client): void {
           .setDescription(`queued **[${song.name}](${song.url})** (position #${queue.songs.length})`)]
       }).catch(() => {});
     })
-    .on("addList", (queue, playlist) => {
+    .on("addList", (queue: Queue, playlist: Playlist) => {
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
       ch.send({
@@ -98,18 +95,21 @@ export function setupMusic(client: Client): void {
           .setDescription(`queued playlist **${playlist.name}** — ${playlist.songs.length} songs`)]
       }).catch(() => {});
     })
-    .on("finish", (queue) => {
+    .on("finish", (queue: Queue) => {
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
       ch.send({
         embeds: [new EmbedBuilder().setColor(config.brandColor).setDescription("queue finished. leaving voice channel.")]
       }).catch(() => {});
     })
-    .on("disconnect", () => {})
-    .on("error", (channel, error) => {
+    .on("disconnect", (queue: Queue) => {
+      logger.debug({ guildId: queue.id }, "distube disconnected");
+    })
+    .on("error", (error: Error, queue: Queue) => {
       logger.warn({ err: error }, "distube error");
-      if (channel && "send" in channel) {
-        (channel as TextChannel).send({ embeds: [new EmbedBuilder().setColor(0xffa500).setDescription(`music error: ${error.message}`)] }).catch(() => {});
+      const ch = queue?.textChannel as TextChannel | undefined;
+      if (ch) {
+        ch.send({ embeds: [new EmbedBuilder().setColor(0xffa500).setDescription(`music error: ${error.message}`)] }).catch(() => {});
       }
     });
 }
