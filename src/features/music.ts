@@ -5,6 +5,7 @@ import { db } from "../db/index.js";
 import { musicSettings } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { config } from "../config.js";
+import ffmpegPath from "ffmpeg-static";
 
 export let distube: DisTube;
 
@@ -66,6 +67,9 @@ export function setupMusic(client: Client): void {
     leaveOnFinish: true,
     leaveOnStop: true,
     savePreviousSongs: false,
+    ffmpeg: {
+      path: ffmpegPath ?? "ffmpeg",
+    },
   });
 
   distube
