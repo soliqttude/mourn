@@ -11,26 +11,68 @@ import { commands, findCommand } from "../../handlers/registry.js";
 import { config } from "../../config.js";
 
 export const CAT_LABEL: Record<string, string> = {
-  fun:         "Fun",
-  moderation:  "Moderation",
-  settings:    "Settings",
-  utility:     "Utility",
-  levels:      "Levels",
-  giveaway:    "Giveaway",
-  tags:        "Tags",
-  voicemaster: "Voice",
-  custom:      "Custom",
-  social:      "Social",
+  anime:          "Anime",
+  animedeveloper: "Developer",
+  config:         "Config",
+  custom:         "Custom",
+  customgiveaway: "Giveaway",
+  developer:      "Developer",
+  economy:        "Economy",
+  fun:            "Fun",
+  giveaway:       "Giveaway",
+  image:          "Image",
+  lastfm:         "Last.fm",
+  levels:         "Levels",
+  moderation:     "Moderation",
+  music:          "Music",
+  roleplay:       "Roleplay",
+  settings:       "Settings",
+  social:         "Social",
+  sticker:        "Sticker",
+  tags:           "Tags",
+  thread:         "Thread",
+  utility:        "Utility",
+  voicemaster:    "Voice",
+  webhook:        "Webhook",
 };
 
-// ── Custom emoji IDs from env — set CAT_EMOJI_MOD=emojiname:emojiid on Railway
+// Unicode emoji fallback per category
+const CAT_EMOJI_UNICODE: Record<string, string> = {
+  anime:          "🌸",
+  animedeveloper: "🛠️",
+  config:         "⚙️",
+  custom:         "🎨",
+  customgiveaway: "🎁",
+  developer:      "🛠️",
+  economy:        "💰",
+  fun:            "🎉",
+  giveaway:       "🎁",
+  image:          "🖼️",
+  lastfm:         "🎵",
+  levels:         "📊",
+  moderation:     "🛡️",
+  music:          "🎶",
+  roleplay:       "🎭",
+  settings:       "⚙️",
+  social:         "💬",
+  sticker:        "🎨",
+  tags:           "🏷️",
+  thread:         "🧵",
+  utility:        "🔧",
+  voicemaster:    "🔊",
+  webhook:        "🔗",
+};
+
+// Custom emoji IDs from env override unicode fallback
 // e.g. CAT_EMOJI_MOD=shield:1234567890123456789
-function getCatEmoji(cat: string): { id: string; name: string } | undefined {
+function getCatEmoji(cat: string): { id?: string; name: string } | undefined {
   const raw = process.env[`CAT_EMOJI_${cat.toUpperCase()}`];
-  if (!raw) return undefined;
-  const [name, id] = raw.split(":");
-  if (!name || !id) return undefined;
-  return { id, name };
+  if (raw) {
+    const [name, id] = raw.split(":");
+    if (name && id) return { id, name };
+  }
+  const unicode = CAT_EMOJI_UNICODE[cat];
+  return unicode ? { name: unicode } : undefined;
 }
 
 const CMDS_PER_PAGE = 10;
