@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { modEmbed, errorEmbed } from "../../lib/embeds.js";
+import { errorEmbed } from "../../lib/embeds.js";
 import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
 
 export const command: HybridCommand = {
@@ -27,11 +27,12 @@ export const command: HybridCommand = {
     if (existingBan) return ctx.reply({ embeds: [errorEmbed("That **user** is already banned.")] });
     const member = await guild.members.fetch(target.id).catch(() => null);
     if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("I can't ban that **user** — they may have a higher **role**.")] });
+    const dmSent = await target.send(
+      `You have been **banned** from **${guild.name}**.\n**Reason:** ${reason}`
+    ).then(() => true).catch(() => false);
     try {
       await guild.members.ban(target.id, { reason: `${ctx.user.tag}: ${reason}` });
-      return ctx.reply({
-        embeds: [modEmbed({ action: "banned", target, moderator: ctx.user, reason })],
-      });
+      return ctx.reply({ content: dmSent ? "👍" : "👍 - Couldn't DM member" });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed(cleanError(err))] });
     }

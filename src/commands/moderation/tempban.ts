@@ -1,29 +1,53 @@
-import { EmbedBuilder, ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { config } from "../../config.js";
+import { errorEmbed } from "../../lib/embeds.js";
+import { REASON_DEFAULT } from "../../lib/format.js";
+import { parseDuration } from "../../lib/time.js";
+import { db } from "../../db/index.js";
+import { tempBans } from "../../db/schema.js";
 
 export const command: HybridCommand = {
   name: "tempban",
   description: "Temporarily ban a user.",
   category: "moderation",
   aliases: ["tban"],
+  permission: "mod",
   guildOnly: true,
-  userPermissions: ["BanMembers"],
   options: [
     { name: "user", description: "User to ban", type: ApplicationCommandOptionType.User, required: true },
     { name: "duration", description: "Duration (e.g. 1h, 30m, 1d)", type: ApplicationCommandOptionType.String, required: true },
     { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
-    if (!ctx.guild) return;
-    const target = await ctx.getUser("user");
-    const duration = ctx.getString("duration") ?? ctx.args[1];
-    const reason = ctx.getString("reason") ?? "Temp ban";
-    if (!target) return ctx.reply({ content: "Provide a user.", ephemeral: true } as any);
-    if (!duration) return ctx.reply({ content: "Provide a duration (e.g. 1h, 30m, 1d).", ephemeral: true } as any);
-    const ms = duration.endsWith("d") ? parseInt(duration)*86400000 : duration.endsWith("h") ? parseInt(duration)*3600000 : duration.endsWith("m") ? parseInt(duration)*60000 : 3600000;
-    await ctx.guild.members.ban(target.id, { reason: `[Temp ban ${duration}] ${reason} | by ${ctx.user.tag}` });
-    setTimeout(() => ctx.guild?.members.unban(target.id, "Temp ban expired").catch(() => null), ms);
-    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xff4444).setTitle("🔨 Temp Ban").addFields({ name: "User", value: target.tag, inline: true },{ name: "Duration", value: duration, inline: true },{ name: "Reason", value: reason }).setFooter({ text: config.embedFooter }).setTimestamp()] });
+    const guild = ctx.guild;
+    if (!guild) return;
+    const target = await ctx.getUser("user", true);
+    const dur = ctx.getString("duration", true) ?? ctx.args[1];
+    const reason = ctx.getString("reason") ?? REASON_DEFAULT;
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**User** not found.")] });
+    if (!dur) return ctx.reply({ embeds: [errorEmbed("Please provide a **duration** (e.g. 1h, 30m, 1d).")] });
+    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't tempban yourself.")] });
+    const existingBan = await guild.bans.fetch(target.id).catch(() => null);
+    if (existingBan) return ctx.reply({ embeds: [errorEmbed("That **user** is already banned.")] });
+    const ms = parseDuration(dur);
+    if (!ms) return ctx.reply({ embeds: [errorEmbed("Invalid **duration** format. Use e.g. `10m`, `1h`, `7d`.")] });
+    const member = await guild.members.fetch(target.id).catch(() => null);
+    if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("I can't ban that **user** — they may have a higher **role**.")] });
+    const dmSent = await target.send(
+      `You have been **temporarily banned** from **${guild.name}** for ${dur}.\n**Reason:** ${reason}`
+    ).then(() => true).catch(() => false);
+    try {
+      await guild.members.ban(target.id, { reason: `[Tempban ${dur}] ${reason} | by ${ctx.user.tag}` });
+      await db.insert(tempBans).values({
+        guildId: guild.id,
+        userId: target.id,
+        moderatorId: ctx.user.id,
+        reason,
+        unbanAt: new Date(Date.now() + ms),
+      });
+      return ctx.reply({ content: dmSent ? "👍" : "👍 - Couldn't DM member" });
+    } catch (err) {
+      return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
+    }
   },
 };
