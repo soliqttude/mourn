@@ -18,12 +18,12 @@ export const command: HybridCommand = {
     let channelId: string, messageId: string;
     if (linkMatch) { channelId = linkMatch[1]!; messageId = linkMatch[2]!; }
     else if (/^\d{17,20}$/.test(input)) { channelId = ctx.channel?.id ?? ""; messageId = input; }
-    else return ctx.reply({ embeds: [errorEmbed("please provide a valid message link or ID.")] });
+    else return ctx.reply({ embeds: [errorEmbed("Please provide a valid message link or ID.")] });
     try {
       const ch = await ctx.client.channels.fetch(channelId) as any;
       const msg = await ch.messages.fetch(messageId);
       await msg.unpin();
-      return ctx.reply({ embeds: [successEmbed("message unpinned.")] });
+      return ctx.reply({ embeds: [successEmbed("Message unpinned.")] });
     } catch (e: any) {
       return ctx.reply({ embeds: [errorEmbed(`failed to unpin: ${e.message ?? "unknown error"}`)] });
     }

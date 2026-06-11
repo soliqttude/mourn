@@ -15,7 +15,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const role = ctx.getRole("role");
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Role not found.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("**Role** not found.")] });
     await ctx.defer();
     const members = await ctx.guild.members.fetch();
     let count = 0;

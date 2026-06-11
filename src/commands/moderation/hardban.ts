@@ -26,7 +26,7 @@ export const command: HybridCommand = {
       await guild.bans.create(target.id, { deleteMessageSeconds: 604800, reason });
       return ctx.reply({ embeds: [successEmbed(`Hardbanned **${target.tag}** — all message history cleared.`)] });
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("Failed to hardban. Check my permissions.")] });
+      return ctx.reply({ embeds: [errorEmbed("Failed to hardban. Check my **permissions**.")] });
     }
   },
 };

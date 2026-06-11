@@ -67,7 +67,7 @@ export const command: HybridCommand = {
     const ch = ctx.channel as TextChannel;
     const ticket = await getTicketByChannel(ch.id);
     if (!ticket) {
-      return ctx.reply({ embeds: [errorEmbed("this channel is not a ticket.")] });
+      return ctx.reply({ embeds: [errorEmbed("This **channel** is not a **ticket**.")] });
     }
 
     const getSlashSub = (): string => {
@@ -81,7 +81,7 @@ export const command: HybridCommand = {
     // ── add ───────────────────────────────────────────────────────────────────
     if (sub === "add") {
       const user = await ctx.getUser("user");
-      if (!user) return ctx.reply({ embeds: [errorEmbed("please mention a valid user.")] });
+      if (!user) return ctx.reply({ embeds: [errorEmbed("Please mention a valid **user**.")] });
       await ticketAdd(ch, user.id);
       return ctx.reply({ embeds: [successEmbed(`added <@${user.id}> to this ticket.`)] });
     }
@@ -89,9 +89,9 @@ export const command: HybridCommand = {
     // ── remove ────────────────────────────────────────────────────────────────
     if (sub === "remove") {
       const user = await ctx.getUser("user");
-      if (!user) return ctx.reply({ embeds: [errorEmbed("please mention a valid user.")] });
+      if (!user) return ctx.reply({ embeds: [errorEmbed("Please mention a valid **user**.")] });
       if (user.id === ticket.openerId) {
-        return ctx.reply({ embeds: [errorEmbed("you cannot remove the ticket opener.")] });
+        return ctx.reply({ embeds: [errorEmbed("You cannot remove the **ticket** opener.")] });
       }
       await ticketRemove(ch, user.id);
       return ctx.reply({ embeds: [successEmbed(`removed <@${user.id}> from this ticket.`)] });
@@ -100,36 +100,36 @@ export const command: HybridCommand = {
     // ── rename ────────────────────────────────────────────────────────────────
     if (sub === "rename") {
       const name = ctx.getString("name") ?? ctx.args[1];
-      if (!name) return ctx.reply({ embeds: [errorEmbed("please provide a name.")] });
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a name.")] });
       await ticketRename(ch, name);
       return ctx.reply({ embeds: [successEmbed(`ticket renamed to **${name.toLowerCase().replace(/\s+/g, "-")}**.`)] });
     }
 
     // ── close ─────────────────────────────────────────────────────────────────
     if (sub === "close") {
-      if (ticket.status === "closed") return ctx.reply({ embeds: [errorEmbed("ticket is already closed.")] });
-      await ctx.reply({ embeds: [successEmbed("closing ticket...")] });
+      if (ticket.status === "closed") return ctx.reply({ embeds: [errorEmbed("**Ticket** is already closed.")] });
+      await ctx.reply({ embeds: [successEmbed("Closing **ticket**...")] });
       await closeTicketCmd(ch, ctx.user.id, ctx.guild);
       return;
     }
 
     // ── reopen ────────────────────────────────────────────────────────────────
     if (sub === "reopen") {
-      if (ticket.status === "open") return ctx.reply({ embeds: [errorEmbed("ticket is already open.")] });
-      await ctx.reply({ embeds: [successEmbed("reopening ticket...")] });
+      if (ticket.status === "open") return ctx.reply({ embeds: [errorEmbed("**Ticket** is already open.")] });
+      await ctx.reply({ embeds: [successEmbed("Reopening **ticket**...")] });
       await reopenTicketCmd(ch, ctx.user.id, ctx.guild);
       return;
     }
 
     // ── delete ────────────────────────────────────────────────────────────────
     if (sub === "delete") {
-      await ctx.reply({ embeds: [successEmbed("generating transcript and deleting ticket...")] });
+      await ctx.reply({ embeds: [successEmbed("Generating transcript and deleting **ticket**...")] });
       await deleteTicketCmd(ch, ctx.user.id, ctx.guild);
       return;
     }
 
     return ctx.reply({
-      embeds: [errorEmbed("usage: `ticket <add|remove|rename|close|reopen|delete>`")],
+      embeds: [errorEmbed("Usage: `ticket <add|remove|rename|close|reopen|delete>`")],
     });
   },
 };

@@ -7,7 +7,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const name = (ctx.getString("name", true) ?? ctx.args.join(" ")).trim();
-    if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a category name.")] });
+    if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a **category** name.")] });
     try {
       const cat = await ctx.guild.channels.create({ name: name.toUpperCase(), type: ChannelType.GuildCategory, reason: `Created by ${ctx.user.tag}` });
       return ctx.reply({ embeds: [successEmbed(`Created category **${cat.name}**.`)] });

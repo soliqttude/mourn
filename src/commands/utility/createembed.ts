@@ -103,10 +103,10 @@ export const command: HybridCommand = {
     if (!target) target = ctx.channel;
 
     if (!target?.isTextBased()) {
-      return ctx.reply({ embeds: [errorEmbed("couldn't resolve a text channel.")] });
+      return ctx.reply({ embeds: [errorEmbed("Couldn't resolve a text **channel**.")] });
     }
     if (!code.trim()) {
-      return ctx.reply({ embeds: [errorEmbed("provide embed scripting code.")] });
+      return ctx.reply({ embeds: [errorEmbed("Provide embed scripting code.")] });
     }
 
     const { embeds, content, components: scriptComponents } = parseScript(code, {
@@ -117,7 +117,7 @@ export const command: HybridCommand = {
     });
 
     if (embeds.length === 0 && !content) {
-      return ctx.reply({ embeds: [errorEmbed("no embeds or content parsed from the script.")] });
+      return ctx.reply({ embeds: [errorEmbed("No embeds or content parsed from the script.")] });
     }
 
     // Attach ticket topic buttons if:
@@ -145,7 +145,7 @@ export const command: HybridCommand = {
         components: allComponents,
       });
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("failed to send — check my permissions in that channel.")] });
+      return ctx.reply({ embeds: [errorEmbed("Failed to send — check my **permissions** in that **channel**.")] });
     }
 
     if (ctx.source === "prefix") {

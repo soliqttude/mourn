@@ -110,7 +110,7 @@ export const command: HybridCommand = {
       const ch = ctx.getChannel("channel");
       const channelArg = ch as any;
       if (!channelArg || channelArg.type !== ChannelType.GuildCategory) {
-        return ctx.reply({ embeds: [errorEmbed("please provide a valid category channel.")] });
+        return ctx.reply({ embeds: [errorEmbed("Please provide a valid **category** **channel**.")] });
       }
       await updateGuildSettings(ctx.guild.id, { ticketCategory: channelArg.id });
       return ctx.reply({ embeds: [successEmbed(`ticket category set to **${channelArg.name}**`, "settings")] });
@@ -119,7 +119,7 @@ export const command: HybridCommand = {
     // ── supportrole ───────────────────────────────────────────────────────────
     if (slashSub === "supportrole" || sub === "supportrole") {
       const role = ctx.getRole("role");
-      if (!role) return ctx.reply({ embeds: [errorEmbed("please provide a valid role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Please provide a valid **role**.")] });
       await updateGuildSettings(ctx.guild.id, { ticketSupportRole: role.id });
       return ctx.reply({ embeds: [successEmbed(`support role set to <@&${role.id}>`, "settings")] });
     }
@@ -127,7 +127,7 @@ export const command: HybridCommand = {
     // ── logs ──────────────────────────────────────────────────────────────────
     if (slashSub === "logs" || sub === "logs") {
       const ch = ctx.getChannel("channel");
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a valid channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a valid **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { ticketLogChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`transcript log channel set to <#${ch.id}>`, "settings")] });
     }
@@ -137,11 +137,11 @@ export const command: HybridCommand = {
       const name = ctx.getString("name") ?? ctx.args[2];
       const emoji = ctx.getString("emoji") ?? ctx.args[3] ?? null;
       const description = ctx.getString("description") ?? null;
-      if (!name) return ctx.reply({ embeds: [errorEmbed("please provide a topic name.")] });
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a **topic** name.")] });
 
       const settings = await getGuildSettings(ctx.guild.id);
       const topics = settings.ticketTopics ?? [];
-      if (topics.length >= 20) return ctx.reply({ embeds: [errorEmbed("maximum of 20 topics allowed.")] });
+      if (topics.length >= 20) return ctx.reply({ embeds: [errorEmbed("Maximum of 20 topics allowed.")] });
       if (topics.some((t: any) => t.name.toLowerCase() === name.toLowerCase())) {
         return ctx.reply({ embeds: [errorEmbed(`a topic called **${name}** already exists.`)] });
       }
@@ -154,7 +154,7 @@ export const command: HybridCommand = {
     // ── topic remove ──────────────────────────────────────────────────────────
     if (slashSub === "topic remove" || (sub === "topic" && sub2 === "remove")) {
       const name = ctx.getString("name") ?? ctx.args[2];
-      if (!name) return ctx.reply({ embeds: [errorEmbed("please provide a topic name.")] });
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a **topic** name.")] });
 
       const settings = await getGuildSettings(ctx.guild.id);
       const topics = (settings.ticketTopics ?? []).filter((t: any) => t.name.toLowerCase() !== name.toLowerCase());
@@ -169,7 +169,7 @@ export const command: HybridCommand = {
     if (slashSub === "topic list" || (sub === "topic" && sub2 === "list")) {
       const settings = await getGuildSettings(ctx.guild.id);
       const topics = settings.ticketTopics ?? [];
-      if (!topics.length) return ctx.reply({ embeds: [errorEmbed("no topics configured.")] });
+      if (!topics.length) return ctx.reply({ embeds: [errorEmbed("No topics configured.")] });
       const lines = topics.map((t: any, i: number) => `**${i + 1}.** ${t.emoji ? `${t.emoji} ` : ""}${t.name}${t.description ? ` — ${t.description}` : ""}`);
       return ctx.reply({
         embeds: [
@@ -202,11 +202,11 @@ export const command: HybridCommand = {
         ticketTopics: [],
         ticketCount: 0,
       });
-      return ctx.reply({ embeds: [successEmbed("ticket settings reset.", "settings")] });
+      return ctx.reply({ embeds: [successEmbed("**Ticket** settings reset.", "settings")] });
     }
 
     return ctx.reply({
-      embeds: [errorEmbed("usage: `ticketsetup <category|supportrole|logs|topic|config|reset>`")],
+      embeds: [errorEmbed("Usage: `ticketsetup <**category**|supportrole|logs|**topic**|config|reset>`")],
     });
   },
 };

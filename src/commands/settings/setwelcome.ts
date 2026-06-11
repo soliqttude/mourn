@@ -17,7 +17,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const channel = ctx.getChannel("channel", true);
-    if (!channel) return ctx.reply({ embeds: [errorEmbed("Channel is required.")] });
+    if (!channel) return ctx.reply({ embeds: [errorEmbed("**Channel** is required.")] });
 
     await updateGuildSettings(ctx.guild.id, { welcomeChannel: channel.id });
     return ctx.reply({ embeds: [successEmbed(`Welcome messages will be sent in <#${channel.id}>.`)] });

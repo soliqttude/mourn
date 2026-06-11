@@ -44,7 +44,7 @@ export const command: HybridCommand = {
     if (action === "list") {
       const rows = await db.select().from(reactionTriggers).where(eq(reactionTriggers.guildId, guild.id));
       if (!rows.length)
-        return ctx.reply({ embeds: [errorEmbed("no reaction triggers configured.")] });
+        return ctx.reply({ embeds: [errorEmbed("No reaction **triggers** configured.")] });
 
       const lines = rows.map((r) => `\`${r.trigger}\` → ${r.emoji}`).join("\n");
       return ctx.reply({
@@ -53,7 +53,7 @@ export const command: HybridCommand = {
     }
 
     const trigger = ctx.getString("trigger");
-    if (!trigger) return ctx.reply({ embeds: [errorEmbed("please provide a trigger word.")] });
+    if (!trigger) return ctx.reply({ embeds: [errorEmbed("Please provide a **trigger** **word**.")] });
 
     if (action === "remove") {
       const result = await db.delete(reactionTriggers)
@@ -64,7 +64,7 @@ export const command: HybridCommand = {
 
     if (action === "add") {
       const emoji = ctx.getString("emoji");
-      if (!emoji) return ctx.reply({ embeds: [errorEmbed("please provide an emoji.")] });
+      if (!emoji) return ctx.reply({ embeds: [errorEmbed("Please provide an **emoji**.")] });
 
       const existing = await db.select().from(reactionTriggers)
         .where(and(eq(reactionTriggers.guildId, guild.id), eq(reactionTriggers.trigger, trigger.toLowerCase())));
@@ -73,7 +73,7 @@ export const command: HybridCommand = {
 
       const rows = await db.select().from(reactionTriggers).where(eq(reactionTriggers.guildId, guild.id));
       if (rows.length >= 25)
-        return ctx.reply({ embeds: [errorEmbed("maximum of 25 reaction triggers reached.")] });
+        return ctx.reply({ embeds: [errorEmbed("Maximum of 25 reaction **triggers** reached.")] });
 
       await db.insert(reactionTriggers).values({
         guildId: guild.id,
@@ -84,6 +84,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`added trigger \`${trigger.toLowerCase()}\` → ${emoji}`, "settings")] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("invalid action.")] });
+    return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
   },
 };

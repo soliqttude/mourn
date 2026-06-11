@@ -59,17 +59,17 @@ export const command: HybridCommand = {
       role = findRole(ctx.guild, ctx.args.slice(1).join(" "));
     }
 
-    if (!target) return ctx.reply({ embeds: [errorEmbed("i can't find that member.")] });
-    if (!role)   return ctx.reply({ embeds: [errorEmbed("i can't find that role.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("I can't find that **member**.")] });
+    if (!role)   return ctx.reply({ embeds: [errorEmbed("I can't find that **role**.")] });
 
     if (!ctx.guild.members.me?.permissions.has("ManageRoles")) {
-      return ctx.reply({ embeds: [errorEmbed("i don't have **manage roles** permission.")] });
+      return ctx.reply({ embeds: [errorEmbed("I don't have **manage roles** **permission**.")] });
     }
     if (role.position >= (ctx.guild.members.me?.roles.highest.position ?? 0)) {
-      return ctx.reply({ embeds: [errorEmbed("that role is above my highest role.")] });
+      return ctx.reply({ embeds: [errorEmbed("That **role** is above my highest **role**.")] });
     }
     if (role.managed) {
-      return ctx.reply({ embeds: [errorEmbed("that role is managed by an integration.")] });
+      return ctx.reply({ embeds: [errorEmbed("That **role** is managed by an integration.")] });
     }
 
     try {

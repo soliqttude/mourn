@@ -34,7 +34,7 @@ export const command: HybridCommand = {
       });
     }
 
-    if (text.length > 64) return ctx.reply({ embeds: [successEmbed("keep it under 64 characters.")] });
+    if (text.length > 64) return ctx.reply({ embeds: [successEmbed("Keep it under 64 characters.")] });
 
     await db.insert(userMood)
       .values({ guildId: ctx.guild.id, userId: ctx.user.id, mood: text })

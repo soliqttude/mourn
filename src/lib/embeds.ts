@@ -3,7 +3,7 @@ import { EmbedBuilder, type Guild, type User } from "discord.js";
 // ── Bleed-style color palette ──────────────────────────────────────────────────
 const C = {
   success: 0x57F287,
-  error:   0xFFA500,
+  error:   0xF0B429,
   action:  0x5865F2,
   mod:     0x000000,
 } as const;
@@ -31,25 +31,25 @@ function base(color: number | null = null): EmbedBuilder {
 }
 
 export function successEmbed(message: string, _page?: unknown): EmbedBuilder {
-  const eb = base(C.success).setDescription(message.toLowerCase());
+  const eb = base(C.success).setDescription(message);
   _styles.set(eb, "success");
   return eb;
 }
 
 export function errorEmbed(message: string, _page?: unknown): EmbedBuilder {
-  const eb = base(C.error).setDescription(message.toLowerCase());
+  const eb = base(C.error).setDescription(message);
   _styles.set(eb, "error");
   return eb;
 }
 
 export function warnEmbed(message: string, _page?: unknown): EmbedBuilder {
-  const eb = base(C.error).setDescription(message.toLowerCase());
+  const eb = base(C.error).setDescription(message);
   _styles.set(eb, "warn");
   return eb;
 }
 
 export function actionEmbed(message: string, _page?: unknown): EmbedBuilder {
-  const eb = base(C.action).setDescription(message.toLowerCase());
+  const eb = base(C.action).setDescription(message);
   _styles.set(eb, "action");
   return eb;
 }

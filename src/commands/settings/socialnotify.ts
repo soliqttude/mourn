@@ -39,9 +39,9 @@ export const command: HybridCommand = {
       const platform = (ctx.getString("platform") ?? ctx.args[1] ?? "").toLowerCase() as typeof PLATFORMS[number];
       const target = ctx.getString("target") ?? ctx.args[2];
       if (!PLATFORMS.includes(platform)) return ctx.reply({ embeds: [errorEmbed(`platform must be one of: ${PLATFORMS.join(", ")}`)] });
-      if (!target) return ctx.reply({ embeds: [errorEmbed("provide a target (channel ID, username, or subreddit).")] });
+      if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a target (**channel** ID, **username**, or subreddit).")] });
       const ch = ctx.getChannel("channel") ?? (ctx.args[3] ? resolveChannel(ctx.guild, ctx.args[3]) : null);
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("provide a discord channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a discord **channel**.")] });
       const message = ctx.getString("message") ?? ctx.args.slice(4).join(" ") || null;
 
       const existing = await db.select().from(socialSubscriptions).where(and(eq(socialSubscriptions.guildId, guildId), eq(socialSubscriptions.platform, platform), eq(socialSubscriptions.target, target)));
@@ -53,15 +53,15 @@ export const command: HybridCommand = {
 
     if (sub === "remove") {
       const id = parseInt(ctx.getString("platform") ?? ctx.args[1] ?? "");
-      if (isNaN(id)) return ctx.reply({ embeds: [errorEmbed("provide the subscription ID (from `socialnotify list`).")] });
+      if (isNaN(id)) return ctx.reply({ embeds: [errorEmbed("Provide the subscription ID (from `socialnotify list`).")] });
       const rows = await db.select().from(socialSubscriptions).where(and(eq(socialSubscriptions.guildId, guildId), eq(socialSubscriptions.id, id)));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("subscription not found.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("Subscription not found.")] });
       await db.delete(socialSubscriptions).where(eq(socialSubscriptions.id, id));
-      return ctx.reply({ embeds: [successEmbed("subscription removed.")] });
+      return ctx.reply({ embeds: [successEmbed("Subscription removed.")] });
     }
 
     const rows = await db.select().from(socialSubscriptions).where(eq(socialSubscriptions.guildId, guildId));
-    if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no social subscriptions.")] });
+    if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No social subscriptions.")] });
     const lines = rows.map(r => `\`#${r.id}\` **${r.platform}** / \`${r.target}\` → <#${r.channelId}>`);
     return ctx.reply({ embeds: [brandEmbed({ title: "Social Notifications", description: lines.join("\n") })] });
   },

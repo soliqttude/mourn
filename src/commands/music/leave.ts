@@ -10,10 +10,10 @@ export const command: HybridCommand = {
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.guild || !ctx.member) return;
-    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("you need the dj role.")] });
+    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("You need the dj **role**.")] });
     const queue = distube.getQueue(ctx.guild);
     if (queue) await distube.stop(ctx.guild);
     await distube.voices.get(ctx.guild)?.leave();
-    return ctx.reply({ embeds: [successEmbed("left the voice channel.")] });
+    return ctx.reply({ embeds: [successEmbed("Left the voice **channel**.")] });
   },
 };

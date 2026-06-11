@@ -17,10 +17,10 @@ export const command: HybridCommand = {
     const member = ctx.member;
     const vc = (member as any).voice?.channel;
     if (!vc || vc.type !== ChannelType.GuildVoice) {
-      return ctx.reply({ embeds: [errorEmbed("you need to be in a voice channel.")] });
+      return ctx.reply({ embeds: [errorEmbed("You need to be in a voice **channel**.")] });
     }
     if (!await hasDjPermission(ctx.guild.id, member)) {
-      return ctx.reply({ embeds: [errorEmbed("you need the dj role to use music commands.")] });
+      return ctx.reply({ embeds: [errorEmbed("You need the dj **role** to use music **commands**.")] });
     }
     const query = ctx.getString("query", true)!;
     await ctx.defer();

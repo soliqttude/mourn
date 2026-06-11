@@ -96,7 +96,7 @@ export const command: HybridCommand = {
 
     if (action === "list") {
       const rows = await db.select().from(invokeMessages).where(eq(invokeMessages.guildId, guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no invoke messages configured.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No invoke messages configured.")] });
       const lines = rows.map(r => {
         const preview = r.content.length > 45 ? r.content.slice(0, 45) + "…" : r.content;
         return `**${r.command}** (${r.type}) — \`${preview}\``;
@@ -111,7 +111,7 @@ export const command: HybridCommand = {
     if (!SUPPORTED_COMMANDS.includes(cmdName)) return ctx.reply({ embeds: [errorEmbed(`unsupported command.\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
 
     const type = ctx.getString("type") ?? ctx.args[2] ?? "";
-    if (!type || !["message", "dm"].includes(type)) return ctx.reply({ embeds: [errorEmbed("specify type: `message` or `dm`.")] });
+    if (!type || !["message", "dm"].includes(type)) return ctx.reply({ embeds: [errorEmbed("Specify type: `message` or `dm`.")] });
 
     if (action === "remove") {
       await db.delete(invokeMessages).where(and(eq(invokeMessages.guildId, guild.id), eq(invokeMessages.command, cmdName), eq(invokeMessages.type, type)));
@@ -123,7 +123,7 @@ export const command: HybridCommand = {
       const content = ctx.rawArgs
         ? ctx.rawArgs.split(" ").slice(2).join(" ")
         : (ctx.getString("content") ?? "");
-      if (!content) return ctx.reply({ embeds: [errorEmbed("provide the message content.")] });
+      if (!content) return ctx.reply({ embeds: [errorEmbed("Provide the message content.")] });
       await db.insert(invokeMessages).values({ guildId: guild.id, command: cmdName, type, content })
         .onConflictDoUpdate({
           target: [invokeMessages.guildId, invokeMessages.command, invokeMessages.type],
@@ -133,6 +133,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`invoke ${type} for \`${cmdName}\` set.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("invalid action.")] });
+    return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
   },
 };

@@ -59,7 +59,7 @@ export const command: HybridCommand = {
 
     if (subName === "channel") {
       const ch = ctx.getChannel("channel");
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("Channel not found.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
       const { updateGuildSettings } = await import("../../db/settings.js");
       await updateGuildSettings(ctx.guild.id, { birthdayChannel: ch.id } as any);
       return ctx.reply({ embeds: [successEmbed(`Birthday announcements will go to <#${ch.id}>.`)] });

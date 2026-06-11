@@ -21,18 +21,18 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (ctx.user.id !== config.ownerId) {
-      return ctx.reply({ embeds: [errorEmbed("not your toy.")], ephemeral: true } as any);
+      return ctx.reply({ embeds: [errorEmbed("Not your toy.")], ephemeral: true } as any);
     }
 
     const target = await ctx.getUser("target");
     const text   = ctx.getString("message") ?? ctx.args.slice(1).join(" ");
 
-    if (!target) return ctx.reply({ embeds: [errorEmbed("couldn't resolve that user.")] });
-    if (!text)   return ctx.reply({ embeds: [errorEmbed("provide a message to send.")] });
-    if (!ctx.channel || !ctx.guild) return ctx.reply({ embeds: [errorEmbed("must be used in a server channel.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("Couldn't resolve that **user**.")] });
+    if (!text)   return ctx.reply({ embeds: [errorEmbed("Provide a message to send.")] });
+    if (!ctx.channel || !ctx.guild) return ctx.reply({ embeds: [errorEmbed("Must be used in a server **channel**.")] });
 
     if (!ctx.guild.members.me?.permissions.has(PermissionFlagsBits.ManageWebhooks)) {
-      return ctx.reply({ embeds: [errorEmbed("i need **Manage Webhooks** permission.")] });
+      return ctx.reply({ embeds: [errorEmbed("I need **Manage Webhooks** **permission**.")] });
     }
 
     const member      = ctx.guild.members.cache.get(target.id);
@@ -51,7 +51,7 @@ export const command: HybridCommand = {
       webhook = await (ctx.channel as any).createWebhook({ name: displayName, avatar: avatarUrl, reason: "masquerade" });
       await webhook.send({ content: text });
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("failed — check my permissions.")] });
+      return ctx.reply({ embeds: [errorEmbed("Failed — check my **permissions**.")] });
     } finally {
       if (webhook) webhook.delete().catch(() => {});
     }

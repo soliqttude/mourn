@@ -17,7 +17,7 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const role = ctx.getRole("role");
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a role.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a **role**.")] });
     const members = guild.members.cache.filter((m) => m.roles.cache.has(role.id));
     if (!members.size) return ctx.reply({ embeds: [errorEmbed(`No members have <@&${role.id}>.`)] });
     const desc = members.map((m) => `<@${m.id}>`).join(" ");

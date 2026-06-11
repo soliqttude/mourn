@@ -32,7 +32,7 @@ export const command: HybridCommand = {
 
     if (sub === "channel") {
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(ctx.args[1]?.replace(/[<#>]/g, "") ?? "");
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
       await db.insert(badgeConfig).values({ guildId: ctx.guild.id, channelId: ch.id, message: null, enabled: true })
         .onConflictDoUpdate({ target: badgeConfig.guildId, set: { channelId: ch.id, enabled: true } });
       return ctx.reply({ embeds: [successEmbed(`badge announcements set to <#${ch.id}>.`)] });
@@ -45,28 +45,28 @@ export const command: HybridCommand = {
 
     if (sub === "message") {
       const msg = ctx.getString("value") ?? ctx.args.slice(1).join(" ");
-      if (!msg) return ctx.reply({ embeds: [errorEmbed("please provide a message.")] });
+      if (!msg) return ctx.reply({ embeds: [errorEmbed("Please provide a message.")] });
       await db.insert(badgeConfig).values({ guildId: ctx.guild.id, channelId: null, message: msg, enabled: true })
         .onConflictDoUpdate({ target: badgeConfig.guildId, set: { message: msg } });
-      return ctx.reply({ embeds: [successEmbed("badge message updated.")] });
+      return ctx.reply({ embeds: [successEmbed("Badge message updated.")] });
     }
 
     if (sub === "role list" || sub === "role") {
       const rows = await db.select().from(badgeRoles).where(eq(badgeRoles.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no badge roles configured.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No badge **roles** configured.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "Badge Roles", description: rows.map(r => `<@&${r.roleId}>`).join("\n") })] });
     }
 
     if (sub === "role add") {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(ctx.args[2]?.replace(/[<@&>]/g, "") ?? "");
-      if (!role) return ctx.reply({ embeds: [errorEmbed("please provide a role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Please provide a **role**.")] });
       await db.insert(badgeRoles).values({ guildId: ctx.guild.id, roleId: role.id }).onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> added to badge roles.`)] });
     }
 
     if (sub === "role remove") {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(ctx.args[2]?.replace(/[<@&>]/g, "") ?? "");
-      if (!role) return ctx.reply({ embeds: [errorEmbed("please provide a role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Please provide a **role**.")] });
       await db.delete(badgeRoles).where(and(eq(badgeRoles.guildId, ctx.guild.id), eq(badgeRoles.roleId, role.id)));
       return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> removed from badge roles.`)] });
     }
@@ -74,9 +74,9 @@ export const command: HybridCommand = {
     if (sub === "sync") {
       const [cfg] = await db.select().from(badgeConfig).where(eq(badgeConfig.guildId, ctx.guild.id));
       const badgeRoleRows = await db.select().from(badgeRoles).where(eq(badgeRoles.guildId, ctx.guild.id));
-      if (!cfg?.channelId || !badgeRoleRows.length) return ctx.reply({ embeds: [errorEmbed("set a badge channel and at least one badge role first.")] });
+      if (!cfg?.channelId || !badgeRoleRows.length) return ctx.reply({ embeds: [errorEmbed("Set a badge **channel** and at least one badge **role** first.")] });
       const ch = ctx.guild.channels.cache.get(cfg.channelId) as any;
-      if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("badge channel not found.")] });
+      if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Badge **channel** not found.")] });
       const members = await ctx.guild.members.fetch();
       let announced = 0;
       for (const [, member] of members) {
@@ -91,6 +91,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`synced ${announced} badge announcement${announced === 1 ? "" : "s"}.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand. use: channel | message | role add | role remove | role list | sync")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand. use: **channel** | message | **role** add | **role** remove | **role** list | sync")] });
   },
 };

@@ -31,14 +31,14 @@ export const command: HybridCommand = {
     if (sub === "variables") return ctx.reply({ embeds: [brandEmbed({ title: "Goodbye Variables", description: VARIABLES.join("\n") })] });
     if (sub === "list") {
       const rows = await db.select().from(goodbyeChannels).where(eq(goodbyeChannels.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no goodbye channels set up.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No goodbye **channels** set up.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "Goodbye Channels", description: rows.map(r => `<#${r.channelId}>`).join("\n") })] });
     }
     const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(ctx.args[1]?.replace(/[<#>]/g, "") ?? "");
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
     if (sub === "view") {
       const [row] = await db.select().from(goodbyeChannels).where(and(eq(goodbyeChannels.guildId, ctx.guild.id), eq(goodbyeChannels.channelId, ch.id)));
-      if (!row) return ctx.reply({ embeds: [errorEmbed("no goodbye message for that channel.")] });
+      if (!row) return ctx.reply({ embeds: [errorEmbed("No goodbye message for that **channel**.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: `Goodbye — #${ch.name}`, description: row.message })] });
     }
     if (sub === "remove") {
@@ -47,11 +47,11 @@ export const command: HybridCommand = {
     }
     if (sub === "add") {
       const msg = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
-      if (!msg) return ctx.reply({ embeds: [errorEmbed("please provide a goodbye message.")] });
+      if (!msg) return ctx.reply({ embeds: [errorEmbed("Please provide a goodbye message.")] });
       await db.insert(goodbyeChannels).values({ guildId: ctx.guild.id, channelId: ch.id, message: msg })
         .onConflictDoUpdate({ target: [goodbyeChannels.guildId, goodbyeChannels.channelId], set: { message: msg } });
       return ctx.reply({ embeds: [successEmbed(`goodbye message set for <#${ch.id}>.`)] });
     }
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

@@ -62,22 +62,22 @@ export const command: HybridCommand = {
         const settings = await getGuildSettings(ctx.guild.id);
         const staffRoles: string[] = (settings as any).staffRoleIds ?? [];
         const isStaff = staffRoles.length === 0 || staffRoles.some((r: string) => member?.roles?.cache?.has(r));
-        if (!isStaff) return ctx.reply({ embeds: [errorEmbed("you need staff permissions to use this.")] });
+        if (!isStaff) return ctx.reply({ embeds: [errorEmbed("You need staff **permissions** to use this.")] });
       } else if (isAdminAction && !isAdmin) {
-        return ctx.reply({ embeds: [errorEmbed("you need **Manage Guild** to configure suggestions.")] });
+        return ctx.reply({ embeds: [errorEmbed("You need **Manage Guild** to configure suggestions.")] });
       }
     }
 
     // ── Staff subcommands ──────────────────────────────────────────────────────
     if (isStaffAction) {
       const id = parseInt(val);
-      if (isNaN(id)) return ctx.reply({ embeds: [errorEmbed("provide a suggestion ID.")] });
+      if (isNaN(id)) return ctx.reply({ embeds: [errorEmbed("Provide a suggestion ID.")] });
       const [sug] = await db.select().from(suggestions).where(and(eq(suggestions.guildId, ctx.guild.id), eq(suggestions.id, id)));
       if (!sug) return ctx.reply({ embeds: [errorEmbed(`suggestion #${id} not found.`)] });
 
       if (action === "reply") {
         const replyText = ctx.args.slice(2).join(" ") || val2;
-        if (!replyText) return ctx.reply({ embeds: [errorEmbed("provide a reply message.")] });
+        if (!replyText) return ctx.reply({ embeds: [errorEmbed("Provide a reply message.")] });
         const ch = ctx.guild.channels.cache.get(sug.channelId) as any;
         if (ch?.isTextBased()) {
           const msg = await ch.messages?.fetch(sug.messageId).catch(() => null);
@@ -92,7 +92,7 @@ export const command: HybridCommand = {
           }).catch(() => {});
         }
         await db.update(suggestions).set({ staffNote: replyText }).where(eq(suggestions.id, id));
-        return ctx.reply({ embeds: [successEmbed("staff reply sent.")] });
+        return ctx.reply({ embeds: [successEmbed("Staff reply sent.")] });
       }
 
       const statusMap: Record<string, string> = {
@@ -152,7 +152,7 @@ export const command: HybridCommand = {
     // ── Admin config subcommands ───────────────────────────────────────────────
     if (action === "set") {
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(val.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("provide a channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { suggestionsChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`suggestions channel set to <#${ch.id}>.`)] });
     }
@@ -181,7 +181,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "reactions") {
-      if (!val || !val2) return ctx.reply({ embeds: [errorEmbed("provide two emojis: upvote then downvote.")] });
+      if (!val || !val2) return ctx.reply({ embeds: [errorEmbed("Provide two **emojis**: upvote then downvote.")] });
       await db.insert(suggestExtended).values({ guildId: ctx.guild.id, threadsEnabled: false, upvoteEmoji: val, downvoteEmoji: val2, reviewChannel: null, reviewEnabled: false, ignoreIds: [] })
         .onConflictDoUpdate({ target: suggestExtended.guildId, set: { upvoteEmoji: val, downvoteEmoji: val2 } });
       return ctx.reply({ embeds: [successEmbed(`suggestion reactions set to ${val} / ${val2}.`)] });
@@ -191,10 +191,10 @@ export const command: HybridCommand = {
       if (val.toLowerCase() === "off" || !val) {
         await db.insert(suggestExtended).values({ guildId: ctx.guild.id, threadsEnabled: false, upvoteEmoji: "👍", downvoteEmoji: "👎", reviewChannel: null, reviewEnabled: false, ignoreIds: [] })
           .onConflictDoUpdate({ target: suggestExtended.guildId, set: { reviewChannel: null, reviewEnabled: false } });
-        return ctx.reply({ embeds: [successEmbed("suggestion review channel disabled.")] });
+        return ctx.reply({ embeds: [successEmbed("Suggestion review **channel** disabled.")] });
       }
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(val.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("provide a channel or `off`.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a **channel** or `off`.")] });
       await db.insert(suggestExtended).values({ guildId: ctx.guild.id, threadsEnabled: false, upvoteEmoji: "👍", downvoteEmoji: "👎", reviewChannel: ch.id, reviewEnabled: true, ignoreIds: [] })
         .onConflictDoUpdate({ target: suggestExtended.guildId, set: { reviewChannel: ch.id, reviewEnabled: true } });
       return ctx.reply({ embeds: [successEmbed(`staff actions on suggestions will be logged to <#${ch.id}>.`)] });
@@ -202,7 +202,7 @@ export const command: HybridCommand = {
 
     if (action === "ignore") {
       const targetId = val.replace(/[<@!&>]/g, "");
-      if (!targetId) return ctx.reply({ embeds: [errorEmbed("mention a member or role to ignore.")] });
+      if (!targetId) return ctx.reply({ embeds: [errorEmbed("Mention a **member** or **role** to ignore.")] });
       const ext = await getExtended(ctx.guild.id);
       const current = ext.ignoreIds as string[];
       const updated = current.includes(targetId) ? current.filter(i => i !== targetId) : [...current, targetId];
@@ -214,16 +214,16 @@ export const command: HybridCommand = {
 
     // ── Submit a suggestion ────────────────────────────────────────────────────
     const text = ctx.rawArgs || ctx.getString("action") || "";
-    if (!text || text.length < 5) return ctx.reply({ embeds: [errorEmbed("please provide a longer suggestion (at least 5 characters).")] });
+    if (!text || text.length < 5) return ctx.reply({ embeds: [errorEmbed("Please provide a longer suggestion (at least 5 characters).")] });
     const settings = await getGuildSettings(ctx.guild.id);
     const channelId = settings.suggestionsChannel;
-    if (!channelId) return ctx.reply({ embeds: [errorEmbed("no suggestions channel set. ask an admin.")] });
+    if (!channelId) return ctx.reply({ embeds: [errorEmbed("No suggestions **channel** set. ask an admin.")] });
     const ch = ctx.guild.channels.cache.get(channelId) as any;
-    if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("suggestions channel is invalid.")] });
+    if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Suggestions **channel** is invalid.")] });
 
     const ext = await getExtended(ctx.guild.id);
     const ignoreIds: string[] = (ext.ignoreIds as string[]) ?? [];
-    if (ignoreIds.includes(ctx.user.id)) return ctx.reply({ embeds: [errorEmbed("you are not allowed to submit suggestions.")] });
+    if (ignoreIds.includes(ctx.user.id)) return ctx.reply({ embeds: [errorEmbed("You are not allowed to submit suggestions.")] });
 
     const up = ext.upvoteEmoji ?? "👍";
     const down = ext.downvoteEmoji ?? "👎";
@@ -244,6 +244,6 @@ export const command: HybridCommand = {
     if (ext.threadsEnabled) {
       try { await msg.startThread({ name: `suggestion — ${text.slice(0, 80)}` }); } catch { }
     }
-    return ctx.reply({ embeds: [successEmbed("your suggestion has been submitted!")], ephemeral: true } as any);
+    return ctx.reply({ embeds: [successEmbed("Your suggestion has been submitted!")], ephemeral: true } as any);
   },
 };

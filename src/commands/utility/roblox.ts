@@ -7,7 +7,7 @@ export const command: HybridCommand = {
   options: [{ name: "username", description: "Roblox username", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     const username = (ctx.getString("username", true) ?? ctx.args[0] ?? "").trim();
-    if (!username) return ctx.reply({ embeds: [errorEmbed("Please provide a Roblox username.")] });
+    if (!username) return ctx.reply({ embeds: [errorEmbed("Please provide a Roblox **username**.")] });
     try {
       const searchRes = await fetch("https://users.roblox.com/v1/usernames/users", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ usernames: [username], excludeBannedUsers: false }) });
       const searchData = await searchRes.json() as any;

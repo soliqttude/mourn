@@ -25,12 +25,12 @@ export const command: HybridCommand = {
 
     if (sub === "list") {
       const rows = await db.select().from(imgonlyChannels).where(eq(imgonlyChannels.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no image-only channels configured.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No image-only **channels** configured.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "Image-Only Channels", description: rows.map(r => `<#${r.channelId}>`).join("\n") })] });
     }
 
     const ch = ctx.getChannel("channel") ?? (ctx.args[1] ? ctx.guild.channels.cache.get(ctx.args[1].replace(/[<#>]/g, "")) : null) as any;
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
 
     if (sub === "add") {
       await db.insert(imgonlyChannels).values({ guildId: ctx.guild.id, channelId: ch.id }).onConflictDoNothing();
@@ -42,6 +42,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`<#${ch.id}> is no longer image-only.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand. use: add | remove | list")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand. use: add | remove | list")] });
   },
 };

@@ -23,7 +23,7 @@ export const command: HybridCommand = {
       ? ctx.guild.channels.cache.get(ctx.args[0].replace(/[<#>]/g, ""))
       : null);
 
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("please mention a valid channel.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("Please mention a valid **channel**.")] });
 
     await updateGuildSettings(ctx.guild.id, { countingChannel: ch.id } as any);
     await db

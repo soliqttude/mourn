@@ -36,12 +36,12 @@ export const command: HybridCommand = {
 
     if (mod === "list") {
       const rows = await db.select().from(disabledModules).where(eq(disabledModules.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no modules disabled.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No **modules** disabled.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "disabled modules", description: rows.map(r => `**${r.module}** in <#${r.channelId}>`).join("\n") })] });
     }
 
     const ch = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, "")) ?? ctx.channel;
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("invalid channel.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("Invalid **channel**.")] });
 
     const existing = await db.select().from(disabledModules).where(and(
       eq(disabledModules.guildId, ctx.guild.id),

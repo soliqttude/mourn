@@ -26,8 +26,8 @@ export const command: HybridCommand = {
     const sourceId = (ctx.getChannel("source")?.id ?? ctx.guild.channels.cache.get(sourceArg.replace(/[<#>]/g, ""))?.id ?? sourceArg.replace(/[<#>]/g, ""));
     const targetId = (ctx.getChannel("target")?.id ?? ctx.guild.channels.cache.get(targetArg.replace(/[<#>]/g, ""))?.id ?? targetArg.replace(/[<#>]/g, ""));
 
-    if (!sourceId || !targetId) return ctx.reply({ embeds: [errorEmbed("provide two valid channels.")] });
-    if (sourceId === targetId) return ctx.reply({ embeds: [errorEmbed("source and target cannot be the same channel.")] });
+    if (!sourceId || !targetId) return ctx.reply({ embeds: [errorEmbed("Provide two valid **channels**.")] });
+    if (sourceId === targetId) return ctx.reply({ embeds: [errorEmbed("Source and target cannot be the same **channel**.")] });
 
     // Get source disabled commands (channel-targeted only)
     const disabledCmds = await db.select().from(disabledCommands).where(eq(disabledCommands.guildId, ctx.guild.id));

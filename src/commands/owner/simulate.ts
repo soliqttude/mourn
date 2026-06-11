@@ -24,7 +24,7 @@ export const command: HybridCommand = {
     const target = await ctx.getUser("user");
     const userId = (target as any)?.id ?? ctx.args[1]?.replace(/[<@!>]/g, "") ?? ctx.user.id;
     const member = await ctx.guild.members.fetch(userId).catch(() => null);
-    if (!member) return ctx.reply({ embeds: [errorEmbed("Could not find that member in this server.")] });
+    if (!member) return ctx.reply({ embeds: [errorEmbed("Could not find that **member** in this server.")] });
 
     if (evt === "join") {
       ctx.client.emit("guildMemberAdd", member);
@@ -38,6 +38,6 @@ export const command: HybridCommand = {
       ctx.client.emit("guildMemberUpdate", member, { ...member, premiumSince: new Date() } as any);
       return ctx.reply({ embeds: [successEmbed(`Simulated **boost** event for ${member.user.tag}.`)] });
     }
-    return ctx.reply({ embeds: [errorEmbed("Valid events: `join`, `leave`, `boost`.")] });
+    return ctx.reply({ embeds: [errorEmbed("Valid **events**: `join`, `leave`, `boost`.")] });
   },
 };

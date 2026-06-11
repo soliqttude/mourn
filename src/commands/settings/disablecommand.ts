@@ -32,7 +32,7 @@ export const command: HybridCommand = {
 
     if (cmdArg === "list") {
       const rows = await db.select().from(disabledCommands).where(eq(disabledCommands.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no disabled commands.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No disabled **commands**.")] });
       const lines = rows.map(r => `**${r.command}** → ${r.targetType === "channel" ? `<#${r.targetId}>` : `<@&${r.targetId}>`}`);
       return ctx.reply({ embeds: [brandEmbed({ title: "disabled commands", description: lines.join("\n") })] });
     }
@@ -48,7 +48,7 @@ export const command: HybridCommand = {
         }
       }
       await db.delete(disabledCommands).where(eq(disabledCommands.guildId, ctx.guild.id));
-      return ctx.reply({ embeds: [successEmbed("all command restrictions cleared.")] });
+      return ctx.reply({ embeds: [successEmbed("All **command** restrictions cleared.")] });
     }
 
     const targetStr = ctx.getString("target") ?? ctx.args[1] ?? "";
@@ -69,7 +69,7 @@ export const command: HybridCommand = {
       else if (foundRole) { targetId = foundRole.id; targetType = "role"; }
     }
 
-    if (!targetId) return ctx.reply({ embeds: [errorEmbed("provide a channel or role to disable this command for.")] });
+    if (!targetId) return ctx.reply({ embeds: [errorEmbed("Provide a **channel** or **role** to disable this **command** for.")] });
 
     // Toggle behavior
     const existing = await db.select().from(disabledCommands).where(and(

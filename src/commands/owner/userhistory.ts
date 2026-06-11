@@ -18,7 +18,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
     const userId = ctx.getString("user_id") ?? ctx.args[0];
-    if (!userId) return ctx.reply({ embeds: [errorEmbed("Provide a user ID.")] });
+    if (!userId) return ctx.reply({ embeds: [errorEmbed("Provide a **user** ID.")] });
 
     const entries = ownerState.commandLog.filter(e => e.userId === userId).slice(0, 30);
     if (!entries.length) return ctx.reply({ content: "No log entries for that user." });

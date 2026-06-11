@@ -13,7 +13,7 @@ export const command: HybridCommand = {
     const name = (ctx.getString("name", true) ?? ctx.args[0] ?? "").toLowerCase().replace(/\s+/g, "-");
     const catName = ctx.getString("category") ?? ctx.args[1];
     const topic = ctx.getString("topic") ?? undefined;
-    if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a channel name.")] });
+    if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel** name.")] });
     try {
       let parent: string | undefined;
       if (catName) {

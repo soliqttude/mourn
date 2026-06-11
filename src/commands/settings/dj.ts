@@ -24,7 +24,7 @@ export const command: HybridCommand = {
     }
     if (off) {
       await setMusicSettings(ctx.guild.id, { djRoleId: null });
-      return ctx.reply({ embeds: [successEmbed("dj role removed. anyone can now use music commands.")] });
+      return ctx.reply({ embeds: [successEmbed("Dj **role** removed. anyone can now use music **commands**.")] });
     }
     await setMusicSettings(ctx.guild.id, { djRoleId: raw.id });
     return ctx.reply({ embeds: [successEmbed(`dj role set to <@&${raw.id}>.`)] });

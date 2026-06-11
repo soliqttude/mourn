@@ -30,13 +30,13 @@ export const command: HybridCommand = {
     if (!guild) return;
 
     const id = ctx.getNumber("id", true);
-    if (!id) return ctx.reply({ embeds: [errorEmbed("please provide a giveaway id.")] });
+    if (!id) return ctx.reply({ embeds: [errorEmbed("Please provide a giveaway id.")] });
 
     const rows = await db.select().from(giveaways)
       .where(and(eq(giveaways.id, id), eq(giveaways.guildId, guild.id)));
     const gw = rows[0];
     if (!gw) return ctx.reply({ embeds: [errorEmbed(`no giveaway found with id \`${id}\`.`)] });
-    if (gw.ended) return ctx.reply({ embeds: [errorEmbed("that giveaway has already ended.")] });
+    if (gw.ended) return ctx.reply({ embeds: [errorEmbed("That giveaway has already ended.")] });
 
     const prize = ctx.getString("prize");
     const winners = ctx.getNumber("winners");
@@ -46,7 +46,7 @@ export const command: HybridCommand = {
     const durStr = ctx.getString("duration");
 
     if (!prize && !winners && !description && !thumbnail && !image && !durStr) {
-      return ctx.reply({ embeds: [errorEmbed("provide at least one field to edit.")] });
+      return ctx.reply({ embeds: [errorEmbed("Provide at least one field to edit.")] });
     }
 
     const update: Partial<typeof giveaways.$inferInsert> = {};
@@ -57,7 +57,7 @@ export const command: HybridCommand = {
     if (image) update.imageUrl = image;
     if (durStr) {
       const ms = parseDuration(durStr);
-      if (!ms) return ctx.reply({ embeds: [errorEmbed("invalid duration.")] });
+      if (!ms) return ctx.reply({ embeds: [errorEmbed("Invalid duration.")] });
       update.endsAt = new Date(gw.endsAt.getTime() + ms);
     }
 

@@ -24,7 +24,7 @@ export const command: HybridCommand = {
 
     const targetUser = await ctx.getUser("user");
     const cmdStr = ctx.getString("command") ?? ctx.args.slice(1).join(" ");
-    if (!targetUser || !cmdStr) return ctx.reply({ embeds: [errorEmbed("Provide a user and command.")] });
+    if (!targetUser || !cmdStr) return ctx.reply({ embeds: [errorEmbed("Provide a **user** and **command**.")] });
 
     const parts = cmdStr.trim().split(/\s+/);
     const cmdName = parts.shift()!;
@@ -33,7 +33,7 @@ export const command: HybridCommand = {
 
     const raw = ctx.raw as any;
     const message = raw.channel ? raw : null;
-    if (!message) return ctx.reply({ embeds: [errorEmbed("Can only sudo via prefix.")] });
+    if (!message) return ctx.reply({ embeds: [errorEmbed("Can only sudo via **prefix**.")] });
 
     const fakeMsg = Object.create(message);
     fakeMsg.author = targetUser;

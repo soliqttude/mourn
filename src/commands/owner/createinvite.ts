@@ -45,7 +45,7 @@ export const command: HybridCommand = {
     // 2. Create a fresh invite with unlimited uses so it won't exhaust
     await guild.channels.fetch().catch(() => null);
     const me = guild.members.me ?? await guild.members.fetchMe().catch(() => null);
-    if (!me) return ctx.reply({ embeds: [errorEmbed("Could not resolve bot member in that server.")], ephemeral: true } as any);
+    if (!me) return ctx.reply({ embeds: [errorEmbed("Could not resolve bot **member** in that server.")], ephemeral: true } as any);
 
     const candidates = guild.channels.cache.filter(
       c =>

@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.channel) return;
     const snipe = getSnipe(ctx.channel.id, "edit");
-    if (!snipe) return ctx.reply({ embeds: [errorEmbed("nothing to editsnipe.")] });
+    if (!snipe) return ctx.reply({ embeds: [errorEmbed("Nothing to editsnipe.")] });
     const embed = brandEmbed({
       description: snipe.content || "*(no text content)*",
     });

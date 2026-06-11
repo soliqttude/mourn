@@ -32,7 +32,7 @@ export const command: HybridCommand = {
         })],
       });
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("Couldn't fetch that invite.")] });
+      return ctx.reply({ embeds: [errorEmbed("Couldn't fetch that **invite**.")] });
     }
   },
 };

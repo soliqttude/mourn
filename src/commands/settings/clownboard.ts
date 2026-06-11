@@ -24,19 +24,19 @@ export const command: HybridCommand = {
 
     if (sub === "disable") {
       await updateGuildSettings(ctx.guild.id, { clownboardChannel: null });
-      return ctx.reply({ embeds: [successEmbed("clownboard disabled.")] });
+      return ctx.reply({ embeds: [successEmbed("Clownboard disabled.")] });
     }
 
     if (sub === "channel") {
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(ctx.args[1]?.replace(/[<#>]/g, "") ?? "");
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { clownboardChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`clownboard set to <#${ch.id}>. messages that hit the threshold will appear there 🤡.`)] });
     }
 
     if (sub === "threshold") {
       const val = parseInt(ctx.getString("value") ?? ctx.args[1] ?? "");
-      if (isNaN(val) || val < 1 || val > 50) return ctx.reply({ embeds: [errorEmbed("threshold must be between 1 and 50.")] });
+      if (isNaN(val) || val < 1 || val > 50) return ctx.reply({ embeds: [errorEmbed("Threshold must be between 1 and 50.")] });
       await updateGuildSettings(ctx.guild.id, { clownboardThreshold: val });
       return ctx.reply({ embeds: [successEmbed(`clownboard threshold set to **${val}** 🤡.`)] });
     }

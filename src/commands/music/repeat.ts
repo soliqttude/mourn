@@ -14,9 +14,9 @@ export const command: HybridCommand = {
   options: [{ name: "mode", description: "off | song | queue", type: ApplicationCommandOptionType.String, required: false, choices: [{ name: "off", value: "off" }, { name: "song", value: "song" }, { name: "queue", value: "queue" }] }],
   async execute(ctx) {
     if (!ctx.guild || !ctx.member) return;
-    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("you need the dj role.")] });
+    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("You need the dj **role**.")] });
     const queue = distube.getQueue(ctx.guild);
-    if (!queue) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
+    if (!queue) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
     const mode = ctx.getString("mode") ?? "off";
     const modeMap: Record<string, RepeatMode> = { off: RepeatMode.DISABLED, song: RepeatMode.SONG, queue: RepeatMode.QUEUE };
     const rm = modeMap[mode] ?? RepeatMode.DISABLED;

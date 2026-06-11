@@ -24,7 +24,7 @@ export const command: HybridCommand = {
 
     if (action === "list") {
       const all = await listTags(ctx.guild.id);
-      if (!all.length) return ctx.reply({ embeds: [errorEmbed("No tags yet.")] });
+      if (!all.length) return ctx.reply({ embeds: [errorEmbed("No **tags** yet.")] });
       return ctx.reply({
         embeds: [
           brandEmbed({
@@ -36,16 +36,16 @@ export const command: HybridCommand = {
       });
     }
 
-    if (!name) return ctx.reply({ embeds: [errorEmbed("Tag name required.")] });
+    if (!name) return ctx.reply({ embeds: [errorEmbed("**Tag** name required.")] });
 
     if (action === "show") {
       const t = await getTag(ctx.guild.id, name);
-      if (!t) return ctx.reply({ embeds: [errorEmbed("Tag not found.")] });
+      if (!t) return ctx.reply({ embeds: [errorEmbed("**Tag** not found.")] });
       return ctx.reply({ content: t.response, allowedMentions: { parse: [] } });
     }
 
     if (!ctx.member || !checkTier(ctx.member, "mod")) {
-      return ctx.reply({ embeds: [errorEmbed("Only mods can add or remove tags.")] });
+      return ctx.reply({ embeds: [errorEmbed("Only mods can add or remove **tags**.")] });
     }
 
     if (action === "add") {
@@ -56,7 +56,7 @@ export const command: HybridCommand = {
 
     if (action === "remove" || action === "delete") {
       const removed = await removeTag(ctx.guild.id, name);
-      if (!removed) return ctx.reply({ embeds: [errorEmbed("Tag not found.")] });
+      if (!removed) return ctx.reply({ embeds: [errorEmbed("**Tag** not found.")] });
       return ctx.reply({ embeds: [successEmbed(`Tag \`${name}\` deleted.`)] });
     }
 

@@ -25,13 +25,13 @@ export const command: HybridCommand = {
     const word = (ctx.getString("word") ?? ctx.args[1] ?? "").toLowerCase().trim();
 
     if (action === "add") {
-      if (!word) return ctx.reply({ embeds: [errorEmbed("Please provide a word.")] });
+      if (!word) return ctx.reply({ embeds: [errorEmbed("Please provide a **word**.")] });
       await db.insert(wordFilter).values({ guildId: guild.id, word }).onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`Added **${word}** to the word filter.`)] });
     }
 
     if (action === "remove") {
-      if (!word) return ctx.reply({ embeds: [errorEmbed("Please provide a word.")] });
+      if (!word) return ctx.reply({ embeds: [errorEmbed("Please provide a **word**.")] });
       await db.delete(wordFilter).where(and(eq(wordFilter.guildId, guild.id), eq(wordFilter.word, word)));
       return ctx.reply({ embeds: [successEmbed(`Removed **${word}** from the word filter.`)] });
     }

@@ -29,7 +29,7 @@ export const command: HybridCommand = {
 
     if (action === "list") {
       if (!staffRoles.length)
-        return ctx.reply({ embeds: [errorEmbed("no staff roles are configured.")] });
+        return ctx.reply({ embeds: [errorEmbed("No staff **roles** are configured.")] });
       const lines = staffRoles.map((id) => `<@&${id}>`).join(", ");
       return ctx.reply({
         embeds: [brandEmbed({ description: `**staff roles:** ${lines}`, page: "moderation" })],
@@ -37,7 +37,7 @@ export const command: HybridCommand = {
     }
 
     const role = ctx.getRole("role");
-    if (!role) return ctx.reply({ embeds: [errorEmbed("please specify a role.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a **role**.")] });
 
     if (action === "add") {
       if (staffRoles.includes(role.id))
@@ -49,7 +49,7 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [errorEmbed(`<@&${role.id}> is not a staff role.`)] });
       staffRoles.splice(idx, 1);
     } else {
-      return ctx.reply({ embeds: [errorEmbed("invalid action.")] });
+      return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
     }
 
     await db.insert(guildSettings).values({ guildId: guild.id, staffRoleIds: staffRoles })

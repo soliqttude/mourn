@@ -9,11 +9,11 @@ export const command: HybridCommand = {
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.guild || !ctx.member) return;
-    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("you need the dj role.")] });
+    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("You need the dj **role**.")] });
     const queue = distube.getQueue(ctx.guild);
-    if (!queue) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
-    if (queue.paused) return ctx.reply({ embeds: [errorEmbed("already paused.")] });
+    if (!queue) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
+    if (queue.paused) return ctx.reply({ embeds: [errorEmbed("Already paused.")] });
     queue.pause();
-    return ctx.reply({ embeds: [successEmbed("paused.")] });
+    return ctx.reply({ embeds: [successEmbed("Paused.")] });
   },
 };

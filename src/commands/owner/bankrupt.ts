@@ -22,7 +22,7 @@ export const command: HybridCommand = {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
     if (!ctx.guild) return;
     const target = await ctx.getUser("user");
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a user.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a **user**.")] });
 
     await db.update(economy)
       .set({ balance: 0, bank: 0 })

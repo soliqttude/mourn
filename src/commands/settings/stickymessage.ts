@@ -31,18 +31,18 @@ export const command: HybridCommand = {
 
     if (sub === "list") {
       const rows = await db.select().from(stickyMessages).where(eq(stickyMessages.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no sticky messages set up.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No sticky messages set up.")] });
       const lines = rows.map(r => `<#${r.channelId}> — ${r.message.slice(0, 50)}${r.message.length > 50 ? "…" : ""}`);
       return ctx.reply({ embeds: [brandEmbed({ title: "Sticky Messages", description: lines.join("\n") })] });
     }
 
     const channelArg = ctx.getChannel("channel") ?? (ctx.args[1] ? ctx.guild.channels.cache.get(ctx.args[1].replace(/[<#>]/g, "")) : null);
-    if (!channelArg && sub !== "list") return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+    if (!channelArg && sub !== "list") return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
     const channelId = (channelArg as any)?.id ?? ctx.args[1]?.replace(/[<#>]/g, "");
 
     if (sub === "view") {
       const [row] = await db.select().from(stickyMessages).where(and(eq(stickyMessages.guildId, ctx.guild.id), eq(stickyMessages.channelId, channelId)));
-      if (!row) return ctx.reply({ embeds: [errorEmbed("no sticky message for that channel.")] });
+      if (!row) return ctx.reply({ embeds: [errorEmbed("No sticky message for that **channel**.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: `Sticky — #${(ctx.guild.channels.cache.get(channelId) as any)?.name ?? channelId}`, description: row.message })] });
     }
 
@@ -53,12 +53,12 @@ export const command: HybridCommand = {
 
     if (sub === "add") {
       const msg = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
-      if (!msg) return ctx.reply({ embeds: [errorEmbed("please provide a message.")] });
+      if (!msg) return ctx.reply({ embeds: [errorEmbed("Please provide a message.")] });
       await db.insert(stickyMessages).values({ guildId: ctx.guild.id, channelId, message: msg })
         .onConflictDoUpdate({ target: [stickyMessages.guildId, stickyMessages.channelId], set: { message: msg } });
       return ctx.reply({ embeds: [successEmbed(`sticky message set in <#${channelId}>.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand. use: add | remove | list | view")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand. use: add | remove | list | view")] });
   },
 };

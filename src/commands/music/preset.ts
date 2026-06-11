@@ -41,7 +41,7 @@ export const command: HybridCommand = {
     const name = (ctx.getString("name") ?? ctx.args[0] ?? "").toLowerCase();
 
     const queue = distube.getQueue(ctx.guild);
-    if (!queue) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
+    if (!queue) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
 
     if (name === "active") {
       const active = queue.filters.names.length ? queue.filters.names.join(", ") : "none";
@@ -53,13 +53,13 @@ export const command: HybridCommand = {
     }
 
     if (!await hasDjPermission(ctx.guild.id, ctx.member)) {
-      return ctx.reply({ embeds: [errorEmbed("you need the DJ role to change presets.")] });
+      return ctx.reply({ embeds: [errorEmbed("You need the DJ **role** to change presets.")] });
     }
 
     // flat = clear all
     if (name === "flat") {
       queue.filters.clear();
-      return ctx.reply({ embeds: [successEmbed("filters cleared (flat/neutral EQ).")]});
+      return ctx.reply({ embeds: [successEmbed("**Filters** cleared (flat/neutral EQ).")]});
     }
 
     queue.filters.clear();

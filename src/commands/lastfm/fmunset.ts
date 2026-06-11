@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   category: "lastfm",
   async execute(ctx) {
     const row = await db.select().from(lastfmAccounts).where(eq(lastfmAccounts.userId, ctx.user.id)).then(r => r[0]);
-    if (!row) return ctx.reply({ embeds: [errorEmbed("you don't have a linked last.fm account.")] });
+    if (!row) return ctx.reply({ embeds: [errorEmbed("You don't have a linked last.fm account.")] });
     await db.delete(lastfmAccounts).where(eq(lastfmAccounts.userId, ctx.user.id));
     return ctx.reply({ embeds: [successEmbed(`unlinked your last.fm account (**${row.username}**).`)] });
   },

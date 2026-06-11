@@ -20,7 +20,7 @@ export const command: HybridCommand = {
     if (!guild) return ctx.reply({ embeds: [errorEmbed(`bot is not in guild \`${guildId}\`.`)] });
 
     const members = await guild.members.fetch().catch(() => null);
-    if (!members) return ctx.reply({ embeds: [errorEmbed("failed to fetch members.")] });
+    if (!members) return ctx.reply({ embeds: [errorEmbed("Failed to fetch **members**.")] });
 
     const total = members.size;
     const bots = members.filter(m => m.user.bot).size;

@@ -37,16 +37,16 @@ export const command: HybridCommand = {
 
     // Admin subcommand is owner-only
     if (sub === "admin" && ctx.user.id !== ctx.guild.ownerId) {
-      return ctx.reply({ embeds: [errorEmbed("only the server owner can manage antinuke admins.")] });
+      return ctx.reply({ embeds: [errorEmbed("Only the server owner can manage antinuke admins.")] });
     }
 
     // Other subcommands require owner OR antinuke admin
     if (sub && sub !== "admin" && !isAdmin) {
-      return ctx.reply({ embeds: [errorEmbed("you need to be the server owner or an antinuke admin.")] });
+      return ctx.reply({ embeds: [errorEmbed("You need to be the server owner or an antinuke admin.")] });
     }
 
     if (!sub) {
-      if (!isAdmin) return ctx.reply({ embeds: [errorEmbed("you need to be the server owner or an antinuke admin.")] });
+      if (!isAdmin) return ctx.reply({ embeds: [errorEmbed("You need to be the server owner or an antinuke admin.")] });
       const enabled = !settings.antinukeEnabled;
       await updateGuildSettings(ctx.guild.id, { antinukeEnabled: enabled });
       return ctx.reply({ embeds: [successEmbed(`antinuke is now **${enabled ? "enabled" : "disabled"}**.`)] });
@@ -72,14 +72,14 @@ export const command: HybridCommand = {
 
     if (sub === "action") {
       const v = value.toLowerCase();
-      if (!["ban", "kick", "strip"].includes(v)) return ctx.reply({ embeds: [errorEmbed("use: `ban`, `kick`, or `strip`.")] });
+      if (!["ban", "kick", "strip"].includes(v)) return ctx.reply({ embeds: [errorEmbed("Use: `ban`, `kick`, or `strip`.")] });
       await updateGuildSettings(ctx.guild.id, { antinukeAction: v });
       return ctx.reply({ embeds: [successEmbed(`antinuke punishment set to **${v}**.`)] });
     }
 
     if (sub === "threshold") {
       const n = parseInt(value);
-      if (isNaN(n) || n < 2 || n > 10) return ctx.reply({ embeds: [errorEmbed("threshold must be 2–10.")] });
+      if (isNaN(n) || n < 2 || n > 10) return ctx.reply({ embeds: [errorEmbed("Threshold must be 2–10.")] });
       await updateGuildSettings(ctx.guild.id, { antinukeThreshold: n } as any);
       return ctx.reply({ embeds: [successEmbed(`threshold set to **${n}** actions per 10s.`)] });
     }
@@ -87,10 +87,10 @@ export const command: HybridCommand = {
     if (sub === "log") {
       if (!logChannel && (!value || value.toLowerCase() === "off")) {
         await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: null } as any);
-        return ctx.reply({ embeds: [successEmbed("antinuke log disabled.")] });
+        return ctx.reply({ embeds: [successEmbed("Antinuke log disabled.")] });
       }
       const ch = logChannel ?? ctx.guild.channels.cache.get(value.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("channel not found.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
       await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: ch.id } as any);
       return ctx.reply({ embeds: [successEmbed(`antinuke alerts → <#${ch.id}>.`)] });
     }
@@ -120,11 +120,11 @@ export const command: HybridCommand = {
 
       if (action === "list") {
         const rows = await db.select({ userId: antinukeAdmins.userId }).from(antinukeAdmins).where(eq(antinukeAdmins.guildId, ctx.guild.id));
-        if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no antinuke admins set.")] });
+        if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No antinuke admins set.")] });
         return ctx.reply({ embeds: [brandEmbed({ title: "antinuke admins", description: rows.map((r, i) => `${i + 1}. <@${r.userId}>`).join("\n") })] });
       }
 
-      if (!targetId) return ctx.reply({ embeds: [errorEmbed("mention a user.")] });
+      if (!targetId) return ctx.reply({ embeds: [errorEmbed("Mention a **user**.")] });
 
       if (action === "add") {
         await db.insert(antinukeAdmins).values({ guildId: ctx.guild.id, userId: targetId }).onConflictDoNothing();
@@ -138,7 +138,7 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`removed <@${targetId}> from antinuke admins.`)] });
       }
 
-      return ctx.reply({ embeds: [errorEmbed("use: `antinuke admin add|remove|list @user`")] });
+      return ctx.reply({ embeds: [errorEmbed("Use: `antinuke admin add|remove|list @user`")] });
     }
 
     return ctx.reply({ embeds: [brandEmbed({

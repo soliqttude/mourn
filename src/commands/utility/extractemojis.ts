@@ -18,11 +18,11 @@ export const command: HybridCommand = {
 
     const member = ctx.member;
     if (!member || !member.permissions.has(PermissionFlagsBits.ManageEmojisAndStickers)) {
-      return ctx.reply({ embeds: [errorEmbed("You need **Manage Emojis** permission to use this.")] });
+      return ctx.reply({ embeds: [errorEmbed("You need **Manage Emojis** **permission** to use this.")] });
     }
 
     if (!ctx.guild.members.me?.permissions.has(PermissionFlagsBits.ManageEmojisAndStickers)) {
-      return ctx.reply({ embeds: [errorEmbed("I need **Manage Emojis** permission in this server.")] });
+      return ctx.reply({ embeds: [errorEmbed("I need **Manage Emojis** **permission** in this server.")] });
     }
 
     const msg = ctx.raw as Message;
@@ -46,7 +46,7 @@ export const command: HybridCommand = {
     }
 
     if (!found.size) {
-      return ctx.reply({ embeds: [errorEmbed("No custom emojis found in that message. Make sure the message contains emojis like `<:name:id>`.")] });
+      return ctx.reply({ embeds: [errorEmbed("No custom **emojis** found in that message. Make sure the message contains **emojis** like `<:name:id>`.")] });
     }
 
     await ctx.reply({

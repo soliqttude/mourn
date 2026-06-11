@@ -7,7 +7,7 @@ export const command: HybridCommand = {
   options:[{name:"amount",description:"Messages to scan (max 100)",type:ApplicationCommandOptionType.Number,required:true}],
   async execute(ctx){
     if(!ctx.guild||!ctx.channel||!ctx.member)return;
-    if(!ctx.member.permissions.has(PermissionFlagsBits.ManageMessages))return ctx.reply({embeds:[errorEmbed("You need **Manage Messages** permission.")]});
+    if(!ctx.member.permissions.has(PermissionFlagsBits.ManageMessages))return ctx.reply({embeds:[errorEmbed("You need **Manage Messages** **permission**.")]});
     const amount=Math.min(100,Math.max(1,ctx.getNumber("amount")??parseInt(ctx.args[0]??"20")));
     const msgs=await ctx.channel.messages.fetch({limit:amount});
     const toDelete=msgs.filter(m=>URL_RE.test(m.content));

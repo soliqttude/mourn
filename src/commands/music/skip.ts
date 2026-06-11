@@ -15,17 +15,17 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild || !ctx.member) return;
     if (!await hasDjPermission(ctx.guild.id, ctx.member)) {
-      return ctx.reply({ embeds: [errorEmbed("you need the dj role.")] });
+      return ctx.reply({ embeds: [errorEmbed("You need the dj **role**.")] });
     }
     const queue = distube.getQueue(ctx.guild);
-    if (!queue) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
+    if (!queue) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
     const pos = ctx.getNumber("position") ?? 1;
     if (pos > 1) {
       try { await distube.jump(ctx.guild, pos - 1); }
-      catch { return ctx.reply({ embeds: [errorEmbed("invalid queue position.")] }); }
+      catch { return ctx.reply({ embeds: [errorEmbed("Invalid queue position.")] }); }
     } else {
       await distube.skip(ctx.guild).catch(() => distube.stop(ctx.guild!));
     }
-    return ctx.reply({ embeds: [successEmbed("skipped.")] });
+    return ctx.reply({ embeds: [successEmbed("Skipped.")] });
   },
 };

@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   category: "voicemaster",
   guildOnly: true,
   async execute(ctx) {
-    if (!ctx.guild || !ctx.member?.voice.channel) return ctx.reply({ embeds: [errorEmbed("you must be in a voice channel.")] });
+    if (!ctx.guild || !ctx.member?.voice.channel) return ctx.reply({ embeds: [errorEmbed("You must be in a voice **channel**.")] });
     const vc = ctx.member.voice.channel;
     const rows = await db.select().from(voicemasterChannels).where(eq(voicemasterChannels.channelId, vc.id));
     const owner = rows[0] ? await ctx.guild.members.fetch(rows[0].ownerId).catch(() => null) : null;

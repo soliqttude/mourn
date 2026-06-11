@@ -17,10 +17,10 @@ export const command: HybridCommand = {
     const raw = ctx.getString("emoji", true) ?? ctx.args[0];
     if (!raw) return;
     const match = raw.match(/<a?:\w+:(\d+)>/);
-    if (!match) return ctx.reply({ embeds: [errorEmbed("Provide a custom server emoji.")] });
+    if (!match) return ctx.reply({ embeds: [errorEmbed("Provide a custom server **emoji**.")] });
     const id = match[1]!;
     const emoji = ctx.guild.emojis.cache.get(id);
-    if (!emoji) return ctx.reply({ embeds: [errorEmbed("Emoji not found in this server.")] });
+    if (!emoji) return ctx.reply({ embeds: [errorEmbed("**Emoji** not found in this server.")] });
     const name = emoji.name;
     await emoji.delete();
     return ctx.reply({ embeds: [successEmbed(`Removed emoji **:${name}:**.`)] });

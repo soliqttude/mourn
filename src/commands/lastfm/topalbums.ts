@@ -23,16 +23,16 @@ export const command: HybridCommand = {
     { name: "user", description: "Discord user", type: ApplicationCommandOptionType.User, required: false },
   ],
   async execute(ctx) {
-    if (!hasApiKey()) return ctx.reply({ embeds: [errorEmbed("last.fm api key not configured.")] });
+    if (!hasApiKey()) return ctx.reply({ embeds: [errorEmbed("Last.fm api key not configured.")] });
 
     const rawPeriod = ctx.getString("period") ?? ctx.args[0] ?? "overall";
     const period = PERIODS[rawPeriod] ? rawPeriod : "overall";
     const target = (await ctx.getUser("user")) ?? ctx.user;
     const row = await db.select().from(lastfmAccounts).where(eq(lastfmAccounts.userId, target.id)).then(r => r[0]);
-    if (!row) return ctx.reply({ embeds: [errorEmbed("that user hasn't linked a last.fm account.")] });
+    if (!row) return ctx.reply({ embeds: [errorEmbed("That **user** hasn't linked a last.fm account.")] });
 
     const albums = await getTopAlbums(row.username, period, 10).catch(() => null);
-    if (!albums?.length) return ctx.reply({ embeds: [errorEmbed("no data.")] });
+    if (!albums?.length) return ctx.reply({ embeds: [errorEmbed("No data.")] });
 
     const lines = albums.slice(0, 10).map((a: any, i: number) =>
       `\`${String(i + 1).padStart(2, " ")}.\` **${a.name}** by ${a.artist?.name ?? "?"} — ${Number(a.playcount).toLocaleString()}x`

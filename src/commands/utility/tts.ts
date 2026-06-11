@@ -13,11 +13,11 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild || !ctx.channel) return;
     const message = ctx.getString("message", true)!;
-    if (message.length > 200) return ctx.reply({ embeds: [errorEmbed("tts message must be 200 characters or less.")] });
+    if (message.length > 200) return ctx.reply({ embeds: [errorEmbed("Tts message must be 200 characters or less.")] });
     if (ctx.source === "slash") {
-      await ctx.reply({ embeds: [successEmbed("sending tts message...")] });
+      await ctx.reply({ embeds: [successEmbed("Sending tts message...")] });
     }
     await (ctx.channel as any).send({ content: message, tts: true }).catch(() => {});
-    if (ctx.source === "prefix") await ctx.reply({ embeds: [successEmbed("tts message sent.")] });
+    if (ctx.source === "prefix") await ctx.reply({ embeds: [successEmbed("Tts message sent.")] });
   },
 };

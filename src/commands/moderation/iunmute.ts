@@ -15,7 +15,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
     await ctx.guild.channels.cache
       .filter(c => c.isTextBased())
       .forEach(async (ch) => {

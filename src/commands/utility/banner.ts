@@ -16,7 +16,7 @@ export const command: HybridCommand = {
     const t = (await ctx.getUser("user")) ?? ctx.user;
     const fetched = await ctx.client.users.fetch(t.id, { force: true });
     const url = fetched.bannerURL({ size: 4096 });
-    if (!url) return ctx.reply({ embeds: [errorEmbed("that user has no banner.")] });
+    if (!url) return ctx.reply({ embeds: [errorEmbed("That **user** has no banner.")] });
     return ctx.reply({
       embeds: [
         brandEmbed({

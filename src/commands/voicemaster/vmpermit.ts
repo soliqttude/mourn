@@ -15,12 +15,12 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [{ name: "user", description: "User to permit", type: ApplicationCommandOptionType.User, required: true }],
   async execute(ctx) {
-    if (!ctx.guild || !ctx.member?.voice.channel) return ctx.reply({ embeds: [errorEmbed("you must be in a voice channel.")] });
+    if (!ctx.guild || !ctx.member?.voice.channel) return ctx.reply({ embeds: [errorEmbed("You must be in a voice **channel**.")] });
     const vc = ctx.member.voice.channel;
     const rows = await db.select().from(voicemasterChannels).where(eq(voicemasterChannels.channelId, vc.id));
-    if (!rows[0] || rows[0].ownerId !== ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you don't own this voice channel.")] });
+    if (!rows[0] || rows[0].ownerId !== ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You don't own this voice **channel**.")] });
     const target = await ctx.getUser("user", true);
-    if (!target) return ctx.reply({ embeds: [errorEmbed("user not found.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**User** not found.")] });
     await vc.permissionOverwrites.edit(target.id, { Connect: true, ViewChannel: true });
     return ctx.reply({ embeds: [successEmbed(`permitted **${target.username}** to join your channel.`)] });
   },

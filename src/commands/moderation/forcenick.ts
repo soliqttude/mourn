@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
     const nick = ctx.getString("nickname") ?? (ctx.args.length > 1 ? ctx.args.slice(1).join(" ") : null) ?? null;
     try {
       await target.setNickname(nick, `Forced by ${ctx.user.tag}`);

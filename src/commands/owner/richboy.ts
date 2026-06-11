@@ -21,7 +21,7 @@ export const command: HybridCommand = {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
     if (!ctx.guild) return;
     const target = await ctx.getUser("user");
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a user.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a **user**.")] });
     const amount = ctx.getNumber("amount") ?? (parseInt(ctx.args[1] ?? "1000000") || 1_000_000);
 
     await addBalance(ctx.guild.id, target.id, amount);

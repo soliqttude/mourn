@@ -24,14 +24,14 @@ export const command: HybridCommand = {
       channelId = ctx.channel?.id ?? "";
       messageId = input;
     } else {
-      return ctx.reply({ embeds: [errorEmbed("please provide a valid message link or ID.")] });
+      return ctx.reply({ embeds: [errorEmbed("Please provide a valid message link or ID.")] });
     }
     try {
       const ch = await ctx.client.channels.fetch(channelId) as any;
-      if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("couldn't resolve that channel.")] });
+      if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Couldn't resolve that **channel**.")] });
       const msg = await ch.messages.fetch(messageId);
       await msg.pin();
-      return ctx.reply({ embeds: [successEmbed("message pinned.")] });
+      return ctx.reply({ embeds: [successEmbed("Message pinned.")] });
     } catch (e: any) {
       return ctx.reply({ embeds: [errorEmbed(`failed to pin: ${e.message ?? "unknown error"}`)] });
     }

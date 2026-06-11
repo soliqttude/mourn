@@ -11,7 +11,7 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const role = ctx.getRole("role");
     const colorStr = (ctx.getString("color", true) ?? ctx.args[1] ?? "").replace("#", "").toLowerCase();
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Role not found.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("**Role** not found.")] });
     const color = colorStr === "reset" ? 0 : parseInt(colorStr, 16);
     if (colorStr !== "reset" && (isNaN(color) || colorStr.length > 6)) return ctx.reply({ embeds: [errorEmbed("Invalid hex color. Example: `#ff0000` or `reset`")] });
     try {

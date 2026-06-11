@@ -15,14 +15,14 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [{ name: "user", description: "User to kick", type: ApplicationCommandOptionType.User, required: true }],
   async execute(ctx) {
-    if (!ctx.guild || !ctx.member?.voice.channel) return ctx.reply({ embeds: [errorEmbed("you must be in a voice channel.")] });
+    if (!ctx.guild || !ctx.member?.voice.channel) return ctx.reply({ embeds: [errorEmbed("You must be in a voice **channel**.")] });
     const vc = ctx.member.voice.channel;
     const rows = await db.select().from(voicemasterChannels).where(eq(voicemasterChannels.channelId, vc.id));
-    if (!rows[0] || rows[0].ownerId !== ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you don't own this voice channel.")] });
+    if (!rows[0] || rows[0].ownerId !== ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You don't own this voice **channel**.")] });
     const target = await ctx.getMember("user", true);
-    if (!target) return ctx.reply({ embeds: [errorEmbed("member not found.")] });
-    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you can't kick yourself.")] });
-    if (target.voice.channelId !== vc.id) return ctx.reply({ embeds: [errorEmbed("that member isn't in your channel.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
+    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't kick yourself.")] });
+    if (target.voice.channelId !== vc.id) return ctx.reply({ embeds: [errorEmbed("That **member** isn't in your **channel**.")] });
     await target.voice.disconnect().catch(() => {});
     return ctx.reply({ embeds: [successEmbed(`kicked **${target.user.username}** from your channel.`)] });
   },

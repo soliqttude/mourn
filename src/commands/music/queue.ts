@@ -20,13 +20,13 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const queue = distube.getQueue(ctx.guild);
-    if (!queue || queue.songs.length === 0) return ctx.reply({ embeds: [errorEmbed("the queue is empty.")] });
+    if (!queue || queue.songs.length === 0) return ctx.reply({ embeds: [errorEmbed("The queue is empty.")] });
 
     const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
 
     if (sub === "remove") {
       const pos = (ctx.getNumber("position") ?? parseInt(ctx.args[1] ?? "")) ;
-      if (isNaN(pos) || pos < 1) return ctx.reply({ embeds: [errorEmbed("provide a valid position number (1 = currently playing).")] });
+      if (isNaN(pos) || pos < 1) return ctx.reply({ embeds: [errorEmbed("Provide a valid position number (1 = currently playing).")] });
       if (pos >= queue.songs.length) return ctx.reply({ embeds: [errorEmbed(`position out of range. queue has ${queue.songs.length} songs.`)] });
       const removed = queue.songs[pos];
       queue.songs.splice(pos, 1);
@@ -36,8 +36,8 @@ export const command: HybridCommand = {
     if (sub === "move") {
       const from = ctx.getNumber("position") ?? parseInt(ctx.args[1] ?? "");
       const to = ctx.getNumber("new_position") ?? parseInt(ctx.args[2] ?? "");
-      if (isNaN(from) || isNaN(to) || from < 1 || to < 1) return ctx.reply({ embeds: [errorEmbed("provide valid from and to positions.")] });
-      if (from >= queue.songs.length || to >= queue.songs.length) return ctx.reply({ embeds: [errorEmbed("position out of range.")] });
+      if (isNaN(from) || isNaN(to) || from < 1 || to < 1) return ctx.reply({ embeds: [errorEmbed("Provide valid from and to positions.")] });
+      if (from >= queue.songs.length || to >= queue.songs.length) return ctx.reply({ embeds: [errorEmbed("Position out of range.")] });
       const [song] = queue.songs.splice(from, 1);
       queue.songs.splice(to, 0, song!);
       return ctx.reply({ embeds: [successEmbed(`moved **${song?.name ?? "track"}** from position **${from}** to **${to}**.`)] });

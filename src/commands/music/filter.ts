@@ -23,16 +23,16 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild || !ctx.member) return;
     const queue = distube.getQueue(ctx.guild);
-    if (!queue) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
+    if (!queue) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
     const name = ctx.getString("name");
     if (!name) {
       const active = queue.filters.names.length ? queue.filters.names.join(", ") : "none";
       return ctx.reply({ embeds: [brandEmbed({ description: `**available filters:** ${FILTERS.join(", ")}\n**active:** ${active}` })] });
     }
-    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("you need the dj role.")] });
+    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("You need the dj **role**.")] });
     if (name === "off") {
       queue.filters.clear();
-      return ctx.reply({ embeds: [successEmbed("all filters cleared.")] });
+      return ctx.reply({ embeds: [successEmbed("All **filters** cleared.")] });
     }
     if (!FILTERS.includes(name as any)) return ctx.reply({ embeds: [errorEmbed(`unknown filter. use: ${FILTERS.join(", ")}`)] });
     if (queue.filters.has(name as any)) {

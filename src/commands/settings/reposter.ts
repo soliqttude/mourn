@@ -55,7 +55,7 @@ export const command: HybridCommand = {
       delete: { deleteOriginal: on } as any,
     }[sub] ?? {};
 
-    if (!Object.keys(patch).length) return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    if (!Object.keys(patch).length) return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
 
     const keyMap: Record<string, keyof typeof cfg> = {
       prefix: "prefixEnabled", suppress: "suppressEmbeds", embed: "showEmbed", strict: "strictMode", delete: "deleteOriginal",

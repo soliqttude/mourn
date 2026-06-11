@@ -19,7 +19,7 @@ export const command: HybridCommand = {
     if (ctx.user.id !== config.ownerId) return ctx.reply({ content: "nope." });
     const guildId = ctx.getString("guild_id", true)!;
     const prefix = ctx.getString("prefix", true)!;
-    if (prefix.length > 5) return ctx.reply({ embeds: [errorEmbed("prefix max 5 characters.")] });
+    if (prefix.length > 5) return ctx.reply({ embeds: [errorEmbed("**Prefix** max 5 characters.")] });
 
     const guild = ctx.client.guilds.cache.get(guildId);
     await updateGuildSettings(guildId, { prefix });

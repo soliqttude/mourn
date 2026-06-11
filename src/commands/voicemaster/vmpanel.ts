@@ -17,6 +17,6 @@ export const command: HybridCommand = {
       embeds: [vmPanelEmbed()],
       components: vmPanelButtons(),
     });
-    return ctx.reply({ embeds: [successEmbed("Panel sent.")], ephemeral: true });
+    return ctx.reply({ embeds: [successEmbed("**Panel** sent.")], ephemeral: true });
   },
 };

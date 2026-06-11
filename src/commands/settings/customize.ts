@@ -76,7 +76,7 @@ export const command: HybridCommand = {
 
     if (!field) {
       return ctx.reply({
-        embeds: [errorEmbed("usage: `customize <avatar|banner|bio|reset> [value]`")],
+        embeds: [errorEmbed("Usage: `customize <avatar|banner|bio|reset> [value]`")],
       });
     }
 
@@ -98,16 +98,16 @@ export const command: HybridCommand = {
         customizeBanner: null,
         customizeBio: null,
       });
-      return ctx.reply({ embeds: [successEmbed("server customization has been reset.", "settings")] });
+      return ctx.reply({ embeds: [successEmbed("Server customization has been reset.", "settings")] });
     }
 
     if (!value) {
-      return ctx.reply({ embeds: [errorEmbed("please provide a value.")] });
+      return ctx.reply({ embeds: [errorEmbed("Please provide a value.")] });
     }
 
     if (field === "avatar") {
       if (!/^https?:\/\/.+/.test(value))
-        return ctx.reply({ embeds: [errorEmbed("please provide a valid image url.")] });
+        return ctx.reply({ embeds: [errorEmbed("Please provide a valid image url.")] });
       let dataUri: string;
       try {
         dataUri = await urlToDataUri(value);
@@ -130,12 +130,12 @@ export const command: HybridCommand = {
         }
       }
       await updateGuildSettings(ctx.guild.id, { customizeAvatar: value });
-      return ctx.reply({ embeds: [successEmbed("server avatar updated.", "settings")] });
+      return ctx.reply({ embeds: [successEmbed("Server avatar updated.", "settings")] });
     }
 
     if (field === "banner") {
       if (!/^https?:\/\/.+/.test(value))
-        return ctx.reply({ embeds: [errorEmbed("please provide a valid image url.")] });
+        return ctx.reply({ embeds: [errorEmbed("Please provide a valid image url.")] });
       let dataUri: string;
       try {
         dataUri = await urlToDataUri(value);
@@ -151,12 +151,12 @@ export const command: HybridCommand = {
         });
       }
       await updateGuildSettings(ctx.guild.id, { customizeBanner: value });
-      return ctx.reply({ embeds: [successEmbed("server banner updated.", "settings")] });
+      return ctx.reply({ embeds: [successEmbed("Server banner updated.", "settings")] });
     }
 
     if (field === "bio") {
       if (value.length > 400)
-        return ctx.reply({ embeds: [errorEmbed("bio must be 400 characters or less.")] });
+        return ctx.reply({ embeds: [errorEmbed("Bio must be 400 characters or less.")] });
       // Update the bot's application description (this is the actual Discord bio)
       const bioErr = await rest
         .patch("/applications/@me", { body: { description: value } })
@@ -171,7 +171,7 @@ export const command: HybridCommand = {
     }
 
     return ctx.reply({
-      embeds: [errorEmbed("invalid option. use `avatar`, `banner`, `bio`, or `reset`.")],
+      embeds: [errorEmbed("Invalid option. use `avatar`, `banner`, `bio`, or `reset`.")],
     });
   },
 };

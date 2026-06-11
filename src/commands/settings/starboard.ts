@@ -54,23 +54,23 @@ export const command: HybridCommand = {
     if (sub === "add" || sub === "remove") {
       if (sub === "remove") {
         await updateGuildSettings(ctx.guild.id, { starboardChannel: null });
-        return ctx.reply({ embeds: [successEmbed("starboard disabled.")] });
+        return ctx.reply({ embeds: [successEmbed("Starboard disabled.")] });
       }
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(val.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { starboardChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`starboard set to <#${ch.id}>.`)] });
     }
 
     if (sub === "threshold") {
       const n = parseInt(val);
-      if (isNaN(n) || n < 1 || n > 50) return ctx.reply({ embeds: [errorEmbed("threshold must be 1–50.")] });
+      if (isNaN(n) || n < 1 || n > 50) return ctx.reply({ embeds: [errorEmbed("Threshold must be 1–50.")] });
       await updateGuildSettings(ctx.guild.id, { starboardThreshold: n });
       return ctx.reply({ embeds: [successEmbed(`starboard threshold set to **${n}**.`)] });
     }
 
     if (sub === "emoji") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("please provide an emoji.")] });
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Please provide an **emoji**.")] });
       await updateGuildSettings(ctx.guild.id, { starboardEmoji: val });
       return ctx.reply({ embeds: [successEmbed(`starboard emoji set to ${val}.`)] });
     }
@@ -82,7 +82,7 @@ export const command: HybridCommand = {
     }
 
     if (sub === "color") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("please provide a hex color.")] });
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Please provide a hex color.")] });
       await updateGuildSettings(ctx.guild.id, { starboardColor: val } as any);
       return ctx.reply({ embeds: [successEmbed(`starboard embed color set to \`${val}\`.`)] });
     }
@@ -105,6 +105,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`starboard attachments ${on ? "enabled" : "disabled"}.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

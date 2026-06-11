@@ -31,15 +31,15 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`Removed reaction role.`)] });
     }
     if (action !== "add") return ctx.reply({ embeds: [errorEmbed("Unknown action.")] });
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Role required for add.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("**Role** required for add.")] });
 
     const message = await ctx.channel.messages.fetch(msgId).catch(() => null);
-    if (!message) return ctx.reply({ embeds: [errorEmbed("Message not found in this channel.")] });
+    if (!message) return ctx.reply({ embeds: [errorEmbed("Message not found in this **channel**.")] });
 
     try {
       await message.react(emoji);
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("Could not react with that emoji.")] });
+      return ctx.reply({ embeds: [errorEmbed("Could not react with that **emoji**.")] });
     }
     await addReactionRole(ctx.guild.id, ctx.channel.id, msgId, emoji, role.id);
     return ctx.reply({

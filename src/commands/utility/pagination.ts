@@ -35,9 +35,9 @@ export const command: HybridCommand = {
 
     if (sub === "create") {
       const ch = ctx.getChannel("channel") ?? (ctx.args[1] ? resolveChannel(ctx.guild, ctx.args[1]) : ctx.channel);
-      if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("provide a valid text channel.")] });
+      if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Provide a valid text **channel**.")] });
       const code = ctx.getString("code") ?? ctx.args.slice(2).join(" ");
-      if (!code) return ctx.reply({ embeds: [errorEmbed("provide the first page content.")] });
+      if (!code) return ctx.reply({ embeds: [errorEmbed("Provide the first page content.")] });
       const { embed, content } = parseScript(code, { guild: ctx.guild });
       const msg = await (ch as any).send({ content: content ?? undefined, embeds: embed ? [embed] : [], components: [buildNavRow(0, 1, "placeholder")] });
       await db.insert(paginatedEmbeds).values({ messageId: msg.id, guildId, channelId: ch.id, pages: [code], currentPage: 0 });
@@ -47,11 +47,11 @@ export const command: HybridCommand = {
 
     if (sub === "add") {
       const msgId = ctx.getString("messageid") ?? ctx.args[1];
-      if (!msgId) return ctx.reply({ embeds: [errorEmbed("provide the message ID.")] });
+      if (!msgId) return ctx.reply({ embeds: [errorEmbed("Provide the message ID.")] });
       const code = ctx.getString("code") ?? ctx.args.slice(2).join(" ");
-      if (!code) return ctx.reply({ embeds: [errorEmbed("provide the page content.")] });
+      if (!code) return ctx.reply({ embeds: [errorEmbed("Provide the page content.")] });
       const rows = await db.select().from(paginatedEmbeds).where(and(eq(paginatedEmbeds.messageId, msgId), eq(paginatedEmbeds.guildId, guildId)));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("paginated embed not found.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("Paginated embed not found.")] });
       const pe = rows[0];
       const pages = [...pe.pages, code];
       await db.update(paginatedEmbeds).set({ pages }).where(eq(paginatedEmbeds.messageId, msgId));
@@ -65,9 +65,9 @@ export const command: HybridCommand = {
 
     if (sub === "delete" || sub === "remove") {
       const msgId = ctx.getString("messageid") ?? ctx.args[1];
-      if (!msgId) return ctx.reply({ embeds: [errorEmbed("provide the message ID.")] });
+      if (!msgId) return ctx.reply({ embeds: [errorEmbed("Provide the message ID.")] });
       const rows = await db.select().from(paginatedEmbeds).where(and(eq(paginatedEmbeds.messageId, msgId), eq(paginatedEmbeds.guildId, guildId)));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("paginated embed not found.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("Paginated embed not found.")] });
       await db.delete(paginatedEmbeds).where(eq(paginatedEmbeds.messageId, msgId));
       const pe = rows[0];
       const ch = ctx.guild.channels.cache.get(pe.channelId);
@@ -75,12 +75,12 @@ export const command: HybridCommand = {
         const msg = await (ch as any).messages.fetch(msgId).catch(() => null);
         if (msg) await msg.edit({ components: [] }).catch(() => {});
       }
-      return ctx.reply({ embeds: [successEmbed("paginated embed deleted.")] });
+      return ctx.reply({ embeds: [successEmbed("Paginated embed deleted.")] });
     }
 
     if (sub === "list") {
       const rows = await db.select().from(paginatedEmbeds).where(eq(paginatedEmbeds.guildId, guildId));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no paginated embeds in this server.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No paginated embeds in this server.")] });
       const lines = rows.map(r => `\`${r.messageId}\` → <#${r.channelId}> (${r.pages.length} pages)`);
       return ctx.reply({ embeds: [brandEmbed({ title: "Paginated Embeds", description: lines.join("\n") })] });
     }

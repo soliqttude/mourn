@@ -14,7 +14,7 @@ export const command: HybridCommand = {
     if (!ctx.channel) return;
     const index = Math.max(0, (ctx.getNumber("index") ?? 1) - 1);
     const snipe = getSnipe(ctx.channel.id, "delete", index);
-    if (!snipe) return ctx.reply({ embeds: [errorEmbed("nothing to snipe.")] });
+    if (!snipe) return ctx.reply({ embeds: [errorEmbed("Nothing to snipe.")] });
     const embed = brandEmbed({ description: snipe.content || "*(no text content)*" });
     embed.setAuthor({ name: snipe.authorTag });
     embed.setTimestamp(new Date(snipe.at));

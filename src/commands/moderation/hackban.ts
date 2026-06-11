@@ -21,12 +21,12 @@ export const command: HybridCommand = {
     const userId = ctx.getString("userid", true) ?? ctx.args[0] ?? "";
     const reason = ctx.getString("reason") ?? "No reason provided";
     if (!/^\d{17,19}$/.test(userId))
-      return ctx.reply({ embeds: [errorEmbed("Please provide a valid Discord user ID (17-19 digits).")] });
+      return ctx.reply({ embeds: [errorEmbed("Please provide a valid Discord **user** ID (17-19 digits).")] });
     try {
       await guild.bans.create(userId, { reason, deleteMessageSeconds: 86400 });
       return ctx.reply({ embeds: [successEmbed(`Hackbanned user **${userId}**.`)] });
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("Failed to ban. Check permissions or ID.")] });
+      return ctx.reply({ embeds: [errorEmbed("Failed to ban. Check **permissions** or ID.")] });
     }
   },
 };

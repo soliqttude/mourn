@@ -25,8 +25,8 @@ export const command: HybridCommand = {
     const reason = ctx.getString("reason") ?? "no reason provided";
     if (!target || !dur) return;
     const ms = parseDuration(dur);
-    if (!ms || ms > 28 * 24 * 60 * 60 * 1000) return ctx.reply({ embeds: [errorEmbed("invalid duration. max 28 days.")] });
-    if (!target.moderatable) return ctx.reply({ embeds: [errorEmbed("i can't timeout that user.")] });
+    if (!ms || ms > 28 * 24 * 60 * 60 * 1000) return ctx.reply({ embeds: [errorEmbed("Invalid duration. max 28 days.")] });
+    if (!target.moderatable) return ctx.reply({ embeds: [errorEmbed("I can't timeout that **user**.")] });
     try {
       await target.timeout(ms, `${ctx.user.tag}: ${reason}`);
       return ctx.reply({

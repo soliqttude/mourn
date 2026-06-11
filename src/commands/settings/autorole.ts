@@ -34,7 +34,7 @@ export const command: HybridCommand = {
     if (actionArg === "give" || actionArg === "remove") {
       if (!settings.autoroleId) return ctx.reply({ embeds: [errorEmbed("No autorole configured. Use `,autorole @role` first.")] });
       const target = await ctx.getMember("user");
-      if (!target) return ctx.reply({ embeds: [errorEmbed("Please mention a member.")] });
+      if (!target) return ctx.reply({ embeds: [errorEmbed("Please mention a **member**.")] });
       const ar = guild.roles.cache.get(settings.autoroleId);
       if (!ar) return ctx.reply({ embeds: [errorEmbed("Configured autorole no longer exists. Reset it with `,autorole @role`.")] });
       if (actionArg === "give") {

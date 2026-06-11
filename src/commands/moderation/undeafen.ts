@@ -15,8 +15,8 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
-    if (!target.voice.channel) return ctx.reply({ embeds: [errorEmbed("Member is not in a voice channel.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
+    if (!target.voice.channel) return ctx.reply({ embeds: [errorEmbed("**Member** is not in a voice **channel**.")] });
     await target.voice.setDeaf(false);
     return ctx.reply({ embeds: [successEmbed(`Undeafened **${target.user.tag}**.`)] });
   },

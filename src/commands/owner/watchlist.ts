@@ -28,7 +28,7 @@ export const command: HybridCommand = {
         embeds: [new EmbedBuilder().setColor(0x0f1923).setTitle("👁️ Watchlist").setDescription(lines.join("\n")).setTimestamp()],
       });
     }
-    if (!id) return ctx.reply({ embeds: [errorEmbed("Provide a user ID.")] });
+    if (!id) return ctx.reply({ embeds: [errorEmbed("Provide a **user** ID.")] });
     if (action === "add") {
       ownerState.watchedUsers.add(id);
       return ctx.reply({ embeds: [successEmbed(`Added \`${id}\` to watchlist. You'll be DM'd when they run commands.`)] });

@@ -28,7 +28,7 @@ export const command: HybridCommand = {
 
     if (subName === "setup") {
       const ch = ctx.getChannel("channel");
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("Channel not found.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
       await updateGuildSettings(ctx.guild.id, { countingChannel: ch.id } as any);
       await db.insert(countingData).values({ guildId: ctx.guild.id, count: 0, lastUserId: null })
         .onConflictDoUpdate({ target: [countingData.guildId], set: { count: 0, lastUserId: null } });

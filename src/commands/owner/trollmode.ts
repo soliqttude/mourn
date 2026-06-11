@@ -19,7 +19,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
     const target = await ctx.getUser("user");
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a user.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a **user**.")] });
     const minutes = ctx.getNumber("duration") ?? (parseInt(ctx.args[1] ?? "60") || 60);
 
     if (ownerState.trolledUsers.has(target.id)) {

@@ -18,7 +18,7 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const role = ctx.getRole("role");
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a role.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a **role**.")] });
     await updateGuildSettings(guild.id, { jailRole: role.id });
     return ctx.reply({ embeds: [successEmbed(`Jail role set to <@&${role.id}>.`)] });
   },

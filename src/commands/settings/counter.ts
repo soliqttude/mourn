@@ -43,7 +43,7 @@ export const command: HybridCommand = {
 
     if (action === "list") {
       const rows = await db.select().from(counters).where(eq(counters.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no counters set up.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No counters set up.")] });
       const lines = rows.map(r => `<#${r.channelId}> — **${r.type}** — \`${r.template}\``);
       return ctx.reply({ embeds: [brandEmbed({ description: `**counters [${rows.length}]**\n\n${lines.join("\n")}` })] });
     }
@@ -66,12 +66,12 @@ export const command: HybridCommand = {
       })();
       const template = ctx.getString("template") ?? ctx.args.slice(3).join(" ") || null;
 
-      if (!channel) return ctx.reply({ embeds: [errorEmbed("please specify a channel.")] });
+      if (!channel) return ctx.reply({ embeds: [errorEmbed("Please specify a **channel**.")] });
       if (!template || !template.includes("{count}")) {
-        return ctx.reply({ embeds: [errorEmbed("template must include \`{count}\` e.g. \`Members: {count}\`.")] });
+        return ctx.reply({ embeds: [errorEmbed("Template must include \`{count}\` e.g. \`Members: {count}\`.")] });
       }
       if (template.length > 100) {
-        return ctx.reply({ embeds: [errorEmbed("template must be 100 characters or less.")] });
+        return ctx.reply({ embeds: [errorEmbed("Template must be 100 characters or less.")] });
       }
 
       await db.insert(counters)
@@ -84,6 +84,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`counter set up — **${type}** → <#${channel.id}> — \`${template}\`.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("invalid action. use \`add\`, \`remove\`, or \`list\`.")] });
+    return ctx.reply({ embeds: [errorEmbed("Invalid action. use \`add\`, \`remove\`, or \`list\`.")] });
   },
 };

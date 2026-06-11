@@ -48,9 +48,9 @@ export const command: HybridCommand = {
 
     if (action === "setbase") {
       if (!member.permissions.has("Administrator" as any))
-        return ctx.reply({ embeds: [errorEmbed("only admins can set the base role.")] });
+        return ctx.reply({ embeds: [errorEmbed("Only admins can set the base **role**.")] });
       const role = ctx.getRole("role");
-      if (!role) return ctx.reply({ embeds: [errorEmbed("please specify the base role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify the base **role**.")] });
       await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: role.id })
         .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { baseRoleId: role.id } });
       return ctx.reply({ embeds: [successEmbed(`base role set to <@&${role.id}>. booster roles will be placed above it.`, "settings")] });
@@ -58,7 +58,7 @@ export const command: HybridCommand = {
 
     const isBoosting = member.premiumSince !== null;
     if (!isBoosting)
-      return ctx.reply({ embeds: [errorEmbed("you must be a server booster to use booster roles.")] });
+      return ctx.reply({ embeds: [errorEmbed("You must be a server **booster** to use **booster** **roles**.")] });
 
     if (action === "create") {
       const existing = await getBoosterRole(guild.id, ctx.user.id);
@@ -66,44 +66,44 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [errorEmbed(`you already have a booster role (<@&${existing}>). delete it first.`)] });
 
       const roleId = await createBoosterRole(guild, member);
-      if (!roleId) return ctx.reply({ embeds: [errorEmbed("failed to create booster role.")] });
+      if (!roleId) return ctx.reply({ embeds: [errorEmbed("Failed to create **booster** **role**.")] });
 
       return ctx.reply({ embeds: [successEmbed(`your booster role (<@&${roleId}>) has been created! use \`boosterrole rename\` and \`boosterrole color\` to customize it.`, "settings")] });
     }
 
     const roleId = await getBoosterRole(guild.id, ctx.user.id);
     if (!roleId)
-      return ctx.reply({ embeds: [errorEmbed("you don't have a booster role. use `boosterrole create` first.")] });
+      return ctx.reply({ embeds: [errorEmbed("You don't have a **booster** **role**. use `boosterrole create` first.")] });
 
     const role = guild.roles.cache.get(roleId);
     if (!role)
-      return ctx.reply({ embeds: [errorEmbed("your booster role no longer exists.")] });
+      return ctx.reply({ embeds: [errorEmbed("Your **booster** **role** no longer exists.")] });
 
     if (action === "delete") {
       await deleteBoosterRole(guild, ctx.user.id);
-      return ctx.reply({ embeds: [successEmbed("your booster role has been deleted.", "settings")] });
+      return ctx.reply({ embeds: [successEmbed("Your **booster** **role** has been deleted.", "settings")] });
     }
 
     if (action === "rename") {
       const name = ctx.getString("value");
-      if (!name) return ctx.reply({ embeds: [errorEmbed("please provide a new name.")] });
-      if (name.length > 100) return ctx.reply({ embeds: [errorEmbed("role name must be 100 characters or less.")] });
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a new name.")] });
+      if (name.length > 100) return ctx.reply({ embeds: [errorEmbed("**Role** name must be 100 characters or less.")] });
       await role.setName(name).catch(() => null);
       return ctx.reply({ embeds: [successEmbed(`renamed your booster role to **${name}**.`, "settings")] });
     }
 
     if (action === "color") {
       const hex = ctx.getString("value");
-      if (!hex) return ctx.reply({ embeds: [errorEmbed("please provide a hex color e.g. `#ff0099`.")] });
+      if (!hex) return ctx.reply({ embeds: [errorEmbed("Please provide a hex color e.g. `#ff0099`.")] });
       const parsed = parseInt(hex.replace("#", ""), 16);
-      if (isNaN(parsed)) return ctx.reply({ embeds: [errorEmbed("invalid hex color.")] });
+      if (isNaN(parsed)) return ctx.reply({ embeds: [errorEmbed("Invalid hex color.")] });
       await role.setColor(parsed).catch(() => null);
       return ctx.reply({ embeds: [successEmbed(`updated your booster role color to \`${hex}\`.`, "settings")] });
     }
 
     if (action === "icon") {
       const icon = ctx.getString("value");
-      if (!icon) return ctx.reply({ embeds: [errorEmbed("please provide an emoji or image url.")] });
+      if (!icon) return ctx.reply({ embeds: [errorEmbed("Please provide an **emoji** or image url.")] });
       await role.setUnicodeEmoji(icon).catch(async () => {
         if (/^https?:\/\//.test(icon)) {
           await role.setIcon(icon).catch(() => {});
@@ -112,6 +112,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`updated your booster role icon.`, "settings")] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("invalid action.")] });
+    return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
   },
 };

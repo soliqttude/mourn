@@ -34,9 +34,9 @@ export const command: HybridCommand = {
     const durStr = ctx.getString("duration", true)!;
     const winnersCount = ctx.getNumber("winners") ?? 1;
     const channel = ctx.getChannel("channel") ?? ctx.channel;
-    if (!channel) return ctx.reply({ embeds: [errorEmbed("no channel found.")] });
+    if (!channel) return ctx.reply({ embeds: [errorEmbed("No **channel** found.")] });
     const ms = parseDuration(durStr);
-    if (!ms || ms < 10_000) return ctx.reply({ embeds: [errorEmbed("invalid duration. minimum is 10 seconds.")] });
+    if (!ms || ms < 10_000) return ctx.reply({ embeds: [errorEmbed("Invalid duration. minimum is 10 seconds.")] });
     const endsAt = new Date(Date.now() + ms);
 
     await ctx.defer();

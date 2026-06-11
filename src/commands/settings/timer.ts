@@ -42,7 +42,7 @@ export const command: HybridCommand = {
     if (action === "list") {
       const rows = await db.select().from(autoMessages).where(eq(autoMessages.guildId, guild.id));
       if (!rows.length)
-        return ctx.reply({ embeds: [errorEmbed("no auto messages configured.")] });
+        return ctx.reply({ embeds: [errorEmbed("No auto messages configured.")] });
 
       const lines = rows.map((r) => {
         const mins = Math.round(r.intervalMs / 60000);
@@ -56,7 +56,7 @@ export const command: HybridCommand = {
 
     if (action === "remove") {
       const id = ctx.getNumber("id");
-      if (!id) return ctx.reply({ embeds: [errorEmbed("please provide the timer id.")] });
+      if (!id) return ctx.reply({ embeds: [errorEmbed("Please provide the timer id.")] });
       const rows = await db.select().from(autoMessages)
         .where(and(eq(autoMessages.id, id), eq(autoMessages.guildId, guild.id)));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`no timer found with id \`${id}\`.`)] });
@@ -69,19 +69,19 @@ export const command: HybridCommand = {
       const intervalStr = ctx.getString("interval");
       const msg = ctx.getString("message");
 
-      if (!channel) return ctx.reply({ embeds: [errorEmbed("please specify a channel.")] });
-      if (!intervalStr) return ctx.reply({ embeds: [errorEmbed("please specify an interval e.g. `30m`, `1h`.")] });
-      if (!msg) return ctx.reply({ embeds: [errorEmbed("please specify a message.")] });
+      if (!channel) return ctx.reply({ embeds: [errorEmbed("Please specify a **channel**.")] });
+      if (!intervalStr) return ctx.reply({ embeds: [errorEmbed("Please specify an interval e.g. `30m`, `1h`.")] });
+      if (!msg) return ctx.reply({ embeds: [errorEmbed("Please specify a message.")] });
 
       const ms = parseDuration(intervalStr);
       if (!ms || ms < 60_000)
-        return ctx.reply({ embeds: [errorEmbed("minimum interval is 1 minute.")] });
+        return ctx.reply({ embeds: [errorEmbed("Minimum interval is 1 minute.")] });
       if (ms > 7 * 24 * 60 * 60 * 1000)
-        return ctx.reply({ embeds: [errorEmbed("maximum interval is 7 days.")] });
+        return ctx.reply({ embeds: [errorEmbed("Maximum interval is 7 days.")] });
 
       const existing = await db.select().from(autoMessages).where(eq(autoMessages.guildId, guild.id));
       if (existing.length >= 10)
-        return ctx.reply({ embeds: [errorEmbed("maximum of 10 auto messages per server.")] });
+        return ctx.reply({ embeds: [errorEmbed("Maximum of 10 auto messages per server.")] });
 
       const result = await db.insert(autoMessages).values({
         guildId: guild.id,
@@ -96,6 +96,6 @@ export const command: HybridCommand = {
       });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("invalid action.")] });
+    return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
   },
 };

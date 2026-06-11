@@ -24,7 +24,7 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const target = await ctx.getUser("user");
     const userId = (target as any)?.id ?? ctx.args[0]?.replace(/[<@!>]/g, "");
-    if (!userId) return ctx.reply({ embeds: [errorEmbed("Provide a user.")] });
+    if (!userId) return ctx.reply({ embeds: [errorEmbed("Provide a **user**.")] });
 
     const user = await ctx.client.users.fetch(userId).catch(() => null);
     const [eco, lvl, warnCount, caseCount, isBlacklisted] = await Promise.all([

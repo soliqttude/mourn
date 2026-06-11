@@ -49,7 +49,7 @@ export const command: HybridCommand = {
 
     if (sub === "reset") {
       await db.delete(pinsConfig).where(eq(pinsConfig.guildId, ctx.guild.id));
-      return ctx.reply({ embeds: [successEmbed("pin archival config reset.")] });
+      return ctx.reply({ embeds: [successEmbed("Pin archival config reset.")] });
     }
 
     if (sub === "set") {
@@ -68,7 +68,7 @@ export const command: HybridCommand = {
 
     if (sub === "channel") {
       const ch = ctx.getChannel("channel") ?? (ctx.args[1] ? ctx.guild.channels.cache.get(ctx.args[1].replace(/[<#>]/g, "")) : null) as any;
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
       await db.insert(pinsConfig).values({ guildId: ctx.guild.id, enabled: false, archiveChannel: ch.id, unpinOnArchive: false })
         .onConflictDoUpdate({ target: pinsConfig.guildId, set: { archiveChannel: ch.id } });
       return ctx.reply({ embeds: [successEmbed(`archive channel set to <#${ch.id}>.`)] });
@@ -76,12 +76,12 @@ export const command: HybridCommand = {
 
     if (sub === "archive") {
       const cfg = await getConfig(ctx.guild.id);
-      if (!cfg?.archiveChannel) return ctx.reply({ embeds: [errorEmbed("no archive channel set. use `,pins channel #channel` first.")] });
+      if (!cfg?.archiveChannel) return ctx.reply({ embeds: [errorEmbed("No archive **channel** set. use `,pins **channel** #channel` first.")] });
       const archiveCh = ctx.guild.channels.cache.get(cfg.archiveChannel) as TextChannel | undefined;
-      if (!archiveCh?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("archive channel not found.")] });
+      if (!archiveCh?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Archive **channel** not found.")] });
       const currentCh = ctx.channel as TextChannel;
       const pins = await currentCh.messages.fetchPinned();
-      if (!pins.size) return ctx.reply({ embeds: [errorEmbed("no pinned messages in this channel.")] });
+      if (!pins.size) return ctx.reply({ embeds: [errorEmbed("No pinned messages in this **channel**.")] });
       let archived = 0;
       for (const [, msg] of pins.sort((a, b) => a.createdTimestamp - b.createdTimestamp)) {
         const embed = new EmbedBuilder()
@@ -101,6 +101,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`archived ${archived} pin${archived === 1 ? "" : "s"} to <#${archiveCh.id}>.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

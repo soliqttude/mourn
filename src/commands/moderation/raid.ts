@@ -26,7 +26,7 @@ export const command: HybridCommand = {
     if (!guild) return;
 
     const action = (ctx.getString("action") ?? "ban") as Action;
-    if (!ACTIONS.includes(action)) return ctx.reply({ embeds: [errorEmbed("invalid action. use ban, kick, or timeout.")] });
+    if (!ACTIONS.includes(action)) return ctx.reply({ embeds: [errorEmbed("Invalid action. use ban, kick, or timeout.")] });
 
     const minutes = ctx.getNumber("minutes") ?? 10;
     const ageDays = ctx.getNumber("age") ?? 7;
@@ -35,11 +35,11 @@ export const command: HybridCommand = {
     const me = guild.members.me;
     if (!me) return;
     if (action === "ban" && !me.permissions.has(PermissionFlagsBits.BanMembers))
-      return ctx.reply({ embeds: [errorEmbed("i need **ban members** permission.")] });
+      return ctx.reply({ embeds: [errorEmbed("I need **ban members** **permission**.")] });
     if (action === "kick" && !me.permissions.has(PermissionFlagsBits.KickMembers))
-      return ctx.reply({ embeds: [errorEmbed("i need **kick members** permission.")] });
+      return ctx.reply({ embeds: [errorEmbed("I need **kick members** **permission**.")] });
     if (action === "timeout" && !me.permissions.has(PermissionFlagsBits.ModerateMembers))
-      return ctx.reply({ embeds: [errorEmbed("i need **moderate members** permission.")] });
+      return ctx.reply({ embeds: [errorEmbed("I need **moderate members** **permission**.")] });
 
     await ctx.defer();
 

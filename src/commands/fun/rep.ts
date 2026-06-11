@@ -19,8 +19,8 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const target = await ctx.getUser("user", true);
     if (!target) return;
-    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you can't rep yourself.")] });
-    if (target.bot) return ctx.reply({ embeds: [errorEmbed("bots don't need rep.")] });
+    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't rep yourself.")] });
+    if (target.bot) return ctx.reply({ embeds: [errorEmbed("Bots don't need rep.")] });
 
     const result = await giveRep(ctx.guild.id, ctx.user.id, target.id);
     if (!result.success) {

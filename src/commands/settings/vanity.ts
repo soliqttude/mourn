@@ -31,7 +31,7 @@ export const command: HybridCommand = {
     const value = ctx.getString("value") ?? ctx.args.slice(1).join(" ");
 
     if (sub === "set") {
-      if (!value) return ctx.reply({ embeds: [errorEmbed("provide a vanity string (e.g. `/yourcoolserver`).")] });
+      if (!value) return ctx.reply({ embeds: [errorEmbed("Provide a vanity string (e.g. `/yourcoolserver`).")] });
       await db.insert(vanityConfig).values({ guildId, vanity: value }).onConflictDoUpdate({ target: vanityConfig.guildId, set: { vanity: value } });
       return ctx.reply({ embeds: [successEmbed(`vanity set to \`${value}\`. members with this in their status will receive vanity roles.`)] });
     }
@@ -41,33 +41,33 @@ export const command: HybridCommand = {
       const roleStr = ctx.args[2] ?? value;
       if (action === "add") {
         const role = resolveRole(ctx.guild, roleStr);
-        if (!role) return ctx.reply({ embeds: [errorEmbed("role not found.")] });
+        if (!role) return ctx.reply({ embeds: [errorEmbed("**Role** not found.")] });
         await db.insert(vanityRoles).values({ guildId, roleId: role.id }).onConflictDoNothing();
         return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> added to vanity roles.`)] });
       }
       if (action === "remove") {
         const role = resolveRole(ctx.guild, roleStr);
-        if (!role) return ctx.reply({ embeds: [errorEmbed("role not found.")] });
+        if (!role) return ctx.reply({ embeds: [errorEmbed("**Role** not found.")] });
         await db.delete(vanityRoles).where(and(eq(vanityRoles.guildId, guildId), eq(vanityRoles.roleId, role.id)));
         return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> removed from vanity roles.`)] });
       }
       const rows = await db.select().from(vanityRoles).where(eq(vanityRoles.guildId, guildId));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no vanity roles set.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No vanity **roles** set.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "Vanity Roles", description: rows.map(r => `<@&${r.roleId}>`).join("\n") })] });
     }
 
     if (sub === "channel") {
-      if (!value) return ctx.reply({ embeds: [errorEmbed("provide a channel.")] });
+      if (!value) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
       const ch = resolveChannel(ctx.guild, value);
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("channel not found.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
       await db.insert(vanityConfig).values({ guildId, vanity: "" }).onConflictDoUpdate({ target: vanityConfig.guildId, set: { channelId: ch.id } });
       return ctx.reply({ embeds: [successEmbed(`vanity notification channel set to <#${ch.id}>.`)] });
     }
 
     if (sub === "message") {
-      if (!value) return ctx.reply({ embeds: [errorEmbed("provide a message. supports scripting variables.")] });
+      if (!value) return ctx.reply({ embeds: [errorEmbed("Provide a message. supports scripting variables.")] });
       await db.insert(vanityConfig).values({ guildId, vanity: "" }).onConflictDoUpdate({ target: vanityConfig.guildId, set: { message: value } });
-      return ctx.reply({ embeds: [successEmbed("vanity message updated.")] });
+      return ctx.reply({ embeds: [successEmbed("Vanity message updated.")] });
     }
 
     if (sub === "status") {

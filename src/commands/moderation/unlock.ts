@@ -14,13 +14,13 @@ export const command: HybridCommand = {
     if (!ctx.channel || !ctx.guild) return;
     const ch = ctx.channel as any;
     if (!ch.permissionOverwrites) {
-      return ctx.reply({ embeds: [errorEmbed("Cannot unlock this channel type.")] });
+      return ctx.reply({ embeds: [errorEmbed("Cannot unlock this **channel** type.")] });
     }
     try {
       await ch.permissionOverwrites.edit(ctx.guild.roles.everyone, {
         SendMessages: null,
       });
-      return ctx.reply({ embeds: [successEmbed("🔓 Channel unlocked.")] });
+      return ctx.reply({ embeds: [successEmbed("🔓 **Channel** unlocked.")] });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
     }

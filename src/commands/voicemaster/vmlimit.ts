@@ -22,13 +22,13 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("Limit must be 0-99.")] });
     }
     const vc = ctx.member.voice.channel;
-    if (!vc) return ctx.reply({ embeds: [errorEmbed("Join your voicemaster channel first.")] });
+    if (!vc) return ctx.reply({ embeds: [errorEmbed("Join your voicemaster **channel** first.")] });
     const rows = await db
       .select()
       .from(voicemasterChannels)
       .where(eq(voicemasterChannels.channelId, vc.id));
     if (!rows[0] || rows[0].ownerId !== ctx.user.id) {
-      return ctx.reply({ embeds: [errorEmbed("Only the channel owner can do this.")] });
+      return ctx.reply({ embeds: [errorEmbed("Only the **channel** owner can do this.")] });
     }
     try {
       await vc.setUserLimit(limit);

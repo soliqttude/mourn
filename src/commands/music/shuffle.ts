@@ -9,9 +9,9 @@ export const command: HybridCommand = {
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.guild || !ctx.member) return;
-    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("you need the dj role.")] });
+    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("You need the dj **role**.")] });
     const queue = distube.getQueue(ctx.guild);
-    if (!queue || queue.songs.length < 2) return ctx.reply({ embeds: [errorEmbed("not enough songs in the queue to shuffle.")] });
+    if (!queue || queue.songs.length < 2) return ctx.reply({ embeds: [errorEmbed("Not enough songs in the queue to shuffle.")] });
     await queue.shuffle();
     return ctx.reply({ embeds: [successEmbed(`shuffled ${queue.songs.length} songs.`)] });
   },

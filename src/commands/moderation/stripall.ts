@@ -19,7 +19,7 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
     const reason = ctx.getString("reason") ?? "No reason provided";
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
     const roles = target.roles.cache.filter(r => r.id !== ctx.guild!.id);
     await target.roles.remove(roles, reason);
     return ctx.reply({ embeds: [successEmbed(`Stripped all roles from **${target.user.tag}** — ${reason}`)] });

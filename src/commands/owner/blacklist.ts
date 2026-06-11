@@ -23,7 +23,7 @@ export const command: HybridCommand = {
     if (ctx.user.id !== config.ownerId) return ctx.reply({ embeds: [errorEmbed("Owner only.")] });
     const action = (ctx.getString("action", true) ?? ctx.args[0] ?? "").toLowerCase();
     const id = ctx.getString("user_id", true) ?? ctx.args[1];
-    if (!id) return ctx.reply({ embeds: [errorEmbed("Provide a user ID.")] });
+    if (!id) return ctx.reply({ embeds: [errorEmbed("Provide a **user** ID.")] });
 
     if (action === "add") {
       const reason = ctx.getString("reason") ?? ctx.args[2] ?? null;

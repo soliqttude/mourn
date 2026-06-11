@@ -22,26 +22,26 @@ export const command: HybridCommand = {
     if (!guild) return;
 
     const id = ctx.getNumber("id", true);
-    if (!id) return ctx.reply({ embeds: [errorEmbed("please provide a giveaway id.")] });
+    if (!id) return ctx.reply({ embeds: [errorEmbed("Please provide a giveaway id.")] });
 
     const rows = await db.select().from(giveaways)
       .where(and(eq(giveaways.id, id), eq(giveaways.guildId, guild.id)));
     const gw = rows[0];
     if (!gw) return ctx.reply({ embeds: [errorEmbed(`no giveaway found with id \`${id}\`.`)] });
-    if (!gw.ended) return ctx.reply({ embeds: [errorEmbed("that giveaway hasn't ended yet.")] });
-    if (!gw.messageId) return ctx.reply({ embeds: [errorEmbed("couldn't find the giveaway message.")] });
+    if (!gw.ended) return ctx.reply({ embeds: [errorEmbed("That giveaway hasn't ended yet.")] });
+    if (!gw.messageId) return ctx.reply({ embeds: [errorEmbed("Couldn't find the giveaway message.")] });
 
     const ch = ctx.client.channels.cache.get(gw.channelId) as TextChannel | undefined;
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("giveaway channel not found.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("Giveaway **channel** not found.")] });
 
     const msg = await ch.messages.fetch(gw.messageId).catch(() => null);
-    if (!msg) return ctx.reply({ embeds: [errorEmbed("giveaway message not found.")] });
+    if (!msg) return ctx.reply({ embeds: [errorEmbed("Giveaway message not found.")] });
 
     const reaction = msg.reactions.cache.get("🎉");
     const users = reaction ? await reaction.users.fetch().catch(() => null) : null;
     const entrants = users ? [...users.values()].filter((u) => !u.bot) : [];
 
-    if (!entrants.length) return ctx.reply({ embeds: [errorEmbed("no valid entrants to reroll from.")] });
+    if (!entrants.length) return ctx.reply({ embeds: [errorEmbed("No valid entrants to reroll from.")] });
 
     const count = Math.min(ctx.getNumber("winners") ?? 1, entrants.length);
     const pool = [...entrants];

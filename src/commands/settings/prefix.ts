@@ -29,9 +29,9 @@ export const command: HybridCommand = {
       }
       if (value === "reset" || value === "none" || value === "off") {
         await db.delete(userPrefixes).where(eq(userPrefixes.userId, ctx.user.id));
-        return ctx.reply({ embeds: [successEmbed("personal prefix reset.") ] });
+        return ctx.reply({ embeds: [successEmbed("Personal **prefix** reset.") ] });
       }
-      if (value.length < 1 || value.length > 5) return ctx.reply({ embeds: [errorEmbed("prefix must be 1-5 characters.")] });
+      if (value.length < 1 || value.length > 5) return ctx.reply({ embeds: [errorEmbed("**Prefix** must be 1-5 characters.")] });
       await db.insert(userPrefixes).values({ userId: ctx.user.id, prefix: value })
         .onConflictDoUpdate({ target: userPrefixes.userId, set: { prefix: value } });
       return ctx.reply({ embeds: [successEmbed(`personal prefix set to \`${value}\`. this overrides the server prefix for you.`)] });
@@ -50,12 +50,12 @@ export const command: HybridCommand = {
     }
 
     // ── set server prefix ──────────────────────────────────────────────────────
-    if (!ctx.guild) return ctx.reply({ embeds: [errorEmbed("use this in a server.")] });
+    if (!ctx.guild) return ctx.reply({ embeds: [errorEmbed("Use this in a server.")] });
     const { checkTier } = await import("../../lib/permissions.js");
     if (!ctx.member || !checkTier(ctx.member as any, "admin")) {
-      return ctx.reply({ embeds: [errorEmbed("only admins can change the server prefix.")] });
+      return ctx.reply({ embeds: [errorEmbed("Only admins can change the server **prefix**.")] });
     }
-    if (action.length < 1 || action.length > 5) return ctx.reply({ embeds: [errorEmbed("prefix must be 1-5 characters.")] });
+    if (action.length < 1 || action.length > 5) return ctx.reply({ embeds: [errorEmbed("**Prefix** must be 1-5 characters.")] });
     await updateGuildSettings(ctx.guild.id, { prefix: action });
     return ctx.reply({ embeds: [successEmbed(`server prefix set to \`${action}\`.`)] });
   },

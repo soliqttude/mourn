@@ -45,7 +45,7 @@ export const command: HybridCommand = {
 
     if (action === "list") {
       const list = await listAutoresponders(ctx.guild.id);
-      if (!list.length) return ctx.reply({ embeds: [errorEmbed("no autoresponders.")] });
+      if (!list.length) return ctx.reply({ embeds: [errorEmbed("No autoresponders.")] });
       return ctx.reply({
         embeds: [brandEmbed({
           title: "autoresponders",
@@ -63,12 +63,12 @@ export const command: HybridCommand = {
     }
 
     if (action === "add") {
-      if (!t) return ctx.reply({ embeds: [errorEmbed("provide a trigger.")] });
+      if (!t) return ctx.reply({ embeds: [errorEmbed("Provide a **trigger**.")] });
       // Build response from remaining args
       const allArgs = ctx.rawArgs ?? [t, r, val].filter(Boolean).join(" ");
       // strip trigger from rawArgs if using prefix
       const responseText = r || ctx.args.slice(2).join(" ");
-      if (!responseText) return ctx.reply({ embeds: [errorEmbed("provide a response.")] });
+      if (!responseText) return ctx.reply({ embeds: [errorEmbed("Provide a response.")] });
       // detect match type flags
       let matchType: "contains" | "exact" | "starts" = "contains";
       if (val === "--exact" || responseText.endsWith("--exact")) matchType = "exact";
@@ -79,18 +79,18 @@ export const command: HybridCommand = {
     }
 
     if (action === "remove") {
-      if (!t) return ctx.reply({ embeds: [errorEmbed("provide an ID.")] });
+      if (!t) return ctx.reply({ embeds: [errorEmbed("Provide an ID.")] });
       const id = parseInt(t);
-      if (!Number.isFinite(id)) return ctx.reply({ embeds: [errorEmbed("invalid ID.")] });
+      if (!Number.isFinite(id)) return ctx.reply({ embeds: [errorEmbed("Invalid ID.")] });
       const removed = await removeAutoresponder(id);
-      if (!removed) return ctx.reply({ embeds: [errorEmbed("not found.")] });
+      if (!removed) return ctx.reply({ embeds: [errorEmbed("Not found.")] });
       return ctx.reply({ embeds: [successEmbed(`removed autoresponder #${id}.`)] });
     }
 
     if (action === "exclusive") {
       // ar exclusive <id> channel|role|clear [mention]
       const id = parseInt(t);
-      if (!Number.isFinite(id)) return ctx.reply({ embeds: [errorEmbed("provide an autoresponder ID.")] });
+      if (!Number.isFinite(id)) return ctx.reply({ embeds: [errorEmbed("Provide an autoresponder ID.")] });
       const sub = r.toLowerCase();
 
       if (sub === "clear") {
@@ -100,25 +100,25 @@ export const command: HybridCommand = {
 
       if (sub === "channel") {
         const ch = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get(val.replace(/[<#>]/g, ""));
-        if (!ch) return ctx.reply({ embeds: [errorEmbed("provide a channel.")] });
+        if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
         await updateAutoresponderExclusive(id, ch.id, null);
         return ctx.reply({ embeds: [successEmbed(`autoresponder #${id} only triggers in <#${ch.id}>.`)] });
       }
 
       if (sub === "role") {
         const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(val.replace(/[<@&>]/g, ""));
-        if (!role) return ctx.reply({ embeds: [errorEmbed("provide a role.")] });
+        if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a **role**.")] });
         await updateAutoresponderExclusive(id, null, role.id);
         return ctx.reply({ embeds: [successEmbed(`autoresponder #${id} only triggers for members with <@&${role.id}>.`)] });
       }
 
-      return ctx.reply({ embeds: [errorEmbed("use: `exclusive <id> channel|role|clear [mention]`")] });
+      return ctx.reply({ embeds: [errorEmbed("Use: `exclusive <id> **channel**|**role**|clear [mention]`")] });
     }
 
     if (action === "role") {
       // ar role <id> add|remove [role]
       const id = parseInt(t);
-      if (!Number.isFinite(id)) return ctx.reply({ embeds: [errorEmbed("provide an autoresponder ID.")] });
+      if (!Number.isFinite(id)) return ctx.reply({ embeds: [errorEmbed("Provide an autoresponder ID.")] });
       const sub = r.toLowerCase();
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(val.replace(/[<@&>]/g, ""));
 
@@ -127,7 +127,7 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`cleared role rewards for #${id}.`)] });
       }
 
-      if (!role) return ctx.reply({ embeds: [errorEmbed("provide a role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a **role**.")] });
 
       if (sub === "add") {
         await updateAutoresponderRoles(id, role.id, null);
@@ -139,9 +139,9 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`autoresponder #${id} will remove <@&${role.id}> when triggered.`)] });
       }
 
-      return ctx.reply({ embeds: [errorEmbed("use: `role <id> add|remove|clear [@role]`")] });
+      return ctx.reply({ embeds: [errorEmbed("Use: `role <id> add|remove|clear [@**role**]`")] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("use: `autoresponder add|remove|list|exclusive|role`")] });
+    return ctx.reply({ embeds: [errorEmbed("Use: `autoresponder add|remove|list|exclusive|role`")] });
   },
 };

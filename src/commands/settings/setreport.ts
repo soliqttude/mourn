@@ -18,7 +18,7 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const ch = ctx.getChannel("channel");
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("Please specify a channel.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("Please specify a **channel**.")] });
     await updateGuildSettings(guild.id, { reportChannel: ch.id });
     return ctx.reply({ embeds: [successEmbed(`Report channel set to <#${ch.id}>. Users can now use \`/report\`.`)] });
   },

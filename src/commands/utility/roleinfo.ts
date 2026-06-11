@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     const role = ctx.getRole("role");
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Role not found.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("**Role** not found.")] });
     return ctx.reply({
       embeds: [
         brandEmbed({

@@ -71,7 +71,7 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed("Anti-Raid log disabled.")] });
       }
       const ch = logChannel ?? ctx.guild.channels.cache.find(c => c.isTextBased() && (c.id === rawValue.replace(/[<#>]/g, "") || (c as any).name?.includes(rawValue)));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("Channel not found.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
       await updateGuildSettings(ctx.guild.id, { antiraidLogChannel: ch.id } as any);
       return ctx.reply({ embeds: [successEmbed(`Raid alerts → <#${ch.id}>.`)] });
     }
@@ -93,7 +93,7 @@ export const command: HybridCommand = {
 
     if (sub === 'minage' || sub === 'minage') {
       const n = parseInt(rawValue);
-      if (isNaN(n) || n < 0 || n > 365) return ctx.reply({ embeds: [errorEmbed('min age must be 0–365 days (0 = disabled).')] });
+      if (isNaN(n) || n < 0 || n > 365) return ctx.reply({ embeds: [errorEmbed('Min age must be 0–365 days (0 = disabled).')] });
       await updateGuildSettings(ctx.guild.id, { antiraidMinAge: n } as any);
       return ctx.reply({ embeds: [successEmbed(n === 0 ? 'minimum account age check disabled.' : `minimum account age set to \${n} days.`)] });
     }

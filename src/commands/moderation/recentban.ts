@@ -22,12 +22,12 @@ export const command: HybridCommand = {
 
     const me = guild.members.me;
     if (!me?.permissions.has(PermissionFlagsBits.BanMembers)) {
-      return ctx.reply({ embeds: [errorEmbed("i need **ban members** permission.")] });
+      return ctx.reply({ embeds: [errorEmbed("I need **ban members** **permission**.")] });
     }
 
     const minutes = ctx.getNumber("minutes", true);
     if (!minutes || minutes < 1 || minutes > 1440) {
-      return ctx.reply({ embeds: [errorEmbed("minutes must be between 1 and 1440.")] });
+      return ctx.reply({ embeds: [errorEmbed("Minutes must be between 1 and 1440.")] });
     }
 
     const reason = ctx.getString("reason") ?? "raid cleanup — recentban";

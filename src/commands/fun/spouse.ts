@@ -21,7 +21,7 @@ export const command: HybridCommand = {
     );
     const marriage = rows.find(r => r.guildId === ctx.guild!.id);
     if (!marriage) {
-      return ctx.reply({ embeds: [errorEmbed("you're not married. use `/marry` to propose to someone.")] });
+      return ctx.reply({ embeds: [errorEmbed("You're not married. use `/marry` to propose to someone.")] });
     }
     const partnerId = marriage.user1Id === ctx.user.id ? marriage.user2Id : marriage.user1Id;
     const partner = await ctx.client.users.fetch(partnerId).catch(() => null);

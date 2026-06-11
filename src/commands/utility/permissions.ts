@@ -28,7 +28,7 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const target = (await ctx.getMember("user")) ?? ctx.member;
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
     const perms = ctx.channel ? target.permissionsIn(ctx.channel) : target.permissions;
     const lines = PERMS.map(([flag, label]) => `${perms.has(flag) ? "✅" : "❌"} ${label}`);
     const half = Math.ceil(lines.length / 2);

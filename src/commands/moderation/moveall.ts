@@ -19,11 +19,11 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const fromCh = ctx.getChannel("from");
     const toCh = ctx.getChannel("to");
-    if (!fromCh || !toCh) return ctx.reply({ embeds: [errorEmbed("Provide both voice channels.")] });
+    if (!fromCh || !toCh) return ctx.reply({ embeds: [errorEmbed("Provide both voice **channels**.")] });
     const from = ctx.guild.channels.cache.get(fromCh.id);
     const to = ctx.guild.channels.cache.get(toCh.id);
-    if (!from || from.type !== ChannelType.GuildVoice) return ctx.reply({ embeds: [errorEmbed("Source must be a voice channel.")] });
-    if (!to || to.type !== ChannelType.GuildVoice) return ctx.reply({ embeds: [errorEmbed("Target must be a voice channel.")] });
+    if (!from || from.type !== ChannelType.GuildVoice) return ctx.reply({ embeds: [errorEmbed("Source must be a voice **channel**.")] });
+    if (!to || to.type !== ChannelType.GuildVoice) return ctx.reply({ embeds: [errorEmbed("Target must be a voice **channel**.")] });
     const members = (from as any).members;
     let count = 0;
     for (const [, member] of members) {

@@ -42,28 +42,28 @@ export const command: HybridCommand = {
 
     if (sub === "clear") {
       await db.delete(userProfiles).where(eq(userProfiles.userId, ctx.user.id));
-      return ctx.reply({ embeds: [successEmbed("bio cleared.")] });
+      return ctx.reply({ embeds: [successEmbed("Bio cleared.")] });
     }
 
     if (sub === "set") {
       let bioText = textArg;
       if (!bioText && ctx.source === "prefix") bioText = ctx.rawArgs.replace(/^set\s+/i, "").trim();
-      if (!bioText) return ctx.reply({ embeds: [errorEmbed("provide a bio. example: `,bio set i love this server!`")] });
+      if (!bioText) return ctx.reply({ embeds: [errorEmbed("Provide a bio. example: `,bio set i love this server!`")] });
       if (bioText.length > 150) return ctx.reply({ embeds: [errorEmbed(`bio too long (${bioText.length}/150 chars).`)] });
       await db.insert(userProfiles).values({ userId: ctx.user.id, bio: bioText })
         .onConflictDoUpdate({ target: userProfiles.userId, set: { bio: bioText, updatedAt: new Date() } });
-      return ctx.reply({ embeds: [successEmbed("bio saved.")] });
+      return ctx.reply({ embeds: [successEmbed("Bio saved.")] });
     }
 
     if (ctx.source === "prefix") {
       const bioText = ctx.rawArgs.trim();
-      if (!bioText) return ctx.reply({ embeds: [errorEmbed("usage: `,bio set <text>` | `,bio clear` | `,bio @user`")] });
+      if (!bioText) return ctx.reply({ embeds: [errorEmbed("Usage: `,bio set <text>` | `,bio clear` | `,bio @user`")] });
       if (bioText.length > 150) return ctx.reply({ embeds: [errorEmbed(`bio too long (${bioText.length}/150 chars).`)] });
       await db.insert(userProfiles).values({ userId: ctx.user.id, bio: bioText })
         .onConflictDoUpdate({ target: userProfiles.userId, set: { bio: bioText, updatedAt: new Date() } });
-      return ctx.reply({ embeds: [successEmbed("bio saved.")] });
+      return ctx.reply({ embeds: [successEmbed("Bio saved.")] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("usage: `,bio set <text>` | `,bio clear` | `,bio @user`")] });
+    return ctx.reply({ embeds: [errorEmbed("Usage: `,bio set <text>` | `,bio clear` | `,bio @user`")] });
   },
 };

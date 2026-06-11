@@ -7,7 +7,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const role = ctx.getRole("role");
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Role not found.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("**Role** not found.")] });
     const name = role.name;
     try {
       await (role as any).delete(`Deleted by ${ctx.user.tag}`);

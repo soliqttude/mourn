@@ -35,7 +35,7 @@ export const command: HybridCommand = {
 
     if (evtArg.toLowerCase() === "list") {
       const rows = await db.select().from(eventsSettings).where(and(eq(eventsSettings.guildId, ctx.guild.id), eq(eventsSettings.enabled, false)));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no events are currently disabled.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No **events** are currently disabled.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "disabled events", description: rows.map(r => `\`${r.event}\``).join("\n") })] });
     }
 

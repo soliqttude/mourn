@@ -39,7 +39,7 @@ export const command: HybridCommand = {
 
     const member = ctx.member;
     if (!member || !member.permissions.has(PermissionFlagsBits.ManageGuild)) {
-      return ctx.reply({ embeds: [errorEmbed("You need **Manage Server** permission.")] });
+      return ctx.reply({ embeds: [errorEmbed("You need **Manage Server** **permission**.")] });
     }
 
     // Resolve channel — works for both slash and prefix
@@ -58,10 +58,10 @@ export const command: HybridCommand = {
     }
 
     if (!targetChannel) {
-      return ctx.reply({ embeds: [errorEmbed("Please mention a text channel.")] });
+      return ctx.reply({ embeds: [errorEmbed("Please mention a text **channel**.")] });
     }
     if (!targetChannel.isTextBased?.()) {
-      return ctx.reply({ embeds: [errorEmbed("That must be a text channel.")] });
+      return ctx.reply({ embeds: [errorEmbed("That must be a text **channel**.")] });
     }
 
     const threshold = ctx.getNumber("threshold") ?? 3;

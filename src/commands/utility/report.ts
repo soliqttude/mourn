@@ -27,9 +27,9 @@ export const command: HybridCommand = {
     if (target.bot) return ctx.reply({ embeds: [errorEmbed("You cannot report a bot.")] });
     const settings = await getGuildSettings(guild.id);
     if (!settings.reportChannel)
-      return ctx.reply({ embeds: [errorEmbed("No report channel configured. Ask an admin to use `/setreport`.")] });
+      return ctx.reply({ embeds: [errorEmbed("No report **channel** configured. Ask an admin to use `/setreport`.")] });
     const ch = guild.channels.cache.get(settings.reportChannel) as any;
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("The report channel no longer exists.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("The report **channel** no longer exists.")] });
     await db.insert(reports).values({ guildId: guild.id, reporterId: ctx.user.id, targetId: target.id, reason });
     await ch.send({
       embeds: [brandEmbed({

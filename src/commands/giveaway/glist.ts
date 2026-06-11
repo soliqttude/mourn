@@ -19,7 +19,7 @@ export const command: HybridCommand = {
       .where(and(eq(giveaways.guildId, guild.id), eq(giveaways.ended, false)));
 
     if (!active.length)
-      return ctx.reply({ embeds: [errorEmbed("no active giveaways in this server.")] });
+      return ctx.reply({ embeds: [errorEmbed("No active giveaways in this server.")] });
 
     const lines = active.map((g) =>
       `**#${g.id}** — ${g.prize} · **${g.winnersCount}w** · <#${g.channelId}> · ends <t:${Math.floor(g.endsAt.getTime() / 1000)}:R>`

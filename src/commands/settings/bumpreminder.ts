@@ -51,26 +51,26 @@ export const command: HybridCommand = {
 
     if (sub === "disable") {
       await updateGuildSettings(ctx.guild.id, { bumpChannel: null });
-      return ctx.reply({ embeds: [successEmbed("bump reminders disabled.")] });
+      return ctx.reply({ embeds: [successEmbed("Bump reminders disabled.")] });
     }
 
     if (sub === "channel") {
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(val.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { bumpChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`bump reminders set to <#${ch.id}>. i'll ping every 2 hours.`)] });
     }
 
     if (sub === "message") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("please provide a message.")] });
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Please provide a message.")] });
       await updateGuildSettings(ctx.guild.id, { bumpMessage: val } as any);
-      return ctx.reply({ embeds: [successEmbed("bump reminder message updated.")] });
+      return ctx.reply({ embeds: [successEmbed("Bump reminder message updated.")] });
     }
 
     if (sub === "thankyou") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("please provide a thank-you message.")] });
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Please provide a thank-you message.")] });
       await updateGuildSettings(ctx.guild.id, { bumpThankyou: val } as any);
-      return ctx.reply({ embeds: [successEmbed("bump thank-you message updated.")] });
+      return ctx.reply({ embeds: [successEmbed("Bump thank-you message updated.")] });
     }
 
     if (sub === "autolock") {
@@ -85,6 +85,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`autoclean ${on ? "enabled — non-bump messages will be deleted" : "disabled"}.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

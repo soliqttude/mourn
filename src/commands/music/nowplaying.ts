@@ -14,9 +14,9 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const queue = distube.getQueue(ctx.guild);
-    if (!queue) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
+    if (!queue) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
     const song = queue.songs[0];
-    if (!song) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
+    if (!song) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
     const total = song.duration ?? 0;
     const current = queue.currentTime;
     const pct = total ? Math.min(current / total, 1) : 0;

@@ -22,13 +22,13 @@ export const command: HybridCommand = {
     if (!guild) return;
 
     const id = ctx.getNumber("id", true);
-    if (!id) return ctx.reply({ embeds: [errorEmbed("please provide a giveaway id.")] });
+    if (!id) return ctx.reply({ embeds: [errorEmbed("Please provide a giveaway id.")] });
 
     const rows = await db.select().from(giveaways)
       .where(and(eq(giveaways.id, id), eq(giveaways.guildId, guild.id)));
     const gw = rows[0];
     if (!gw) return ctx.reply({ embeds: [errorEmbed(`no giveaway found with id \`${id}\`.`)] });
-    if (gw.ended) return ctx.reply({ embeds: [errorEmbed("that giveaway is already ended.")] });
+    if (gw.ended) return ctx.reply({ embeds: [errorEmbed("That giveaway is already ended.")] });
 
     await db.update(giveaways).set({ ended: true }).where(eq(giveaways.id, id));
 

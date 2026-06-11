@@ -71,12 +71,12 @@ export const command: HybridCommand = {
 
       if (ignoreSub === "list") {
         const rows = await db.select().from(logIgnores).where(eq(logIgnores.guildId, ctx.guild.id));
-        if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no log ignore entries.")] });
+        if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No log ignore entries.")] });
         const lines = rows.map(r => ctx.guild!.channels.cache.has(r.targetId) ? `<#${r.targetId}>` : `<@${r.targetId}>`);
         return ctx.reply({ embeds: [brandEmbed({ title: "Log Ignores", description: lines.join("\n") })] });
       }
 
-      if (!targetId) return ctx.reply({ embeds: [errorEmbed("mention a channel or user.")] });
+      if (!targetId) return ctx.reply({ embeds: [errorEmbed("Mention a **channel** or **user**.")] });
 
       if (ignoreSub === "add") {
         await db.insert(logIgnores).values({ guildId: ctx.guild.id, targetId }).onConflictDoNothing();
@@ -88,7 +88,7 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`removed from log ignore list.`)] });
       }
 
-      return ctx.reply({ embeds: [errorEmbed("use: logging ignore add | remove | list")] });
+      return ctx.reply({ embeds: [errorEmbed("Use: logging ignore add | remove | list")] });
     }
 
     // ── list ───────────────────────────────────────────────────────────────────
@@ -106,19 +106,19 @@ export const command: HybridCommand = {
     if (sub === "reset") {
       const patch = Object.fromEntries(ALL_KEYS.map(k => [k.key, null]));
       await updateGuildSettings(ctx.guild.id, patch as any);
-      return ctx.reply({ embeds: [successEmbed("all log channels cleared.")] });
+      return ctx.reply({ embeds: [successEmbed("All log **channels** cleared.")] });
     }
 
     // ── add | remove ───────────────────────────────────────────────────────────
     if (sub === "add" || sub === "remove") {
-      if (!type) return ctx.reply({ embeds: [errorEmbed("provide a log type.")] });
+      if (!type) return ctx.reply({ embeds: [errorEmbed("Provide a log type.")] });
 
       if (type === "all") {
         if (sub === "remove") {
           await updateGuildSettings(ctx.guild.id, Object.fromEntries(ALL_KEYS.map(k => [k.key, null])) as any);
-          return ctx.reply({ embeds: [successEmbed("all log channels removed.")] });
+          return ctx.reply({ embeds: [successEmbed("All log **channels** removed.")] });
         }
-        if (!channelId) return ctx.reply({ embeds: [errorEmbed("provide a channel.")] });
+        if (!channelId) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
         await updateGuildSettings(ctx.guild.id, Object.fromEntries(ALL_KEYS.map(k => [k.key, channelId])) as any);
         return ctx.reply({ embeds: [successEmbed(`all log types set to <#${channelId}>.`)] });
       }
@@ -131,11 +131,11 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`${meta.emoji} **${meta.label}** log channel removed.`)] });
       }
 
-      if (!channelId) return ctx.reply({ embeds: [errorEmbed("provide a channel.")] });
+      if (!channelId) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { [meta.key]: channelId } as any);
       return ctx.reply({ embeds: [successEmbed(`${meta.emoji} **${meta.label}** logs → <#${channelId}>.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

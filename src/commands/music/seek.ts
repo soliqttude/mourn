@@ -13,9 +13,9 @@ export const command: HybridCommand = {
   options: [{ name: "time", description: "Time (e.g. 1:30 or 90 seconds)", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     if (!ctx.guild || !ctx.member) return;
-    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("you need the dj role.")] });
+    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("You need the dj **role**.")] });
     const queue = distube.getQueue(ctx.guild);
-    if (!queue) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
+    if (!queue) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
     const timeStr = ctx.getString("time", true)!;
     let seconds = 0;
     if (timeStr.includes(":")) {
@@ -25,7 +25,7 @@ export const command: HybridCommand = {
     } else {
       seconds = parseInt(timeStr);
     }
-    if (isNaN(seconds) || seconds < 0) return ctx.reply({ embeds: [errorEmbed("invalid time format. use `1:30` or `90`.")] });
+    if (isNaN(seconds) || seconds < 0) return ctx.reply({ embeds: [errorEmbed("Invalid time format. use `1:30` or `90`.")] });
     await distube.seek(ctx.guild, seconds);
     const m = Math.floor(seconds / 60), s = seconds % 60;
     return ctx.reply({ embeds: [successEmbed(`seeked to \`${m}:${String(s).padStart(2, "0")}\`.`)] });

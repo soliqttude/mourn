@@ -46,7 +46,7 @@ export const command: HybridCommand = {
     if (action === "list") {
       const rows = await db.select().from(commandAliases).where(eq(commandAliases.guildId, guild.id));
       if (!rows.length)
-        return ctx.reply({ embeds: [errorEmbed("no aliases configured for this server.")] });
+        return ctx.reply({ embeds: [errorEmbed("No **aliases** configured for this server.")] });
 
       const sorted = rows.sort((a, b) => a.alias.localeCompare(b.alias));
       const maxLen = Math.max(...sorted.map((r) => r.alias.length));
@@ -60,7 +60,7 @@ export const command: HybridCommand = {
     }
 
     const aliasName = ctx.getString("alias")?.toLowerCase();
-    if (!aliasName) return ctx.reply({ embeds: [errorEmbed("please provide an alias name.")] });
+    if (!aliasName) return ctx.reply({ embeds: [errorEmbed("Please provide an **alias** name.")] });
 
     if (action === "view") {
       const rows = await db.select().from(commandAliases)
@@ -87,7 +87,7 @@ export const command: HybridCommand = {
 
     if (action === "add") {
       const cmdName = ctx.getString("command")?.toLowerCase();
-      if (!cmdName) return ctx.reply({ embeds: [errorEmbed("please provide the command name to map to.")] });
+      if (!cmdName) return ctx.reply({ embeds: [errorEmbed("Please provide the **command** name to map to.")] });
 
       const cmd = findCommand(cmdName);
       if (!cmd || cmd.ownerOnly)
@@ -103,12 +103,12 @@ export const command: HybridCommand = {
 
       const all = await db.select().from(commandAliases).where(eq(commandAliases.guildId, guild.id));
       if (all.length >= 50)
-        return ctx.reply({ embeds: [errorEmbed("maximum of 50 aliases per server.")] });
+        return ctx.reply({ embeds: [errorEmbed("Maximum of 50 **aliases** per server.")] });
 
       await db.insert(commandAliases).values({ guildId: guild.id, alias: aliasName, command: cmd.name });
       return ctx.reply({ embeds: [successEmbed(`alias \`${aliasName}\` → \`${cmd.name}\` created.`, "settings")] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("invalid action.")] });
+    return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
   },
 };

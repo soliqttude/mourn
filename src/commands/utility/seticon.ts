@@ -14,10 +14,10 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const url = ctx.getString("url") ?? ctx.args[0];
-    if (!url) return ctx.reply({ embeds: [errorEmbed("please provide an image URL.")] });
+    if (!url) return ctx.reply({ embeds: [errorEmbed("Please provide an image URL.")] });
     try {
       await ctx.guild.setIcon(url);
-      return ctx.reply({ embeds: [successEmbed("server icon updated.")] });
+      return ctx.reply({ embeds: [successEmbed("Server icon updated.")] });
     } catch (e: any) {
       return ctx.reply({ embeds: [errorEmbed(`failed to set icon: ${e.message ?? "unknown error"}`)] });
     }

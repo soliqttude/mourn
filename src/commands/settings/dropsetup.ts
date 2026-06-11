@@ -17,14 +17,14 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     if (!ctx.member || !hasAdminPerms(ctx.member)) {
-      return ctx.reply({ embeds: [errorEmbed("only admins can configure drops.")], ephemeral: true } as any);
+      return ctx.reply({ embeds: [errorEmbed("Only admins can configure drops.")], ephemeral: true } as any);
     }
 
     const ch = ctx.getChannel("channel");
 
     if (!ch) {
       await updateGuildSettings(ctx.guild.id, { dropChannel: null });
-      return ctx.reply({ embeds: [successEmbed("coin drops disabled.")] });
+      return ctx.reply({ embeds: [successEmbed("Coin drops disabled.")] });
     }
 
     await updateGuildSettings(ctx.guild.id, { dropChannel: ch.id });

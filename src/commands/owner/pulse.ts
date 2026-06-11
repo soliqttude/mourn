@@ -35,7 +35,7 @@ export const command: HybridCommand = {
   ownerOnly: true,
   async execute(ctx) {
     if (ctx.user.id !== config.ownerId) {
-      return ctx.reply({ embeds: [errorEmbed("not yours.")], ephemeral: true } as any);
+      return ctx.reply({ embeds: [errorEmbed("Not yours.")], ephemeral: true } as any);
     }
 
     const mem      = process.memoryUsage();

@@ -53,8 +53,8 @@ export const command: HybridCommand = {
         const id = extractId(rawVal) ?? rawVal.replace(/^#/, "");
         hub = ctx.guild.channels.cache.get(id) ?? ctx.guild.channels.cache.find(c => c.name.toLowerCase() === id.toLowerCase()) ?? null;
       }
-      if (!hub) return ctx.reply({ embeds: [errorEmbed("please provide a voice channel.")] });
-      if (hub.type !== ChannelType.GuildVoice) return ctx.reply({ embeds: [errorEmbed("that has to be a **voice channel**.")] });
+      if (!hub) return ctx.reply({ embeds: [errorEmbed("Please provide a voice **channel**.")] });
+      if (hub.type !== ChannelType.GuildVoice) return ctx.reply({ embeds: [errorEmbed("That has to be a **voice channel**.")] });
       await updateGuildSettings(ctx.guild.id, { voicemasterHub: hub.id, voicemasterCategory: hub.parentId ?? null });
       return ctx.reply({ embeds: [successEmbed(`voicemaster hub set to <#${hub.id}>.`)] });
     }
@@ -62,7 +62,7 @@ export const command: HybridCommand = {
     if (sub === "joinrole") {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(rawVal.replace(/[<@&>]/g, "")) ??
         ctx.guild.roles.cache.find(r => r.name.toLowerCase() === rawVal.toLowerCase());
-      if (!role) return ctx.reply({ embeds: [errorEmbed("please provide a valid role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Please provide a valid **role**.")] });
       await updateGuildSettings(ctx.guild.id, { voicemasterJoinRole: role.id } as any);
       return ctx.reply({ embeds: [successEmbed(`join role set to <@&${role.id}> — members will receive this role when joining a voicemaster VC.`)] });
     }
@@ -70,11 +70,11 @@ export const command: HybridCommand = {
     if (sub === "role") {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(rawVal.replace(/[<@&>]/g, "")) ??
         ctx.guild.roles.cache.find(r => r.name.toLowerCase() === rawVal.toLowerCase());
-      if (!role) return ctx.reply({ embeds: [errorEmbed("please provide a valid role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Please provide a valid **role**.")] });
       await updateGuildSettings(ctx.guild.id, { voicemasterVcRole: role.id } as any);
       return ctx.reply({ embeds: [successEmbed(`VC role set to <@&${role.id}> — members get this while in any voicemaster channel.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand. use: hub | joinrole | role | config")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand. use: hub | joinrole | **role** | config")] });
   },
 };

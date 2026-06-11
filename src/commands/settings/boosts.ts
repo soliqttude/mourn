@@ -38,14 +38,14 @@ export const command: HybridCommand = {
     if (sub === "variables") return ctx.reply({ embeds: [brandEmbed({ title: "Boost Variables", description: VARIABLES.join("\n") })] });
     if (sub === "list") {
       const rows = await db.select().from(boostChannels).where(eq(boostChannels.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no boost channels set up.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No **boost** **channels** set up.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "Boost Channels", description: rows.map(r => `<#${r.channelId}>`).join("\n") })] });
     }
     const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(ctx.args[1]?.replace(/[<#>]/g, "") ?? "");
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
     if (sub === "view") {
       const [row] = await db.select().from(boostChannels).where(and(eq(boostChannels.guildId, ctx.guild.id), eq(boostChannels.channelId, ch.id)));
-      if (!row) return ctx.reply({ embeds: [errorEmbed("no boost message for that channel.")] });
+      if (!row) return ctx.reply({ embeds: [errorEmbed("No **boost** message for that **channel**.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: `Boost — #${ch.name}`, description: row.message })] });
     }
     if (sub === "remove") {
@@ -54,11 +54,11 @@ export const command: HybridCommand = {
     }
     if (sub === "add") {
       const msg = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
-      if (!msg) return ctx.reply({ embeds: [errorEmbed("please provide a boost message.")] });
+      if (!msg) return ctx.reply({ embeds: [errorEmbed("Please provide a **boost** message.")] });
       await db.insert(boostChannels).values({ guildId: ctx.guild.id, channelId: ch.id, message: msg })
         .onConflictDoUpdate({ target: [boostChannels.guildId, boostChannels.channelId], set: { message: msg } });
       return ctx.reply({ embeds: [successEmbed(`boost message set for <#${ch.id}>.`)] });
     }
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

@@ -14,13 +14,13 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild || !ctx.member) return;
     const queue = distube.getQueue(ctx.guild);
-    if (!queue) return ctx.reply({ embeds: [errorEmbed("nothing is playing.")] });
+    if (!queue) return ctx.reply({ embeds: [errorEmbed("Nothing is playing.")] });
     const amount = ctx.getNumber("amount");
     if (amount === null) {
       return ctx.reply({ embeds: [brandEmbed({ description: `current volume: **${queue.volume}%**` })] });
     }
-    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("you need the dj role.")] });
-    if (amount < 1 || amount > 200) return ctx.reply({ embeds: [errorEmbed("volume must be between 1 and 200.")] });
+    if (!await hasDjPermission(ctx.guild.id, ctx.member)) return ctx.reply({ embeds: [errorEmbed("You need the dj **role**.")] });
+    if (amount < 1 || amount > 200) return ctx.reply({ embeds: [errorEmbed("Volume must be between 1 and 200.")] });
     queue.setVolume(amount);
     return ctx.reply({ embeds: [successEmbed(`volume set to **${amount}%**.`)] });
   },

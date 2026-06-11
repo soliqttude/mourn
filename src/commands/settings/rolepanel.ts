@@ -30,15 +30,15 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const channel = ctx.getChannel("channel", true);
-    if (!channel) return ctx.reply({ embeds: [errorEmbed("Channel is required.")] });
+    if (!channel) return ctx.reply({ embeds: [errorEmbed("**Channel** is required.")] });
 
     const categories = await getCategories(ctx.guild.id);
     if (!categories.length) {
-      return ctx.reply({ embeds: [errorEmbed("No categories set up yet. Use `,rcategory create <name>` first.")] });
+      return ctx.reply({ embeds: [errorEmbed("No **categories** set up yet. Use `,rcategory create <name>` first.")] });
     }
 
     const ch = ctx.guild.channels.cache.get(channel.id) as TextChannel | null;
-    if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Invalid text channel.")] });
+    if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Invalid text **channel**.")] });
 
     for (let i = 0; i < categories.length; i++) {
       const cat = categories[i]!;

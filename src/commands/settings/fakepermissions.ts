@@ -53,7 +53,7 @@ export const command: HybridCommand = {
       if (!role) {
         const all = await db.select().from(fakePermissions).where(eq(fakePermissions.guildId, guild.id));
         if (!all.length)
-          return ctx.reply({ embeds: [errorEmbed("no fake permissions configured.")] });
+          return ctx.reply({ embeds: [errorEmbed("No fake **permissions** configured.")] });
         const lines = all.map((r) => `<@&${r.roleId}> — ${(r.permissions as string[]).join(", ")}`).join("\n");
         return ctx.reply({
           embeds: [brandEmbed({ description: `**fake permissions**\n\n${lines}`, page: "settings" })],
@@ -70,7 +70,7 @@ export const command: HybridCommand = {
       });
     }
 
-    if (!role) return ctx.reply({ embeds: [errorEmbed("please specify a role.")] });
+    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a **role**.")] });
 
     if (action === "reset") {
       await db.delete(fakePermissions).where(and(eq(fakePermissions.guildId, guild.id), eq(fakePermissions.roleId, role.id)));
@@ -78,7 +78,7 @@ export const command: HybridCommand = {
     }
 
     const perm = ctx.getString("permission")?.toLowerCase();
-    if (!perm) return ctx.reply({ embeds: [errorEmbed("please specify a permission.")] });
+    if (!perm) return ctx.reply({ embeds: [errorEmbed("Please specify a **permission**.")] });
     if (!VALID_PERMS.includes(perm as typeof VALID_PERMS[number]))
       return ctx.reply({ embeds: [errorEmbed(`invalid permission.\n\nvalid options:\n\`\`\`\n${VALID_PERMS.join(", ")}\n\`\`\``)] });
 
@@ -108,6 +108,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`removed fake \`${perm}\` from <@&${role.id}>.`, "settings")] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("invalid action.")] });
+    return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
   },
 };

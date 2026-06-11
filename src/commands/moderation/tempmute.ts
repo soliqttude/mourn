@@ -22,11 +22,11 @@ export const command: HybridCommand = {
     const target = await ctx.getMember("user", true);
     const durStr = ctx.getString("duration", true)!;
     const reason = ctx.getString("reason") ?? "No reason provided";
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
     if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't mute yourself.")] });
     const ms = parseDuration(durStr);
     if (!ms || ms > 28 * 24 * 60 * 60 * 1000) return ctx.reply({ embeds: [errorEmbed("Invalid duration. Max 28 days.")] });
-    if (!target.moderatable) return ctx.reply({ embeds: [errorEmbed("I can't timeout that user.")] });
+    if (!target.moderatable) return ctx.reply({ embeds: [errorEmbed("I can't timeout that **user**.")] });
     try {
       await target.timeout(ms, `${ctx.user.tag}: ${reason}`);
       return ctx.reply({ embeds: [successEmbed(`Muted **${target.user.tag}** for **${durStr}** — ${reason}`)] });

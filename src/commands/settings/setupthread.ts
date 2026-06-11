@@ -643,7 +643,7 @@ export const command: HybridCommand = {
       channel.type !== ChannelType.GuildAnnouncement
     ) {
       return ctx.reply({
-        embeds: [errorEmbed("This command must be run in a text channel.")],
+        embeds: [errorEmbed("This **command** must be run in a text **channel**.")],
       });
     }
 

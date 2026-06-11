@@ -7,7 +7,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const channel = ctx.getChannel("channel", true);
-    if (!channel) return ctx.reply({ embeds: [errorEmbed("Channel not found.")] });
+    if (!channel) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
     const name = (channel as any).name ?? "unknown";
     try {
       await (channel as any).delete(`Deleted by ${ctx.user.tag}`);

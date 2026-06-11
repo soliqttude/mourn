@@ -33,7 +33,7 @@ export const command: HybridCommand = {
       return raw ? { id: raw } : null;
     })();
 
-    if (!channel) return ctx.reply({ embeds: [errorEmbed("Channel required.")] });
+    if (!channel) return ctx.reply({ embeds: [errorEmbed("**Channel** required.")] });
 
     if (type === "all") {
       const update = Object.fromEntries(ALL_KEYS.map(k => [k, channel.id]));

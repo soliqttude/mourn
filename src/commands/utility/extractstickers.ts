@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const stickers = await ctx.guild.stickers.fetch();
-    if (!stickers.size) return ctx.reply({ embeds: [errorEmbed("this server has no stickers.")] });
+    if (!stickers.size) return ctx.reply({ embeds: [errorEmbed("This server has no stickers.")] });
 
     await ctx.defer?.();
 

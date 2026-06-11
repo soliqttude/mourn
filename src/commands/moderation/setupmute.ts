@@ -20,7 +20,7 @@ export const command: HybridCommand = {
 
     const me = guild.members.me;
     if (!me?.permissions.has(PermissionFlagsBits.ManageRoles)) {
-      return ctx.reply({ embeds: [errorEmbed("i need **manage roles** permission.")] });
+      return ctx.reply({ embeds: [errorEmbed("I need **manage roles** **permission**.")] });
     }
 
     await ctx.defer();

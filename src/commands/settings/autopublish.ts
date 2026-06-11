@@ -19,9 +19,9 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const ch = ctx.getChannel("channel", true);
-    if (!ch) return ctx.reply({ embeds: [errorEmbed("Channel not found.")] });
+    if (!ch) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
     const full = ctx.guild.channels.cache.get(ch.id);
-    if (!full || full.type !== ChannelType.GuildAnnouncement) return ctx.reply({ embeds: [errorEmbed("That must be an announcement channel.")] });
+    if (!full || full.type !== ChannelType.GuildAnnouncement) return ctx.reply({ embeds: [errorEmbed("That must be an announcement **channel**.")] });
     const existing = await db.select().from(autopublishChannels).where(and(eq(autopublishChannels.guildId, ctx.guild.id), eq(autopublishChannels.channelId, ch.id)));
     if (existing.length) {
       await db.delete(autopublishChannels).where(and(eq(autopublishChannels.guildId, ctx.guild.id), eq(autopublishChannels.channelId, ch.id)));

@@ -60,31 +60,31 @@ export const command: HybridCommand = {
 
     // ── Word filter CRUD ──────────────────────────────────────────────────────
     if (sub === "add") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("provide a word to filter.")] });
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a **word** to **filter**.")] });
       await db.insert(wordFilter).values({ guildId: ctx.guild.id, word: val.toLowerCase() }).onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`\`${val}\` added to the word filter.`)] });
     }
 
     if (sub === "remove") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("provide a word to remove.")] });
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a **word** to remove.")] });
       await db.delete(wordFilter).where(and(eq(wordFilter.guildId, ctx.guild.id), eq(wordFilter.word, val.toLowerCase())));
       return ctx.reply({ embeds: [successEmbed(`\`${val}\` removed from the word filter.`)] });
     }
 
     if (sub === "list") {
       const words = await db.select().from(wordFilter).where(eq(wordFilter.guildId, ctx.guild.id));
-      if (!words.length) return ctx.reply({ embeds: [errorEmbed("no filtered words.")] });
+      if (!words.length) return ctx.reply({ embeds: [errorEmbed("No filtered **words**.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "Filtered Words", description: words.map(w => `\`${w.word}\``).join(", ") })] });
     }
 
     if (sub === "reset") {
       await db.delete(wordFilter).where(eq(wordFilter.guildId, ctx.guild.id));
-      return ctx.reply({ embeds: [successEmbed("all filtered words cleared.")] });
+      return ctx.reply({ embeds: [successEmbed("All filtered **words** cleared.")] });
     }
 
     if (sub === "regex") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("provide a regex pattern.")] });
-      try { new RegExp(val); } catch { return ctx.reply({ embeds: [errorEmbed("invalid regex pattern.")] }); }
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a regex pattern.")] });
+      try { new RegExp(val); } catch { return ctx.reply({ embeds: [errorEmbed("Invalid regex pattern.")] }); }
       await db.insert(filterWhitelist).values({ guildId: ctx.guild.id, filterType: "regex", value: val }).onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`regex pattern added: \`${val}\`.`)] });
     }
@@ -93,7 +93,7 @@ export const command: HybridCommand = {
       // filter whitelist links example.com
       const filterType = val.toLowerCase();
       const whitelistVal = args[2] ?? ctx.getString("setting") ?? "";
-      if (!filterType || !whitelistVal) return ctx.reply({ embeds: [errorEmbed("usage: filter whitelist <links|invites> <value>")] });
+      if (!filterType || !whitelistVal) return ctx.reply({ embeds: [errorEmbed("Usage: **filter** whitelist <links|**invites**> <value>")] });
       await db.insert(filterWhitelist).values({ guildId: ctx.guild.id, filterType, value: whitelistVal }).onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`\`${whitelistVal}\` whitelisted from the **${filterType}** filter.`)] });
     }
@@ -107,7 +107,7 @@ export const command: HybridCommand = {
 
     if (sub === "wordmigrate") {
       const words = await db.select().from(wordFilter).where(eq(wordFilter.guildId, ctx.guild.id));
-      if (!words.length) return ctx.reply({ embeds: [errorEmbed("no filtered words to migrate.")] });
+      if (!words.length) return ctx.reply({ embeds: [errorEmbed("No filtered **words** to migrate.")] });
       try {
         await ctx.guild.autoModerationRules.create({
           name: "bleed-word-filter",
@@ -138,7 +138,7 @@ export const command: HybridCommand = {
         }
         const roleRaw = args[2] ?? "";
         const roleId = roleRaw.replace(/[<@&>]/g, "");
-        if (!roleId) return ctx.reply({ embeds: [errorEmbed("please provide a role to exempt.")] });
+        if (!roleId) return ctx.reply({ embeds: [errorEmbed("Please provide a **role** to exempt.")] });
         await db.insert(filterExempts).values({ guildId: ctx.guild.id, filterType: sub, roleId }).onConflictDoNothing();
         return ctx.reply({ embeds: [successEmbed(`<@&${roleId}> exempted from **${sub}** filter.`)] });
       }
@@ -153,11 +153,11 @@ export const command: HybridCommand = {
 
     if (sub === "exempt") {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(val.replace(/[<@&>]/g, ""));
-      if (!role) return ctx.reply({ embeds: [errorEmbed("please provide a role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Please provide a **role**.")] });
       await db.insert(filterExempts).values({ guildId: ctx.guild.id, filterType: "word", roleId: role.id }).onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> exempted from the word filter.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

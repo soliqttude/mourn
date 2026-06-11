@@ -31,7 +31,7 @@ export const command: HybridCommand = {
 
     const guild = ctx.client.guilds.cache.get(guildId);
     const channel = guild?.channels.cache.get(channelId);
-    if (!channel?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("drop channel not found or not text-based.")] });
+    if (!channel?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Drop **channel** not found or not text-based.")] });
 
     const embed = new EmbedBuilder()
       .setColor(0xf9c74f)
@@ -41,7 +41,7 @@ export const command: HybridCommand = {
       .setTimestamp();
 
     const msg = await (channel as any).send({ embeds: [embed] }).catch(() => null);
-    if (!msg) return ctx.reply({ embeds: [errorEmbed("failed to send drop message.")] });
+    if (!msg) return ctx.reply({ embeds: [errorEmbed("Failed to send drop message.")] });
 
     activeDrop.set(guildId, { amount, messageId: msg.id });
 

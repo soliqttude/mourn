@@ -22,9 +22,9 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (ctx.user.id !== config.ownerId) {
-      return ctx.reply({ embeds: [errorEmbed("this command is not for you.")], ephemeral: true } as any);
+      return ctx.reply({ embeds: [errorEmbed("This **command** is not for you.")], ephemeral: true } as any);
     }
-    if (!ctx.channel) return ctx.reply({ embeds: [errorEmbed("must be used in a channel.")] });
+    if (!ctx.channel) return ctx.reply({ embeds: [errorEmbed("Must be used in a **channel**.")] });
 
     const rolesUrl  = ctx.getString("roles_url")  ?? ctx.args[0] ?? "https://discord.gg/placeholder";
     const ticketUrl = ctx.getString("ticket_url") ?? ctx.args[1] ?? "https://discord.gg/placeholder";

@@ -42,12 +42,12 @@ export const command: HybridCommand = {
 
     if (sub === "on") {
       await updateGuildSettings(ctx.guild.id, { levelsEnabled: true });
-      return ctx.reply({ embeds: [successEmbed("leveling enabled.")] });
+      return ctx.reply({ embeds: [successEmbed("Leveling enabled.")] });
     }
 
     if (sub === "off") {
       await updateGuildSettings(ctx.guild.id, { levelsEnabled: false });
-      return ctx.reply({ embeds: [successEmbed("leveling disabled.")] });
+      return ctx.reply({ embeds: [successEmbed("Leveling disabled.")] });
     }
 
     if (sub === "config") {
@@ -67,26 +67,26 @@ export const command: HybridCommand = {
 
     if (sub === "reset") {
       await updateGuildSettings(ctx.guild.id, { levelsEnabled: true, levelUpChannel: null, levelUpMessage: null, levelUpMode: "channel", xpRate: 100, levelsStackRoles: false } as any);
-      return ctx.reply({ embeds: [successEmbed("leveling config reset to defaults.")] });
+      return ctx.reply({ embeds: [successEmbed("Leveling config reset to defaults.")] });
     }
 
     if (sub === "channel") {
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(firstArg.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { levelUpChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`level-up channel set to <#${ch.id}>.`)] });
     }
 
     if (sub === "message") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("provide a message. use {user.mention}, {level}, {xp} etc.")] });
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a message. use {**user**.mention}, {**level**}, {xp} etc.")] });
       await updateGuildSettings(ctx.guild.id, { levelUpMessage: val } as any);
-      return ctx.reply({ embeds: [successEmbed("level-up message updated.")] });
+      return ctx.reply({ embeds: [successEmbed("**Level**-up message updated.")] });
     }
 
     if (sub === "messagemode") {
       const mode = firstArg.toLowerCase();
       if (!["dm", "channel", "context", "none"].includes(mode)) {
-        return ctx.reply({ embeds: [errorEmbed("mode must be: dm | channel | context | none")] });
+        return ctx.reply({ embeds: [errorEmbed("Mode must be: dm | **channel** | context | none")] });
       }
       await updateGuildSettings(ctx.guild.id, { levelUpMode: mode } as any);
       return ctx.reply({ embeds: [successEmbed(`level-up message mode set to **${mode}**.`)] });
@@ -94,7 +94,7 @@ export const command: HybridCommand = {
 
     if (sub === "rate") {
       const rate = parseInt(firstArg);
-      if (isNaN(rate) || rate < 1 || rate > 500) return ctx.reply({ embeds: [errorEmbed("rate must be 1–500 (percentage).")] });
+      if (isNaN(rate) || rate < 1 || rate > 500) return ctx.reply({ embeds: [errorEmbed("Rate must be 1–500 (percentage).")] });
       await updateGuildSettings(ctx.guild.id, { xpRate: rate } as any);
       return ctx.reply({ embeds: [successEmbed(`xp rate set to **${rate}%**.`)] });
     }
@@ -107,15 +107,15 @@ export const command: HybridCommand = {
 
     if (sub === "ignore") {
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(firstArg.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("provide a channel to ignore xp in.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a **channel** to ignore xp in.")] });
       const { ignoredXpChannels } = await import("../../db/schema.js").catch(() => ({ ignoredXpChannels: null }));
-      if (!ignoredXpChannels) return ctx.reply({ embeds: [errorEmbed("xp ignore not yet available — update the DB.")] });
+      if (!ignoredXpChannels) return ctx.reply({ embeds: [errorEmbed("Xp ignore not yet available — update the DB.")] });
       return ctx.reply({ embeds: [successEmbed(`xp gain ignored in <#${ch.id}>.`)] });
     }
 
     if (sub === "rewards") {
       const rows = await db.select().from(levelRewards).where(eq(levelRewards.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no level rewards set up.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No **level** rewards set up.")] });
       const lines = rows.sort((a, b) => a.level - b.level).map(r => `Level **${r.level}** → <@&${r.roleId}>`);
       return ctx.reply({ embeds: [brandEmbed({ title: "Level Rewards", description: lines.join("\n") })] });
     }
@@ -124,7 +124,7 @@ export const command: HybridCommand = {
       const levelNum = parseInt(firstArg);
       const roleRaw = ctx.args[2] ?? "";
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(roleRaw.replace(/[<@&>]/g, ""));
-      if (isNaN(levelNum) || !role) return ctx.reply({ embeds: [errorEmbed("usage: levels addreward <level> <role>")] });
+      if (isNaN(levelNum) || !role) return ctx.reply({ embeds: [errorEmbed("Usage: **levels** addreward <**level**> <**role**>")] });
       await db.insert(levelRewards).values({ guildId: ctx.guild.id, level: levelNum, roleId: role.id })
         .onConflictDoUpdate({ target: [levelRewards.guildId, levelRewards.level], set: { roleId: role.id } });
       return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> set as reward for reaching level **${levelNum}**.`)] });
@@ -132,11 +132,11 @@ export const command: HybridCommand = {
 
     if (sub === "removereward") {
       const levelNum = parseInt(firstArg);
-      if (isNaN(levelNum)) return ctx.reply({ embeds: [errorEmbed("provide the level number.")] });
+      if (isNaN(levelNum)) return ctx.reply({ embeds: [errorEmbed("Provide the **level** number.")] });
       await db.delete(levelRewards).where(and(eq(levelRewards.guildId, ctx.guild.id), eq(levelRewards.level, levelNum)));
       return ctx.reply({ embeds: [successEmbed(`reward for level **${levelNum}** removed.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

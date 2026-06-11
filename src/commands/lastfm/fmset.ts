@@ -17,7 +17,7 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     const username = ctx.getString("username", true) ?? ctx.args[0];
-    if (!username) return ctx.reply({ embeds: [errorEmbed("please provide your last.fm username.")] });
+    if (!username) return ctx.reply({ embeds: [errorEmbed("Please provide your last.fm **username**.")] });
     try {
       const info = await getUserInfo(username);
       await db.insert(lastfmAccounts)
@@ -25,7 +25,7 @@ export const command: HybridCommand = {
         .onConflictDoUpdate({ target: lastfmAccounts.userId, set: { username: info.name } });
       return ctx.reply({ embeds: [successEmbed(`linked your account to **${info.name}** on last.fm.`)] });
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("couldn't find that last.fm username. make sure it's spelled correctly.")] });
+      return ctx.reply({ embeds: [errorEmbed("Couldn't find that last.fm **username**. make sure it's spelled correctly.")] });
     }
   },
 };

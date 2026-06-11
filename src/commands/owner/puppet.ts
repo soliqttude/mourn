@@ -21,7 +21,7 @@ export const command: HybridCommand = {
 
     const target = await ctx.getUser("user");
     const msg = ctx.getString("message") ?? ctx.args.slice(1).join(" ");
-    if (!target || !msg) return ctx.reply({ embeds: [errorEmbed("Provide a user and message.")] });
+    if (!target || !msg) return ctx.reply({ embeds: [errorEmbed("Provide a **user** and message.")] });
 
     const member = await ctx.guild.members.fetch(target.id).catch(() => null);
     const displayName = member?.displayName ?? target.username;

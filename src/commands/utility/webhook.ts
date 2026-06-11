@@ -37,15 +37,15 @@ export const command: HybridCommand = {
 
     if (sub === "list") {
       const rows = await db.select().from(managedWebhooks).where(eq(managedWebhooks.guildId, guildId));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no webhooks configured.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No **webhooks** configured.")] });
       const lines = rows.map(r => `**${r.identifier}** → <#${r.channelId}>`);
       return ctx.reply({ embeds: [brandEmbed({ title: "Server Webhooks", description: lines.join("\n") })] });
     }
 
     if (sub === "create") {
-      if (!name) return ctx.reply({ embeds: [errorEmbed("provide a name for the webhook.")] });
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Provide a name for the **webhook**.")] });
       const ch = ctx.getChannel("channel") ?? (ctx.args[2] ? resolveChannel(ctx.guild, ctx.args[2]) : ctx.channel);
-      if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("provide a valid text channel.")] });
+      if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Provide a valid text **channel**.")] });
       const existing = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.identifier, name)));
       if (existing.length) return ctx.reply({ embeds: [errorEmbed(`webhook \`${name}\` already exists.`)] });
       try {
@@ -53,14 +53,14 @@ export const command: HybridCommand = {
         await db.insert(managedWebhooks).values({ guildId, identifier: name, webhookId: wh.id, webhookToken: wh.token!, channelId: ch.id });
         return ctx.reply({ embeds: [successEmbed(`webhook \`${name}\` created in <#${ch.id}>.`)] });
       } catch {
-        return ctx.reply({ embeds: [errorEmbed("failed to create webhook. check my permissions.")] });
+        return ctx.reply({ embeds: [errorEmbed("Failed to create **webhook**. check my **permissions**.")] });
       }
     }
 
     if (sub === "send") {
-      if (!name) return ctx.reply({ embeds: [errorEmbed("provide the webhook name.")] });
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Provide the **webhook** name.")] });
       const messageText = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
-      if (!messageText) return ctx.reply({ embeds: [errorEmbed("provide a message to send.")] });
+      if (!messageText) return ctx.reply({ embeds: [errorEmbed("Provide a message to send.")] });
       const rows = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.identifier, name)));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`webhook \`${name}\` not found.`)] });
       const wh = rows[0];
@@ -72,12 +72,12 @@ export const command: HybridCommand = {
         await client.send({ content: content ?? messageText, embeds: embed ? [embed] : [], username: usernameOverride, avatarURL: avatarOverride });
         return ctx.reply({ embeds: [successEmbed(`message sent via \`${name}\`.`)] });
       } catch {
-        return ctx.reply({ embeds: [errorEmbed("failed to send webhook message.")] });
+        return ctx.reply({ embeds: [errorEmbed("Failed to send **webhook** message.")] });
       }
     }
 
     if (sub === "delete" || sub === "remove") {
-      if (!name) return ctx.reply({ embeds: [errorEmbed("provide the webhook name.")] });
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Provide the **webhook** name.")] });
       const rows = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.identifier, name)));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`webhook \`${name}\` not found.`)] });
       const wh = rows[0];
@@ -90,7 +90,7 @@ export const command: HybridCommand = {
     }
 
     if (sub === "info") {
-      if (!name) return ctx.reply({ embeds: [errorEmbed("provide the webhook name.")] });
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Provide the **webhook** name.")] });
       const rows = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.identifier, name)));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`webhook \`${name}\` not found.`)] });
       const wh = rows[0];

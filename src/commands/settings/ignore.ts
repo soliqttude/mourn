@@ -25,7 +25,7 @@ export const command: HybridCommand = {
 
     if (sub === "list") {
       const rows = await db.select().from(globalIgnores).where(eq(globalIgnores.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no ignored members or channels.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No ignored **members** or **channels**.")] });
       const lines = rows.map(r => r.targetType === "channel" ? `<#${r.targetId}>` : `<@${r.targetId}>`);
       return ctx.reply({ embeds: [brandEmbed({ title: "Ignored Targets", description: lines.join("\n") })] });
     }
@@ -46,10 +46,10 @@ export const command: HybridCommand = {
       // guess type by looking up cache
       targetType = ctx.guild.channels.cache.has(targetId) ? "channel" : "member";
     } else {
-      return ctx.reply({ embeds: [errorEmbed("please mention a valid member or channel.")] });
+      return ctx.reply({ embeds: [errorEmbed("Please mention a valid **member** or **channel**.")] });
     }
 
-    if (!targetId) return ctx.reply({ embeds: [errorEmbed("couldn't resolve that target.")] });
+    if (!targetId) return ctx.reply({ embeds: [errorEmbed("Couldn't resolve that target.")] });
 
     if (sub === "add") {
       await db.insert(globalIgnores).values({ guildId: ctx.guild.id, targetId, targetType }).onConflictDoNothing();
@@ -61,6 +61,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`removed ignore for ${targetType === "channel" ? `<#${targetId}>` : `<@${targetId}>`}.`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

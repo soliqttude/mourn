@@ -14,7 +14,7 @@ export const command: HybridCommand = {
     const raw = ctx.getString("emoji", true) ?? ctx.args[0];
     if (!raw) return;
     const match = raw.match(/<a?:(\w+):(\d+)>/);
-    if (!match) return ctx.reply({ embeds: [errorEmbed("Provide a custom emoji.")] });
+    if (!match) return ctx.reply({ embeds: [errorEmbed("Provide a custom **emoji**.")] });
     const [, name, id] = match;
     const animated = raw.startsWith("<a:");
     const url = `https://cdn.discordapp.com/emojis/${id}.${animated ? "gif" : "png"}?size=512`;

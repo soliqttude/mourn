@@ -25,7 +25,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (ctx.user.id !== OID) return ctx.reply({ content: "nope." });
     const name = (ctx.getString("name") ?? ctx.args[0] ?? "").toLowerCase();
-    if (!name) return ctx.reply({ embeds: [errorEmbed("Provide a command name.")] });
+    if (!name) return ctx.reply({ embeds: [errorEmbed("Provide a **command** name.")] });
 
     for (const cat of CATEGORY_DIRS) {
       const filePath = join(__dirname, "..", "..", "commands", cat, `${name}.ts`);

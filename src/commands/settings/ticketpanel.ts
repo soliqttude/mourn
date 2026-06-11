@@ -38,7 +38,7 @@ export const command: HybridCommand = {
 
     try {
       await createTicketPanel(ctx.channel as TextChannel, title, desc, topics);
-      return ctx.reply({ embeds: [successEmbed("panel sent.")], ephemeral: true });
+      return ctx.reply({ embeds: [successEmbed("**Panel** sent.")], ephemeral: true });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed((err as Error).message)] });
     }

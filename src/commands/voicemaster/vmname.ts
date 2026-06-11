@@ -20,13 +20,13 @@ export const command: HybridCommand = {
     const name = ctx.getString("name", true);
     if (!name) return;
     const vc = ctx.member.voice.channel;
-    if (!vc) return ctx.reply({ embeds: [errorEmbed("Join your voicemaster channel first.")] });
+    if (!vc) return ctx.reply({ embeds: [errorEmbed("Join your voicemaster **channel** first.")] });
     const rows = await db
       .select()
       .from(voicemasterChannels)
       .where(eq(voicemasterChannels.channelId, vc.id));
     if (!rows[0] || rows[0].ownerId !== ctx.user.id) {
-      return ctx.reply({ embeds: [errorEmbed("Only the channel owner can rename it.")] });
+      return ctx.reply({ embeds: [errorEmbed("Only the **channel** owner can rename it.")] });
     }
     try {
       await vc.setName(name.slice(0, 100));

@@ -38,7 +38,7 @@ export const command: HybridCommand = {
     if (sub === "shop") {
       await ctx.defer();
       const shop = await fnFetch<any>("/shop?language=en");
-      if (!shop) return ctx.reply({ embeds: [errorEmbed("failed to fetch fortnite shop.")] });
+      if (!shop) return ctx.reply({ embeds: [errorEmbed("Failed to fetch fortnite shop.")] });
       const items = shop.featured?.entries ?? shop.entries ?? [];
       const top10 = items.slice(0, 10);
       const lines = top10.map((e: any) => {
@@ -58,7 +58,7 @@ export const command: HybridCommand = {
     }
 
     if (sub === "item") {
-      if (!query) return ctx.reply({ embeds: [errorEmbed("provide an item name.")] });
+      if (!query) return ctx.reply({ embeds: [errorEmbed("Provide an item name.")] });
       await ctx.defer();
       const results = await fnFetch<any[]>(`/cosmetics/br/search/all?name=${encodeURIComponent(query)}&language=en`);
       if (!results?.length) return ctx.reply({ embeds: [errorEmbed(`no item found for \`${query}\`.`)] });
@@ -75,7 +75,7 @@ export const command: HybridCommand = {
     }
 
     if (sub === "stats") {
-      if (!query) return ctx.reply({ embeds: [errorEmbed("provide a player name.")] });
+      if (!query) return ctx.reply({ embeds: [errorEmbed("Provide a player name.")] });
       await ctx.defer();
       const stats = await fnFetch<any>(`/stats/br/v2?name=${encodeURIComponent(query)}&image=all`);
       if (!stats) return ctx.reply({ embeds: [errorEmbed(`no stats found for \`${query}\`. (player must have public stats)`)] });
@@ -97,7 +97,7 @@ export const command: HybridCommand = {
     }
 
     if (sub === "watch") {
-      if (!query) return ctx.reply({ embeds: [errorEmbed("provide a cosmetic name to watch.")] });
+      if (!query) return ctx.reply({ embeds: [errorEmbed("Provide a cosmetic name to watch.")] });
       const existing = await db.select().from(fortniteWatches).where(and(eq(fortniteWatches.userId, ctx.user.id), eq(fortniteWatches.cosmetic, query.toLowerCase())));
       if (existing.length) return ctx.reply({ embeds: [errorEmbed(`you're already watching \`${query}\`.`)] });
       await db.insert(fortniteWatches).values({ userId: ctx.user.id, cosmetic: query.toLowerCase() });
@@ -105,14 +105,14 @@ export const command: HybridCommand = {
     }
 
     if (sub === "unwatch") {
-      if (!query) return ctx.reply({ embeds: [errorEmbed("provide a cosmetic name to unwatch.")] });
+      if (!query) return ctx.reply({ embeds: [errorEmbed("Provide a cosmetic name to unwatch.")] });
       await db.delete(fortniteWatches).where(and(eq(fortniteWatches.userId, ctx.user.id), eq(fortniteWatches.cosmetic, query.toLowerCase())));
       return ctx.reply({ embeds: [successEmbed(`removed \`${query}\` from your watch list.`)] });
     }
 
     if (sub === "watching") {
       const rows = await db.select().from(fortniteWatches).where(eq(fortniteWatches.userId, ctx.user.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("you're not watching any cosmetics.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("You're not watching any cosmetics.")] });
       return ctx.reply({ embeds: [brandEmbed({ title: "Your Fortnite Watches", description: rows.map(r => `• ${r.cosmetic}`).join("\n") })] });
     }
 

@@ -21,12 +21,12 @@ export const command: HybridCommand = {
     if (ctx.user.id !== config.ownerId) return ctx.reply({ content: "nope." });
     const guildId = ctx.getString("guild_id", true)!;
     const xp = ctx.getNumber("amount", true)!;
-    if (xp <= 0 || xp > 100_000) return ctx.reply({ embeds: [errorEmbed("xp must be between 1 and 100,000.")] });
+    if (xp <= 0 || xp > 100_000) return ctx.reply({ embeds: [errorEmbed("Xp must be between 1 and 100,000.")] });
 
     const guild = ctx.client.guilds.cache.get(guildId);
     const rows = await db.select({ userId: levels.userId }).from(levels).where(eq(levels.guildId, guildId));
 
-    if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no level data found for that guild.")] });
+    if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No **level** data found for that guild.")] });
 
     await db.update(levels)
       .set({ xp: sql`${levels.xp} + ${xp}` })

@@ -22,11 +22,11 @@ export const command: HybridCommand = {
 
     const channelArg = ctx.getChannel("channel");
     const ch = ctx.guild.channels.cache.get((channelArg as any)?.id ?? ctx.args[0]?.replace(/[<#>]/g, "")) as TextChannel | undefined;
-    if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("please provide a valid text channel.")] });
+    if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Please provide a valid text **channel**.")] });
 
     const categories = await getCategories(ctx.guild.id);
     const active = categories.filter(c => c.roles.length > 0);
-    if (!active.length) return ctx.reply({ embeds: [errorEmbed("no role categories set up yet. use `,rcategory create <name>` first.")] });
+    if (!active.length) return ctx.reply({ embeds: [errorEmbed("No **role** **categories** set up yet. use `,rcategory create <name>` first.")] });
 
     await ctx.reply({ embeds: [successEmbed(`posting ${active.length} role panel${active.length === 1 ? "" : "s"} to <#${ch.id}>…`)] });
 

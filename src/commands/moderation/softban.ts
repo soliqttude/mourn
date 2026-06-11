@@ -21,10 +21,10 @@ export const command: HybridCommand = {
     if (!guild) return;
     const target = await ctx.getUser("user", true);
     const reason = ctx.getString("reason") ?? REASON_DEFAULT;
-    if (!target) return ctx.reply({ embeds: [errorEmbed("user not found.")] });
-    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you can't softban yourself.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**User** not found.")] });
+    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't softban yourself.")] });
     const member = await guild.members.fetch(target.id).catch(() => null);
-    if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("i can't ban that user — they may have a higher role.")] });
+    if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("I can't ban that **user** — they may have a higher **role**.")] });
     try {
       await guild.bans.create(target.id, { deleteMessageSeconds: 604800, reason });
       await guild.bans.remove(target.id, "softban cleanup");

@@ -19,8 +19,8 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
     const reason = ctx.getString("reason") ?? "No reason provided";
-    if (!target) return ctx.reply({ embeds: [errorEmbed("Member not found.")] });
-    if (!target.voice.channel) return ctx.reply({ embeds: [errorEmbed("Member is not in a voice channel.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
+    if (!target.voice.channel) return ctx.reply({ embeds: [errorEmbed("**Member** is not in a voice **channel**.")] });
     await target.voice.setMute(true, reason);
     return ctx.reply({ embeds: [successEmbed(`Voice-muted **${target.user.tag}** — ${reason}`)] });
   },

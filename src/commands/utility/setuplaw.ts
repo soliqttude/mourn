@@ -38,7 +38,7 @@ export const command: HybridCommand = {
 
     const member = ctx.member;
     if (!member || !member.permissions.has(PermissionFlagsBits.ManageGuild)) {
-      return ctx.reply({ embeds: [errorEmbed("You need **Manage Server** permission to use this.")] });
+      return ctx.reply({ embeds: [errorEmbed("You need **Manage Server** **permission** to use this.")] });
     }
 
     const guild = ctx.guild;

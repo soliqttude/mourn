@@ -18,12 +18,12 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const target = (ctx.getChannel("channel") ?? ctx.channel) as any;
-    if (!target?.permissionOverwrites) return ctx.reply({ embeds: [errorEmbed("Cannot hide this channel type.")] });
+    if (!target?.permissionOverwrites) return ctx.reply({ embeds: [errorEmbed("Cannot hide this **channel** type.")] });
     try {
       await target.permissionOverwrites.edit(guild.roles.everyone, { ViewChannel: false });
       return ctx.reply({ embeds: [successEmbed(`Hidden <#${target.id}> from @everyone.`)] });
     } catch {
-      return ctx.reply({ embeds: [errorEmbed("Failed to hide channel. Check my permissions.")] });
+      return ctx.reply({ embeds: [errorEmbed("Failed to hide **channel**. Check my **permissions**.")] });
     }
   },
 };

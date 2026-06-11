@@ -20,9 +20,9 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const ch = ctx.getChannel("channel");
     const role = ctx.getRole("role");
-    if (!ch || !role) return ctx.reply({ embeds: [errorEmbed("Provide a channel and role.")] });
+    if (!ch || !role) return ctx.reply({ embeds: [errorEmbed("Provide a **channel** and **role**.")] });
     const target = ctx.guild.channels.cache.get(ch.id);
-    if (!target?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Invalid channel.")] });
+    if (!target?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Invalid **channel**.")] });
     await updateGuildSettings(ctx.guild.id, { verificationChannel: ch.id, verificationRole: role.id } as any);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId("verify_button").setLabel("✅ Verify").setStyle(ButtonStyle.Success),

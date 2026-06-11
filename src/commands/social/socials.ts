@@ -48,7 +48,7 @@ export const command: HybridCommand = {
     if (sub === "remove") {
       let plat = ctx.getString("platform")?.toLowerCase();
       if (!plat && ctx.source === "prefix") plat = ctx.rawArgs.replace(/^remove\s+/i, "").trim().toLowerCase();
-      if (!plat) return ctx.reply({ embeds: [errorEmbed("provide a platform to remove.")] });
+      if (!plat) return ctx.reply({ embeds: [errorEmbed("Provide a platform to remove.")] });
       const row = await db.select().from(userProfiles).where(eq(userProfiles.userId, ctx.user.id)).then(r => r[0] ?? null);
       const socials = { ...((row?.socials ?? {}) as Record<string, string>) };
       if (!socials[plat]) return ctx.reply({ embeds: [errorEmbed(`no **${plat}** link found.`)] });
@@ -66,17 +66,17 @@ export const command: HybridCommand = {
         plat = parts[0]?.toLowerCase();
         val = parts.slice(1).join(" ");
       }
-      if (!plat) return ctx.reply({ embeds: [errorEmbed("provide a platform name. example: `,socials add twitter @handle`")] });
-      if (!val) return ctx.reply({ embeds: [errorEmbed("provide a link or username.")] });
-      if (val.length > 100) return ctx.reply({ embeds: [errorEmbed("link too long (max 100 chars).")] });
+      if (!plat) return ctx.reply({ embeds: [errorEmbed("Provide a platform name. example: `,socials add twitter @handle`")] });
+      if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a link or **username**.")] });
+      if (val.length > 100) return ctx.reply({ embeds: [errorEmbed("Link too long (max 100 chars).")] });
       const row = await db.select().from(userProfiles).where(eq(userProfiles.userId, ctx.user.id)).then(r => r[0] ?? null);
       const socials = { ...((row?.socials ?? {}) as Record<string, string>), [plat]: val };
-      if (Object.keys(socials).length > 10) return ctx.reply({ embeds: [errorEmbed("max 10 socials allowed.")] });
+      if (Object.keys(socials).length > 10) return ctx.reply({ embeds: [errorEmbed("Max 10 socials allowed.")] });
       await db.insert(userProfiles).values({ userId: ctx.user.id, socials })
         .onConflictDoUpdate({ target: userProfiles.userId, set: { socials, updatedAt: new Date() } });
       return ctx.reply({ embeds: [successEmbed(`added **${plat}:** ${val}`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("usage: `,socials add <platform> <link>` | `,socials remove <platform>` | `,socials @user`")] });
+    return ctx.reply({ embeds: [errorEmbed("Usage: `,socials add <platform> <link>` | `,socials remove <platform>` | `,socials @user`")] });
   },
 };

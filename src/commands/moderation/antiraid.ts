@@ -51,17 +51,17 @@ export const command: HybridCommand = {
 
     if (sub === "enable" || (sub === "toggle" && !settings.antiraidEnabled)) {
       await updateGuildSettings(ctx.guild.id, { antiraidEnabled: true });
-      return ctx.reply({ embeds: [successEmbed("antiraid protection **enabled**.")] });
+      return ctx.reply({ embeds: [successEmbed("Antiraid protection **enabled**.")] });
     }
 
     if (sub === "disable" || (sub === "toggle" && settings.antiraidEnabled)) {
       await updateGuildSettings(ctx.guild.id, { antiraidEnabled: false });
-      return ctx.reply({ embeds: [successEmbed("antiraid protection **disabled**.")] });
+      return ctx.reply({ embeds: [successEmbed("Antiraid protection **disabled**.")] });
     }
 
     if (sub === "action") {
       if (!["kick", "ban", "timeout"].includes(value)) {
-        return ctx.reply({ embeds: [errorEmbed("action must be `kick`, `ban`, or `timeout`.")] });
+        return ctx.reply({ embeds: [errorEmbed("Action must be `kick`, `ban`, or `timeout`.")] });
       }
       await updateGuildSettings(ctx.guild.id, { antiraidAction: value });
       return ctx.reply({ embeds: [successEmbed(`antiraid action set to **${value}**.`)] });
@@ -69,14 +69,14 @@ export const command: HybridCommand = {
 
     if (sub === "threshold") {
       const n = parseInt(value);
-      if (isNaN(n) || n < 2 || n > 50) return ctx.reply({ embeds: [errorEmbed("threshold must be 2–50.")] });
+      if (isNaN(n) || n < 2 || n > 50) return ctx.reply({ embeds: [errorEmbed("Threshold must be 2–50.")] });
       await updateGuildSettings(ctx.guild.id, { antiraidThreshold: n });
       return ctx.reply({ embeds: [successEmbed(`antiraid triggers when **${n}** members join within 10s.`)] });
     }
 
     if (sub === "age") {
       const n = parseInt(value);
-      if (isNaN(n) || n < 0 || n > 365) return ctx.reply({ embeds: [errorEmbed("age must be 0–365 days (0 = disabled).")] });
+      if (isNaN(n) || n < 0 || n > 365) return ctx.reply({ embeds: [errorEmbed("Age must be 0–365 days (0 = disabled).")] });
       await updateGuildSettings(ctx.guild.id, { antiraidJoinAge: n });
       return ctx.reply({ embeds: [successEmbed(n === 0 ? "account age gate disabled." : `accounts younger than **${n} days** will be actioned on join.`)] });
     }
@@ -90,10 +90,10 @@ export const command: HybridCommand = {
     if (sub === "log") {
       if (value === "off" || (!value && !ctx.getChannel("channel"))) {
         await updateGuildSettings(ctx.guild.id, { antiraidLogChannel: null });
-        return ctx.reply({ embeds: [successEmbed("antiraid log disabled.")] });
+        return ctx.reply({ embeds: [successEmbed("Antiraid log disabled.")] });
       }
       const ch = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get(value.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("channel not found.")] });
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
       await updateGuildSettings(ctx.guild.id, { antiraidLogChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`antiraid alerts → <#${ch.id}>.`)] });
     }
@@ -110,6 +110,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(on ? "🔴 **raid mode manually activated** — all joins will be actioned." : "✅ **raid mode deactivated** — server back to normal.")] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand. use: `enable|disable|status|action|threshold|age|avatar|log|lock|state`")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand. use: `enable|disable|status|action|threshold|age|avatar|log|lock|state`")] });
   },
 };

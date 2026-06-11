@@ -25,7 +25,7 @@ export const command: HybridCommand = {
       if (ch) { channel = ch; break; }
     }
     if (!channel) channel = ctx.client.channels.cache.get(channelId);
-    if (!channel?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("channel not found.")] });
+    if (!channel?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("**Channel** not found.")] });
 
     try {
       const msg = await channel.messages.fetch(messageId);

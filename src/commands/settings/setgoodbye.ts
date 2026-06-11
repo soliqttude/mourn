@@ -19,7 +19,7 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const channel = ctx.getChannel("channel", true);
     const msg = ctx.getString("message", true);
-    if (!channel || !msg) return ctx.reply({ embeds: [errorEmbed("Channel and message required.")] });
+    if (!channel || !msg) return ctx.reply({ embeds: [errorEmbed("**Channel** and message required.")] });
     await updateGuildSettings(ctx.guild.id, {
       goodbyeChannel: channel.id,
       goodbyeMessage: msg,

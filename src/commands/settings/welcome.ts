@@ -96,7 +96,7 @@ export const command: HybridCommand = {
 
     if (sub === "list") {
       const rows = await db.select().from(welcomeChannels).where(eq(welcomeChannels.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no welcome channels set up.")] });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No welcome **channels** set up.")] });
       return ctx.reply({
         embeds: [brandEmbed({ title: "Welcome Channels", description: rows.map((r) => `<#${r.channelId}>`).join("\n") })],
       });
@@ -107,7 +107,7 @@ export const command: HybridCommand = {
       ctx.guild.channels.cache.get(ctx.args[1]?.replace(/[<#>]/g, "") ?? "");
 
     if (!ch && sub !== "list" && sub !== "variables") {
-      return ctx.reply({ embeds: [errorEmbed("please provide a channel.")] });
+      return ctx.reply({ embeds: [errorEmbed("Please provide a **channel**.")] });
     }
 
     if (sub === "view") {
@@ -115,7 +115,7 @@ export const command: HybridCommand = {
         .select()
         .from(welcomeChannels)
         .where(and(eq(welcomeChannels.guildId, ctx.guild.id), eq(welcomeChannels.channelId, ch.id)));
-      if (!row) return ctx.reply({ embeds: [errorEmbed("no welcome message for that channel.")] });
+      if (!row) return ctx.reply({ embeds: [errorEmbed("No welcome message for that **channel**.")] });
       return ctx.reply({
         embeds: [brandEmbed({ title: `Welcome — #${ch.name}`, description: `\`\`\`\n${row.message}\n\`\`\`` })],
       });
@@ -132,7 +132,7 @@ export const command: HybridCommand = {
       const msg = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
       if (!msg) {
         return ctx.reply({
-          embeds: [errorEmbed("please provide a welcome message. run `welcome variables` to see the embed scripting syntax.")],
+          embeds: [errorEmbed("Please provide a welcome message. run `welcome variables` to see the embed scripting syntax.")],
         });
       }
 
@@ -168,6 +168,6 @@ export const command: HybridCommand = {
       });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("unknown subcommand.")] });
+    return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
   },
 };

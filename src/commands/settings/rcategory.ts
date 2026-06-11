@@ -31,14 +31,14 @@ export const command: HybridCommand = {
 
     if (action === "list") {
       const cats = await getCategories(ctx.guild.id);
-      if (!cats.length) return ctx.reply({ embeds: [errorEmbed("No categories yet. Use `,rcategory create <name>` to start.")] });
+      if (!cats.length) return ctx.reply({ embeds: [errorEmbed("No **categories** yet. Use `,rcategory create <name>` to start.")] });
       const lines = cats.map(c =>
         `**${c.name}** — ${c.roles.length ? c.roles.map(r => `<@&${r}>`).join(", ") : "no roles yet"}`
       );
       return ctx.reply({ embeds: [successEmbed(lines.join("\n"))] });
     }
 
-    if (!name) return ctx.reply({ embeds: [errorEmbed("Provide a category name.")] });
+    if (!name) return ctx.reply({ embeds: [errorEmbed("Provide a **category** name.")] });
 
     if (action === "create") {
       await createCategory(ctx.guild.id, name);
@@ -51,7 +51,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "add" || action === "remove") {
-      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a role.")] });
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a **role**.")] });
       if (action === "add") {
         const ok = await addRoleToCategory(ctx.guild.id, name, role.id);
         return ctx.reply({ embeds: [ok ? successEmbed(`Added <@&${role.id}> to **${name}**.`) : errorEmbed(`Category **${name}** not found.`)] });

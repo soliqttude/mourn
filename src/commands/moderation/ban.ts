@@ -21,12 +21,12 @@ export const command: HybridCommand = {
     if (!guild) return;
     const target = await ctx.getUser("user", true);
     const reason = ctx.getString("reason") ?? REASON_DEFAULT;
-    if (!target) return ctx.reply({ embeds: [errorEmbed("user not found.")] });
-    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("you can't ban yourself.")] });
+    if (!target) return ctx.reply({ embeds: [errorEmbed("**User** not found.")] });
+    if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You can't ban yourself.")] });
     const existingBan = await guild.bans.fetch(target.id).catch(() => null);
-    if (existingBan) return ctx.reply({ embeds: [errorEmbed("that user is already banned.")] });
+    if (existingBan) return ctx.reply({ embeds: [errorEmbed("That **user** is already banned.")] });
     const member = await guild.members.fetch(target.id).catch(() => null);
-    if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("i can't ban that user — they may have a higher role.")] });
+    if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("I can't ban that **user** — they may have a higher **role**.")] });
     try {
       await guild.members.ban(target.id, { reason: `${ctx.user.tag}: ${reason}` });
       return ctx.reply({
