@@ -3,12 +3,21 @@ import { logger } from "../lib/logger.js";
 import { cacheGuildInvites } from "../features/invites.js";
 import { checkBirthdays } from "../features/birthday.js";
 import { updateCounters } from "../features/counters.js";
+import { setupMusic } from "../features/music.js";
 
 export const event = {
   name: "ready",
   once: false,
   async execute(client: Client) {
     logger.info(`Bleed is online as ${client.user?.tag}`);
+
+    // ── Music — initialise DisTube with the client ────────────────────────────
+    try {
+      setupMusic(client);
+      logger.info("DisTube music engine ready.");
+    } catch (err) {
+      logger.error({ err }, "Failed to initialise music engine");
+    }
 
     for (const [, guild] of client.guilds.cache) {
       try {
@@ -32,7 +41,6 @@ export const event = {
         logger.error({ err }, "Counter update error");
       }
     }, 10 * 60 * 1000);
-    // Run once on startup (delayed to let cache warm up)
     setTimeout(async () => {
       try { await updateCounters(client); } catch {}
     }, 30 * 1000);
