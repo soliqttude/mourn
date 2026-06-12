@@ -7,6 +7,12 @@ export interface Snipe {
   stickers?: string[];
   after?: string;
   at: number;
+  sentAt?: number;
+  channelName?: string;
+  replyTo?: {
+    authorTag: string;
+    content: string;
+  };
 }
 
 const deleteSnipes = new Map<string, Snipe[]>();
