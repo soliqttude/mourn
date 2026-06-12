@@ -14,7 +14,7 @@ export const command: HybridCommand = {
     const isRepo = query.includes("/");
     try {
       const url = isRepo ? `https://api.github.com/repos/${query}` : `https://api.github.com/users/${query}`;
-      const res = await fetch(url, { headers: { "User-Agent": "bleed-bot" } });
+      const res = await fetch(url, { headers: { "User-Agent": "mourn-bot" } });
       if (!res.ok) throw new Error("Not found");
       const data = await res.json() as any;
       if (isRepo) {
