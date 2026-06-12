@@ -14,16 +14,19 @@ export const event = {
     const logCh = role.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
+    const guildIcon = role.guild.iconURL({ size: 256 });
+
     const embed = new EmbedBuilder()
       .setColor(role.color || 0x9b59b6)
-      .setAuthor({ name: "role created" })
+      .setAuthor({ name: "role created", iconURL: guildIcon ?? undefined })
+      .setThumbnail(guildIcon)
       .addFields(
-        { name: "name",        value: `<@&${role.id}> \`${role.name}\``, inline: false },
-        { name: "color",       value: role.hexColor,               inline: true  },
-        { name: "hoisted",     value: role.hoist ? "yes" : "no",   inline: true  },
-        { name: "mentionable", value: role.mentionable ? "yes" : "no", inline: true },
-        { name: "position",    value: `${role.position}`,           inline: true  },
-        { name: "members",     value: `${role.members.size}`,       inline: true  },
+        { name: "name",        value: `<@&${role.id}> \`${role.name}\``,  inline: false },
+        { name: "color",       value: role.hexColor,                       inline: true  },
+        { name: "hoisted",     value: role.hoist ? "yes" : "no",          inline: true  },
+        { name: "mentionable", value: role.mentionable ? "yes" : "no",    inline: true  },
+        { name: "position",    value: `${role.position}`,                  inline: true  },
+        { name: "members",     value: `${role.members.size}`,              inline: true  },
       )
       .setTimestamp()
       .setFooter({ text: `role id: ${role.id}` });
