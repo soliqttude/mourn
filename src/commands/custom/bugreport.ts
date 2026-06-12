@@ -5,7 +5,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "bugreport",
-  description: "Report a bug with Bleed.",
+  description: "Report a bug with Mourn.",
   usage: "bugreport [description]",
   examples: ["bugreport"],
   category: "custom",
