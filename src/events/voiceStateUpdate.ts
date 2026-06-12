@@ -32,78 +32,51 @@ export const event = {
     const ch = guild.channels.cache.get(settings.voiceLogChannel);
     if (!ch?.isTextBased()) return;
 
-    const avatarURL = member.user.displayAvatarURL({ size: 256 });
-    let embed: EmbedBuilder | null = null;
+    const avatarURL = member.user.displayAvatarURL({ size: 64 });
+    let label: string | null = null;
+    let fields: { name: string; value: string; inline: boolean }[] = [];
 
     if (!oldState.channel && newState.channel) {
-      embed = new EmbedBuilder()
-        .setColor(0x2ecc71)
-        .setAuthor({ name: `${member.user.username} joined voice`, iconURL: avatarURL })
-        .setThumbnail(avatarURL)
-        .addFields(
-          { name: "channel", value: `<#${newState.channel.id}> \`${newState.channel.name}\``, inline: true },
-          { name: "members", value: `${newState.channel.members.size}`,                        inline: true },
-        )
-        .setTimestamp()
-        .setFooter({ text: `user id: ${member.id}` });
-
+      label = `${member.user.username} — joined voice`;
+      fields = [
+        { name: "channel", value: `<#${newState.channel.id}> \`${newState.channel.name}\``, inline: true },
+        { name: "members", value: `${newState.channel.members.size}`,                        inline: true },
+      ];
     } else if (oldState.channel && !newState.channel) {
-      embed = new EmbedBuilder()
-        .setColor(0xe74c3c)
-        .setAuthor({ name: `${member.user.username} left voice`, iconURL: avatarURL })
-        .setThumbnail(avatarURL)
-        .addFields(
-          { name: "channel",   value: `<#${oldState.channel.id}> \`${oldState.channel.name}\``, inline: true },
-          { name: "remaining", value: `${oldState.channel.members.size}`,                        inline: true },
-        )
-        .setTimestamp()
-        .setFooter({ text: `user id: ${member.id}` });
-
+      label = `${member.user.username} — left voice`;
+      fields = [
+        { name: "channel",   value: `<#${oldState.channel.id}> \`${oldState.channel.name}\``, inline: true },
+        { name: "remaining", value: `${oldState.channel.members.size}`,                        inline: true },
+      ];
     } else if (oldState.channel && newState.channel && oldState.channel.id !== newState.channel.id) {
-      embed = new EmbedBuilder()
-        .setColor(0x3498db)
-        .setAuthor({ name: `${member.user.username} moved channels`, iconURL: avatarURL })
-        .setThumbnail(avatarURL)
-        .addFields(
-          { name: "from", value: `<#${oldState.channel.id}> \`${oldState.channel.name}\``, inline: true },
-          { name: "to",   value: `<#${newState.channel.id}> \`${newState.channel.name}\``, inline: true },
-        )
-        .setTimestamp()
-        .setFooter({ text: `user id: ${member.id}` });
-
+      label = `${member.user.username} — moved channels`;
+      fields = [
+        { name: "from", value: `<#${oldState.channel.id}> \`${oldState.channel.name}\``, inline: true },
+        { name: "to",   value: `<#${newState.channel.id}> \`${newState.channel.name}\``, inline: true },
+      ];
     } else if (!oldState.mute && newState.mute) {
-      embed = new EmbedBuilder()
-        .setColor(0xe67e22)
-        .setAuthor({ name: `${member.user.username} server muted`, iconURL: avatarURL })
-        .setThumbnail(avatarURL)
-        .addFields({ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true })
-        .setTimestamp().setFooter({ text: `user id: ${member.id}` });
-
+      label = `${member.user.username} — server muted`;
+      fields = [{ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true }];
     } else if (oldState.mute && !newState.mute) {
-      embed = new EmbedBuilder()
-        .setColor(0x2ecc71)
-        .setAuthor({ name: `${member.user.username} server unmuted`, iconURL: avatarURL })
-        .setThumbnail(avatarURL)
-        .addFields({ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true })
-        .setTimestamp().setFooter({ text: `user id: ${member.id}` });
-
+      label = `${member.user.username} — server unmuted`;
+      fields = [{ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true }];
     } else if (!oldState.deaf && newState.deaf) {
-      embed = new EmbedBuilder()
-        .setColor(0xe67e22)
-        .setAuthor({ name: `${member.user.username} server deafened`, iconURL: avatarURL })
-        .setThumbnail(avatarURL)
-        .addFields({ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true })
-        .setTimestamp().setFooter({ text: `user id: ${member.id}` });
-
+      label = `${member.user.username} — server deafened`;
+      fields = [{ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true }];
     } else if (oldState.deaf && !newState.deaf) {
-      embed = new EmbedBuilder()
-        .setColor(0x2ecc71)
-        .setAuthor({ name: `${member.user.username} server undeafened`, iconURL: avatarURL })
-        .setThumbnail(avatarURL)
-        .addFields({ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true })
-        .setTimestamp().setFooter({ text: `user id: ${member.id}` });
+      label = `${member.user.username} — server undeafened`;
+      fields = [{ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true }];
     }
 
-    if (embed) await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
+    if (!label) return;
+
+    const embed = new EmbedBuilder()
+      .setColor(0x000000)
+      .setAuthor({ name: label, iconURL: avatarURL })
+      .addFields(...fields)
+      .setTimestamp()
+      .setFooter({ text: `user id: ${member.id}` });
+
+    await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
