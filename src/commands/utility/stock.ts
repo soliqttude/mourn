@@ -8,7 +8,7 @@ export const command: HybridCommand = {
     const sym = (ctx.getString("symbol", true) ?? ctx.args[0] ?? "").toUpperCase().trim();
     if (!sym) return ctx.reply({ embeds: [errorEmbed("Please provide a ticker symbol (e.g. AAPL).")] });
     try {
-      const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`, { headers: { "User-Agent": "bleed-bot/1.0" } });
+      const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`, { headers: { "User-Agent": "mourn-bot/1.0" } });
       const data = await res.json() as any;
       const meta = data?.chart?.result?.[0]?.meta;
       if (!meta?.regularMarketPrice) return ctx.reply({ embeds: [errorEmbed(`Stock \`${sym}\` not found or market is closed.`)] });
