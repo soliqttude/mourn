@@ -86,14 +86,14 @@ export const antinukeAdmins = pgTable("antinuke_admins",
 );
 
 export const antinukeModules = pgTable(
-  antinuke_modules,
+  "antinuke_modules",
   {
-    guildId:       text(guild_id).notNull(),
-    module:        text(module).notNull(),
-    enabled:       boolean(enabled).default(false).notNull(),
-    threshold:     integer(threshold).default(3).notNull(),
-    punishment:    text(punishment).default(ban).notNull(),
-    countCommands: boolean(count_commands).default(false).notNull(),
+    guildId:       text("guild_id").notNull(),
+    module:        text("module").notNull(),
+    enabled:       boolean("enabled").default(false).notNull(),
+    threshold:     integer("threshold").default(3).notNull(),
+    punishment:    text("punishment").default("ban").notNull(),
+    countCommands: boolean("count_commands").default(false).notNull(),
   },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.module] }) }),
 );
