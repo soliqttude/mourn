@@ -42,9 +42,10 @@ export async function createTicketPanel(
 ): Promise<void> {
   const resolved = topics.length > 0 ? topics : DEFAULT_TOPICS;
 
+  const toTitle = (s: string) => s.replace(/\b\w/g, (l) => l.toUpperCase());
   const topicLines = resolved
-    .map((t) => `${t.emoji ?? "📩"} **${t.name}** — ${t.description ?? ""}`)
-    .join("\n");
+    .map((t) => `${t.emoji ?? "📩"} **${toTitle(t.name)}**\n╰${t.description ?? ""}`)
+    .join("\n\n");
 
   const embed = new EmbedBuilder()
     .setColor(0x000000)
