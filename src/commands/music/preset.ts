@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed, successEmbed, brandEmbed } from "../../lib/embeds.js";
 import { distube, hasDjPermission } from "../../features/music.js";
 
-// bleed-style named presets mapped to DisTube filter names
+// mourn-style named presets mapped to DisTube filter names
 const PRESETS: Record<string, string[]> = {
   soft:       ["normalizer"],
   "8d":       ["8d"],
