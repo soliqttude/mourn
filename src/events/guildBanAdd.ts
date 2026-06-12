@@ -1,10 +1,13 @@
 import type { Client, GuildBan, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
+import { handleAntinukeAction } from "../features/antinuke.js";
 
 export const event = {
   name: "guildBanAdd",
-  async execute(_client: Client, ban: GuildBan) {
+  async execute(client: Client, ban: GuildBan) {
+    await handleAntinukeAction(client, ban.guild, "ban_add", ban.user.id).catch(() => {});
+
     const settings = await getGuildSettings(ban.guild.id);
     if (!settings.modLogChannel) return;
     const ch = ban.guild.channels.cache.get(settings.modLogChannel);
