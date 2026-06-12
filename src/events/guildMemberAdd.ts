@@ -1,5 +1,5 @@
 import type { Client, GuildMember, TextChannel } from "discord.js";
-import { brandEmbed } from "../lib/embeds.js";
+import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { trackInviteUse } from "../features/invites.js";
 import { handleAntiraidJoin } from "../features/antiraid.js";
@@ -7,6 +7,7 @@ import { db } from "../db/index.js";
 import { welcomeChannels } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { parseScript } from "../lib/scripting.js";
+import { brandEmbed } from "../lib/embeds.js";
 
 export const event = {
   name: "guildMemberAdd",
@@ -53,27 +54,19 @@ export const event = {
 
     const inviter = await trackInviteUse(member);
 
-    // ── Multi-channel welcome (welcomeChannels table, full embed scripting) ────
-    const welcomeRows = await db
-      .select()
-      .from(welcomeChannels)
-      .where(eq(welcomeChannels.guildId, member.guild.id));
+    // ── Multi-channel welcome ─────────────────────────────────────────────────
+    const welcomeRows = await db.select().from(welcomeChannels).where(eq(welcomeChannels.guildId, member.guild.id));
 
     for (const row of welcomeRows) {
       const ch = member.guild.channels.cache.get(row.channelId);
       if (!ch?.isTextBased()) continue;
-
       const { embeds, content, components } = parseScript(row.message, {
-        user: member,
-        guild: member.guild,
-        channel: ch as TextChannel,
-        client,
+        user: member, guild: member.guild, channel: ch as TextChannel, client,
         extra: {
           "{inviter}": inviter?.inviterId ? `<@${inviter.inviterId}>` : "unknown",
           "{invite_code}": inviter?.code ?? "unknown",
         },
       });
-
       await (ch as TextChannel).send({
         content: content ?? undefined,
         embeds: embeds.length ? embeds : undefined,
@@ -82,51 +75,54 @@ export const event = {
       }).catch(() => {});
     }
 
-    // ── Legacy single-channel fallback (settings.welcomeChannel) ─────────────
+    // ── Legacy single-channel fallback ────────────────────────────────────────
     if (welcomeRows.length === 0 && settings.welcomeChannel) {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
         const welcome = (settings as any).welcomeMessage
-          ? (settings as any).welcomeMessage
-              .replace("{user}", `<@${member.id}>`)
-              .replace("{server}", member.guild.name)
+          ? (settings as any).welcomeMessage.replace("{user}", `<@${member.id}>`).replace("{server}", member.guild.name)
           : null;
-
         const embed = brandEmbed({
           description: welcome ?? `welcome to **${member.guild.name}**, <@${member.id}>`,
           thumbnail: member.user.displayAvatarURL({ size: 256 }),
           authorName: member.user.globalName ?? member.user.username,
           authorIcon: member.user.displayAvatarURL({ size: 64 }),
         });
-
-        await (ch as TextChannel).send({
-          embeds: [embed],
-          allowedMentions: { users: [member.id] },
-        }).catch(() => {});
+        await (ch as TextChannel).send({ embeds: [embed], allowedMentions: { users: [member.id] } }).catch(() => {});
       }
     }
 
-    if (settings.joinLogChannel) {
-      const ch = member.guild.channels.cache.get(settings.joinLogChannel);
-      if (ch?.isTextBased()) {
-        const accountAge = Math.floor((Date.now() - member.user.createdTimestamp) / 86_400_000);
-        const lines = [
-          `<@${member.id}> **${member.user.username}** (\`${member.id}\`)`,
-          `**account age** — ${accountAge}d`,
-          `**has avatar** — ${member.user.avatar ? "yes" : "no"}`,
-          `**members** — ${member.guild.memberCount}`,
-          inviter ? `**invited by** — <@${inviter.inviterId}> (\`${inviter.code}\`)` : null,
-        ].filter(Boolean).join("\n");
+    // ── Join log ──────────────────────────────────────────────────────────────
+    if (!settings.joinLogChannel) return;
+    const logCh = member.guild.channels.cache.get(settings.joinLogChannel);
+    if (!logCh?.isTextBased()) return;
 
-        const embed = brandEmbed({
-          description: lines,
-          thumbnail: member.user.displayAvatarURL({ size: 256 }),
-          authorName: "member joined",
-          authorIcon: member.user.displayAvatarURL({ size: 64 }),
-        });
-        embed.setTimestamp();
-        await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
-      }
+    const created     = Math.floor(member.user.createdTimestamp / 1000);
+    const accountAgeDays = Math.floor((Date.now() - member.user.createdTimestamp) / 86_400_000);
+    const isNew       = accountAgeDays < 7;
+
+    const fields: { name: string; value: string; inline: boolean }[] = [
+      { name: "user",    value: `<@${member.id}> \`${member.id}\``,       inline: false },
+      { name: "created", value: `<t:${created}:R> (${accountAgeDays}d)`,  inline: true  },
+      { name: "avatar",  value: member.user.avatar ? "yes" : "no",        inline: true  },
+      { name: "members", value: `${member.guild.memberCount}`,             inline: true  },
+    ];
+
+    if (inviter) {
+      fields.push({ name: "invited by", value: `<@${inviter.inviterId}> (code: \`${inviter.code}\`)`, inline: false });
     }
+
+    const embed = new EmbedBuilder()
+      .setColor(isNew ? 0xe67e22 : 0x2ecc71)
+      .setAuthor({
+        name: `${member.user.username} joined${isNew ? " ⚠️ new account" : ""}`,
+        iconURL: member.user.displayAvatarURL({ size: 64 }),
+      })
+      .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
+      .addFields(...fields)
+      .setTimestamp()
+      .setFooter({ text: `user id: ${member.id}` });
+
+    await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
