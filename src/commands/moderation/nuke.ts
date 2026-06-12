@@ -16,6 +16,7 @@ export const command: HybridCommand = {
     const clone = await ch.clone({ reason: `Nuked by ${ctx.user.tag}` });
     await clone.setPosition(position);
     await ch.delete();
+    await clone.send("first");
     await clone.send({ embeds: [new EmbedBuilder().setColor(0xff4444).setTitle("💥 Channel Nuked").setDescription("This channel has been nuked. All previous messages were deleted.").setFooter({ text: `Nuked by ${ctx.user.tag} • ${config.embedFooter}` }).setTimestamp()] });
   },
 };
