@@ -10,7 +10,6 @@ export const event = {
   async execute(client: Client, member: GuildMember | PartialGuildMember) {
     if (member.user.bot) return;
 
-    // Kick detection for antinuke
     await handleAntinukeAction(client, member.guild, "member_kick", member.id).catch(() => {});
 
     const settings = await getGuildSettings(member.guild.id);
@@ -41,7 +40,7 @@ export const event = {
       .join(", ") || "none";
 
     const embed = new EmbedBuilder()
-      .setColor(0xe74c3c)
+      .setColor(0x000000)
       .setAuthor({ name: `${member.user.username} left`, iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .addFields(
