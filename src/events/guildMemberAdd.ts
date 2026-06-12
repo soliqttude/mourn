@@ -13,7 +13,6 @@ import { brandEmbed } from "../lib/embeds.js";
 export const event = {
   name: "guildMemberAdd",
   async execute(client: Client, member: GuildMember) {
-    // Handle bot adds via antinuke before anything else
     if (member.user.bot) {
       await handleBotAdd(client, member.guild, member).catch(() => {});
       return;
@@ -109,10 +108,11 @@ export const event = {
       { name: "members", value: `${member.guild.memberCount}`,            inline: true  },
     ];
     if (inviter) fields.push({ name: "invited by", value: `<@${inviter.inviterId}> (code: \`${inviter.code}\`)`, inline: false });
+    if (isNew)   fields.push({ name: "⚠️ new account", value: `account is only ${accountAgeDays} day${accountAgeDays === 1 ? "" : "s"} old`, inline: false });
 
     const embed = new EmbedBuilder()
-      .setColor(isNew ? 0xe67e22 : 0x2ecc71)
-      .setAuthor({ name: `${member.user.username} joined${isNew ? " ⚠️ new account" : ""}`, iconURL: avatarURL })
+      .setColor(0x000000)
+      .setAuthor({ name: `${member.user.username} joined`, iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .addFields(...fields)
       .setTimestamp()
