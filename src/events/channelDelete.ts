@@ -23,25 +23,24 @@ export const event = {
     await handleAntinukeAction(client, channel.guild, "channel_delete", channel.id);
     await db.delete(voicemasterChannels).where(eq(voicemasterChannels.channelId, channel.id)).catch(() => {});
 
-    const settings = await getGuildSettings(channel.guild.id);
+    const settings    = await getGuildSettings(channel.guild.id);
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = channel.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
-    const guildIcon = channel.guild.iconURL({ size: 256 });
+    const guildIcon = channel.guild.iconURL({ size: 64 }) ?? undefined;
     const typeName  = CHANNEL_TYPE_NAMES[(channel as GuildChannel).type] ?? "unknown";
     const parent    = (channel as any).parent;
     const name      = "name" in channel ? channel.name : "unknown";
 
     const embed = new EmbedBuilder()
-      .setColor(0xe74c3c)
-      .setAuthor({ name: "channel deleted", iconURL: guildIcon ?? undefined })
-      .setThumbnail(guildIcon)
+      .setColor(0x000000)
+      .setAuthor({ name: "channel deleted", iconURL: guildIcon })
       .addFields(
-        { name: "name",     value: `\`${name}\``,                  inline: true },
-        { name: "type",     value: typeName,                        inline: true },
-        { name: "category", value: parent ? parent.name : "none",  inline: true },
+        { name: "name",     value: `\`${name}\``,                 inline: true },
+        { name: "type",     value: typeName,                       inline: true },
+        { name: "category", value: parent ? parent.name : "none", inline: true },
       )
       .setTimestamp()
       .setFooter({ text: `channel id: ${channel.id}` });
