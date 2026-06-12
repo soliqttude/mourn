@@ -114,7 +114,6 @@ export const command: HybridCommand = {
     // 5. Save to DB
     await updateGuildSettings(guild.id, {
       jailRole: jailRole.id,
-      jailChannel: jailChannel.id,
       modLogChannel: jailLogChannel.id,
     });
 
