@@ -9,6 +9,63 @@ import { getGuildSettings } from "../db/settings.js";
 import { eq, and } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 
+export interface TicketTopic {
+  name: string;
+  emoji?: string;
+  description?: string;
+}
+
+export async function createTicketPanel(
+  channel: TextChannel,
+  title: string,
+  description: string,
+  topics: TicketTopic[] = [],
+): Promise<void> {
+  const embed = new EmbedBuilder()
+    .setColor(0x5865f2)
+    .setTitle(title)
+    .setDescription(description);
+
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+  if (topics.length > 0) {
+    // Up to 5 buttons per row, max 25 topics across 5 rows
+    const chunked: TicketTopic[][] = [];
+    for (let i = 0; i < Math.min(topics.length, 25); i += 5) {
+      chunked.push(topics.slice(i, i + 5));
+    }
+    for (const chunk of chunked) {
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        ...chunk.map((t) =>
+          new ButtonBuilder()
+            .setCustomId(`ticket_open_${t.name}`)
+            .setLabel(t.name)
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji(t.emoji ?? "🎫"),
+        ),
+      );
+      rows.push(row);
+    }
+  } else {
+    // Single open button when no topics configured
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId("ticket_open_")
+        .setLabel("Open Ticket")
+        .setStyle(ButtonStyle.Primary)
+        .setEmoji("🎫"),
+    );
+    rows.push(row);
+  }
+
+  const msg = await channel.send({ embeds: [embed], components: rows });
+
+  await db
+    .insert(ticketPanels)
+    .values({ guildId: channel.guild.id, messageId: msg.id, channelId: channel.id })
+    .onConflictDoNothing();
+}
+
 export async function createTicket(guild: Guild, member: GuildMember, topic?: string): Promise<TextChannel | null> {
   const settings = await getGuildSettings(guild.id);
   if (!settings.ticketCategory) return null;
@@ -213,6 +270,83 @@ export async function handleTicketModal(interaction: any): Promise<void> {
   }
 }
 
+export async function getTicketByChannel(channelId: string) {
+  const [ticket] = await db.select().from(tickets).where(eq(tickets.channelId, channelId));
+  return ticket ?? null;
+}
+
+export async function ticketAdd(channel: TextChannel, userId: string): Promise<void> {
+  await channel.permissionOverwrites.edit(userId, {
+    ViewChannel: true,
+    SendMessages: true,
+    AttachFiles: true,
+  });
+}
+
+export async function ticketRemove(channel: TextChannel, userId: string): Promise<void> {
+  await channel.permissionOverwrites.delete(userId);
+}
+
+export async function ticketRename(channel: TextChannel, name: string): Promise<void> {
+  await channel.setName(name.toLowerCase().replace(/\s+/g, "-").slice(0, 100));
+}
+
+export async function closeTicketCmd(channel: TextChannel, closerId: string, guild: Guild): Promise<void> {
+  const [ticket] = await db.select().from(tickets).where(eq(tickets.channelId, channel.id));
+  if (!ticket) return;
+  await closeTicket(ticket.id, guild, closerId);
+}
+
+export async function reopenTicketCmd(channel: TextChannel, openerId: string, guild: Guild): Promise<void> {
+  const [ticket] = await db.select().from(tickets).where(eq(tickets.channelId, channel.id));
+  if (!ticket) return;
+
+  await db.update(tickets).set({ status: "open", closedAt: null, closeReason: null }).where(eq(tickets.id, ticket.id));
+
+  const newName = channel.name.replace(/^closed-/, "").slice(0, 100);
+  await channel.setName(newName, "ticket reopened").catch(() => {});
+  await channel.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: null }).catch(() => {});
+
+  const embed = new EmbedBuilder()
+    .setColor(0x57f287)
+    .setDescription(`🔓 **ticket reopened** by <@${openerId}>`)
+    .setTimestamp();
+  await channel.send({ embeds: [embed] }).catch(() => {});
+}
+
+export async function deleteTicketCmd(channel: TextChannel, deleterId: string, guild: Guild): Promise<void> {
+  const [ticket] = await db.select().from(tickets).where(eq(tickets.channelId, channel.id));
+  if (!ticket) return;
+
+  // Generate simple text transcript
+  const messages = await channel.messages.fetch({ limit: 100 }).catch(() => null);
+  if (messages) {
+    const lines = [...messages.values()]
+      .reverse()
+      .map((m) => `[${m.createdAt.toISOString()}] ${m.author.tag}: ${m.content}`);
+    const transcript = lines.join("\n");
+
+    const settings = await getGuildSettings(guild.id);
+    if (settings.ticketLogChannel) {
+      const logCh = guild.channels.cache.get(settings.ticketLogChannel) as TextChannel | undefined;
+      if (logCh?.isTextBased()) {
+        const { AttachmentBuilder } = await import("discord.js");
+        const buf = Buffer.from(transcript, "utf-8");
+        const attachment = new AttachmentBuilder(buf, { name: `ticket-${ticket.number}-transcript.txt` });
+        const embed = new EmbedBuilder()
+          .setColor(0x5865f2)
+          .setAuthor({ name: `ticket #${String(ticket.number).padStart(4, "0")} transcript` })
+          .setDescription(`**deleted by** <@${deleterId}>\n**opened by** <@${ticket.openerId}>`)
+          .setTimestamp();
+        await logCh.send({ embeds: [embed], files: [attachment] }).catch(() => {});
+      }
+    }
+  }
+
+  await db.delete(tickets).where(eq(tickets.id, ticket.id));
+  await channel.delete("ticket deleted").catch(() => {});
+}
+
 // Inactivity monitoring
 const inactivityTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
@@ -224,8 +358,6 @@ export function resetInactivityTimer(channelId: string, guildId: string, inactiv
     inactivityTimers.delete(channelId);
     const [ticket] = await db.select().from(tickets).where(and(eq(tickets.channelId, channelId), eq(tickets.status, "open")));
     if (!ticket) return;
-    const { Client } = await import("discord.js");
-    // We don't have easy client access here — mark via db and let the inactivity cron handle it
     await db.update(tickets).set({ lastActivityAt: new Date() }).where(eq(tickets.id, ticket.id));
     logger.info({ channelId, guildId, ticket: ticket.id }, "ticket inactivity warning due");
   }, ms);
