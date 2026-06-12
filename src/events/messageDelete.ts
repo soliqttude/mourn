@@ -23,8 +23,10 @@ export const event = {
     storeSnipe(message.channel.id, "delete", {
       authorId: message.author?.id ?? "unknown",
       authorTag: message.author?.tag ?? "unknown",
+      authorAvatar: message.author?.displayAvatarURL({ size: 256 }) ?? null,
       content: message.content ?? "",
       attachments: message.attachments?.map((a) => a.url) ?? [],
+      stickers: message.stickers?.map((s) => s.url) ?? [],
       at: Date.now(),
     });
 
