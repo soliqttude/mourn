@@ -1,7 +1,17 @@
 import type { Client, GuildChannel, TextChannel } from "discord.js";
-import { brandEmbed } from "../lib/embeds.js";
+import { EmbedBuilder, ChannelType } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
+
+const CHANNEL_TYPE_NAMES: Partial<Record<ChannelType, string>> = {
+  [ChannelType.GuildText]:         "text",
+  [ChannelType.GuildVoice]:        "voice",
+  [ChannelType.GuildCategory]:     "category",
+  [ChannelType.GuildAnnouncement]: "announcement",
+  [ChannelType.GuildStageVoice]:   "stage",
+  [ChannelType.GuildForum]:        "forum",
+  [ChannelType.GuildMedia]:        "media",
+};
 
 export const event = {
   name: "channelCreate",
@@ -15,14 +25,20 @@ export const event = {
     const logCh = channel.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
-    await (logCh as TextChannel).send({
-      embeds: [
-        brandEmbed({
-          authorName: "channel created",
-          description: `**Name:** ${channel.name}\n**Type:** ${channel.type}\n**ID:** \`${channel.id}\``,
-          page: "Logs",
-        }).setTimestamp(),
-      ],
-    }).catch(() => {});
+    const typeName = CHANNEL_TYPE_NAMES[channel.type] ?? "unknown";
+    const parent = (channel as any).parent;
+
+    const embed = new EmbedBuilder()
+      .setColor(0x1abc9c)
+      .setAuthor({ name: "channel created" })
+      .addFields(
+        { name: "name",     value: `<#${channel.id}> \`${channel.name}\``,         inline: false },
+        { name: "type",     value: typeName,                                         inline: true  },
+        { name: "category", value: parent ? parent.name : "none",                   inline: true  },
+      )
+      .setTimestamp()
+      .setFooter({ text: `channel id: ${channel.id}` });
+
+    await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
