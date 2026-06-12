@@ -95,7 +95,7 @@ export const event = {
       const { blacklisted, reason } = await isBlacklisted(message.author.id);
       if (blacklisted) {
         message.author.send({
-          embeds: [errorEmbed(reason ? `you are blacklisted from bleed.\n**reason** — ${reason}` : "you are blacklisted from bleed.")],
+          embeds: [errorEmbed(reason ? `you are blacklisted from mourn.\n**reason** — ${reason}` : "you are blacklisted from mourn.")],
         }).catch(() => {});
         return;
       }
