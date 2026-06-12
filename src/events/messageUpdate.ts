@@ -24,6 +24,7 @@ export const event = {
     storeSnipe(newMsg.channel.id, "edit", {
       authorId: newMsg.author?.id ?? "unknown",
       authorTag: newMsg.author?.tag ?? "unknown",
+      authorAvatar: newMsg.author?.displayAvatarURL({ size: 256 }) ?? null,
       content: oldMsg.content ?? "",
       after: newMsg.content ?? "",
       at: Date.now(),
