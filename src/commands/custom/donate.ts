@@ -4,7 +4,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "donate",
-  description: "Support Bleed's development.",
+  description: "Support Mourn's development.",
   usage: "donate",
   examples: ["donate"],
   category: "custom",
@@ -14,18 +14,18 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "support bleed.",
+          title: "support mourn.",
           description: link
             ? [
-                "bleed is built and maintained solo, for free.",
+                "mourn is built and maintained solo, for free.",
                 "",
                 "if you want to support the project:",
                 `[**donate here**](${link})`,
                 "",
-                "every bit helps keep bleed running.",
+                "every bit helps keep mourn running.",
               ].join("\n")
             : [
-                "bleed is built and maintained solo, for free.",
+                "mourn is built and maintained solo, for free.",
                 "",
                 "donations aren't open yet — but they're coming soon.",
                 "",
