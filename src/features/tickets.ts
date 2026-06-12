@@ -231,6 +231,15 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
 
   if (customId.startsWith("ticket_claim_")) {
     const ticketId = parseInt(customId.replace("ticket_claim_", ""));
+    const [ticket] = await db.select().from(tickets).where(eq(tickets.id, ticketId));
+    if (!ticket) return void interaction.reply({ content: "ticket not found.", ephemeral: true });
+    if (ticket.claimerId) {
+      return void interaction.reply({
+        content: `this ticket has already been claimed by <@${ticket.claimerId}>.`,
+        ephemeral: true,
+        allowedMentions: { parse: [] },
+      });
+    }
     const settings = await getGuildSettings(guild.id);
     const gMember = member as GuildMember;
     const isSupportOrAbove =
@@ -240,7 +249,7 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
       return void interaction.reply({ content: "only support staff can claim tickets.", ephemeral: true });
     }
     await db.update(tickets).set({ claimerId: user.id }).where(eq(tickets.id, ticketId));
-    await interaction.reply({ content: `🙋 ticket claimed by <@${user.id}>`, allowedMentions: { parse: [] } });
+    await interaction.reply({ content: `ticket claimed by <@${user.id}>`, allowedMentions: { parse: [] } });
     return;
   }
 
