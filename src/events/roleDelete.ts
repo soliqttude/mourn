@@ -1,5 +1,5 @@
 import type { Client, Role, TextChannel } from "discord.js";
-import { brandEmbed } from "../lib/embeds.js";
+import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 
@@ -14,14 +14,17 @@ export const event = {
     const logCh = role.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
-    await (logCh as TextChannel).send({
-      embeds: [
-        brandEmbed({
-          authorName: "role deleted",
-          description: `**Name:** ${role.name}\n**ID:** \`${role.id}\`\n**Color:** \`${role.hexColor}\``,
-          page: "Logs",
-        }).setTimestamp(),
-      ],
-    }).catch(() => {});
+    const embed = new EmbedBuilder()
+      .setColor(0xe74c3c)
+      .setAuthor({ name: "role deleted" })
+      .addFields(
+        { name: "name",    value: role.name,     inline: true },
+        { name: "color",   value: role.hexColor, inline: true },
+        { name: "members", value: `${role.members.size}`, inline: true },
+      )
+      .setTimestamp()
+      .setFooter({ text: `role id: ${role.id}` });
+
+    await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
