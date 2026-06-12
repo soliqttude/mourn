@@ -85,6 +85,20 @@ export const antinukeAdmins = pgTable("antinuke_admins",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }),
 );
 
+export const antinukeModules = pgTable(
+  antinuke_modules,
+  {
+    guildId:       text(guild_id).notNull(),
+    module:        text(module).notNull(),
+    enabled:       boolean(enabled).default(false).notNull(),
+    threshold:     integer(threshold).default(3).notNull(),
+    punishment:    text(punishment).default(ban).notNull(),
+    countCommands: boolean(count_commands).default(false).notNull(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.module] }) }),
+);
+
+
 export const warnings = pgTable("warnings",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), reason: text("reason").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildUserIdx: index("warnings_guild_user_idx").on(t.guildId, t.userId) })
