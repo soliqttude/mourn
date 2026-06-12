@@ -1,50 +1,47 @@
-import type {
-  Client,
-  GuildMember,
-  PartialGuildMember,
-  TextChannel,
-} from "discord.js";
-import { brandEmbed } from "../lib/embeds.js";
+import type { Client, GuildMember, PartialGuildMember, TextChannel } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { handleBoostEnd } from "../features/boosterRoles.js";
 
 export const event = {
   name: "guildMemberUpdate",
-  async execute(
-    client: Client,
-    oldMember: GuildMember | PartialGuildMember,
-    newMember: GuildMember
-  ) {
-    // ── Booster role cleanup when boost is removed ────────────────────────────
+  async execute(_client: Client, oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) {
     const wasBooster = (oldMember as GuildMember).premiumSince !== null;
     const isBooster  = newMember.premiumSince !== null;
     if (wasBooster && !isBooster) {
       await handleBoostEnd(newMember.guild, newMember).catch(() => {});
     }
 
-    // ── Role change logging ───────────────────────────────────────────────────
     const settings = await getGuildSettings(newMember.guild.id);
-    if (!settings.modLogChannel) return;
+    const logChannelId = (settings as any).roleLogChannel as string | null;
+    if (!logChannelId) return;
+
     const oldRoles = (oldMember as GuildMember).roles?.cache;
     if (!oldRoles) return;
-    const added = newMember.roles.cache.filter((r) => !oldRoles.has(r.id));
+    const added   = newMember.roles.cache.filter((r) => !oldRoles.has(r.id));
     const removed = oldRoles.filter((r) => !newMember.roles.cache.has(r.id));
     if (added.size === 0 && removed.size === 0) return;
-    const ch = newMember.guild.channels.cache.get(settings.modLogChannel);
+
+    const ch = newMember.guild.channels.cache.get(logChannelId);
     if (!ch?.isTextBased()) return;
-    let desc = `<@${newMember.id}> (${newMember.user.tag})\n`;
-    if (added.size) desc += `**Added:** ${added.map((r) => `<@&${r.id}>`).join(", ")}\n`;
-    if (removed.size) desc += `**Removed:** ${removed.map((r) => `<@&${r.id}>`).join(", ")}`;
-    await (ch as TextChannel)
-      .send({
-        embeds: [
-          brandEmbed({
-            title: "🎭 Roles Updated",
-            description: desc,
-            page: "Logs",
-          }),
-        ],
+
+    const fields: { name: string; value: string; inline: boolean }[] = [];
+    if (added.size)   fields.push({ name: `roles added (${added.size})`,   value: added.map((r) => `<@&${r.id}>`).join(", ").slice(0, 1024),   inline: false });
+    if (removed.size) fields.push({ name: `roles removed (${removed.size})`, value: removed.map((r) => `<@&${r.id}>`).join(", ").slice(0, 1024), inline: false });
+
+    const embed = new EmbedBuilder()
+      .setColor(added.size ? 0x9b59b6 : 0xe74c3c)
+      .setAuthor({
+        name: `${newMember.user.username} — roles updated`,
+        iconURL: newMember.user.displayAvatarURL({ size: 64 }),
       })
-      .catch(() => {});
+      .addFields(
+        { name: "member", value: `<@${newMember.id}> \`${newMember.id}\``, inline: false },
+        ...fields,
+      )
+      .setTimestamp()
+      .setFooter({ text: `user id: ${newMember.id}` });
+
+    await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
