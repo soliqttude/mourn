@@ -14,12 +14,15 @@ export const event = {
     const logCh = role.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
+    const guildIcon = role.guild.iconURL({ size: 256 });
+
     const embed = new EmbedBuilder()
       .setColor(0xe74c3c)
-      .setAuthor({ name: "role deleted" })
+      .setAuthor({ name: "role deleted", iconURL: guildIcon ?? undefined })
+      .setThumbnail(guildIcon)
       .addFields(
-        { name: "name",    value: role.name,     inline: true },
-        { name: "color",   value: role.hexColor, inline: true },
+        { name: "name",    value: role.name,           inline: true },
+        { name: "color",   value: role.hexColor,       inline: true },
         { name: "members", value: `${role.members.size}`, inline: true },
       )
       .setTimestamp()
