@@ -29,17 +29,19 @@ export const event = {
     const logCh = channel.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
-    const typeName = CHANNEL_TYPE_NAMES[(channel as GuildChannel).type] ?? "unknown";
-    const parent = (channel as any).parent;
-    const name = "name" in channel ? channel.name : "unknown";
+    const guildIcon = channel.guild.iconURL({ size: 256 });
+    const typeName  = CHANNEL_TYPE_NAMES[(channel as GuildChannel).type] ?? "unknown";
+    const parent    = (channel as any).parent;
+    const name      = "name" in channel ? channel.name : "unknown";
 
     const embed = new EmbedBuilder()
       .setColor(0xe74c3c)
-      .setAuthor({ name: "channel deleted" })
+      .setAuthor({ name: "channel deleted", iconURL: guildIcon ?? undefined })
+      .setThumbnail(guildIcon)
       .addFields(
-        { name: "name",     value: `\`${name}\``,                    inline: true },
-        { name: "type",     value: typeName,                          inline: true },
-        { name: "category", value: parent ? parent.name : "none",    inline: true },
+        { name: "name",     value: `\`${name}\``,                  inline: true },
+        { name: "type",     value: typeName,                        inline: true },
+        { name: "category", value: parent ? parent.name : "none",  inline: true },
       )
       .setTimestamp()
       .setFooter({ text: `channel id: ${channel.id}` });
