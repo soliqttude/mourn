@@ -220,12 +220,7 @@ export async function closeTicket(
     }
   }
 
-  await ch.setName(`closed-${ch.name}`.slice(0, 100), "ticket closed").catch(() => {});
-  await ch.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: false }).catch(() => {});
-
-  setTimeout(() => {
-    ch.delete("ticket closed — auto cleanup").catch(() => {});
-  }, 5 * 60 * 1000);
+  await ch.delete("ticket closed").catch(() => {});
 }
 
 export async function handleTicketButton(interaction: ButtonInteraction): Promise<void> {
