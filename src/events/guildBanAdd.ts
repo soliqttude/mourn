@@ -11,18 +11,16 @@ export const event = {
     if (!ch?.isTextBased()) return;
 
     const created = Math.floor(ban.user.createdTimestamp / 1000);
+    const avatarURL = ban.user.displayAvatarURL({ size: 256 });
 
     const embed = new EmbedBuilder()
       .setColor(0xe74c3c)
-      .setAuthor({
-        name: `${ban.user.username} banned`,
-        iconURL: ban.user.displayAvatarURL({ size: 64 }),
-      })
-      .setThumbnail(ban.user.displayAvatarURL({ size: 256 }))
+      .setAuthor({ name: `${ban.user.username} banned`, iconURL: avatarURL })
+      .setThumbnail(avatarURL)
       .addFields(
-        { name: "user",    value: `<@${ban.user.id}> \`${ban.user.id}\``, inline: false },
-        { name: "reason",  value: ban.reason?.toLowerCase() ?? "no reason provided", inline: false },
-        { name: "account created", value: `<t:${created}:R>`, inline: true },
+        { name: "user",            value: `<@${ban.user.id}> \`${ban.user.id}\``, inline: false },
+        { name: "reason",          value: ban.reason?.toLowerCase() ?? "no reason provided", inline: false },
+        { name: "account created", value: `<t:${created}:R>`,                     inline: true  },
       )
       .setTimestamp()
       .setFooter({ text: `user id: ${ban.user.id}` });
