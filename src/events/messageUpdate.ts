@@ -31,27 +31,25 @@ export const event = {
 
     const settings = await getGuildSettings(newMsg.guild.id);
     if (!settings.msgLogChannel) return;
-
     if (await isIgnored(newMsg.guild.id, [newMsg.author?.id ?? "", newMsg.channel.id])) return;
 
     const ch = newMsg.guild.channels.cache.get(settings.msgLogChannel);
     if (!ch?.isTextBased()) return;
 
     const author = newMsg.author;
-    const before = (oldMsg.content || "*no content*").slice(0, 1024);
-    const after  = (newMsg.content || "*no content*").slice(0, 1024);
-    const jumpUrl = newMsg.url;
+    const avatarURL = author?.displayAvatarURL({ size: 256 });
 
     const embed = new EmbedBuilder()
       .setColor(0xf39c12)
       .setAuthor({
         name: author ? `${author.username} (${author.id})` : "Unknown User",
-        iconURL: author?.displayAvatarURL({ size: 64 }) ?? undefined,
+        iconURL: avatarURL,
       })
-      .setDescription(`**message edited in** <#${newMsg.channel.id}> — [jump to message](${jumpUrl})`)
+      .setThumbnail(avatarURL ?? null)
+      .setDescription(`**message edited in** <#${newMsg.channel.id}> — [jump to message](${newMsg.url})`)
       .addFields(
-        { name: "before", value: before, inline: false },
-        { name: "after",  value: after,  inline: false },
+        { name: "before", value: (oldMsg.content || "*no content*").slice(0, 1024), inline: false },
+        { name: "after",  value: (newMsg.content || "*no content*").slice(0, 1024), inline: false },
       )
       .setTimestamp()
       .setFooter({ text: `message id: ${newMsg.id}` });
