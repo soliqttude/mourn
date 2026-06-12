@@ -63,3 +63,14 @@ CREATE TABLE IF NOT EXISTS suggest_extended (
 -- moderation setup: jail channel tracking
 ALTER TABLE guild_settings
   ADD COLUMN IF NOT EXISTS jail_channel TEXT;
+
+-- antinuke: per-module configuration
+CREATE TABLE IF NOT EXISTS antinuke_modules (
+  guild_id       TEXT    NOT NULL,
+  module         TEXT    NOT NULL,
+  enabled        BOOLEAN NOT NULL DEFAULT FALSE,
+  threshold      INTEGER NOT NULL DEFAULT 3,
+  punishment     TEXT    NOT NULL DEFAULT 'ban',
+  count_commands BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (guild_id, module)
+);
