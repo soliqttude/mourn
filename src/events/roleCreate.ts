@@ -1,5 +1,5 @@
 import type { Client, Role, TextChannel } from "discord.js";
-import { brandEmbed } from "../lib/embeds.js";
+import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 
@@ -14,14 +14,20 @@ export const event = {
     const logCh = role.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
-    await (logCh as TextChannel).send({
-      embeds: [
-        brandEmbed({
-          authorName: "role created",
-          description: `**Role:** <@&${role.id}> (${role.name})\n**Color:** \`${role.hexColor}\`\n**Hoisted:** ${role.hoist ? "yes" : "no"}\n**Mentionable:** ${role.mentionable ? "yes" : "no"}`,
-          page: "Logs",
-        }).setTimestamp(),
-      ],
-    }).catch(() => {});
+    const embed = new EmbedBuilder()
+      .setColor(role.color || 0x9b59b6)
+      .setAuthor({ name: "role created" })
+      .addFields(
+        { name: "name",        value: `<@&${role.id}> \`${role.name}\``, inline: false },
+        { name: "color",       value: role.hexColor,               inline: true  },
+        { name: "hoisted",     value: role.hoist ? "yes" : "no",   inline: true  },
+        { name: "mentionable", value: role.mentionable ? "yes" : "no", inline: true },
+        { name: "position",    value: `${role.position}`,           inline: true  },
+        { name: "members",     value: `${role.members.size}`,       inline: true  },
+      )
+      .setTimestamp()
+      .setFooter({ text: `role id: ${role.id}` });
+
+    await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
