@@ -21,7 +21,15 @@ export const command: HybridCommand = {
           authorName: ctx.client.user?.username ?? "mourn",
           authorIcon: ctx.client.user?.displayAvatarURL({ size: 64 }) ?? undefined,
           thumbnail:  ctx.client.user?.displayAvatarURL({ size: 256 }) ?? undefined,
-          description: `mourn is a private Discord bot i built for my own servers. covers moderation, logging, antinuke, antiraid, automod, tickets, economy, levels, and more. been building it for a while and i'm still adding to it.\n\nif something's broken or you have a suggestion, message \`geico\` on Discord.`,
+          description: `mourn is a free all-in-one Discord bot built for modern communities.
+
+Featuring moderation, security, automod, antinuke, antiraid, leveling, tickets, giveaways, utility tools, and much more, mourn is designed to provide everything your server needs in a single, reliable experience.
+
+The bot is actively maintained and continuously updated with new features, improvements, and fixes.
+
+If you have any questions, feedback, or bug reports, feel free to reach out:
+
+@udrs • @remandment`,
           fields: [
             { name: "servers", value: `${guilds}`,                   inline: true },
             { name: "users",   value: `${users.toLocaleString()}`,   inline: true },
