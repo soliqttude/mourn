@@ -1,6 +1,4 @@
-import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "nuke",
@@ -17,6 +15,5 @@ export const command: HybridCommand = {
     await clone.setPosition(position);
     await ch.delete();
     await clone.send("first");
-    await clone.send({ embeds: [new EmbedBuilder().setColor(0xff4444).setTitle("💥 Channel Nuked").setDescription("This channel has been nuked. All previous messages were deleted.").setFooter({ text: `Nuked by ${ctx.user.tag} • ${config.embedFooter}` }).setTimestamp()] });
   },
 };
