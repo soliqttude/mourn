@@ -14,7 +14,7 @@ export const command: HybridCommand = {
     try {
       const sub = subreddits[Math.floor(Math.random() * subreddits.length)];
       const res = await fetch(`https://www.reddit.com/r/${sub}/random.json?limit=1`, {
-        headers: { "User-Agent": "bleed-bot/1.0" },
+        headers: { "User-Agent": "mourn-bot/1.0" },
       });
       const data = await res.json() as any;
       const post = data?.[0]?.data?.children?.[0]?.data;
