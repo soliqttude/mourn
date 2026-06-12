@@ -4,7 +4,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "invite",
-  description: "Invite Bleed to your server.",
+  description: "Invite Mourn to your server.",
   usage: "invite",
   examples: ["invite"],
   category: "custom",
@@ -13,10 +13,10 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "invite bleed.",
+          title: "invite mourn.",
           description: link
-            ? `add **bleed** to your server:\n\n[**click here to invite**](${link})\n${link}`
-            : "bleed isn't publicly available yet.\n\nstay tuned — it's coming.",
+            ? `add **mourn** to your server:\n\n[**click here to invite**](${link})\n${link}`
+            : "mourn isn't publicly available yet.\n\nstay tuned — it's coming.",
           page: "Invite",
         }),
       ],
