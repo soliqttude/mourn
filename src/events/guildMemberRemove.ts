@@ -3,11 +3,16 @@ import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { renderTemplate } from "../lib/template.js";
 import { trackMemberLeave } from "../features/invites.js";
+import { handleAntinukeAction } from "../features/antinuke.js";
 
 export const event = {
   name: "guildMemberRemove",
-  async execute(_client: Client, member: GuildMember | PartialGuildMember) {
+  async execute(client: Client, member: GuildMember | PartialGuildMember) {
     if (member.user.bot) return;
+
+    // Kick detection for antinuke
+    await handleAntinukeAction(client, member.guild, "member_kick", member.id).catch(() => {});
+
     const settings = await getGuildSettings(member.guild.id);
 
     await trackMemberLeave(member.guild.id, member.id);
