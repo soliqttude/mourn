@@ -93,8 +93,8 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
         embeds: [
           errorEmbed(
             reason
-              ? `you are blacklisted from bleed.\n**reason** — ${reason}`
-              : "you are blacklisted from bleed."
+              ? `you are blacklisted from mourn.\n**reason** — ${reason}`
+              : "you are blacklisted from mourn."
           ),
         ],
         flags: MessageFlags.Ephemeral,
