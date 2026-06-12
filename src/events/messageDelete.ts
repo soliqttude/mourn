@@ -30,13 +30,13 @@ export const event = {
 
     const settings = await getGuildSettings(message.guild.id);
     if (!settings.msgLogChannel) return;
-
     if (await isIgnored(message.guild.id, [message.author?.id ?? "", message.channel.id])) return;
 
     const ch = message.guild.channels.cache.get(settings.msgLogChannel);
     if (!ch?.isTextBased()) return;
 
     const author = message.author;
+    const avatarURL = author?.displayAvatarURL({ size: 256 });
     const content = message.content?.slice(0, 1024) || "*no text content*";
     const attachments = message.attachments?.map((a) => a.url) ?? [];
 
@@ -44,8 +44,9 @@ export const event = {
       .setColor(0xe74c3c)
       .setAuthor({
         name: author ? `${author.username} (${author.id})` : "Unknown User",
-        iconURL: author?.displayAvatarURL({ size: 64 }) ?? undefined,
+        iconURL: avatarURL,
       })
+      .setThumbnail(avatarURL ?? null)
       .setDescription(`**message deleted in** <#${message.channel.id}>`)
       .addFields({ name: "content", value: content, inline: false })
       .setTimestamp()
