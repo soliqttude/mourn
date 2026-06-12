@@ -60,15 +60,17 @@ export const command: HybridCommand = {
 
     // ── Word filter CRUD ──────────────────────────────────────────────────────
     if (sub === "add") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a **word** to **filter**.")] });
-      await db.insert(wordFilter).values({ guildId: ctx.guild.id, word: val.toLowerCase() }).onConflictDoNothing();
-      return ctx.reply({ embeds: [successEmbed(`\`${val}\` added to the word filter.`)] });
+      const phrase = (ctx.getString("value") ?? args.slice(1).join(" ")).trim().toLowerCase();
+      if (!phrase) return ctx.reply({ embeds: [errorEmbed("Provide a **word or phrase** to **filter**.")] });
+      await db.insert(wordFilter).values({ guildId: ctx.guild.id, word: phrase }).onConflictDoNothing();
+      return ctx.reply({ embeds: [successEmbed(`\`${phrase}\` added to the word filter.`)] });
     }
 
     if (sub === "remove") {
-      if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a **word** to remove.")] });
-      await db.delete(wordFilter).where(and(eq(wordFilter.guildId, ctx.guild.id), eq(wordFilter.word, val.toLowerCase())));
-      return ctx.reply({ embeds: [successEmbed(`\`${val}\` removed from the word filter.`)] });
+      const phrase = (ctx.getString("value") ?? args.slice(1).join(" ")).trim().toLowerCase();
+      if (!phrase) return ctx.reply({ embeds: [errorEmbed("Provide a **word or phrase** to remove.")] });
+      await db.delete(wordFilter).where(and(eq(wordFilter.guildId, ctx.guild.id), eq(wordFilter.word, phrase)));
+      return ctx.reply({ embeds: [successEmbed(`\`${phrase}\` removed from the word filter.`)] });
     }
 
     if (sub === "list") {
