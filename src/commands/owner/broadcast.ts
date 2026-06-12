@@ -21,7 +21,7 @@ export const command: HybridCommand = {
     }
     const eb = new EmbedBuilder()
       .setColor(config.brandColor)
-      .setTitle("📢 Bleed Announcement")
+      .setTitle("📢 Mourn Announcement")
       .setDescription(msg)
       .setFooter({ text: `From the bot owner` })
       .setTimestamp();
