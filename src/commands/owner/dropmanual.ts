@@ -37,7 +37,7 @@ export const command: HybridCommand = {
       .setColor(0xf9c74f)
       .setTitle("🎁 coin drop!")
       .setDescription(`**${amount.toLocaleString()} coins** just dropped!\n\ntype \`claim\` to grab them — first come, first served!`)
-      .setFooter({ text: "bleed drops • be quick!" })
+      .setFooter({ text: "mourn drops • be quick!" })
       .setTimestamp();
 
     const msg = await (channel as any).send({ embeds: [embed] }).catch(() => null);
