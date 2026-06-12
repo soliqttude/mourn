@@ -15,16 +15,23 @@ export interface TicketTopic {
   description?: string;
 }
 
+// ── Swap these out for custom server emojis once you have them ─────────────────
+const E = {
+  bug:        "🔧",   // search: wrench / tool
+  suggestion: "✨",   // search: sparkle / star
+  support:    "📩",   // search: mail / ticket / envelope
+};
+
 const DEFAULT_TOPICS: TicketTopic[] = [
-  { name: "Bug Report",  emoji: "🐛", description: "Found a bug or broken feature? Report it here." },
-  { name: "Suggestion",  emoji: "💡", description: "Have an idea to improve the bot? Share it."     },
-  { name: "Support",     emoji: "🎫", description: "General questions, help, or inquiries."          },
+  { name: "bug report",  emoji: E.bug,        description: "something's broken? let us know." },
+  { name: "suggestion",  emoji: E.suggestion, description: "got an idea? drop it here."        },
+  { name: "support",     emoji: E.support,    description: "need help? we've got you."         },
 ];
 
 const BUTTON_STYLES: Record<string, ButtonStyle> = {
-  "Bug Report": ButtonStyle.Danger,
-  "Suggestion": ButtonStyle.Success,
-  "Support":    ButtonStyle.Primary,
+  "bug report": ButtonStyle.Danger,
+  "suggestion": ButtonStyle.Success,
+  "support":    ButtonStyle.Primary,
 };
 
 export async function createTicketPanel(
@@ -36,13 +43,13 @@ export async function createTicketPanel(
   const resolved = topics.length > 0 ? topics : DEFAULT_TOPICS;
 
   const topicLines = resolved
-    .map((t) => `${t.emoji ?? "🎫"} **${t.name}**${t.description ? `\n╰ ${t.description}` : ""}`)
-    .join("\n\n");
+    .map((t) => `${t.emoji ?? "📩"} **${t.name}** — ${t.description ?? ""}`)
+    .join("\n");
 
   const embed = new EmbedBuilder()
     .setColor(0x000000)
     .setAuthor({
-      name: title,
+      name:    title.toLowerCase(),
       iconURL: channel.guild.iconURL({ size: 128 }) ?? undefined,
     })
     .setDescription(
@@ -50,11 +57,12 @@ export async function createTicketPanel(
         description,
         "",
         topicLines,
-        "",
-        "-# Click a button below to open a ticket.",
       ].join("\n"),
     )
-    .setTimestamp();
+    .setFooter({
+      text: `${channel.guild.name} • select a category below to open a ticket`,
+      iconURL: channel.guild.iconURL({ size: 32 }) ?? undefined,
+    });
 
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
   const chunks: TicketTopic[][] = [];
@@ -68,8 +76,8 @@ export async function createTicketPanel(
         new ButtonBuilder()
           .setCustomId(`ticket_open_${t.name}`)
           .setLabel(t.name)
-          .setStyle(BUTTON_STYLES[t.name] ?? ButtonStyle.Secondary)
-          .setEmoji(t.emoji ?? "🎫"),
+          .setStyle(BUTTON_STYLES[t.name.toLowerCase()] ?? ButtonStyle.Secondary)
+          .setEmoji(t.emoji ?? "📩"),
       ),
     );
     rows.push(row);
@@ -118,7 +126,7 @@ export async function createTicket(guild: Guild, member: GuildMember, topic?: st
     type: ChannelType.GuildText,
     parent: settings.ticketCategory,
     permissionOverwrites: overwrites,
-    reason: `Ticket #${ticketCount} — ${member.user.tag}`,
+    reason: `ticket #${ticketCount} — ${member.user.tag}`,
   }) as TextChannel;
 
   const [ticket] = await db.insert(tickets).values({
@@ -131,42 +139,36 @@ export async function createTicket(guild: Guild, member: GuildMember, topic?: st
     lastActivityAt: new Date(),
   }).returning();
 
-  const topicLabel = topic ?? "general";
+  const topicLabel = topic ?? "support";
   const topicEmoji =
-    topicLabel === "Bug Report" ? "🐛" :
-    topicLabel === "Suggestion" ? "💡" :
-    topicLabel === "Support"    ? "🎫" : "🎫";
+    topicLabel === "bug report" ? E.bug :
+    topicLabel === "suggestion" ? E.suggestion : E.support;
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(`ticket_claim_${ticket.id}`).setLabel("Claim").setStyle(ButtonStyle.Primary).setEmoji("🙋"),
-    new ButtonBuilder().setCustomId(`ticket_close_${ticket.id}`).setLabel("Close").setStyle(ButtonStyle.Danger).setEmoji("🔒"),
-    new ButtonBuilder().setCustomId(`ticket_transcript_${ticket.id}`).setLabel("Transcript").setStyle(ButtonStyle.Secondary).setEmoji("📄"),
+    new ButtonBuilder().setCustomId(`ticket_claim_${ticket.id}`).setLabel("claim").setStyle(ButtonStyle.Primary).setEmoji("🙋"),
+    new ButtonBuilder().setCustomId(`ticket_close_${ticket.id}`).setLabel("close").setStyle(ButtonStyle.Danger).setEmoji("🔒"),
+    new ButtonBuilder().setCustomId(`ticket_transcript_${ticket.id}`).setLabel("transcript").setStyle(ButtonStyle.Secondary).setEmoji("📄"),
   );
 
   const embed = new EmbedBuilder()
     .setColor(0x000000)
     .setAuthor({
-      name: `${topicEmoji} ${topicLabel} — ticket #${String(ticketCount).padStart(4, "0")}`,
+      name:    `${topicLabel} — ticket #${String(ticketCount).padStart(4, "0")}`,
       iconURL: guild.iconURL({ size: 64 }) ?? undefined,
     })
     .setDescription(
       [
-        `**Opened by** <@${member.id}>`,
+        `opened by <@${member.id}>`,
         "",
-        "Our team will be with you shortly.",
-        "Please describe your issue in as much detail as possible.",
+        "our team will be with you shortly.",
+        "describe your issue in as much detail as possible.",
       ].join("\n"),
     )
-    .setFooter({ text: "Use the buttons below to manage this ticket." })
+    .setFooter({ text: "use the buttons below to manage this ticket." })
     .setTimestamp();
 
   const mgmtMsg = await channel.send({ content: `<@${member.id}>`, embeds: [embed], components: [row] });
   await db.update(tickets).set({ managementMessageId: mgmtMsg.id }).where(eq(tickets.id, ticket.id));
-
-  const forms = await db.select().from(ticketForms).where(
-    and(eq(ticketForms.guildId, guild.id), topic ? eq(ticketForms.topic, topic) : eq(ticketForms.topic, ""))
-  );
-  if (!forms.length) { /* no form configured */ }
 
   logger.info({ guild: guild.id, channel: channel.id, ticket: ticket.id, opener: member.id }, "ticket created");
   return channel;
@@ -193,8 +195,8 @@ export async function closeTicket(
   const closeEmbed = new EmbedBuilder()
     .setColor(0xed4245)
     .setDescription([
-      `🔒 **Ticket closed** by <@${closerId}>`,
-      reason ? `> **Reason** ${reason}` : null,
+      `🔒 ticket closed by <@${closerId}>`,
+      reason ? `> reason — ${reason}` : null,
     ].filter(Boolean).join("\n"))
     .setTimestamp();
   await ch.send({ embeds: [closeEmbed] }).catch(() => {});
@@ -207,10 +209,10 @@ export async function closeTicket(
         .setColor(0xed4245)
         .setAuthor({ name: `ticket #${String(ticket.number).padStart(4, "0")} closed` })
         .setDescription([
-          `**Opened by** <@${ticket.openerId}>`,
-          `**Closed by** <@${closerId}>`,
-          ticket.topic ? `**Topic** ${ticket.topic}` : null,
-          reason ? `**Reason** ${reason}` : null,
+          `opened by <@${ticket.openerId}>`,
+          `closed by <@${closerId}>`,
+          ticket.topic ? `topic — ${ticket.topic}` : null,
+          reason ? `reason — ${reason}` : null,
         ].filter(Boolean).join("\n"))
         .setTimestamp();
       await logCh.send({ embeds: [logEmbed] }).catch(() => {});
@@ -237,10 +239,10 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
       (settings.ticketSupportRole && gMember.roles.cache.has(settings.ticketSupportRole)) ||
       gMember.permissions.has(PermissionFlagsBits.ManageChannels);
     if (!isSupportOrAbove) {
-      return void interaction.reply({ content: "Only support staff can claim tickets.", ephemeral: true });
+      return void interaction.reply({ content: "only support staff can claim tickets.", ephemeral: true });
     }
     await db.update(tickets).set({ claimerId: user.id }).where(eq(tickets.id, ticketId));
-    await interaction.reply({ content: `🙋 Ticket claimed by <@${user.id}>`, allowedMentions: { parse: [] } });
+    await interaction.reply({ content: `🙋 ticket claimed by <@${user.id}>`, allowedMentions: { parse: [] } });
     return;
   }
 
@@ -248,10 +250,10 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
     const ticketId = parseInt(customId.replace("ticket_close_", ""));
     const modal = new ModalBuilder()
       .setCustomId(`ticket_close_modal_${ticketId}`)
-      .setTitle("Close Ticket");
+      .setTitle("close ticket");
     const reasonInput = new TextInputBuilder()
       .setCustomId("close_reason")
-      .setLabel("Reason (optional)")
+      .setLabel("reason (optional)")
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(false)
       .setMaxLength(512);
@@ -261,7 +263,7 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
   }
 
   if (customId.startsWith("ticket_transcript_")) {
-    await interaction.reply({ content: "📄 Transcript generation coming soon.", ephemeral: true });
+    await interaction.reply({ content: "📄 transcript coming soon.", ephemeral: true });
     return;
   }
 
@@ -269,8 +271,8 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
     const topic = customId.replace("ticket_open_", "") || undefined;
     const gMember = member as GuildMember;
     const ch = await createTicket(guild, gMember, topic);
-    if (!ch) return void interaction.reply({ content: "Could not create ticket — make sure a ticket category is configured.", ephemeral: true });
-    return void interaction.reply({ content: `📩 Your ticket has been created: <#${ch.id}>`, ephemeral: true });
+    if (!ch) return void interaction.reply({ content: "couldn't create ticket — make sure a ticket category is set.", ephemeral: true });
+    return void interaction.reply({ content: `your ticket has been opened — <#${ch.id}>`, ephemeral: true });
   }
 }
 
@@ -283,7 +285,7 @@ export async function handleTicketModal(interaction: any): Promise<void> {
     const reason = interaction.fields?.getTextInputValue("close_reason") || undefined;
     await interaction.deferReply({ ephemeral: true });
     await closeTicket(ticketId, guild, user.id, reason);
-    await interaction.editReply({ content: "Ticket closed." }).catch(() => {});
+    await interaction.editReply({ content: "ticket closed." }).catch(() => {});
     return;
   }
 }
@@ -327,7 +329,7 @@ export async function reopenTicketCmd(channel: TextChannel, openerId: string, gu
 
   const embed = new EmbedBuilder()
     .setColor(0x57f287)
-    .setDescription(`🔓 **Ticket reopened** by <@${openerId}>`)
+    .setDescription(`🔓 ticket reopened by <@${openerId}>`)
     .setTimestamp();
   await channel.send({ embeds: [embed] }).catch(() => {});
 }
@@ -352,8 +354,8 @@ export async function deleteTicketCmd(channel: TextChannel, deleterId: string, g
         const attachment = new AttachmentBuilder(buf, { name: `ticket-${ticket.number}-transcript.txt` });
         const embed = new EmbedBuilder()
           .setColor(0x5865f2)
-          .setAuthor({ name: `ticket #${String(ticket.number).padStart(4, "0")} transcript` })
-          .setDescription(`**Deleted by** <@${deleterId}>\n**Opened by** <@${ticket.openerId}>`)
+          .setAuthor({ name: `ticket #${String(ticket.number).padStart(4, "0")} — transcript` })
+          .setDescription(`deleted by <@${deleterId}> • opened by <@${ticket.openerId}>`)
           .setTimestamp();
         await logCh.send({ embeds: [embed], files: [attachment] }).catch(() => {});
       }
