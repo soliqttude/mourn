@@ -10,11 +10,11 @@ export const event = {
     const ch = ban.guild.channels.cache.get(settings.modLogChannel);
     if (!ch?.isTextBased()) return;
 
-    const created = Math.floor(ban.user.createdTimestamp / 1000);
+    const created   = Math.floor(ban.user.createdTimestamp / 1000);
     const avatarURL = ban.user.displayAvatarURL({ size: 256 });
 
     const embed = new EmbedBuilder()
-      .setColor(0x2ecc71)
+      .setColor(0x000000)
       .setAuthor({ name: `${ban.user.username} unbanned`, iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .addFields(
