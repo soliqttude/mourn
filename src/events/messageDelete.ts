@@ -1,12 +1,25 @@
 import type { Client, Message, PartialMessage, TextChannel } from "discord.js";
-import { brandEmbed } from "../lib/embeds.js";
+import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { storeSnipe } from "../features/snipes.js";
+import { db } from "../db/index.js";
+import { logIgnores } from "../db/schema.js";
+import { and, eq, inArray } from "drizzle-orm";
+
+async function isIgnored(guildId: string, ids: string[]): Promise<boolean> {
+  const clean = ids.filter(Boolean);
+  if (!clean.length) return false;
+  const rows = await db.select().from(logIgnores).where(
+    and(eq(logIgnores.guildId, guildId), inArray(logIgnores.targetId, clean))
+  );
+  return rows.length > 0;
+}
 
 export const event = {
   name: "messageDelete",
-  async execute(client: Client, message: Message | PartialMessage) {
+  async execute(_client: Client, message: Message | PartialMessage) {
     if (!message.guild || message.author?.bot) return;
+
     storeSnipe(message.channel.id, "delete", {
       authorId: message.author?.id ?? "unknown",
       authorTag: message.author?.tag ?? "unknown",
@@ -14,19 +27,34 @@ export const event = {
       attachments: message.attachments?.map((a) => a.url) ?? [],
       at: Date.now(),
     });
+
     const settings = await getGuildSettings(message.guild.id);
     if (!settings.msgLogChannel) return;
+
+    if (await isIgnored(message.guild.id, [message.author?.id ?? "", message.channel.id])) return;
+
     const ch = message.guild.channels.cache.get(settings.msgLogChannel);
-    if (!ch || !ch.isTextBased()) return;
-    const embed = brandEmbed({
-      title: "🗑️ Message Deleted",
-      description:
-        (message.content?.slice(0, 1900) || "*No content*") +
-        `\n\n**Channel:** <#${message.channel.id}>\n**Author:** ${
-          message.author ? `<@${message.author.id}> (${message.author.tag})` : "Unknown"
-        }`,
-      page: "Logs",
-    });
+    if (!ch?.isTextBased()) return;
+
+    const author = message.author;
+    const content = message.content?.slice(0, 1024) || "*no text content*";
+    const attachments = message.attachments?.map((a) => a.url) ?? [];
+
+    const embed = new EmbedBuilder()
+      .setColor(0xe74c3c)
+      .setAuthor({
+        name: author ? `${author.username} (${author.id})` : "Unknown User",
+        iconURL: author?.displayAvatarURL({ size: 64 }) ?? undefined,
+      })
+      .setDescription(`**message deleted in** <#${message.channel.id}>`)
+      .addFields({ name: "content", value: content, inline: false })
+      .setTimestamp()
+      .setFooter({ text: `message id: ${message.id}` });
+
+    if (attachments.length) {
+      embed.addFields({ name: `attachments (${attachments.length})`, value: attachments.join("\n").slice(0, 1024), inline: false });
+    }
+
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
