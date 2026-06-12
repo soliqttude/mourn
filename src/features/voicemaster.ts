@@ -81,16 +81,16 @@ export function vmInterfaceEmbed(guild: { name: string; iconURL: () => string | 
     .addFields({
       name: "Button Usage",
       value: [
-        "<:lock:1508834911669194905> — [Lock](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:unlock:1508834923279159316> — [Unlock](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:ghost:1508834920783675431> — [Ghost](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:unghost:1508834916194844743> — [Reveal](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:claim:1508834918011113493> — [Claim](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:disconnect:1508834914899071007> — [Disconnect](https://discord.gg/CdUtYSFC3U) a member",
-        "<:activity:1508834913242320956> — [Start](https://discord.gg/CdUtYSFC3U) an activity",
-        "<:info:1508834870493712465> — [View](https://discord.gg/CdUtYSFC3U) channel information",
-        "<:increase:1508835132704952551> — [Increase](https://discord.gg/CdUtYSFC3U) the user limit",
-        "<:decrease:1508835134718345479> — [Decrease](https://discord.gg/CdUtYSFC3U) the user limit",
+        "<:lock:1508834911669194905> — [Lock](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:unlock:1508834923279159316> — [Unlock](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:ghost:1508834920783675431> — [Ghost](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:unghost:1508834916194844743> — [Reveal](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:claim:1508834918011113493> — [Claim](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:disconnect:1508834914899071007> — [Disconnect](https://discord.gg/MsBsYkJhx3) a member",
+        "<:activity:1508834913242320956> — [Start](https://discord.gg/MsBsYkJhx3) an activity",
+        "<:info:1508834870493712465> — [View](https://discord.gg/MsBsYkJhx3) channel information",
+        "<:increase:1508835132704952551> — [Increase](https://discord.gg/MsBsYkJhx3) the user limit",
+        "<:decrease:1508835134718345479> — [Decrease](https://discord.gg/MsBsYkJhx3) the user limit",
       ].join("\n"),
     });
 }
@@ -121,16 +121,16 @@ export function vmPanelEmbed() {
     .addFields({
       name: "Button Usage",
       value: [
-        "<:lock:1508834911669194905> — [Lock](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:unlock:1508834923279159316> — [Unlock](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:ghost:1508834920783675431> — [Ghost](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:unghost:1508834916194844743> — [Reveal](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:claim:1508834918011113493> — [Claim](https://discord.gg/CdUtYSFC3U) the voice channel",
-        "<:disconnect:1508834914899071007> — [Disconnect](https://discord.gg/CdUtYSFC3U) a member",
-        "<:activity:1508834913242320956> — [Start](https://discord.gg/CdUtYSFC3U) an activity",
-        "<:info:1508834870493712465> — [View](https://discord.gg/CdUtYSFC3U) channel information",
-        "<:increase:1508835132704952551> — [Increase](https://discord.gg/CdUtYSFC3U) the user limit",
-        "<:decrease:1508835134718345479> — [Decrease](https://discord.gg/CdUtYSFC3U) the user limit",
+        "<:lock:1508834911669194905> — [Lock](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:unlock:1508834923279159316> — [Unlock](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:ghost:1508834920783675431> — [Ghost](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:unghost:1508834916194844743> — [Reveal](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:claim:1508834918011113493> — [Claim](https://discord.gg/MsBsYkJhx3) the voice channel",
+        "<:disconnect:1508834914899071007> — [Disconnect](https://discord.gg/MsBsYkJhx3) a member",
+        "<:activity:1508834913242320956> — [Start](https://discord.gg/MsBsYkJhx3) an activity",
+        "<:info:1508834870493712465> — [View](https://discord.gg/MsBsYkJhx3) channel information",
+        "<:increase:1508835132704952551> — [Increase](https://discord.gg/MsBsYkJhx3) the user limit",
+        "<:decrease:1508835134718345479> — [Decrease](https://discord.gg/MsBsYkJhx3) the user limit",
       ].join("\n"),
     });
 }
