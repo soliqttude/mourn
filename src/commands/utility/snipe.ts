@@ -31,31 +31,43 @@ export const command: HybridCommand = {
     const total = getSnipeCount(ctx.channel.id, "delete");
     if (!snipe) return ctx.reply({ embeds: [errorEmbed("There's nothing to snipe.")] });
 
-    const channelName = "name" in ctx.channel ? (ctx.channel as any).name as string : "unknown";
+    const channelName =
+      snipe.channelName ??
+      ("name" in ctx.channel ? (ctx.channel as any).name as string : "unknown");
     const current = index + 1;
 
     const imageAttachment = snipe.attachments?.find(isImage);
     const otherAttachments = snipe.attachments?.filter((a) => !isImage(a)) ?? [];
 
-    let description = snipe.content ?? "";
+    const lines: string[] = [];
+
+    if (snipe.replyTo) {
+      const replyPreview = snipe.replyTo.content.slice(0, 80).replace(/\n/g, " ");
+      lines.push(`> **${snipe.replyTo.authorTag}**: ${replyPreview}${snipe.replyTo.content.length > 80 ? "…" : ""}`);
+    }
+
+    if (snipe.content) {
+      lines.push(snipe.content);
+    } else if (!snipe.attachments?.length && !snipe.stickers?.length) {
+      lines.push("*(no content)*");
+    }
+
     if (otherAttachments.length) {
-      description +=
-        (description ? "\n\n" : "") +
-        otherAttachments.map((a) => `[attachment](${a})`).join(" \u00b7 ");
+      lines.push(otherAttachments.map((a) => `[attachment](${a})`).join("  ·  "));
     }
+
     if (snipe.stickers?.length) {
-      description +=
-        (description ? "\n\n" : "") +
-        `*${snipe.stickers.length} sticker${snipe.stickers.length > 1 ? "s" : ""}*`;
+      lines.push(`*${snipe.stickers.length} sticker${snipe.stickers.length > 1 ? "s" : ""}*`);
     }
-    if (!description.trim()) description = "*(no content)*";
+
+    lines.push(`-# deleted <t:${Math.floor(snipe.at / 1000)}:R>`);
 
     const embed = new EmbedBuilder()
       .setColor(config.brandColor)
       .setAuthor({ name: snipe.authorTag, iconURL: snipe.authorAvatar ?? undefined })
-      .setDescription(description)
-      .setTimestamp(snipe.at)
-      .setFooter({ text: `${current} of ${total} \u00b7 #${channelName}` });
+      .setDescription(lines.join("\n"))
+      .setTimestamp(snipe.sentAt ?? snipe.at)
+      .setFooter({ text: `${current} of ${total}  ·  #${channelName}` });
 
     if (imageAttachment) embed.setImage(imageAttachment);
 
