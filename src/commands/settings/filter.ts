@@ -112,7 +112,7 @@ export const command: HybridCommand = {
       if (!words.length) return ctx.reply({ embeds: [errorEmbed("No filtered **words** to migrate.")] });
       try {
         await ctx.guild.autoModerationRules.create({
-          name: "bleed-word-filter",
+          name: "mourn-word-filter",
           eventType: 1,
           triggerType: 1,
           triggerMetadata: { keywordFilter: words.map(w => w.word) },
