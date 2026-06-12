@@ -37,23 +37,22 @@ export const event = {
     const ch = newMsg.guild.channels.cache.get(settings.msgLogChannel);
     if (!ch?.isTextBased()) return;
 
-    const author = newMsg.author;
+    const author    = newMsg.author;
     const avatarURL = author?.displayAvatarURL({ size: 256 });
 
     const embed = new EmbedBuilder()
-      .setColor(0xf39c12)
+      .setColor(0x000000)
       .setAuthor({
-        name: author ? `${author.username} (${author.id})` : "Unknown User",
+        name:    author ? `${author.username} — message edited` : "unknown user — message edited",
         iconURL: avatarURL,
       })
-      .setThumbnail(avatarURL ?? null)
-      .setDescription(`**message edited in** <#${newMsg.channel.id}> — [jump to message](${newMsg.url})`)
+      .setDescription(`in <#${newMsg.channel.id}> — [jump](${newMsg.url})`)
       .addFields(
         { name: "before", value: (oldMsg.content || "*no content*").slice(0, 1024), inline: false },
         { name: "after",  value: (newMsg.content || "*no content*").slice(0, 1024), inline: false },
       )
       .setTimestamp()
-      .setFooter({ text: `message id: ${newMsg.id}` });
+      .setFooter({ text: `message id: ${newMsg.id} • user id: ${author?.id ?? "unknown"}` });
 
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
