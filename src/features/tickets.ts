@@ -23,9 +23,9 @@ const E = {
 };
 
 const DEFAULT_TOPICS: TicketTopic[] = [
-  { name: "bug report",  emoji: E.bug,        description: "something's broken? let us know." },
-  { name: "suggestion",  emoji: E.suggestion, description: "got an idea? drop it here."        },
-  { name: "support",     emoji: E.support,    description: "need help? we've got you."         },
+  { name: "bug report",  emoji: E.bug,        description: "Found a bug or broken feature? Report it here." },
+  { name: "suggestion",  emoji: E.suggestion, description: "Have an idea to improve the bot? Share it."        },
+  { name: "support",     emoji: E.support,    description: "General questions, help, or inquiries."            },
 ];
 
 const BUTTON_STYLES: Record<string, ButtonStyle> = {
