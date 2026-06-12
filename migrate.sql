@@ -59,3 +59,7 @@ CREATE TABLE IF NOT EXISTS suggest_extended (
   review_enabled  BOOLEAN NOT NULL DEFAULT FALSE,
   ignore_ids      JSONB   NOT NULL DEFAULT '[]'
 );
+
+-- moderation setup: jail channel tracking
+ALTER TABLE guild_settings
+  ADD COLUMN IF NOT EXISTS jail_channel TEXT;
