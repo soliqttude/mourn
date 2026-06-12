@@ -5,7 +5,7 @@ import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "partner",
-  description: "Apply to partner your server with Bleed.",
+  description: "Apply to partner your server with Mourn.",
   usage: "partner [invite] [description]",
   examples: ["partner"],
   category: "custom",
