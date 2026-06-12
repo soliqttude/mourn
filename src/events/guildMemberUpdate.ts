@@ -13,7 +13,6 @@ export const event = {
       await handleBoostEnd(newMember.guild, newMember).catch(() => {});
     }
 
-    // Permission escalation detection
     const oldRoles = (oldMember as GuildMember).roles?.cache;
     if (oldRoles) {
       const addedRoleIds = newMember.roles.cache
@@ -44,7 +43,7 @@ export const event = {
     if (removed.size) fields.push({ name: `roles removed (${removed.size})`, value: removed.map((r) => `<@&${r.id}>`).join(", ").slice(0, 1024), inline: false });
 
     const embed = new EmbedBuilder()
-      .setColor(added.size ? 0x9b59b6 : 0xe74c3c)
+      .setColor(0x000000)
       .setAuthor({ name: `${newMember.user.username} — roles updated`, iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .addFields(...fields)
