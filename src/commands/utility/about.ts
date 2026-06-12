@@ -4,7 +4,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "about",
   aliases: ["botinfo"],
-  description: "About the Bleed bot.",
+  description: "About the Mourn bot.",
   usage: "about",
   examples: ["about"],
   category: "utility",
@@ -14,7 +14,7 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "Bleed",
+          title: "Mourn",
           description:
             "an all-in-one Discord toolkit — moderation, anti-nuke, anti-raid, full logging, welcome, starboard, reaction roles, voicemaster, tickets, economy, levels, autoresponders, tags, and more.\n\nbuilt by **geico** (@udrs).",
           fields: [
