@@ -29,9 +29,9 @@ const DEFAULT_TOPICS: TicketTopic[] = [
 ];
 
 const BUTTON_STYLES: Record<string, ButtonStyle> = {
-  "bug report": ButtonStyle.Danger,
-  "suggestion": ButtonStyle.Success,
-  "support":    ButtonStyle.Primary,
+  "bug report": ButtonStyle.Secondary,
+  "suggestion": ButtonStyle.Secondary,
+  "support":    ButtonStyle.Secondary,
 };
 
 export async function createTicketPanel(
