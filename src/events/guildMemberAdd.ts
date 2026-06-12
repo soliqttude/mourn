@@ -17,7 +17,6 @@ export const event = {
 
     await handleAntiraidJoin(member, settings);
 
-    // ── Join Gate: avatar check ───────────────────────────────────────────────
     const avatarCheck = (settings as any).antiraidAvatarCheck ?? false;
     if (avatarCheck && !member.user.avatar) {
       const action = (settings as any).antiraidAction ?? "kick";
@@ -33,7 +32,6 @@ export const event = {
       return;
     }
 
-    // ── Join Gate: minimum account age ────────────────────────────────────────
     const minAge = (settings as any).antiraidMinAge ?? 0;
     if (minAge > 0) {
       const accountAgeDays = (Date.now() - member.user.createdTimestamp) / 86_400_000;
@@ -54,9 +52,7 @@ export const event = {
 
     const inviter = await trackInviteUse(member);
 
-    // ── Multi-channel welcome ─────────────────────────────────────────────────
     const welcomeRows = await db.select().from(welcomeChannels).where(eq(welcomeChannels.guildId, member.guild.id));
-
     for (const row of welcomeRows) {
       const ch = member.guild.channels.cache.get(row.channelId);
       if (!ch?.isTextBased()) continue;
@@ -75,7 +71,6 @@ export const event = {
       }).catch(() => {});
     }
 
-    // ── Legacy single-channel fallback ────────────────────────────────────────
     if (welcomeRows.length === 0 && settings.welcomeChannel) {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
@@ -92,33 +87,27 @@ export const event = {
       }
     }
 
-    // ── Join log ──────────────────────────────────────────────────────────────
     if (!settings.joinLogChannel) return;
     const logCh = member.guild.channels.cache.get(settings.joinLogChannel);
     if (!logCh?.isTextBased()) return;
 
-    const created     = Math.floor(member.user.createdTimestamp / 1000);
+    const avatarURL      = member.user.displayAvatarURL({ size: 256 });
+    const created        = Math.floor(member.user.createdTimestamp / 1000);
     const accountAgeDays = Math.floor((Date.now() - member.user.createdTimestamp) / 86_400_000);
-    const isNew       = accountAgeDays < 7;
+    const isNew          = accountAgeDays < 7;
 
     const fields: { name: string; value: string; inline: boolean }[] = [
-      { name: "user",    value: `<@${member.id}> \`${member.id}\``,       inline: false },
-      { name: "created", value: `<t:${created}:R> (${accountAgeDays}d)`,  inline: true  },
-      { name: "avatar",  value: member.user.avatar ? "yes" : "no",        inline: true  },
-      { name: "members", value: `${member.guild.memberCount}`,             inline: true  },
+      { name: "user",    value: `<@${member.id}> \`${member.id}\``,      inline: false },
+      { name: "created", value: `<t:${created}:R> (${accountAgeDays}d)`, inline: true  },
+      { name: "avatar",  value: member.user.avatar ? "yes" : "no",       inline: true  },
+      { name: "members", value: `${member.guild.memberCount}`,            inline: true  },
     ];
-
-    if (inviter) {
-      fields.push({ name: "invited by", value: `<@${inviter.inviterId}> (code: \`${inviter.code}\`)`, inline: false });
-    }
+    if (inviter) fields.push({ name: "invited by", value: `<@${inviter.inviterId}> (code: \`${inviter.code}\`)`, inline: false });
 
     const embed = new EmbedBuilder()
       .setColor(isNew ? 0xe67e22 : 0x2ecc71)
-      .setAuthor({
-        name: `${member.user.username} joined${isNew ? " ⚠️ new account" : ""}`,
-        iconURL: member.user.displayAvatarURL({ size: 64 }),
-      })
-      .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
+      .setAuthor({ name: `${member.user.username} joined${isNew ? " ⚠️ new account" : ""}`, iconURL: avatarURL })
+      .setThumbnail(avatarURL)
       .addFields(...fields)
       .setTimestamp()
       .setFooter({ text: `user id: ${member.id}` });
