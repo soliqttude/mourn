@@ -1,5 +1,5 @@
 import type { Client, GuildBan, TextChannel } from "discord.js";
-import { brandEmbed } from "../lib/embeds.js";
+import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 
 export const event = {
@@ -10,13 +10,23 @@ export const event = {
     const ch = ban.guild.channels.cache.get(settings.modLogChannel);
     if (!ch?.isTextBased()) return;
 
-    const embed = brandEmbed({
-      description: `**reason** — ${ban.reason?.toLowerCase() ?? "no reason provided"}`,
-      thumbnail: ban.user.displayAvatarURL({ size: 256 }),
-      authorName: `banned — ${ban.user.username}`,
-      authorIcon: ban.user.displayAvatarURL({ size: 64 }),
-    });
-    embed.setTimestamp();
+    const created = Math.floor(ban.user.createdTimestamp / 1000);
+
+    const embed = new EmbedBuilder()
+      .setColor(0xe74c3c)
+      .setAuthor({
+        name: `${ban.user.username} banned`,
+        iconURL: ban.user.displayAvatarURL({ size: 64 }),
+      })
+      .setThumbnail(ban.user.displayAvatarURL({ size: 256 }))
+      .addFields(
+        { name: "user",    value: `<@${ban.user.id}> \`${ban.user.id}\``, inline: false },
+        { name: "reason",  value: ban.reason?.toLowerCase() ?? "no reason provided", inline: false },
+        { name: "account created", value: `<t:${created}:R>`, inline: true },
+      )
+      .setTimestamp()
+      .setFooter({ text: `user id: ${ban.user.id}` });
+
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
