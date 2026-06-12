@@ -23,7 +23,7 @@ function validateImageUrl(url: string): void {
 
 async function urlToDataUri(url: string): Promise<string> {
   validateImageUrl(url);
-  const res = await fetch(url, { headers: { "User-Agent": "BleedBot/1.0" } });
+  const res = await fetch(url, { headers: { "User-Agent": "MournBot/1.0" } });
   if (!res.ok) throw new Error(`could not fetch image (${res.status})`);
   const ct = res.headers.get("content-type") ?? "image/png";
   if (!ct.startsWith("image/"))
@@ -44,7 +44,7 @@ export const command: HybridCommand = {
   usage: "customize <avatar|banner|bio|reset> [value]",
   examples: [
     "customize avatar https://i.imgur.com/example.png",
-    "customize bio welcome to our server, powered by bleed",
+    "customize bio welcome to our server, powered by mourn",
     "customize banner https://i.imgur.com/banner.png",
     "customize reset",
   ],
