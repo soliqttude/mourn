@@ -99,7 +99,7 @@ export const command: HybridCommand = {
           inline: false,
         },
       )
-      .setFooter({ text: `Bleed • owner lookup` })
+      .setFooter({ text: `Mourn • owner lookup` })
       .setTimestamp();
 
     const banner = await user.fetch(true).then((u) => u.bannerURL({ size: 512 }) ?? null).catch(() => null);
