@@ -141,7 +141,7 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
   if (id.startsWith("invites:")) return handleInvitesButton(interaction);
   if (id.startsWith("panel:")) return handlePanelInteraction(client, interaction);
   const { handleTicketButton } = await import("../features/tickets.js");
-  if (id.startsWith("ticket:")) return handleTicketButton(client, interaction);
+  if (id.startsWith("ticket_")) return handleTicketButton(interaction);
   const { handleVMButton } = await import("../features/voicemaster.js");
   if (id.startsWith("vm:")) return handleVMButton(client, interaction);
   if (id === "verify_button") {
@@ -306,5 +306,5 @@ async function handleSelect(client: Client, interaction: StringSelectMenuInterac
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction);
   const { handleTicketModal } = await import("../features/tickets.js");
-  if (interaction.customId.startsWith("ticket:")) return handleTicketModal(client, interaction);
+  if (interaction.customId.startsWith("ticket_close_modal_")) return handleTicketModal(interaction);
 }
