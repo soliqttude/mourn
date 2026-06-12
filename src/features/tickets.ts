@@ -28,6 +28,8 @@ const DEFAULT_TOPICS: TicketTopic[] = [
   { name: "support",     emoji: E.support,    description: "General questions, help, or inquiries."            },
 ];
 
+const toTitle = (s: string) => s.replace(/\b\w/g, (l) => l.toUpperCase());
+
 const BUTTON_STYLES: Record<string, ButtonStyle> = {
   "bug report": ButtonStyle.Secondary,
   "suggestion": ButtonStyle.Secondary,
@@ -42,7 +44,6 @@ export async function createTicketPanel(
 ): Promise<void> {
   const resolved = topics.length > 0 ? topics : DEFAULT_TOPICS;
 
-  const toTitle = (s: string) => s.replace(/\b\w/g, (l) => l.toUpperCase());
   const topicLines = resolved
     .map((t) => `${t.emoji ?? "📩"} **${toTitle(t.name)}**\n╰${t.description ?? ""}`)
     .join("\n\n");
@@ -160,6 +161,7 @@ export async function createTicket(guild: Guild, member: GuildMember, topic?: st
     .setDescription(
       [
         `opened by <@${member.id}>`,
+        `category — ${topicEmoji} **${toTitle(topicLabel)}**`,
         "",
         "our team will be with you shortly.",
         "describe your issue in as much detail as possible.",
