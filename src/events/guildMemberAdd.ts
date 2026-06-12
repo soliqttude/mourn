@@ -3,6 +3,7 @@ import { EmbedBuilder } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { trackInviteUse } from "../features/invites.js";
 import { handleAntiraidJoin } from "../features/antiraid.js";
+import { handleBotAdd } from "../features/antinuke.js";
 import { db } from "../db/index.js";
 import { welcomeChannels } from "../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -12,7 +13,12 @@ import { brandEmbed } from "../lib/embeds.js";
 export const event = {
   name: "guildMemberAdd",
   async execute(client: Client, member: GuildMember) {
-    if (member.user.bot) return;
+    // Handle bot adds via antinuke before anything else
+    if (member.user.bot) {
+      await handleBotAdd(client, member.guild, member).catch(() => {});
+      return;
+    }
+
     const settings = await getGuildSettings(member.guild.id);
 
     await handleAntiraidJoin(member, settings);
