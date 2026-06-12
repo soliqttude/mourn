@@ -38,10 +38,7 @@ export const event = {
       sentAt: message.createdTimestamp ?? undefined,
       channelName,
       replyTo: replyMsg
-        ? {
-            authorTag: replyMsg.author?.tag ?? "unknown",
-            content: replyMsg.content || "",
-          }
+        ? { authorTag: replyMsg.author?.tag ?? "unknown", content: replyMsg.content || "" }
         : undefined,
     });
 
@@ -52,22 +49,21 @@ export const event = {
     const ch = message.guild.channels.cache.get(settings.msgLogChannel);
     if (!ch?.isTextBased()) return;
 
-    const author = message.author;
-    const avatarURL = author?.displayAvatarURL({ size: 256 });
-    const content = message.content?.slice(0, 1024) || "*no text content*";
+    const author     = message.author;
+    const avatarURL  = author?.displayAvatarURL({ size: 256 });
+    const content    = message.content?.slice(0, 1024) || "*no text content*";
     const attachments = message.attachments?.map((a) => a.url) ?? [];
 
     const embed = new EmbedBuilder()
-      .setColor(0xe74c3c)
+      .setColor(0x000000)
       .setAuthor({
-        name: author ? `${author.username} (${author.id})` : "Unknown User",
+        name:    author ? `${author.username} — message deleted` : "unknown user — message deleted",
         iconURL: avatarURL,
       })
-      .setThumbnail(avatarURL ?? null)
-      .setDescription(`**message deleted in** <#${message.channel.id}>`)
+      .setDescription(`in <#${message.channel.id}>`)
       .addFields({ name: "content", value: content, inline: false })
       .setTimestamp()
-      .setFooter({ text: `message id: ${message.id}` });
+      .setFooter({ text: `message id: ${message.id} • user id: ${author?.id ?? "unknown"}` });
 
     if (attachments.length) {
       embed.addFields({
