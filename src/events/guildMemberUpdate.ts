@@ -25,20 +25,18 @@ export const event = {
     const ch = newMember.guild.channels.cache.get(logChannelId);
     if (!ch?.isTextBased()) return;
 
-    const fields: { name: string; value: string; inline: boolean }[] = [];
-    if (added.size)   fields.push({ name: `roles added (${added.size})`,   value: added.map((r) => `<@&${r.id}>`).join(", ").slice(0, 1024),   inline: false });
+    const avatarURL = newMember.user.displayAvatarURL({ size: 256 });
+    const fields: { name: string; value: string; inline: boolean }[] = [
+      { name: "member", value: `<@${newMember.id}> \`${newMember.id}\``, inline: false },
+    ];
+    if (added.size)   fields.push({ name: `roles added (${added.size})`,     value: added.map((r) => `<@&${r.id}>`).join(", ").slice(0, 1024),   inline: false });
     if (removed.size) fields.push({ name: `roles removed (${removed.size})`, value: removed.map((r) => `<@&${r.id}>`).join(", ").slice(0, 1024), inline: false });
 
     const embed = new EmbedBuilder()
       .setColor(added.size ? 0x9b59b6 : 0xe74c3c)
-      .setAuthor({
-        name: `${newMember.user.username} — roles updated`,
-        iconURL: newMember.user.displayAvatarURL({ size: 64 }),
-      })
-      .addFields(
-        { name: "member", value: `<@${newMember.id}> \`${newMember.id}\``, inline: false },
-        ...fields,
-      )
+      .setAuthor({ name: `${newMember.user.username} — roles updated`, iconURL: avatarURL })
+      .setThumbnail(avatarURL)
+      .addFields(...fields)
       .setTimestamp()
       .setFooter({ text: `user id: ${newMember.id}` });
 
