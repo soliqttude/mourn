@@ -19,20 +19,19 @@ export const event = {
     if (!("guild" in channel) || !channel.guild) return;
     await handleAntinukeAction(client, channel.guild, "channel_create", channel.id);
 
-    const settings = await getGuildSettings(channel.guild.id);
+    const settings    = await getGuildSettings(channel.guild.id);
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = channel.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
-    const guildIcon = channel.guild.iconURL({ size: 256 });
+    const guildIcon = channel.guild.iconURL({ size: 64 }) ?? undefined;
     const typeName  = CHANNEL_TYPE_NAMES[channel.type] ?? "unknown";
     const parent    = (channel as any).parent;
 
     const embed = new EmbedBuilder()
-      .setColor(0x1abc9c)
-      .setAuthor({ name: "channel created", iconURL: guildIcon ?? undefined })
-      .setThumbnail(guildIcon)
+      .setColor(0x000000)
+      .setAuthor({ name: "channel created", iconURL: guildIcon })
       .addFields(
         { name: "name",     value: `<#${channel.id}> \`${channel.name}\``, inline: false },
         { name: "type",     value: typeName,                                 inline: true  },
