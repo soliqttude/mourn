@@ -17,9 +17,9 @@ export interface TicketTopic {
 
 // ── Swap these out for custom server emojis once you have them ─────────────────
 const E = {
-  bug:        "🔧",   // search: wrench / tool
-  suggestion: "✨",   // search: sparkle / star
-  support:    "📩",   // search: mail / ticket / envelope
+  bug:        "<:warn:1515113428749123674>",   // search: wrench / tool
+  suggestion: "<:idea:1515113444540682321>",   // search: sparkle / star
+  support:    "<:emoji_25:1515113714599067658>",   // search: mail / ticket / envelope
 };
 
 const DEFAULT_TOPICS: TicketTopic[] = [
