@@ -43,7 +43,7 @@ function buildTopicRows(topics: TicketTopic[]): ActionRowBuilder<ButtonBuilder>[
 export const command: HybridCommand = {
   name: "createembed",
   aliases: ["ce"],
-  description: "Send a bleed-style scripted embed to a channel.",
+  description: "Send a mourn-style scripted embed to a channel.",
   category: "utility",
   permission: "mod",
   guildOnly: true,
