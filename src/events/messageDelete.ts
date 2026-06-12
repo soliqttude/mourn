@@ -20,6 +20,13 @@ export const event = {
   async execute(_client: Client, message: Message | PartialMessage) {
     if (!message.guild || message.author?.bot) return;
 
+    const replyMsg = message.reference?.messageId
+      ? message.channel.messages?.cache.get(message.reference.messageId)
+      : undefined;
+
+    const channelName =
+      "name" in message.channel ? (message.channel as any).name as string : "unknown";
+
     storeSnipe(message.channel.id, "delete", {
       authorId: message.author?.id ?? "unknown",
       authorTag: message.author?.tag ?? "unknown",
@@ -28,6 +35,14 @@ export const event = {
       attachments: message.attachments?.map((a) => a.url) ?? [],
       stickers: message.stickers?.map((s) => s.url) ?? [],
       at: Date.now(),
+      sentAt: message.createdTimestamp ?? undefined,
+      channelName,
+      replyTo: replyMsg
+        ? {
+            authorTag: replyMsg.author?.tag ?? "unknown",
+            content: replyMsg.content || "",
+          }
+        : undefined,
     });
 
     const settings = await getGuildSettings(message.guild.id);
@@ -55,7 +70,11 @@ export const event = {
       .setFooter({ text: `message id: ${message.id}` });
 
     if (attachments.length) {
-      embed.addFields({ name: `attachments (${attachments.length})`, value: attachments.join("\n").slice(0, 1024), inline: false });
+      embed.addFields({
+        name: `attachments (${attachments.length})`,
+        value: attachments.join("\n").slice(0, 1024),
+        inline: false,
+      });
     }
 
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
