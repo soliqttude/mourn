@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
 import { cleanError, REASON_DEFAULT } from "../../lib/format.js";
+import { buildModDmEmbed } from "../../lib/modDm.js";
 
 export const command: HybridCommand = {
   name: "ban",
@@ -13,8 +14,8 @@ export const command: HybridCommand = {
   permission: "mod",
   guildOnly: true,
   options: [
-    { name: "user", description: "User to ban", type: ApplicationCommandOptionType.User, required: true },
-    { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false },
+    { name: "user",   description: "User to ban", type: ApplicationCommandOptionType.User,   required: true  },
+    { name: "reason", description: "Reason",       type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
@@ -27,12 +28,11 @@ export const command: HybridCommand = {
     if (existingBan) return ctx.reply({ embeds: [errorEmbed("That **user** is already banned.")] });
     const member = await guild.members.fetch(target.id).catch(() => null);
     if (member && !member.bannable) return ctx.reply({ embeds: [errorEmbed("I can't ban that **user** — they may have a higher **role**.")] });
-    const dmSent = await target.send(
-      `You have been **banned** from **${guild.name}**.\n**Reason:** ${reason}`
-    ).then(() => true).catch(() => false);
+    const dmEmbed = buildModDmEmbed({ action: "banned", guild, moderator: ctx.user, reason });
+    const dmSent = await target.send({ embeds: [dmEmbed] }).then(() => true).catch(() => false);
     try {
       await guild.members.ban(target.id, { reason: `${ctx.user.tag}: ${reason}` });
-      return ctx.reply({ content: dmSent ? "👍" : "👍 - Couldn't DM member" });
+      return ctx.reply({ content: dmSent ? "👍" : "👍 — couldn't DM member" });
     } catch (err) {
       return ctx.reply({ embeds: [errorEmbed(cleanError(err))] });
     }
