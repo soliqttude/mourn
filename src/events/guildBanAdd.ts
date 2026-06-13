@@ -18,15 +18,15 @@ export const event = {
 
     const embed = new EmbedBuilder()
       .setColor(0x000000)
-      .setAuthor({ name: `${ban.user.username} banned`, iconURL: avatarURL })
+      .setAuthor({ name: "Member Banned", iconURL: avatarURL })
       .setThumbnail(avatarURL)
+      .setDescription(`<@${ban.user.id}> was banned from ${ban.guild.name}`)
       .addFields(
-        { name: "user",            value: `<@${ban.user.id}> \`${ban.user.id}\``,           inline: false },
-        { name: "reason",          value: ban.reason?.toLowerCase() ?? "no reason provided", inline: false },
-        { name: "account created", value: `<t:${created}:R>`,                                inline: true  },
+        { name: "Reason",          value: ban.reason?.toLowerCase() ?? "no reason provided", inline: false },
+        { name: "Account Created", value: `<t:${created}:R>`,                                inline: true  },
       )
       .setTimestamp()
-      .setFooter({ text: `user id: ${ban.user.id}` });
+      .setFooter({ text: `User ID: ${ban.user.id}` });
 
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
