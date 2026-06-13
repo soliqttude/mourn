@@ -1,4 +1,3 @@
-import { EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { config } from "../../config.js";
@@ -16,15 +15,8 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("owner only.")] });
     }
 
-    // Use rawArgs so the full message (including newlines via Shift+Enter) is captured
     const msg = ctx.rawArgs?.trim() || ctx.getString("message") || "";
     if (!msg) return ctx.reply({ embeds: [errorEmbed("provide a message to broadcast.")] });
-
-    const eb = new EmbedBuilder()
-      .setColor(config.brandColor)
-      .setDescription(msg)
-      .setFooter({ text: "mourn" })
-      .setTimestamp();
 
     let ok   = 0;
     let fail = 0;
@@ -39,7 +31,8 @@ export const command: HybridCommand = {
               guild.members.me?.permissionsIn(c).has("SendMessages") === true
           );
         if (channel?.isTextBased()) {
-          await (channel as any).send({ embeds: [eb] });
+          // Send as plain content so links (discord.gg, etc) are always clickable
+          await (channel as any).send({ content: msg });
           ok++;
         } else {
           fail++;
