@@ -1,5 +1,5 @@
 import type { Client, GuildBan, TextChannel } from "discord.js";
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 
 export const event = {
@@ -9,13 +9,29 @@ export const event = {
     if (!settings.modLogChannel) return;
     const ch = ban.guild.channels.cache.get(settings.modLogChannel);
     if (!ch?.isTextBased()) return;
+
+    let executor: string | null = null;
+    try {
+      const audit = await ban.guild.fetchAuditLogs({ type: AuditLogEvent.MemberBanRemove, limit: 1 });
+      const entry = audit.entries.first();
+      if (entry && entry.targetId === ban.user.id && (Date.now() - entry.createdTimestamp) < 5000)
+        executor = entry.executorId ?? null;
+    } catch {}
+
     const created   = Math.floor(ban.user.createdTimestamp / 1000);
     const avatarURL = ban.user.displayAvatarURL({ size: 256 });
+
     const embed = new EmbedBuilder()
-      .setColor(0x000000).setAuthor({ name: "Member Unbanned", iconURL: avatarURL }).setThumbnail(avatarURL)
-      .setDescription(`<@${ban.user.id}> was unbanned from ${ban.guild.name}`)
+      .setColor(0x000000)
+      .setAuthor({ name: "Member Unbanned", iconURL: avatarURL })
+      .setThumbnail(avatarURL)
+      .setDescription(
+        `<@${ban.user.id}> was unbanned from ${ban.guild.name}${executor ? ` by <@${executor}>` : ""}`
+      )
       .addFields({ name: "Account Created", value: `<t:${created}:R>`, inline: true })
-      .setTimestamp().setFooter({ text: `User ID: ${ban.user.id}` });
+      .setTimestamp()
+      .setFooter({ text: `User ID: ${ban.user.id}` });
+
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
