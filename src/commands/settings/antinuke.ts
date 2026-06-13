@@ -27,10 +27,19 @@ const MODULE_LABELS: Record<Module, string> = {
   vanity:  "vanity",
 };
 
+const KEYWORDS = new Set(["add", "remove", "list", "clear", "on", "off", "threshold", "punishment", "do"]);
+
 async function resolveUser(ctx: any, raw: string) {
-  try { return await ctx.getUser("user"); } catch {}
-  const id = raw?.replace(/[<@!>]/g, "");
-  if (id) return ctx.guild!.client.users.fetch(id).catch(() => null);
+  // try slash option first
+  try {
+    const u = ctx.getUser?.("user");
+    if (u) return u;
+  } catch {}
+  // strip mention formatting and fetch by id
+  const id = raw?.replace(/[<@!>]/g, "").trim();
+  if (/^\d{15,20}$/.test(id)) {
+    return ctx.guild!.client.users.fetch(id).catch(() => null);
+  }
   return null;
 }
 
@@ -45,14 +54,13 @@ export const command: HybridCommand = {
     "antinuke disable",
     "antinuke ban",
     "antinuke ban on",
-    "antinuke ban off",
     "antinuke ban threshold 3",
     "antinuke ban punishment ban",
-    "antinuke whitelist add @user",
+    "antinuke whitelist @user",
     "antinuke whitelist remove @user",
     "antinuke whitelist list",
     "antinuke whitelist clear",
-    "antinuke admin add @user",
+    "antinuke admin @user",
     "antinuke admin remove @user",
     "antinuke admin list",
     "antinuke log #channel",
@@ -70,10 +78,10 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
 
-    const args  = ctx.args;
-    const sub   = (ctx.getString("sub")  ?? args[0] ?? "").toLowerCase();
-    const arg1  = (ctx.getString("arg1") ?? args[1] ?? "").toLowerCase();
-    const arg2  = (ctx.getString("arg2") ?? args[2] ?? "").toLowerCase();
+    const args = ctx.args;
+    const sub  = (ctx.getString?.("sub")  ?? args[0] ?? "").toLowerCase();
+    const arg1 = (ctx.getString?.("arg1") ?? args[1] ?? "").toLowerCase();
+    const arg2 = (ctx.getString?.("arg2") ?? args[2] ?? "").toLowerCase();
 
     const settings = await getGuildSettings(ctx.guild.id);
     const isOwner  = ctx.user.id === ctx.guild.ownerId;
@@ -83,22 +91,22 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("you must be the server **owner** or an **antinuke admin**.")] });
     }
 
-    // ── enable / disable ───────────────────────────────────────────────────────
+    // ── enable / disable ─────────────────────────────────────────────────────
     if (sub === "enable") {
       await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
-      return ctx.reply({ embeds: [successEmbed(`antinuke has been **enabled**.`)] });
+      return ctx.reply({ embeds: [successEmbed("antinuke has been **enabled**.")] });
     }
 
     if (sub === "disable") {
       await updateGuildSettings(ctx.guild.id, { antinukeEnabled: false });
-      return ctx.reply({ embeds: [successEmbed(`antinuke has been **disabled**.`)] });
+      return ctx.reply({ embeds: [successEmbed("antinuke has been **disabled**.")] });
     }
 
-    // ── log channel ───────────────────────────────────────────────────────────
+    // ── log channel ──────────────────────────────────────────────────────────
     if (sub === "log") {
       if (!arg1 || arg1 === "remove" || arg1 === "off") {
         await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: null });
-        return ctx.reply({ embeds: [successEmbed("antinuke log channel **removed**.")]});
+        return ctx.reply({ embeds: [successEmbed("antinuke log channel **removed**.")] });
       }
       const ch = ctx.getChannel?.("channel") ?? ctx.guild.channels.cache.get(arg1.replace(/[<#>]/g, ""));
       if (!ch) return ctx.reply({ embeds: [errorEmbed("channel not found.")] });
@@ -106,9 +114,9 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`antinuke logs will be sent to <#${ch.id}>.`)] });
     }
 
-    // ── whitelist ──────────────────────────────────────────────────────────────
+    // ── whitelist ────────────────────────────────────────────────────────────
     if (sub === "whitelist") {
-      // list
+      // ,antinuke whitelist  or  ,antinuke whitelist list
       if (!arg1 || arg1 === "list") {
         const rows = await db.select().from(antinukeWhitelist).where(eq(antinukeWhitelist.guildId, ctx.guild.id));
         if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no users are whitelisted.")] });
@@ -119,42 +127,49 @@ export const command: HybridCommand = {
           })],
         });
       }
-      // clear
+
+      // ,antinuke whitelist clear
       if (arg1 === "clear") {
         if (!isOwner) return ctx.reply({ embeds: [errorEmbed("only the server **owner** can clear the whitelist.")] });
         await db.delete(antinukeWhitelist).where(eq(antinukeWhitelist.guildId, ctx.guild.id));
         invalidateWhitelistCache(ctx.guild.id);
         return ctx.reply({ embeds: [successEmbed("antinuke whitelist **cleared**.")] });
       }
-      // add / remove
-      if (arg1 === "add" || arg1 === "remove") {
-        const rawId = args[2] ?? ctx.getString("arg2") ?? "";
-        const user  = await resolveUser(ctx, rawId);
-        if (!user) return ctx.reply({ embeds: [errorEmbed("user not found.")] });
 
+      // ,antinuke whitelist remove @user
+      if (arg1 === "remove") {
+        const rawId = args[2] ?? ctx.getString?.("arg2") ?? "";
+        const user  = await resolveUser(ctx, rawId);
+        if (!user) return ctx.reply({ embeds: [errorEmbed("user not found. provide a mention or user ID.")] });
         const exists = await db.select().from(antinukeWhitelist).where(
           and(eq(antinukeWhitelist.guildId, ctx.guild.id), eq(antinukeWhitelist.userId, user.id))
         );
-
-        if (arg1 === "add") {
-          if (exists.length) return ctx.reply({ embeds: [errorEmbed(`<@${user.id}> is already whitelisted.`)] });
-          await db.insert(antinukeWhitelist).values({ guildId: ctx.guild.id, userId: user.id }).onConflictDoNothing();
-          invalidateWhitelistCache(ctx.guild.id);
-          return ctx.reply({ embeds: [successEmbed(`<@${user.id}> has been added to the antinuke whitelist.`)], allowedMentions: { parse: [] } });
-        } else {
-          if (!exists.length) return ctx.reply({ embeds: [errorEmbed(`<@${user.id}> is not whitelisted.`)] });
-          await db.delete(antinukeWhitelist).where(and(eq(antinukeWhitelist.guildId, ctx.guild.id), eq(antinukeWhitelist.userId, user.id)));
-          invalidateWhitelistCache(ctx.guild.id);
-          return ctx.reply({ embeds: [successEmbed(`<@${user.id}> has been removed from the antinuke whitelist.`)], allowedMentions: { parse: [] } });
-        }
+        if (!exists.length) return ctx.reply({ embeds: [errorEmbed(`<@${user.id}> is not whitelisted.`)] });
+        await db.delete(antinukeWhitelist).where(and(eq(antinukeWhitelist.guildId, ctx.guild.id), eq(antinukeWhitelist.userId, user.id)));
+        invalidateWhitelistCache(ctx.guild.id);
+        return ctx.reply({ embeds: [successEmbed(`<@${user.id}> has been removed from the whitelist.`)], allowedMentions: { parse: [] } });
       }
-      return ctx.reply({ embeds: [errorEmbed("usage: `antinuke whitelist add/remove/list/clear @user`")] });
+
+      // ,antinuke whitelist @user  (or ,antinuke whitelist add @user for backwards compat)
+      const rawId = arg1 === "add"
+        ? (args[2] ?? ctx.getString?.("arg2") ?? "")
+        : (args[1] ?? ctx.getString?.("arg1") ?? "");
+      const user = await resolveUser(ctx, rawId);
+      if (!user) return ctx.reply({ embeds: [errorEmbed("user not found. provide a mention or user ID.")] });
+      const exists = await db.select().from(antinukeWhitelist).where(
+        and(eq(antinukeWhitelist.guildId, ctx.guild.id), eq(antinukeWhitelist.userId, user.id))
+      );
+      if (exists.length) return ctx.reply({ embeds: [errorEmbed(`<@${user.id}> is already whitelisted.`)] });
+      await db.insert(antinukeWhitelist).values({ guildId: ctx.guild.id, userId: user.id }).onConflictDoNothing();
+      invalidateWhitelistCache(ctx.guild.id);
+      return ctx.reply({ embeds: [successEmbed(`<@${user.id}> has been added to the antinuke whitelist.`)], allowedMentions: { parse: [] } });
     }
 
-    // ── admin ──────────────────────────────────────────────────────────────────
+    // ── admin ────────────────────────────────────────────────────────────────
     if (sub === "admin") {
       if (!isOwner) return ctx.reply({ embeds: [errorEmbed("only the server **owner** can manage antinuke admins.")] });
 
+      // ,antinuke admin  or  ,antinuke admin list
       if (!arg1 || arg1 === "list") {
         const rows = await db.select().from(antinukeAdmins).where(eq(antinukeAdmins.guildId, ctx.guild.id));
         if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no antinuke admins set.")] });
@@ -166,42 +181,47 @@ export const command: HybridCommand = {
         });
       }
 
-      if (arg1 === "add" || arg1 === "remove") {
-        const rawId = args[2] ?? ctx.getString("arg2") ?? "";
+      // ,antinuke admin remove @user
+      if (arg1 === "remove") {
+        const rawId = args[2] ?? ctx.getString?.("arg2") ?? "";
         const user  = await resolveUser(ctx, rawId);
-        if (!user) return ctx.reply({ embeds: [errorEmbed("user not found.")] });
+        if (!user) return ctx.reply({ embeds: [errorEmbed("user not found. provide a mention or user ID.")] });
         if (user.id === ctx.guild.ownerId) return ctx.reply({ embeds: [errorEmbed("the server owner is always an antinuke admin.")] });
-
         const exists = await db.select().from(antinukeAdmins).where(
           and(eq(antinukeAdmins.guildId, ctx.guild.id), eq(antinukeAdmins.userId, user.id))
         );
-
-        if (arg1 === "add") {
-          if (exists.length) return ctx.reply({ embeds: [errorEmbed(`<@${user.id}> is already an antinuke admin.`)] });
-          await db.insert(antinukeAdmins).values({ guildId: ctx.guild.id, userId: user.id }).onConflictDoNothing();
-          invalidateAdminCache(ctx.guild.id);
-          return ctx.reply({ embeds: [successEmbed(`<@${user.id}> can now manage antinuke settings.`)], allowedMentions: { parse: [] } });
-        } else {
-          if (!exists.length) return ctx.reply({ embeds: [errorEmbed(`<@${user.id}> is not an antinuke admin.`)] });
-          await db.delete(antinukeAdmins).where(and(eq(antinukeAdmins.guildId, ctx.guild.id), eq(antinukeAdmins.userId, user.id)));
-          invalidateAdminCache(ctx.guild.id);
-          return ctx.reply({ embeds: [successEmbed(`<@${user.id}> is no longer an antinuke admin.`)], allowedMentions: { parse: [] } });
-        }
+        if (!exists.length) return ctx.reply({ embeds: [errorEmbed(`<@${user.id}> is not an antinuke admin.`)] });
+        await db.delete(antinukeAdmins).where(and(eq(antinukeAdmins.guildId, ctx.guild.id), eq(antinukeAdmins.userId, user.id)));
+        invalidateAdminCache(ctx.guild.id);
+        return ctx.reply({ embeds: [successEmbed(`<@${user.id}> is no longer an antinuke admin.`)], allowedMentions: { parse: [] } });
       }
-      return ctx.reply({ embeds: [errorEmbed("usage: `antinuke admin add/remove/list @user`")] });
+
+      // ,antinuke admin @user  (or ,antinuke admin add @user for backwards compat)
+      const rawId = arg1 === "add"
+        ? (args[2] ?? ctx.getString?.("arg2") ?? "")
+        : (args[1] ?? ctx.getString?.("arg1") ?? "");
+      const user = await resolveUser(ctx, rawId);
+      if (!user) return ctx.reply({ embeds: [errorEmbed("user not found. provide a mention or user ID.")] });
+      if (user.id === ctx.guild.ownerId) return ctx.reply({ embeds: [errorEmbed("the server owner is always an antinuke admin.")] });
+      const exists = await db.select().from(antinukeAdmins).where(
+        and(eq(antinukeAdmins.guildId, ctx.guild.id), eq(antinukeAdmins.userId, user.id))
+      );
+      if (exists.length) return ctx.reply({ embeds: [errorEmbed(`<@${user.id}> is already an antinuke admin.`)] });
+      await db.insert(antinukeAdmins).values({ guildId: ctx.guild.id, userId: user.id }).onConflictDoNothing();
+      invalidateAdminCache(ctx.guild.id);
+      return ctx.reply({ embeds: [successEmbed(`<@${user.id}> can now manage antinuke settings.`)], allowedMentions: { parse: [] } });
     }
 
-    // ── module subcommands ─────────────────────────────────────────────────────
+    // ── module subcommands ───────────────────────────────────────────────────
     if ((MODULES as readonly string[]).includes(sub)) {
-      const module = sub as Module;
+      const module  = sub as Module;
       const modules = await getModuleConfigs(ctx.guild.id);
-      const cfg = modules.get(module);
+      const cfg     = modules.get(module);
 
-      // show module status (no arg)
       if (!arg1) {
-        const status   = cfg?.enabled ? "**enabled**" : "**disabled**";
-        const thresh   = (module === "botadd" || module === "vanity") ? "N/A" : (cfg?.threshold ?? 3);
-        const punish   = cfg?.punishment ?? "ban";
+        const status = cfg?.enabled ? "**enabled**" : "**disabled**";
+        const thresh = (module === "botadd" || module === "vanity") ? "N/A" : (cfg?.threshold ?? 3);
+        const punish = cfg?.punishment ?? "ban";
         return ctx.reply({
           embeds: [brandEmbed({
             title: `antinuke — ${MODULE_LABELS[module]}`,
@@ -214,7 +234,6 @@ export const command: HybridCommand = {
         });
       }
 
-      // on / off
       if (arg1 === "on" || arg1 === "off") {
         const enabled = arg1 === "on";
         await db
@@ -228,7 +247,6 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`**${MODULE_LABELS[module]}** protection is now **${arg1}**.`)] });
       }
 
-      // threshold
       if (arg1 === "threshold") {
         if (module === "botadd" || module === "vanity") {
           return ctx.reply({ embeds: [errorEmbed(`the **${MODULE_LABELS[module]}** module has no threshold.`)] });
@@ -246,7 +264,6 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`**${MODULE_LABELS[module]}** threshold set to **${n}**.`)] });
       }
 
-      // punishment
       if (arg1 === "punishment" || arg1 === "do") {
         if (!["ban", "kick", "strip"].includes(arg2)) {
           return ctx.reply({ embeds: [errorEmbed("punishment must be `ban`, `kick`, or `strip`.")] });
@@ -265,16 +282,18 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed(`usage: \`antinuke ${module} on|off|threshold <n>|punishment ban|kick|strip\``)] });
     }
 
-    // ── overview (no subcommand) ───────────────────────────────────────────────
-    const modules   = await getModuleConfigs(ctx.guild.id);
-    const wlCount   = (await db.select().from(antinukeWhitelist).where(eq(antinukeWhitelist.guildId, ctx.guild.id))).length;
-    const admCount  = (await db.select().from(antinukeAdmins).where(eq(antinukeAdmins.guildId, ctx.guild.id))).length;
+    // ── overview ─────────────────────────────────────────────────────────────
+    const modules  = await getModuleConfigs(ctx.guild.id);
+    const wlCount  = (await db.select().from(antinukeWhitelist).where(eq(antinukeWhitelist.guildId, ctx.guild.id))).length;
+    const admCount = (await db.select().from(antinukeAdmins).where(eq(antinukeAdmins.guildId, ctx.guild.id))).length;
 
     const moduleLines = (MODULES as readonly string[]).map(m => {
-      const mod = modules.get(m);
-      const on  = mod?.enabled ? "✅" : "❌";
-      const lbl = MODULE_LABELS[m as Module];
-      const extra = (m !== "botadd" && m !== "vanity") ? ` — threshold \`${mod?.threshold ?? 3}\` | do \`${mod?.punishment ?? "ban"}\`` : ` — do \`${mod?.punishment ?? "ban"}\``;
+      const mod   = modules.get(m);
+      const on    = mod?.enabled ? "✅" : "❌";
+      const lbl   = MODULE_LABELS[m as Module];
+      const extra = (m !== "botadd" && m !== "vanity")
+        ? ` — threshold \`${mod?.threshold ?? 3}\` | do \`${mod?.punishment ?? "ban"}\``
+        : ` — do \`${mod?.punishment ?? "ban"}\``;
       return `${on} **${lbl}**${extra}`;
     }).join("\n");
 
