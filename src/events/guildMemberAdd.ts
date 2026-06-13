@@ -64,13 +64,13 @@ export const event = {
       const { embeds, content, components } = parseScript(row.message, {
         user: member, guild: member.guild, channel: ch as TextChannel, client,
         extra: {
-          "{inviter}": inviter?.inviterId ? `<@${inviter.inviterId}>` : "unknown",
-          "{invite_code}": inviter?.code ?? "unknown",
+          "{inviter}":      inviter?.inviterId ? `<@${inviter.inviterId}>` : "unknown",
+          "{invite_code}":  inviter?.code ?? "unknown",
         },
       });
       await (ch as TextChannel).send({
-        content: content ?? undefined,
-        embeds: embeds.length ? embeds : undefined,
+        content:    content ?? undefined,
+        embeds:     embeds.length ? embeds : undefined,
         components: components.length ? components : undefined,
         allowedMentions: { users: [member.id] },
       }).catch(() => {});
@@ -83,10 +83,10 @@ export const event = {
           ? (settings as any).welcomeMessage.replace("{user}", `<@${member.id}>`).replace("{server}", member.guild.name)
           : null;
         const embed = brandEmbed({
-          description: welcome ?? `welcome to **${member.guild.name}**, <@${member.id}>`,
-          thumbnail: member.user.displayAvatarURL({ size: 256 }),
-          authorName: member.user.globalName ?? member.user.username,
-          authorIcon: member.user.displayAvatarURL({ size: 64 }),
+          description:  welcome ?? `welcome to **${member.guild.name}**, <@${member.id}>`,
+          thumbnail:    member.user.displayAvatarURL({ size: 256 }),
+          authorName:   member.user.globalName ?? member.user.username,
+          authorIcon:   member.user.displayAvatarURL({ size: 64 }),
         });
         await (ch as TextChannel).send({ embeds: [embed], allowedMentions: { users: [member.id] } }).catch(() => {});
       }
@@ -101,22 +101,21 @@ export const event = {
     const accountAgeDays = Math.floor((Date.now() - member.user.createdTimestamp) / 86_400_000);
     const isNew          = accountAgeDays < 7;
 
-    const fields: { name: string; value: string; inline: boolean }[] = [
-      { name: "user",    value: `<@${member.id}> \`${member.id}\``,      inline: false },
-      { name: "created", value: `<t:${created}:R> (${accountAgeDays}d)`, inline: true  },
-      { name: "avatar",  value: member.user.avatar ? "yes" : "no",       inline: true  },
-      { name: "members", value: `${member.guild.memberCount}`,            inline: true  },
+    const descLines = [
+      `<@${member.id}> joined the server`,
+      `Account created <t:${created}:R>`,
     ];
-    if (inviter) fields.push({ name: "invited by", value: `<@${inviter.inviterId}> (code: \`${inviter.code}\`)`, inline: false });
-    if (isNew)   fields.push({ name: "⚠️ new account", value: `account is only ${accountAgeDays} day${accountAgeDays === 1 ? "" : "s"} old`, inline: false });
+    if (inviter) descLines.push(`Invited by <@${inviter.inviterId}> (code: \`${inviter.code}\`)`);
+    if (isNew)   descLines.push(`⚠️ Account is only ${accountAgeDays} day${accountAgeDays === 1 ? "" : "s"} old`);
 
     const embed = new EmbedBuilder()
       .setColor(0x000000)
-      .setAuthor({ name: `${member.user.username} joined`, iconURL: avatarURL })
+      .setAuthor({ name: "Member Joined", iconURL: avatarURL })
       .setThumbnail(avatarURL)
-      .addFields(...fields)
+      .setDescription(descLines.join("\n"))
+      .addFields({ name: "Member Count", value: `${member.guild.memberCount}`, inline: true })
       .setTimestamp()
-      .setFooter({ text: `user id: ${member.id}` });
+      .setFooter({ text: `User ID: ${member.id}` });
 
     await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
