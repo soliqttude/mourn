@@ -82,6 +82,11 @@ async function isModuleDisabled(guildId: string, channelId: string, moduleName: 
   return rows.length > 0;
 }
 
+const ANTINUKE_CMD_MAP: Record<string, string> = {
+  ban: "ban", softban: "ban", tempban: "ban", hackban: "ban", forceban: "ban",
+  kick: "kick",
+  delrole: "role",
+};
 export const event = {
   name: "messageCreate",
   async execute(client: Client, message: Message) {
@@ -269,6 +274,13 @@ export const event = {
 
     try {
       await cmd.execute(ctx);
+      // antinuke: command detection (--command flag)
+      const anModule = ANTINUKE_CMD_MAP[resolvedName.toLowerCase()];
+      if (anModule && message.guild) {
+        import("../features/antinuke.js").then(({ tickCommandUsage }) =>
+          tickCommandUsage(client, message.guild!, message.author.id, anModule).catch(() => {})
+        ).catch(() => {});
+      }
     } catch (err) {
       logger.error({ err, cmd: cmd.name }, "prefix command error");
       try {
