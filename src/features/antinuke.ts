@@ -332,3 +332,34 @@ export async function handlePermissionEscalation(client: Client, guild: Guild, m
     logger.warn({ err }, "antinuke: perm escalation punishment failed");
   }
 }
+
+// ─── Command-usage tick ─────────────────────────────────────────────────────────────
+// Called from messageCreate when a mod command (ban/kick/role) is used.
+// If countCommands is enabled for that module, counts towards threshold.
+export async function tickCommandUsage(client: Client, guild: Guild, userId: string, moduleName: string): Promise<void> {
+  const settings = await getGuildSettings(guild.id);
+  if (!settings.antinukeEnabled) return;
+  if (userId === guild.ownerId || userId === client.user?.id) return;
+
+  const whitelist = await getWhitelist(guild.id);
+  if (whitelist.has(userId)) return;
+
+  const modules = await getModuleConfigs(guild.id);
+  const mod = modules.get(moduleName);
+  if (!mod?.enabled || !mod.countCommands) return;
+
+  const shouldAct = tick(`${guild.id}:${userId}:${moduleName}`, mod.threshold);
+  if (!shouldAct) return;
+  if (alreadyPunished(guild.id, userId)) return;
+
+  const member = await guild.members.fetch(userId).catch(() => null);
+  if (!member) return;
+
+  try {
+    const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban");
+    logger.warn({ guild: guild.id, executor: userId, module: moduleName, action: actionTaken }, "antinuke: command-based punishment executed");
+    await sendAlert(guild, settings.antinukeLogChannel, userId, moduleName + "_cmd", actionTaken);
+  } catch (err) {
+    logger.warn({ err }, "antinuke: command-based punishment failed");
+  }
+}
