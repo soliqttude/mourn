@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, Message, StickerFormatType } from "discord.js";
+import { ApplicationCommandOptionType, Message, StickerFormatType, AttachmentBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
@@ -15,9 +15,8 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild || !ctx.channel) return;
 
-    // resolve the target message: reply reference (prefix) or slash fallback
+    // resolve the replied-to message
     let targetMsg: Message | null = null;
-
     if (ctx.source === "prefix") {
       const raw = ctx.raw as Message;
       if (raw.reference?.messageId) {
@@ -41,12 +40,25 @@ export const command: HybridCommand = {
     }
 
     const overrideName = ctx.getString("name") ?? ctx.args[0];
-    const stickerName  = overrideName ?? sticker.name;
+    const stickerName  = (overrideName ?? sticker.name).slice(0, 30);
+
+    // download the sticker as a buffer — discord.js v14 needs file: not url:
+    const ext = sticker.format === StickerFormatType.GIF ? "gif" : "png";
+    let fileBuffer: Buffer;
+    try {
+      const res = await fetch(sticker.url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      fileBuffer = Buffer.from(await res.arrayBuffer());
+    } catch (e) {
+      return ctx.reply({ embeds: [errorEmbed(`Failed to download sticker: ${(e as Error).message}`)] });
+    }
+
+    const attachment = new AttachmentBuilder(fileBuffer, { name: `sticker.${ext}` });
 
     const added = await ctx.guild.stickers
       .create({
+        file:   attachment,
         name:   stickerName,
-        url:    sticker.url,
         tags:   "⭐",
         reason: `Stolen by ${ctx.user.tag}`,
       })
