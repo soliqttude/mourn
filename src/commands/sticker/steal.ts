@@ -1,25 +1,66 @@
-import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, Message, StickerFormatType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { config } from "../../config.js";
+import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "stickersteal",
-  description: "Steal a sticker from a message and add it to the server.",
+  description: "Reply to a sticker message to steal it into this server.",
   category: "sticker",
-  aliases: ["grabsticker", "yoinksticker"],
+  aliases: ["stealsticker", "grabsticker", "yoinksticker"],
   guildOnly: true,
   userPermissions: ["ManageEmojisAndStickers"],
-  options: [{ name: "message_id", description: "Message ID containing the sticker", type: ApplicationCommandOptionType.String, required: true }],
+  options: [
+    { name: "name", description: "Override name for the sticker", type: ApplicationCommandOptionType.String, required: false },
+  ],
   async execute(ctx) {
-    if (!ctx.guild || !ctx.channel || ctx.channel.type === 1) return;
-    const msgId = ctx.getString("message_id") ?? ctx.args[0];
-    if (!msgId) return ctx.reply({ content: "Provide a message ID.", ephemeral: true } as any);
-    const msg = await (ctx.channel as any).messages.fetch(msgId).catch(() => null);
-    if (!msg) return ctx.reply({ content: "Message not found.", ephemeral: true } as any);
-    const sticker = msg.stickers?.first();
-    if (!sticker) return ctx.reply({ content: "No sticker found on that message.", ephemeral: true } as any);
-    const added = await ctx.guild.stickers.create({ name: sticker.name, url: sticker.url, tags: "⭐", reason: `Stolen by ${ctx.user.tag}` }).catch((e: Error) => e);
-    if (added instanceof Error) return ctx.reply({ content: `Failed: ${added.message}`, ephemeral: true } as any);
-    return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setTitle("✅ Sticker Stolen").setDescription(`**${sticker.name}** added to the server.`).setImage(sticker.url).setFooter({ text: config.embedFooter }).setTimestamp()] });
+    if (!ctx.guild || !ctx.channel) return;
+
+    // resolve the target message: reply reference (prefix) or slash fallback
+    let targetMsg: Message | null = null;
+
+    if (ctx.source === "prefix") {
+      const raw = ctx.raw as Message;
+      if (raw.reference?.messageId) {
+        targetMsg = await (ctx.channel as any).messages
+          .fetch(raw.reference.messageId)
+          .catch(() => null);
+      }
+    }
+
+    if (!targetMsg) {
+      return ctx.reply({ embeds: [errorEmbed("Reply to a message that contains a sticker.")] });
+    }
+
+    const sticker = targetMsg.stickers?.first();
+    if (!sticker) {
+      return ctx.reply({ embeds: [errorEmbed("That message doesn't have a sticker.")] });
+    }
+
+    if (sticker.format === StickerFormatType.Lottie) {
+      return ctx.reply({ embeds: [errorEmbed("Lottie stickers can't be stolen — Discord only allows bots to upload PNG/APNG stickers.")] });
+    }
+
+    const overrideName = ctx.getString("name") ?? ctx.args[0];
+    const stickerName  = overrideName ?? sticker.name;
+
+    const added = await ctx.guild.stickers
+      .create({
+        name:   stickerName,
+        url:    sticker.url,
+        tags:   "⭐",
+        reason: `Stolen by ${ctx.user.tag}`,
+      })
+      .catch((e: Error) => e);
+
+    if (added instanceof Error) {
+      return ctx.reply({ embeds: [errorEmbed(`Failed to steal sticker: ${added.message}`)] });
+    }
+
+    return ctx.reply({
+      embeds: [
+        successEmbed(`Sticker **${added.name}** has been added to the server.`)
+          .setThumbnail(sticker.url),
+      ],
+    });
   },
 };
