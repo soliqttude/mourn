@@ -27,15 +27,43 @@ const MODULE_LABELS: Record<Module, string> = {
   vanity:  "vanity",
 };
 
-const KEYWORDS = new Set(["add", "remove", "list", "clear", "on", "off", "threshold", "punishment", "do"]);
+// Modules that support --threshold and --command flags
+const HAS_THRESHOLD = new Set<Module>(["ban", "kick", "channel", "role", "emoji", "webhook"]);
+const HAS_COMMAND   = new Set<Module>(["ban", "kick", "role"]);
+
+interface Flags {
+  threshold?: number;
+  do?: string;
+  command?: boolean;
+}
+
+/** Parse --threshold N  --do punishment  --command on|off from raw args */
+function parseFlags(args: string[]): Flags {
+  const out: Flags = {};
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]?.toLowerCase();
+    const next = args[i + 1];
+    if ((a === "--threshold" || a === "-threshold") && next) {
+      const n = parseInt(next);
+      if (!isNaN(n) && n >= 1 && n <= 20) out.threshold = n;
+      i++;
+    } else if ((a === "--do" || a === "-do") && next) {
+      const p = next.toLowerCase();
+      if (["ban", "kick", "strip"].includes(p)) out.do = p;
+      i++;
+    } else if ((a === "--command" || a === "-command") && next) {
+      out.command = ["on", "true", "yes", "1"].includes(next.toLowerCase());
+      i++;
+    }
+  }
+  return out;
+}
 
 async function resolveUser(ctx: any, raw: string) {
-  // await the slash option — getUser returns a Promise, not a value
   try {
     const u = await ctx.getUser?.("user");
     if (u) return u;
   } catch {}
-  // strip mention formatting and fetch by id
   const id = raw?.replace(/[<@!>]/g, "").trim();
   if (/^\d{15,20}$/.test(id)) {
     return ctx.guild!.client.users.fetch(id).catch(() => null);
@@ -52,14 +80,14 @@ export const command: HybridCommand = {
     "antinuke",
     "antinuke enable",
     "antinuke disable",
-    "antinuke ban",
     "antinuke ban on",
+    "antinuke ban on --threshold 3 --do ban --command on",
+    "antinuke ban off",
     "antinuke ban threshold 3",
     "antinuke ban punishment ban",
     "antinuke whitelist @user",
     "antinuke whitelist remove @user",
     "antinuke whitelist list",
-    "antinuke whitelist clear",
     "antinuke admin @user",
     "antinuke admin remove @user",
     "antinuke admin list",
@@ -116,7 +144,6 @@ export const command: HybridCommand = {
 
     // ── whitelist ────────────────────────────────────────────────────────────
     if (sub === "whitelist") {
-      // ,antinuke whitelist  or  ,antinuke whitelist list
       if (!arg1 || arg1 === "list") {
         const rows = await db.select().from(antinukeWhitelist).where(eq(antinukeWhitelist.guildId, ctx.guild.id));
         if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no users are whitelisted.")] });
@@ -127,16 +154,12 @@ export const command: HybridCommand = {
           })],
         });
       }
-
-      // ,antinuke whitelist clear
       if (arg1 === "clear") {
         if (!isOwner) return ctx.reply({ embeds: [errorEmbed("only the server **owner** can clear the whitelist.")] });
         await db.delete(antinukeWhitelist).where(eq(antinukeWhitelist.guildId, ctx.guild.id));
         invalidateWhitelistCache(ctx.guild.id);
         return ctx.reply({ embeds: [successEmbed("antinuke whitelist **cleared**.")] });
       }
-
-      // ,antinuke whitelist remove @user
       if (arg1 === "remove") {
         const rawId = args[2] ?? ctx.getString?.("arg2") ?? "";
         const user  = await resolveUser(ctx, rawId);
@@ -149,8 +172,7 @@ export const command: HybridCommand = {
         invalidateWhitelistCache(ctx.guild.id);
         return ctx.reply({ embeds: [successEmbed(`<@${user.id}> has been removed from the whitelist.`)], allowedMentions: { parse: [] } });
       }
-
-      // ,antinuke whitelist @user  (or ,antinuke whitelist add @user for backwards compat)
+      // ,antinuke whitelist @user  (or ,antinuke whitelist add @user)
       const rawId = arg1 === "add"
         ? (args[2] ?? ctx.getString?.("arg2") ?? "")
         : (args[1] ?? ctx.getString?.("arg1") ?? "");
@@ -168,8 +190,6 @@ export const command: HybridCommand = {
     // ── admin ────────────────────────────────────────────────────────────────
     if (sub === "admin") {
       if (!isOwner) return ctx.reply({ embeds: [errorEmbed("only the server **owner** can manage antinuke admins.")] });
-
-      // ,antinuke admin  or  ,antinuke admin list
       if (!arg1 || arg1 === "list") {
         const rows = await db.select().from(antinukeAdmins).where(eq(antinukeAdmins.guildId, ctx.guild.id));
         if (!rows.length) return ctx.reply({ embeds: [errorEmbed("no antinuke admins set.")] });
@@ -180,8 +200,6 @@ export const command: HybridCommand = {
           })],
         });
       }
-
-      // ,antinuke admin remove @user
       if (arg1 === "remove") {
         const rawId = args[2] ?? ctx.getString?.("arg2") ?? "";
         const user  = await resolveUser(ctx, rawId);
@@ -195,8 +213,7 @@ export const command: HybridCommand = {
         invalidateAdminCache(ctx.guild.id);
         return ctx.reply({ embeds: [successEmbed(`<@${user.id}> is no longer an antinuke admin.`)], allowedMentions: { parse: [] } });
       }
-
-      // ,antinuke admin @user  (or ,antinuke admin add @user for backwards compat)
+      // ,antinuke admin @user  (or ,antinuke admin add @user)
       const rawId = arg1 === "add"
         ? (args[2] ?? ctx.getString?.("arg2") ?? "")
         : (args[1] ?? ctx.getString?.("arg1") ?? "");
@@ -218,37 +235,49 @@ export const command: HybridCommand = {
       const modules = await getModuleConfigs(ctx.guild.id);
       const cfg     = modules.get(module);
 
+      // No arg → show current config
       if (!arg1) {
         const status = cfg?.enabled ? "**enabled**" : "**disabled**";
-        const thresh = (module === "botadd" || module === "vanity") ? "N/A" : (cfg?.threshold ?? 3);
-        const punish = cfg?.punishment ?? "ban";
-        return ctx.reply({
-          embeds: [brandEmbed({
-            title: `antinuke — ${MODULE_LABELS[module]}`,
-            description: [
-              `**status** — ${status}`,
-              `**threshold** — ${thresh}`,
-              `**punishment** — ${punish}`,
-            ].join("\n"),
-          })],
-        });
+        const lines  = [
+          `**status** — ${status}`,
+          ...(HAS_THRESHOLD.has(module) ? [`**threshold** — \`${cfg?.threshold ?? 3}\``] : []),
+          `**punishment** — \`${cfg?.punishment ?? "ban"}\``,
+          ...(HAS_COMMAND.has(module)   ? [`**command detection** — ${cfg?.countCommands ? "on" : "off"}`] : []),
+        ];
+        return ctx.reply({ embeds: [brandEmbed({ title: `antinuke — ${MODULE_LABELS[module]}`, description: lines.join("\n") })] });
       }
 
+      // ── on / off (with optional inline flags) ────────────────────────────
       if (arg1 === "on" || arg1 === "off") {
         const enabled = arg1 === "on";
+        // flags start at args[2] (everything after "ban on")
+        const flags = parseFlags(args.slice(2));
+
+        const newThreshold    = flags.threshold                 ?? cfg?.threshold     ?? 3;
+        const newPunishment   = flags.do                        ?? cfg?.punishment    ?? "ban";
+        const newCountCmds    = flags.command !== undefined      ? flags.command       : (cfg?.countCommands ?? false);
+
         await db
           .insert(antinukeModules)
-          .values({ guildId: ctx.guild.id, module, enabled, threshold: cfg?.threshold ?? 3, punishment: cfg?.punishment ?? "ban", countCommands: cfg?.countCommands ?? false })
+          .values({ guildId: ctx.guild.id, module, enabled, threshold: newThreshold, punishment: newPunishment, countCommands: newCountCmds })
           .onConflictDoUpdate({
             target: [antinukeModules.guildId, antinukeModules.module],
-            set: { enabled },
+            set: { enabled, threshold: newThreshold, punishment: newPunishment, countCommands: newCountCmds },
           });
         invalidateModuleCache(ctx.guild.id);
-        return ctx.reply({ embeds: [successEmbed(`**${MODULE_LABELS[module]}** protection is now **${arg1}**.`)] });
+
+        const lines = [
+          `**${MODULE_LABELS[module]}** protection is now **${arg1}**`,
+          ...(HAS_THRESHOLD.has(module) ? [`**threshold** — \`${newThreshold}\``] : []),
+          `**punishment** — \`${newPunishment}\``,
+          ...(HAS_COMMAND.has(module)   ? [`**command detection** — ${newCountCmds ? "on" : "off"}`] : []),
+        ];
+        return ctx.reply({ embeds: [successEmbed(lines.join("\n"))] });
       }
 
+      // ── standalone threshold subcommand (backwards compat) ───────────────
       if (arg1 === "threshold") {
-        if (module === "botadd" || module === "vanity") {
+        if (!HAS_THRESHOLD.has(module)) {
           return ctx.reply({ embeds: [errorEmbed(`the **${MODULE_LABELS[module]}** module has no threshold.`)] });
         }
         const n = parseInt(arg2);
@@ -256,14 +285,12 @@ export const command: HybridCommand = {
         await db
           .insert(antinukeModules)
           .values({ guildId: ctx.guild.id, module, enabled: cfg?.enabled ?? false, threshold: n, punishment: cfg?.punishment ?? "ban", countCommands: cfg?.countCommands ?? false })
-          .onConflictDoUpdate({
-            target: [antinukeModules.guildId, antinukeModules.module],
-            set: { threshold: n },
-          });
+          .onConflictDoUpdate({ target: [antinukeModules.guildId, antinukeModules.module], set: { threshold: n } });
         invalidateModuleCache(ctx.guild.id);
         return ctx.reply({ embeds: [successEmbed(`**${MODULE_LABELS[module]}** threshold set to **${n}**.`)] });
       }
 
+      // ── standalone punishment subcommand (backwards compat) ─────────────
       if (arg1 === "punishment" || arg1 === "do") {
         if (!["ban", "kick", "strip"].includes(arg2)) {
           return ctx.reply({ embeds: [errorEmbed("punishment must be `ban`, `kick`, or `strip`.")] });
@@ -271,15 +298,26 @@ export const command: HybridCommand = {
         await db
           .insert(antinukeModules)
           .values({ guildId: ctx.guild.id, module, enabled: cfg?.enabled ?? false, threshold: cfg?.threshold ?? 3, punishment: arg2, countCommands: cfg?.countCommands ?? false })
-          .onConflictDoUpdate({
-            target: [antinukeModules.guildId, antinukeModules.module],
-            set: { punishment: arg2 },
-          });
+          .onConflictDoUpdate({ target: [antinukeModules.guildId, antinukeModules.module], set: { punishment: arg2 } });
         invalidateModuleCache(ctx.guild.id);
         return ctx.reply({ embeds: [successEmbed(`**${MODULE_LABELS[module]}** punishment set to **${arg2}**.`)] });
       }
 
-      return ctx.reply({ embeds: [errorEmbed(`usage: \`antinuke ${module} on|off|threshold <n>|punishment ban|kick|strip\``)] });
+      // ── standalone command-detection subcommand ──────────────────────────
+      if (arg1 === "command" || arg1 === "--command") {
+        if (!HAS_COMMAND.has(module)) {
+          return ctx.reply({ embeds: [errorEmbed(`the **${MODULE_LABELS[module]}** module doesn't support command detection.`)] });
+        }
+        const on = ["on", "true", "yes", "1"].includes(arg2);
+        await db
+          .insert(antinukeModules)
+          .values({ guildId: ctx.guild.id, module, enabled: cfg?.enabled ?? false, threshold: cfg?.threshold ?? 3, punishment: cfg?.punishment ?? "ban", countCommands: on })
+          .onConflictDoUpdate({ target: [antinukeModules.guildId, antinukeModules.module], set: { countCommands: on } });
+        invalidateModuleCache(ctx.guild.id);
+        return ctx.reply({ embeds: [successEmbed(`**${MODULE_LABELS[module]}** command detection is now **${on ? "on" : "off"}**.`)] });
+      }
+
+      return ctx.reply({ embeds: [errorEmbed(`usage: \`antinuke ${module} on|off [--threshold <n>] [--do ban|kick|strip] [--command on|off]\``)] });
     }
 
     // ── overview ─────────────────────────────────────────────────────────────
@@ -291,10 +329,11 @@ export const command: HybridCommand = {
       const mod   = modules.get(m);
       const on    = mod?.enabled ? "✅" : "❌";
       const lbl   = MODULE_LABELS[m as Module];
-      const extra = (m !== "botadd" && m !== "vanity")
-        ? ` — threshold \`${mod?.threshold ?? 3}\` | do \`${mod?.punishment ?? "ban"}\``
-        : ` — do \`${mod?.punishment ?? "ban"}\``;
-      return `${on} **${lbl}**${extra}`;
+      const parts: string[] = [];
+      if (HAS_THRESHOLD.has(m as Module)) parts.push(`threshold \`${mod?.threshold ?? 3}\``);
+      parts.push(`do \`${mod?.punishment ?? "ban"}\``);
+      if (HAS_COMMAND.has(m as Module)) parts.push(`cmd \`${mod?.countCommands ? "on" : "off"}\``);
+      return `${on} **${lbl}** — ${parts.join(" | ")}`;
     }).join("\n");
 
     return ctx.reply({
@@ -310,7 +349,7 @@ export const command: HybridCommand = {
           moduleLines,
           "",
           `use \`antinuke enable\` or \`antinuke disable\` to toggle`,
-          `use \`antinuke <module> on/off\` to toggle a module`,
+          `use \`antinuke <module> on/off [--threshold N] [--do punishment] [--command on/off]\` to configure`,
         ].join("\n"),
       })],
     });
