@@ -14,14 +14,16 @@ export const command: HybridCommand = {
         brandEmbed({
           title: "geico. — Creator of Mourn",
           description: [
-            "> Built **Mourn** from the ground up — solo.",
-            "> Every command, every feature, every fix.",
+            "> Built **Mourn** entirely from the ground up, alone.",
+            "> Every command, every feature, every fix — personally.",
+            "> A project driven by the desire to build something that actually works.",
           ].join("\n"),
           fields: [
-            { name: "Discord",  value: "@udrs",                              inline: true },
-            { name: "Handle",   value: "geico",                              inline: true },
-            { name: "Project",  value: "Mourn — all-in-one Discord toolkit", inline: false },
-            { name: "Feedback", value: "Got a bug or idea? Hit him up directly.", inline: false },
+            { name: "Discord",     value: "@udrs",                                        inline: true  },
+            { name: "Handle",      value: "geico",                                        inline: true  },
+            { name: "Project",     value: "Mourn — a full-featured Discord toolkit",      inline: false },
+            { name: "Built With",  value: "TypeScript · discord.js v14 · PostgreSQL",     inline: false },
+            { name: "Feedback",    value: "Have a bug report or feature idea? Reach out directly.", inline: false },
           ],
           page: "Creator",
         }),
