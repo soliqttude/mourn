@@ -1,6 +1,8 @@
 import { EmbedBuilder, ApplicationCommandOptionType, Message } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 
+const GOOGLE_ICON = "https://cdn.discordapp.com/emojis/1515490536566292541.png";
+
 const LANG_NAMES: Record<string, string> = {
   af:"Afrikaans",sq:"Albanian",am:"Amharic",ar:"Arabic",hy:"Armenian",az:"Azerbaijani",
   eu:"Basque",be:"Belarusian",bn:"Bengali",bs:"Bosnian",bg:"Bulgarian",ca:"Catalan",
@@ -38,50 +40,44 @@ export const command: HybridCommand = {
     { name: "text", description: "Text to translate (or reply to a message)", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
-    // --- resolve text & languages ---
     let text: string | null = null;
     let to   = "en";
     let from = "auto";
-    let replyAuthor: { name: string; iconURL?: string } | null = null;
+    let author: { name: string; iconURL?: string } = {
+      name:    ctx.user.tag,
+      iconURL: ctx.user.displayAvatarURL(),
+    };
 
     if (ctx.source === "prefix") {
       const raw = ctx.raw as Message;
 
-      // grab text from replied message first
       if (raw.reference?.messageId) {
         const ref = await (ctx.channel as any).messages
           .fetch(raw.reference.messageId)
           .catch(() => null) as Message | null;
         if (ref?.content) {
-          text = ref.content;
-          replyAuthor = {
-            name:    ref.author.tag,
-            iconURL: ref.author.displayAvatarURL(),
-          };
+          text   = ref.content;
+          author = { name: ref.author.tag, iconURL: ref.author.displayAvatarURL() };
         }
       }
 
-      // args: [to] [from] [text...] — or just [text...] if first arg isn't a lang code
-      const args = ctx.args;
+      const args   = ctx.args;
+      const isLang = (s: string) => /^[a-z]{2,3}(-[a-zA-Z]{2,4})?$/.test(s);
+
       if (args.length > 0) {
         const first  = args[0].toLowerCase();
         const second = args[1]?.toLowerCase();
-        const isLang = (s: string) => /^[a-z]{2,3}(-[a-zA-Z]{2,4})?$/.test(s);
 
-        if (isLang(first) && args.length >= 2 && isLang(second)) {
-          // ,tr fr en some text
+        if (isLang(first) && args.length >= 2 && second && isLang(second)) {
           to   = first;
           from = second;
           if (!text) text = args.slice(2).join(" ") || null;
         } else if (isLang(first) && args.length === 1) {
-          // ,tr fr  (with replied message)
           to = first;
         } else if (isLang(first) && args.length > 1) {
-          // ,tr fr some text
           to = first;
           if (!text) text = args.slice(1).join(" ") || null;
         } else {
-          // ,tr some plain text
           if (!text) text = args.join(" ") || null;
         }
       }
@@ -92,14 +88,20 @@ export const command: HybridCommand = {
     }
 
     if (!text) {
-      return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xff4444).setDescription("Reply to a message or provide text to translate.")] });
+      return ctx.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0xff4444)
+            .setDescription("Reply to a message or provide text to translate.")
+            .setFooter({ text: "Google Translate", iconURL: GOOGLE_ICON }),
+        ],
+      });
     }
 
-    // --- call Google Translate free endpoint ---
     let translated: string;
     let detectedFrom: string = from;
     try {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(from)}&tl=${encodeURIComponent(to)}&dt=t&q=${encodeURIComponent(text)}`;
+      const url  = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(from)}&tl=${encodeURIComponent(to)}&dt=t&q=${encodeURIComponent(text)}`;
       const res  = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as any;
@@ -107,23 +109,29 @@ export const command: HybridCommand = {
       if (data[2] && from === "auto") detectedFrom = data[2] as string;
       if (!translated) throw new Error("Empty response");
     } catch (e) {
-      return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xff4444).setDescription(`Translation failed: ${(e as Error).message}`)] });
+      return ctx.reply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(0xff4444)
+            .setDescription(`Translation failed: ${(e as Error).message}`)
+            .setFooter({ text: "Google Translate", iconURL: GOOGLE_ICON }),
+        ],
+      });
     }
 
     const fromName = langName(detectedFrom);
     const toName   = langName(to);
 
-    const embed = new EmbedBuilder()
-      .setColor(0x5865f2)
-      .setTitle(`Translated from ${fromName} to ${toName}`)
-      .setDescription(translated.slice(0, 2000))
-      .setFooter({ text: "Google Translate" })
-      .setTimestamp();
-
-    if (replyAuthor) {
-      embed.setAuthor({ name: replyAuthor.name, iconURL: replyAuthor.iconURL });
-    }
-
-    return ctx.reply({ embeds: [embed] });
+    return ctx.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0x5865f2)
+          .setAuthor({ name: author.name, iconURL: author.iconURL })
+          .setTitle(`Translated from ${fromName} to ${toName}`)
+          .setDescription(translated.slice(0, 2000))
+          .setFooter({ text: "Google Translate", iconURL: GOOGLE_ICON })
+          .setTimestamp(),
+      ],
+    });
   },
 };
