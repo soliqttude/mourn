@@ -30,9 +30,9 @@ const MODULE_LABELS: Record<Module, string> = {
 const KEYWORDS = new Set(["add", "remove", "list", "clear", "on", "off", "threshold", "punishment", "do"]);
 
 async function resolveUser(ctx: any, raw: string) {
-  // try slash option first
+  // await the slash option — getUser returns a Promise, not a value
   try {
-    const u = ctx.getUser?.("user");
+    const u = await ctx.getUser?.("user");
     if (u) return u;
   } catch {}
   // strip mention formatting and fetch by id
