@@ -4,13 +4,13 @@ import { getGuildSettings } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 
 const CHANNEL_TYPE_NAMES: Partial<Record<ChannelType, string>> = {
-  [ChannelType.GuildText]:         "text",
-  [ChannelType.GuildVoice]:        "voice",
-  [ChannelType.GuildCategory]:     "category",
-  [ChannelType.GuildAnnouncement]: "announcement",
-  [ChannelType.GuildStageVoice]:   "stage",
-  [ChannelType.GuildForum]:        "forum",
-  [ChannelType.GuildMedia]:        "media",
+  [ChannelType.GuildText]:         "Text",
+  [ChannelType.GuildVoice]:        "Voice",
+  [ChannelType.GuildCategory]:     "Category",
+  [ChannelType.GuildAnnouncement]: "Announcement",
+  [ChannelType.GuildStageVoice]:   "Stage",
+  [ChannelType.GuildForum]:        "Forum",
+  [ChannelType.GuildMedia]:        "Media",
 };
 
 export const event = {
@@ -26,19 +26,19 @@ export const event = {
     if (!logCh?.isTextBased()) return;
 
     const guildIcon = channel.guild.iconURL({ size: 64 }) ?? undefined;
-    const typeName  = CHANNEL_TYPE_NAMES[channel.type] ?? "unknown";
+    const typeName  = CHANNEL_TYPE_NAMES[channel.type] ?? "Unknown";
     const parent    = (channel as any).parent;
 
     const embed = new EmbedBuilder()
       .setColor(0x000000)
-      .setAuthor({ name: "channel created", iconURL: guildIcon })
+      .setAuthor({ name: "Channel Created", iconURL: guildIcon })
+      .setDescription(`Channel <#${channel.id}> was created in ${channel.guild.name}`)
       .addFields(
-        { name: "name",     value: `<#${channel.id}> \`${channel.name}\``, inline: false },
-        { name: "type",     value: typeName,                                 inline: true  },
-        { name: "category", value: parent ? parent.name : "none",           inline: true  },
+        { name: "Type",     value: typeName,                          inline: true },
+        { name: "Category", value: parent ? parent.name : "none",    inline: true },
       )
       .setTimestamp()
-      .setFooter({ text: `channel id: ${channel.id}` });
+      .setFooter({ text: `Channel ID: ${channel.id}` });
 
     await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
