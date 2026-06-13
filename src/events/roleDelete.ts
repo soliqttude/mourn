@@ -7,26 +7,20 @@ export const event = {
   name: "roleDelete",
   async execute(client: Client, role: Role) {
     await handleAntinukeAction(client, role.guild, "role_delete", role.id);
-
     const settings    = await getGuildSettings(role.guild.id);
     const logChannelId = (settings as any).roleLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = role.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
-
     const guildIcon = role.guild.iconURL({ size: 64 }) ?? undefined;
-
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
-      .setAuthor({ name: "role deleted", iconURL: guildIcon })
+      .setColor(0x000000).setAuthor({ name: "Role Deleted", iconURL: guildIcon })
+      .setDescription(`Role \`${role.name}\` was deleted from ${role.guild.name}`)
       .addFields(
-        { name: "name",    value: `\`${role.name}\``,     inline: true },
-        { name: "color",   value: role.hexColor,           inline: true },
-        { name: "members", value: `${role.members.size}`, inline: true },
+        { name: "Color", value: role.hexColor, inline: true },
+        { name: "Members", value: `${role.members.size}`, inline: true },
       )
-      .setTimestamp()
-      .setFooter({ text: `role id: ${role.id}` });
-
+      .setTimestamp().setFooter({ text: `Role ID: ${role.id}` });
     await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };

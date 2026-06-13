@@ -7,29 +7,23 @@ export const event = {
   name: "roleCreate",
   async execute(client: Client, role: Role) {
     await handleAntinukeAction(client, role.guild, "role_create", role.id);
-
     const settings    = await getGuildSettings(role.guild.id);
     const logChannelId = (settings as any).roleLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = role.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
-
     const guildIcon = role.guild.iconURL({ size: 64 }) ?? undefined;
-
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
-      .setAuthor({ name: "role created", iconURL: guildIcon })
+      .setColor(0x000000).setAuthor({ name: "Role Created", iconURL: guildIcon })
+      .setDescription(`Role <@&${role.id}> was created in ${role.guild.name}`)
       .addFields(
-        { name: "name",        value: `<@&${role.id}> \`${role.name}\``, inline: false },
-        { name: "color",       value: role.hexColor,                      inline: true  },
-        { name: "hoisted",     value: role.hoist ? "yes" : "no",         inline: true  },
-        { name: "mentionable", value: role.mentionable ? "yes" : "no",   inline: true  },
-        { name: "position",    value: `${role.position}`,                 inline: true  },
-        { name: "members",     value: `${role.members.size}`,             inline: true  },
+        { name: "Color", value: role.hexColor, inline: true },
+        { name: "Hoisted", value: role.hoist ? "yes" : "no", inline: true },
+        { name: "Mentionable", value: role.mentionable ? "yes" : "no", inline: true },
+        { name: "Position", value: `${role.position}`, inline: true },
+        { name: "Members", value: `${role.members.size}`, inline: true },
       )
-      .setTimestamp()
-      .setFooter({ text: `role id: ${role.id}` });
-
+      .setTimestamp().setFooter({ text: `Role ID: ${role.id}` });
     await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };

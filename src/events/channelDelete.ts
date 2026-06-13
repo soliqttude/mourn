@@ -7,13 +7,9 @@ import { eq } from "drizzle-orm";
 import { voicemasterChannels } from "../db/schema.js";
 
 const CHANNEL_TYPE_NAMES: Partial<Record<ChannelType, string>> = {
-  [ChannelType.GuildText]:         "text",
-  [ChannelType.GuildVoice]:        "voice",
-  [ChannelType.GuildCategory]:     "category",
-  [ChannelType.GuildAnnouncement]: "announcement",
-  [ChannelType.GuildStageVoice]:   "stage",
-  [ChannelType.GuildForum]:        "forum",
-  [ChannelType.GuildMedia]:        "media",
+  [ChannelType.GuildText]: "Text", [ChannelType.GuildVoice]: "Voice",
+  [ChannelType.GuildCategory]: "Category", [ChannelType.GuildAnnouncement]: "Announcement",
+  [ChannelType.GuildStageVoice]: "Stage", [ChannelType.GuildForum]: "Forum", [ChannelType.GuildMedia]: "Media",
 };
 
 export const event = {
@@ -22,29 +18,23 @@ export const event = {
     if (!("guild" in channel)) return;
     await handleAntinukeAction(client, channel.guild, "channel_delete", channel.id);
     await db.delete(voicemasterChannels).where(eq(voicemasterChannels.channelId, channel.id)).catch(() => {});
-
     const settings    = await getGuildSettings(channel.guild.id);
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = channel.guild.channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
-
     const guildIcon = channel.guild.iconURL({ size: 64 }) ?? undefined;
-    const typeName  = CHANNEL_TYPE_NAMES[(channel as GuildChannel).type] ?? "unknown";
+    const typeName  = CHANNEL_TYPE_NAMES[(channel as GuildChannel).type] ?? "Unknown";
     const parent    = (channel as any).parent;
     const name      = "name" in channel ? channel.name : "unknown";
-
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
-      .setAuthor({ name: "channel deleted", iconURL: guildIcon })
+      .setColor(0x000000).setAuthor({ name: "Channel Deleted", iconURL: guildIcon })
+      .setDescription(`Channel \`${name}\` was deleted from ${channel.guild.name}`)
       .addFields(
-        { name: "name",     value: `\`${name}\``,                 inline: true },
-        { name: "type",     value: typeName,                       inline: true },
-        { name: "category", value: parent ? parent.name : "none", inline: true },
+        { name: "Type", value: typeName, inline: true },
+        { name: "Category", value: parent ? parent.name : "none", inline: true },
       )
-      .setTimestamp()
-      .setFooter({ text: `channel id: ${channel.id}` });
-
+      .setTimestamp().setFooter({ text: `Channel ID: ${channel.id}` });
     await (logCh as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };

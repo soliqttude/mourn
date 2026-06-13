@@ -9,9 +9,7 @@ import { and, eq, inArray } from "drizzle-orm";
 async function isIgnored(guildId: string, ids: string[]): Promise<boolean> {
   const clean = ids.filter(Boolean);
   if (!clean.length) return false;
-  const rows = await db.select().from(logIgnores).where(
-    and(eq(logIgnores.guildId, guildId), inArray(logIgnores.targetId, clean))
-  );
+  const rows = await db.select().from(logIgnores).where(and(eq(logIgnores.guildId, guildId), inArray(logIgnores.targetId, clean)));
   return rows.length > 0;
 }
 
@@ -21,62 +19,42 @@ export const event = {
     const guild = newState.guild;
     if (!guild) return;
     await vmHandle(client, oldState, newState);
-
     const settings = await getGuildSettings(guild.id);
     if (!settings.voiceLogChannel) return;
-
     const member = newState.member ?? oldState.member;
     if (!member || member.user.bot) return;
     if (await isIgnored(guild.id, [member.id])) return;
-
     const ch = guild.channels.cache.get(settings.voiceLogChannel);
     if (!ch?.isTextBased()) return;
-
-    const avatarURL = member.user.displayAvatarURL({ size: 64 });
-    let label: string | null = null;
-    let fields: { name: string; value: string; inline: boolean }[] = [];
-
+    const avatarURL = member.user.displayAvatarURL({ size: 64 }) ?? undefined;
+    let title: string | null = null;
+    let description = "";
     if (!oldState.channel && newState.channel) {
-      label = `${member.user.username} — joined voice`;
-      fields = [
-        { name: "channel", value: `<#${newState.channel.id}> \`${newState.channel.name}\``, inline: true },
-        { name: "members", value: `${newState.channel.members.size}`,                        inline: true },
-      ];
+      title = "Joined Voice";
+      description = `<@${member.id}> joined <#${newState.channel.id}> (${newState.channel.members.size} member${newState.channel.members.size === 1 ? "" : "s"})`;
     } else if (oldState.channel && !newState.channel) {
-      label = `${member.user.username} — left voice`;
-      fields = [
-        { name: "channel",   value: `<#${oldState.channel.id}> \`${oldState.channel.name}\``, inline: true },
-        { name: "remaining", value: `${oldState.channel.members.size}`,                        inline: true },
-      ];
+      title = "Left Voice";
+      description = `<@${member.id}> left <#${oldState.channel.id}> (${oldState.channel.members.size} remaining)`;
     } else if (oldState.channel && newState.channel && oldState.channel.id !== newState.channel.id) {
-      label = `${member.user.username} — moved channels`;
-      fields = [
-        { name: "from", value: `<#${oldState.channel.id}> \`${oldState.channel.name}\``, inline: true },
-        { name: "to",   value: `<#${newState.channel.id}> \`${newState.channel.name}\``, inline: true },
-      ];
+      title = "Moved Channels";
+      description = `<@${member.id}> moved from <#${oldState.channel.id}> to <#${newState.channel.id}>`;
     } else if (!oldState.mute && newState.mute) {
-      label = `${member.user.username} — server muted`;
-      fields = [{ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true }];
+      title = "Server Muted";
+      description = `<@${member.id}> was server muted${newState.channel ? ` in <#${newState.channel.id}>` : ""}`;
     } else if (oldState.mute && !newState.mute) {
-      label = `${member.user.username} — server unmuted`;
-      fields = [{ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true }];
+      title = "Server Unmuted";
+      description = `<@${member.id}> was server unmuted${newState.channel ? ` in <#${newState.channel.id}>` : ""}`;
     } else if (!oldState.deaf && newState.deaf) {
-      label = `${member.user.username} — server deafened`;
-      fields = [{ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true }];
+      title = "Server Deafened";
+      description = `<@${member.id}> was server deafened${newState.channel ? ` in <#${newState.channel.id}>` : ""}`;
     } else if (oldState.deaf && !newState.deaf) {
-      label = `${member.user.username} — server undeafened`;
-      fields = [{ name: "channel", value: newState.channel ? `<#${newState.channel.id}>` : "unknown", inline: true }];
+      title = "Server Undeafened";
+      description = `<@${member.id}> was server undeafened${newState.channel ? ` in <#${newState.channel.id}>` : ""}`;
     }
-
-    if (!label) return;
-
+    if (!title) return;
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
-      .setAuthor({ name: label, iconURL: avatarURL })
-      .addFields(...fields)
-      .setTimestamp()
-      .setFooter({ text: `user id: ${member.id}` });
-
+      .setColor(0x000000).setAuthor({ name: title, iconURL: avatarURL })
+      .setDescription(description).setTimestamp().setFooter({ text: `User ID: ${member.id}` });
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };

@@ -9,9 +9,7 @@ import { and, eq, inArray } from "drizzle-orm";
 async function isIgnored(guildId: string, ids: string[]): Promise<boolean> {
   const clean = ids.filter(Boolean);
   if (!clean.length) return false;
-  const rows = await db.select().from(logIgnores).where(
-    and(eq(logIgnores.guildId, guildId), inArray(logIgnores.targetId, clean))
-  );
+  const rows = await db.select().from(logIgnores).where(and(eq(logIgnores.guildId, guildId), inArray(logIgnores.targetId, clean)));
   return rows.length > 0;
 }
 
@@ -20,40 +18,26 @@ export const event = {
   async execute(_client: Client, oldMsg: Message | PartialMessage, newMsg: Message | PartialMessage) {
     if (!newMsg.guild || newMsg.author?.bot) return;
     if (oldMsg.content === newMsg.content) return;
-
     storeSnipe(newMsg.channel.id, "edit", {
-      authorId: newMsg.author?.id ?? "unknown",
-      authorTag: newMsg.author?.tag ?? "unknown",
+      authorId: newMsg.author?.id ?? "unknown", authorTag: newMsg.author?.tag ?? "unknown",
       authorAvatar: newMsg.author?.displayAvatarURL({ size: 256 }) ?? null,
-      content: oldMsg.content ?? "",
-      after: newMsg.content ?? "",
-      at: Date.now(),
+      content: oldMsg.content ?? "", after: newMsg.content ?? "", at: Date.now(),
     });
-
     const settings = await getGuildSettings(newMsg.guild.id);
     if (!settings.msgLogChannel) return;
     if (await isIgnored(newMsg.guild.id, [newMsg.author?.id ?? "", newMsg.channel.id])) return;
-
     const ch = newMsg.guild.channels.cache.get(settings.msgLogChannel);
     if (!ch?.isTextBased()) return;
-
-    const author    = newMsg.author;
-    const avatarURL = author?.displayAvatarURL({ size: 256 });
-
+    const author = newMsg.author;
+    const avatarURL = author?.displayAvatarURL({ size: 256 }) ?? undefined;
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
-      .setAuthor({
-        name:    author ? `${author.username} — message edited` : "unknown user — message edited",
-        iconURL: avatarURL,
-      })
-      .setDescription(`in <#${newMsg.channel.id}> — [jump](${newMsg.url})`)
+      .setColor(0x000000).setAuthor({ name: "Message Edited", iconURL: avatarURL })
+      .setDescription(`Message from <@${author?.id}> edited in <#${newMsg.channel.id}> — [jump](${newMsg.url})`)
       .addFields(
-        { name: "before", value: (oldMsg.content || "*no content*").slice(0, 1024), inline: false },
-        { name: "after",  value: (newMsg.content || "*no content*").slice(0, 1024), inline: false },
+        { name: "Before", value: (oldMsg.content || "*no content*").slice(0, 1024), inline: false },
+        { name: "After",  value: (newMsg.content || "*no content*").slice(0, 1024), inline: false },
       )
-      .setTimestamp()
-      .setFooter({ text: `message id: ${newMsg.id} • user id: ${author?.id ?? "unknown"}` });
-
+      .setTimestamp().setFooter({ text: `User ID: ${author?.id ?? "unknown"}` });
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
 };
