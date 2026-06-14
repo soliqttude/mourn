@@ -208,7 +208,11 @@ export const event = {
     }
     if (cmd.permission && cmd.permission !== "everyone" && message.member) {
       if (!checkTier(message.member, cmd.permission)) {
-        return message.reply({ embeds: [errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: ${cmd.permission}`)] });
+        const permEmbed = errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: ${cmd.permission}`);
+        await message.reply({ embeds: [permEmbed] }).catch(() =>
+          message.channel.send({ embeds: [permEmbed] }).catch(() => {})
+        );
+        return;
       }
     }
 
