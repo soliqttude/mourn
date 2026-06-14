@@ -206,8 +206,12 @@ export const event = {
     if (cmd.ownerOnly && !isBotOwner(message.author.id)) {
       return message.reply({ content: "this isn't yours to touch." });
     }
-    if (cmd.permission && cmd.permission !== "everyone" && message.member) {
-      if (!checkTier(message.member, cmd.permission)) {
+    if (cmd.permission && cmd.permission !== "everyone") {
+      // Fetch fresh member so partial/stale role cache never skips this check
+      const member = (message.member?.partial)
+        ? await message.guild!.members.fetch(message.author.id).catch(() => message.member)
+        : message.member;
+      if (member && !checkTier(member, cmd.permission)) {
         const permEmbed = errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: ${cmd.permission}`);
         await message.reply({ embeds: [permEmbed] }).catch(() =>
           message.channel.send({ embeds: [permEmbed] }).catch(() => {})
