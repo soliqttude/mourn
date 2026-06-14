@@ -11,7 +11,7 @@ const C = {
 // ── Custom emoji config ────────────────────────────────────────────────────────
 export const EMOJIS = {
   check: process.env.EMOJI_CHECK ?? "✅",
-  warn:  process.env.EMOJI_WARN  ?? "⚠️",
+  warn:  process.env.EMOJI_WARN  ?? "<:warn:1508824473992696049>",
   plus:  process.env.EMOJI_PLUS  ?? "➕",
   cross: process.env.EMOJI_CROSS ?? "❌",
   info:  process.env.EMOJI_INFO  ?? "ℹ️",
