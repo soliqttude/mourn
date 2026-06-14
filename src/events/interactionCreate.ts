@@ -102,10 +102,12 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
     }
   }
 
+  const TIER_TO_PERM: Record<string, string> = { mod: "ban_members", admin: "manage_guild", owner: "server_owner", botowner: "bot_owner" };
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
     if (!checkTier(interaction.member as any, cmd.permission)) {
+      const permName = TIER_TO_PERM[cmd.permission] ?? cmd.permission;
       return interaction.reply({
-        embeds: [errorEmbed(`you need the **${cmd.permission}** permission to use this.`)],
+        embeds: [errorEmbed(`<:warn:1508824473992696049> <@${interaction.user.id}>: You're **missing** permission: ${permName}`)],
         flags: MessageFlags.Ephemeral,
       });
     }
