@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "setbasicroles <#channel>",
   examples: ["setbasicroles #roles", "setbasicroles #self-roles"],
   category: "utility",
-  permission: "admin",
+  permission: "manage_roles",
   guildOnly: true,
   options: [
     { name: "channel", description: "Channel to post the role panels in", type: ApplicationCommandOptionType.Channel, required: true },

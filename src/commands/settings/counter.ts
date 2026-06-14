@@ -19,7 +19,7 @@ export const command: HybridCommand = {
     "counter list",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     {

@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   usage: "softban [user] [reason]",
   examples: ["softban Rule violation"],
   category: "moderation",
-  permission: "mod",
+  permission: "ban_members",
   guildOnly: true,
   options: [
     { name: "user",   description: "User to softban", type: ApplicationCommandOptionType.User,   required: true  },

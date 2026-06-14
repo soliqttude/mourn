@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { config } from "../../config.js";
 export const command: HybridCommand = {
-  name:"unbanall",description:"Unban every banned user in this server.",category:"moderation",permission:"admin",guildOnly:true,
+  name:"unbanall",description:"Unban every banned user in this server.",category:"moderation",permission: "ban_members",guildOnly:true,
   async execute(ctx){
     if(!ctx.guild||!ctx.member)return;
     if(!ctx.member.permissions.has(PermissionFlagsBits.BanMembers))return ctx.reply({embeds:[errorEmbed("You need **Ban Members** **permission**.")]});

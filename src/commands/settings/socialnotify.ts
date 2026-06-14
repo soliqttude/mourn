@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   aliases: ["sn", "notify"],
   description: "Set up social media notifications. Subcommands: add, remove, list",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "socialnotify [add|remove|list] [platform] [target] [#channel] [message]",
   examples: [

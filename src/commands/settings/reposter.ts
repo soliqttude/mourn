@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   usage: "reposter <prefix|suppress|embed|strict|delete> <on|off>",
   examples: ["reposter prefix on", "reposter suppress off", "reposter delete on", "reposter embed on"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "prefix | suppress | embed | strict | delete | config", type: ApplicationCommandOptionType.String, required: true,

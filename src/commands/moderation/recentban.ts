@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   aliases: ["banrecent"],
   description: "Ban all members who joined within the last N minutes. Use during raids.",
   category: "moderation",
-  permission: "admin",
+  permission: "ban_members",
   guildOnly: true,
   usage: "recentban (minutes) [reason]",
   examples: ["recentban 5", "recentban 10 raid cleanup"],

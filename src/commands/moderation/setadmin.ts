@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "setadmin [user] [role]",
   examples: ["setadmin"],
   category: "moderation",
-  permission: "owner",
+  permission: "administrator",
   guildOnly: true,
   options: [
     { name: "user", description: "Member", type: ApplicationCommandOptionType.User, required: true },

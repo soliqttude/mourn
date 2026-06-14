@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   usage: "kick [user] [reason]",
   examples: ["kick Rule violation"],
   category: "moderation",
-  permission: "mod",
+  permission: "kick_members",
   guildOnly: true,
   options: [
     { name: "user",   description: "Member to kick", type: ApplicationCommandOptionType.User,   required: true  },

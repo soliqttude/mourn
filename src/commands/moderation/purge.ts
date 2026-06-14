@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "purge [amount]",
   examples: ["purge"],
   category: "moderation",
-  permission: "mod",
+  permission: "manage_messages",
   guildOnly: true,
   options: [
     { name: "amount", description: "Amount (1-100)", type: ApplicationCommandOptionType.Number, required: true },

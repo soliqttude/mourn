@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   name: "gedit",
   description: "Edit an active giveaway's prize, winners, description, thumbnail, or image.",
   category: "giveaway",
-  permission: "mod",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "gedit (id) [--prize <text>] [--winners <n>] [--desc <text>] [--thumb <url>] [--image <url>] [--duration <time>]",
   examples: ["gedit 12 --prize Nitro Classic --winners 2", "gedit 5 --desc Must be level 10+"],

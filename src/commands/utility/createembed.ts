@@ -45,7 +45,7 @@ export const command: HybridCommand = {
   aliases: ["ce"],
   description: "Send a mourn-style scripted embed to a channel.",
   category: "utility",
-  permission: "mod",
+  permission: "manage_messages",
   guildOnly: true,
   usage: "ce [#channel] {embed}$v{key: value}$v...",
   examples: [

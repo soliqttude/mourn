@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "enablemodule <module> [#channel]",
   examples: ["enablemodule fun #general", "enablemodule levels"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   userPermissions: ["ManageGuild"],
   options: [

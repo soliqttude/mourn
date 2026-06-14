@@ -1,7 +1,7 @@
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "unhoist", aliases: ["dehoist"], description: "Remove leading special characters from all member nicknames.", category: "moderation", permission: "mod", guildOnly: true,
+  name: "unhoist", aliases: ["dehoist"], description: "Remove leading special characters from all member nicknames.", category: "moderation", permission: "manage_nicknames", guildOnly: true,
   async execute(ctx) {
     if (!ctx.guild) return;
     await ctx.defer();

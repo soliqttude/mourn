@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "suggestchannel [channel]",
   examples: ["suggestchannel"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [{ name: "channel", description: "Channel for suggestions", type: ApplicationCommandOptionType.Channel, required: true }],
   async execute(ctx) {

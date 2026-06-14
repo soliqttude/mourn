@@ -26,7 +26,7 @@ export const command: HybridCommand = {
     "autoresponder role 3 remove @Unverified",
   ],
   category: "tags",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "action", description: "add|remove|list|exclusive|role", type: ApplicationCommandOptionType.String, required: true },

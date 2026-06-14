@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   usage: "setbanner <url>",
   examples: ["setbanner https://i.imgur.com/abc.png"],
   category: "utility",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [{ name: "url", description: "Image URL (PNG/JPG)", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {

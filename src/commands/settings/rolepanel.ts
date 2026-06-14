@@ -22,7 +22,7 @@ export const command: HybridCommand = {
   usage: "reactionroles [channel]",
   examples: ["reactionroles"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "channel", description: "Channel to post the role panel in", type: ApplicationCommandOptionType.Channel, required: true },

@@ -16,7 +16,7 @@ export const command: HybridCommand = {
     "voicemaster config",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "hub | joinrole | role | config", type: ApplicationCommandOptionType.String, required: true,

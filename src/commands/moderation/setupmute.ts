@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   aliases: ["mutesetup"],
   description: "Create and configure the mute role, image-mute role, and reaction-mute role with proper channel overwrites.",
   category: "moderation",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "setupmute",
   examples: ["setupmute"],

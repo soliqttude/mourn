@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   description: "Warn a server member.",
   category: "moderation",
   aliases: ["warning"],
-  permission: "mod",
+  permission: "kick_members",
   guildOnly: true,
   options: [
     { name: "user",   description: "User to warn",        type: ApplicationCommandOptionType.User,   required: true  },

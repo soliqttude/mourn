@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "roleall [role]",
   examples: ["roleall"],
   category: "moderation",
-  permission: "admin",
+  permission: "manage_roles",
   guildOnly: true,
   options: [{ name: "role", description: "Role to give", type: ApplicationCommandOptionType.Role, required: true }],
   async execute(ctx) {

@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "delrole", aliases: ["deleterole"], description: "Delete a role from the server.", category: "moderation", permission: "admin", guildOnly: true,
+  name: "delrole", aliases: ["deleterole"], description: "Delete a role from the server.", category: "moderation", permission: "manage_roles", guildOnly: true,
   options: [{ name: "role", description: "Role to delete", type: ApplicationCommandOptionType.Role, required: true }],
   async execute(ctx) {
     if (!ctx.guild) return;

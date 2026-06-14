@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "verification [channel] [role]",
   examples: ["verification"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   aliases: ["verify"],
   options: [

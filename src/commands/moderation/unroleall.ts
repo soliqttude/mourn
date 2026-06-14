@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "unroleall [role]",
   examples: ["unroleall"],
   category: "moderation",
-  permission: "admin",
+  permission: "manage_roles",
   guildOnly: true,
   options: [{ name: "role", description: "Role to remove", type: ApplicationCommandOptionType.Role, required: true }],
   async execute(ctx) {

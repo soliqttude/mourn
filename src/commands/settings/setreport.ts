@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "setreport [channel]",
   examples: ["setreport"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "channel", description: "Report channel", type: ApplicationCommandOptionType.Channel, required: true },

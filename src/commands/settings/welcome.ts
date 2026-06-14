@@ -65,7 +65,7 @@ export const command: HybridCommand = {
     "welcome variables",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     {

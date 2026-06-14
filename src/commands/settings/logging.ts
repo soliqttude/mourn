@@ -57,7 +57,7 @@ export const command: HybridCommand = {
   ],
   aliases: ["logs", "log"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     {

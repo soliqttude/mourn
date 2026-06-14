@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   name: "ticketpanel",
   description: "send a ticket panel to this channel",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "ticketpanel [title] [description]",
   examples: [

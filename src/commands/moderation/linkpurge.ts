@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 const URL_RE=/https?:\/\/\S+/i;
 export const command: HybridCommand = {
-  name:"linkpurge",description:"Delete messages containing links.",category:"moderation",permission:"mod",guildOnly:true,aliases:["purgelinks"],
+  name:"linkpurge",description:"Delete messages containing links.",category:"moderation",permission: "manage_messages",guildOnly:true,aliases:["purgelinks"],
   options:[{name:"amount",description:"Messages to scan (max 100)",type:ApplicationCommandOptionType.Number,required:true}],
   async execute(ctx){
     if(!ctx.guild||!ctx.channel||!ctx.member)return;

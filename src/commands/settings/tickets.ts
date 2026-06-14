@@ -7,7 +7,7 @@ export const command: HybridCommand = {
   name: "ticketsetup",
   description: "configure the ticket system",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "ticketsetup <subcommand> [args]",
   examples: [

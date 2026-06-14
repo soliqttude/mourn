@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "copydisabled <#source> <#target>",
   examples: ["copydisabled #general #bot-commands"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   userPermissions: ["ManageGuild"],
   options: [

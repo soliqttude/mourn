@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   aliases: ["simulateraid", "testraids"],
   description: "Handle a raid — mass-action members who joined recently with a new account.",
   category: "moderation",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "raid (ban|kick|timeout) [--minutes <n>] [--age <days>] [--reason <text>]",
   examples: ["raid ban --minutes 5 --age 7", "raid kick --minutes 10"],

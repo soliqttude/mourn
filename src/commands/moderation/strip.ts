@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "strip [user] [reason]",
   examples: ["strip Rule violation"],
   category: "moderation",
-  permission: "admin",
+  permission: "manage_roles",
   guildOnly: true,
   options: [
     { name: "user", description: "Member to strip roles from", type: ApplicationCommandOptionType.User, required: true },

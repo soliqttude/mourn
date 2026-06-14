@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   usage: "tempmute [user] [duration] [reason]",
   examples: ["tempmute Rule violation"],
   category: "moderation",
-  permission: "mod",
+  permission: "mute_members",
   guildOnly: true,
   options: [
     { name: "user", description: "User to mute", type: ApplicationCommandOptionType.User, required: true },

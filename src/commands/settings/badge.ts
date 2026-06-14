@@ -17,7 +17,7 @@ export const command: HybridCommand = {
     "badge sync",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "channel | message | message view | role add | role remove | role list | sync", type: ApplicationCommandOptionType.String, required: true },

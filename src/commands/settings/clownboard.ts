@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   usage: "clownboard <channel|threshold|disable>",
   examples: ["clownboard #clownboard", "clownboard threshold 5", "clownboard disable"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "channel | threshold | disable", type: ApplicationCommandOptionType.String, required: true,

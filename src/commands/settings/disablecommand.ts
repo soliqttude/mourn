@@ -17,7 +17,7 @@ export const command: HybridCommand = {
     "disablecommand reset ban #general",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   userPermissions: ["ManageGuild"],
   options: [

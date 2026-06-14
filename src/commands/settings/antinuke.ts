@@ -95,7 +95,7 @@ export const command: HybridCommand = {
     "antinuke log remove",
   ],
   category: "settings",
-  permission: "owner",
+  permission: "administrator",
   guildOnly: true,
   options: [
     { name: "sub",   description: "subcommand", type: ApplicationCommandOptionType.String, required: false },

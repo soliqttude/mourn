@@ -626,7 +626,7 @@ export const command: HybridCommand = {
   aliases: ["setupthreads", "setupdirectory"],
   description: "Post the server setup directory and create a thread for each topic.",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "setupthread",
   examples: ["setupthread"],

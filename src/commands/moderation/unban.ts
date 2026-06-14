@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "unban [user_id]",
   examples: ["unban"],
   category: "moderation",
-  permission: "mod",
+  permission: "ban_members",
   guildOnly: true,
   options: [
     { name: "user_id", description: "User ID to unban", type: ApplicationCommandOptionType.String, required: true },

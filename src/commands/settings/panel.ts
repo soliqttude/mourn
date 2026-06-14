@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "panel",
   examples: ["panel"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.guild) return ctx.reply({ embeds: [errorEmbed("Server only.")] });

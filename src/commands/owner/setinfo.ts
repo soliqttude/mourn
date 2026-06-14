@@ -59,7 +59,7 @@ export const command: HybridCommand = {
   aliases: ["postinfo"],
   description: "Post the server info embeds in this channel.",
   category: "owner",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   noSlash: true,
   usage: "setinfo",

@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "warnings [user]",
   examples: ["warnings"],
   category: "moderation",
-  permission: "mod",
+  permission: "kick_members",
   guildOnly: true,
   options: [
     { name: "user", description: "User", type: ApplicationCommandOptionType.User, required: true },

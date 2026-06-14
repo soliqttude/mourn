@@ -15,7 +15,7 @@ export const command: HybridCommand = {
   name: "ticket",
   description: "manage the current ticket channel",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "ticket <add|remove|rename|close|reopen|delete> [args]",
   examples: [

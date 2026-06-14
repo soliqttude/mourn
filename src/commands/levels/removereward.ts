@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   usage: "removereward [level]",
   examples: ["removereward"],
   category: "levels",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [{ name: "level", description: "Level to remove reward from", type: ApplicationCommandOptionType.Integer, required: true }],
   async execute(ctx) {

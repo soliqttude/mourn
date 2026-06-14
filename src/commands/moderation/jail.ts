@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   usage: "jail [user] [reason]",
   examples: ["jail Rule violation"],
   category: "moderation",
-  permission: "mod",
+  permission: "mute_members",
   guildOnly: true,
   options: [
     { name: "user", description: "Member to jail", type: ApplicationCommandOptionType.User, required: true },

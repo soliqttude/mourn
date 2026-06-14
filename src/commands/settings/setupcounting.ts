@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   name: "setupcounting",
   description: "set a counting channel",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "setupcounting #channel",
   examples: ["setupcounting #counting"],

@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "deafen [user] [reason]",
   examples: ["deafen Rule violation"],
   category: "moderation",
-  permission: "mod",
+  permission: "deafen_members",
   guildOnly: true,
   options: [
     { name: "user", description: "Member to deafen", type: ApplicationCommandOptionType.User, required: true },

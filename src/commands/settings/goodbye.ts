@@ -17,7 +17,7 @@ export const command: HybridCommand = {
   usage: "goodbye <add|remove|list|view|variables> [channel] [message]",
   examples: ["goodbye add #bye Goodbye {user}!", "goodbye remove #bye", "goodbye list"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "add | remove | list | view | variables", type: ApplicationCommandOptionType.String, required: true,

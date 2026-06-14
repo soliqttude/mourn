@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   usage: "banlist",
   examples: ["banlist"],
   category: "moderation",
-  permission: "mod",
+  permission: "ban_members",
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.guild) return;

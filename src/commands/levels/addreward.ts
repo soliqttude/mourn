@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   usage: "addreward [level] [role]",
   examples: ["addreward"],
   category: "levels",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "level", description: "Level required", type: ApplicationCommandOptionType.Integer, required: true },

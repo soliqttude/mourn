@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   name: "vanity",
   description: "Configure vanity role rewards. Users get roles for putting the vanity in their status.",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "vanity [set|roles add|roles remove|roles list|channel|message|status]",
   examples: [

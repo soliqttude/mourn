@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   aliases: ["wh"],
   description: "Manage server webhooks. Subcommands: create, send, delete, list, info",
   category: "utility",
-  permission: "mod",
+  permission: "manage_webhooks",
   guildOnly: true,
   usage: "webhook [create|send|delete|list|info] [args]",
   examples: [

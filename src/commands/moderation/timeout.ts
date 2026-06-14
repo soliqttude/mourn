@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   usage: "timeout [user] [duration] [reason]",
   examples: ["timeout @user 10m Rule violation"],
   category: "moderation",
-  permission: "mod",
+  permission: "moderate_members",
   guildOnly: true,
   options: [
     { name: "user", description: "User to timeout", type: ApplicationCommandOptionType.User, required: true },

@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   usage: "shopadd [name] [price] [description] [role] [stock]",
   examples: ["shopadd"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "name", description: "Item name", type: ApplicationCommandOptionType.String, required: true },

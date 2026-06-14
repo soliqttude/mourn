@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   usage: "addemoji [name] [url]",
   examples: ["addemoji"],
   category: "utility",
-  permission: "admin",
+  permission: "manage_expressions",
   guildOnly: true,
   aliases: ["addmoji"],
   options: [

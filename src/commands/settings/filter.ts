@@ -42,7 +42,7 @@ export const command: HybridCommand = {
     "filter wordmigrate",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "add | remove | list | reset | caps | invites | links | spam | spoilers | massmention | emoji | musicfiles | regex | whitelist | snipe | exempt | wordmigrate", type: ApplicationCommandOptionType.String, required: true },

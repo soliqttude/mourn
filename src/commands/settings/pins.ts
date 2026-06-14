@@ -18,7 +18,7 @@ export const command: HybridCommand = {
   usage: "pins <set|channel|archive|unpin|config|reset> [args]",
   examples: ["pins set on", "pins channel #pin-archive", "pins archive", "pins config"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_messages",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "set | channel | archive | unpin | config | reset", type: ApplicationCommandOptionType.String, required: true,

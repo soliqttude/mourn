@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "moveall [from] [to]",
   examples: ["moveall"],
   category: "moderation",
-  permission: "mod",
+  permission: "move_members",
   guildOnly: true,
   options: [
     { name: "from", description: "Source voice channel", type: ApplicationCommandOptionType.Channel, required: true },

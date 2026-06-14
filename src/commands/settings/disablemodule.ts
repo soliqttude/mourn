@@ -19,7 +19,7 @@ export const command: HybridCommand = {
   usage: "disablemodule <module> [#channel] | disablemodule list | disablemodule modules",
   examples: ["disablemodule fun #general", "disablemodule levels", "disablemodule list", "disablemodule modules"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   userPermissions: ["ManageGuild"],
   options: [

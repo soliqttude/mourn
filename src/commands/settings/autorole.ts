@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "autorole [role] [action] [user]",
   examples: ["autorole"],
   category: "settings",
-  permission: "mod",
+  permission: "manage_roles",
   guildOnly: true,
   options: [
     { name: "role", description: "Role to set as autorole (skip to view/clear)", type: ApplicationCommandOptionType.Role, required: false },

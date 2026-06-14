@@ -141,7 +141,7 @@ export const command: HybridCommand = {
   aliases: ["serversetup"],
   description: "AI-powered server setup. ,setup <type|description> then ,setup roles.",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "setup <gambling|community|gaming|anime|custom|roles> [description]",
   examples: ["📋 INFORMATION"],

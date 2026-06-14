@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   aliases: ["gstart"],
   description: "Start a giveaway in the current or specified channel.",
   category: "giveaway",
-  permission: "mod",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "gcreate (prize) (duration) [winners] [--channel #ch] [--desc text] [--thumb url] [--roles @r1,@r2] [--minlevel n] [--maxlevel n]",
   examples: [

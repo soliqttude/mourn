@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "ignore <add|remove|list> [member or channel]",
   examples: ["ignore add @user", "ignore add #channel", "ignore remove @user", "ignore list"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "add | remove | list", type: ApplicationCommandOptionType.String, required: true,

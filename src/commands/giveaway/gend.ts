@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "gend [id]",
   examples: ["gend"],
   category: "giveaway",
-  permission: "mod",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "id", description: "Giveaway ID", type: ApplicationCommandOptionType.Integer, required: true },

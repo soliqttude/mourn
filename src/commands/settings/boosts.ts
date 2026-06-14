@@ -24,7 +24,7 @@ export const command: HybridCommand = {
     "boosts variables",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "add | remove | list | view | variables", type: ApplicationCommandOptionType.String, required: true,

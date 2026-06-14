@@ -58,7 +58,7 @@ export const command: HybridCommand = {
     "role icon @vip reset",
   ],
   category: "moderation",
-  permission: "mod",
+  permission: "manage_roles",
   guildOnly: true,
   options: [
     { name: "user", description: "Member", type: ApplicationCommandOptionType.User, required: true },

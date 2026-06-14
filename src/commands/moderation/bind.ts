@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   name: "bind",
   description: "Bind a role to a bot category. Use ,bind staff @role to toggle.",
   category: "moderation",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "bind staff (@role|list)",
   examples: ["bind staff @Moderator", "bind staff list"],

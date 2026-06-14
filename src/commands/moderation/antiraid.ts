@@ -35,7 +35,7 @@ export const command: HybridCommand = {
     "antiraid whitelist list",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   userPermissions: ["Administrator"],
   options: [

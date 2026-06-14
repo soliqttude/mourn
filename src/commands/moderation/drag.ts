@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "drag [user] [channel]",
   examples: ["drag"],
   category: "moderation",
-  permission: "mod",
+  permission: "move_members",
   guildOnly: true,
   options: [
     { name: "user", description: "Member to move", type: ApplicationCommandOptionType.User, required: true },

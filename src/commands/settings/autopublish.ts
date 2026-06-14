@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   usage: "autopublish [channel]",
   examples: ["autopublish"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_channels",
   guildOnly: true,
   options: [
     { name: "channel", description: "Announcement channel to toggle", type: ApplicationCommandOptionType.Channel, required: true },

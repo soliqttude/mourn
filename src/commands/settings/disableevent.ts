@@ -19,7 +19,7 @@ export const command: HybridCommand = {
   usage: "disableevent <event> | disableevent list | disableevent events",
   examples: ["disableevent messageDelete", "disableevent list"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   userPermissions: ["ManageGuild"],
   options: [

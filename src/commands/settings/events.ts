@@ -27,7 +27,7 @@ export const command: HybridCommand = {
   name: "events",
   description: "Toggle bot events on or off per server.",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "events [toggle|status] [event]",
   examples: ["events toggle afk", "events toggle snipe", "events status"],

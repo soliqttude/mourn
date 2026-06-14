@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   aliases: ["cmdalias", "commandalias"],
   description: "Create custom command aliases — shorthand names for existing commands in this server.",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "alias (add|remove|list|view) [alias] [command]",
   examples: [

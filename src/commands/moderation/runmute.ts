@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "runmute [user]",
   examples: ["runmute"],
   category: "moderation",
-  permission: "mod",
+  permission: "mute_members",
   guildOnly: true,
   options: [{ name: "user", description: "Member to reaction-unmute", type: ApplicationCommandOptionType.User, required: true }],
   async execute(ctx) {

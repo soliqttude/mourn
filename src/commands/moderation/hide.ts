@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "hide [channel]",
   examples: ["hide"],
   category: "moderation",
-  permission: "mod",
+  permission: "manage_channels",
   guildOnly: true,
   options: [
     { name: "channel", description: "Channel to hide (defaults to current)", type: ApplicationCommandOptionType.Channel, required: false },

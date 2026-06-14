@@ -19,7 +19,7 @@ export const command: HybridCommand = {
   usage: "setlog [type] [channel]",
   examples: ["setlog"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "type", description: "all | mod | message | join | voice", type: ApplicationCommandOptionType.String, required: true },

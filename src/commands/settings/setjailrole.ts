@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "setjailrole [role]",
   examples: ["setjailrole"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "role", description: "The jail role", type: ApplicationCommandOptionType.Role, required: true },

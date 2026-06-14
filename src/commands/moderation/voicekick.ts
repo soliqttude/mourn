@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   usage: "voicekick [user]",
   examples: ["voicekick"],
   category: "moderation",
-  permission: "mod",
+  permission: "move_members",
   guildOnly: true,
   aliases: ["vkick"],
   options: [{ name: "user", description: "Member to kick from VC", type: ApplicationCommandOptionType.User, required: true }],

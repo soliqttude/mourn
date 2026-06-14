@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType, ChannelType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "createcategory", aliases: ["makecategory", "catcreate"], description: "Create a new channel category.", category: "moderation", permission: "admin", guildOnly: true,
+  name: "createcategory", aliases: ["makecategory", "catcreate"], description: "Create a new channel category.", category: "moderation", permission: "manage_channels", guildOnly: true,
   options: [{ name: "name", description: "Category name", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {
     if (!ctx.guild) return;

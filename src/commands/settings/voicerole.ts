@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed } from "../../lib/embeds.js";
 import { updateGuildSettings } from "../../db/settings.js";
 export const command: HybridCommand = {
-  name: "voicerole", aliases: ["joinrole"], description: "Set a role to give when members join a voice channel.", category: "settings", permission: "admin", guildOnly: true,
+  name: "voicerole", aliases: ["joinrole"], description: "Set a role to give when members join a voice channel.", category: "settings", permission: "manage_guild", guildOnly: true,
   options: [{ name: "role", description: "Role to assign on voice join (leave empty to disable)", type: ApplicationCommandOptionType.Role, required: false }],
   async execute(ctx) {
     if (!ctx.guild) return;

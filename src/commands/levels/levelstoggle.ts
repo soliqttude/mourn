@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "levelstoggle",
   examples: ["levelstoggle"],
   category: "levels",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   aliases: ["togglelevels"],
   async execute(ctx) {

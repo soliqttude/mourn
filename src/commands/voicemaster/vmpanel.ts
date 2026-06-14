@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "vmpanel",
   examples: ["vmpanel"],
   category: "voicemaster",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.channel) return;

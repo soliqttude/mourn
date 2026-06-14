@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "nick [user] [name]",
   examples: ["nick"],
   category: "moderation",
-  permission: "mod",
+  permission: "manage_nicknames",
   guildOnly: true,
   options: [
     { name: "user", description: "Member", type: ApplicationCommandOptionType.User, required: true },

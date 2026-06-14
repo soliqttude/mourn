@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   usage: "ban [user] [reason]",
   examples: ["ban Rule violation"],
   category: "moderation",
-  permission: "mod",
+  permission: "ban_members",
   guildOnly: true,
   options: [
     { name: "user",   description: "User to ban", type: ApplicationCommandOptionType.User,   required: true  },

@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name:"mentionpurge",description:"Delete messages containing @mentions.",category:"moderation",permission:"mod",guildOnly:true,
+  name:"mentionpurge",description:"Delete messages containing @mentions.",category:"moderation",permission: "manage_messages",guildOnly:true,
   options:[{name:"amount",description:"Messages to scan (max 100)",type:ApplicationCommandOptionType.Number,required:true}],
   async execute(ctx){
     if(!ctx.guild||!ctx.channel||!ctx.member)return;

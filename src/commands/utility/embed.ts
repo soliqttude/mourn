@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   usage: "embed [title] [description] [color]",
   examples: ["embed"],
   category: "utility",
-  permission: "mod",
+  permission: "manage_messages",
   guildOnly: true,
   options: [
     { name: "title", description: "Embed title", type: ApplicationCommandOptionType.String, required: true },

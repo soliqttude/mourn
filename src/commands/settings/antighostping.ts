@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "antighostping",
   examples: ["antighostping"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [],
   async execute(ctx) {

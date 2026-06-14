@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "untimeout [user]",
   examples: ["untimeout"],
   category: "moderation",
-  permission: "mod",
+  permission: "moderate_members",
   guildOnly: true,
   options: [
     { name: "user", description: "User", type: ApplicationCommandOptionType.User, required: true },

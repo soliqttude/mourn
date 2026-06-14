@@ -25,7 +25,7 @@ export const command: HybridCommand = {
     "levels config",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "on | off | channel | message | messagemode | rate | stackroles | ignore | config | reset | addreward | removereward | rewards", type: ApplicationCommandOptionType.String, required: true },

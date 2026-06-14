@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   aliases: ["staffbind", "staffrole"],
   description: "Add or remove a staff role. Staff roles are treated as moderators by the bot.",
   category: "moderation",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "bindstaff (add|remove|list) [role]",
   examples: ["bindstaff add @Moderator", "bindstaff remove @Helper", "bindstaff list"],

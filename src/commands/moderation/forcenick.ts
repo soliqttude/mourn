@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "forcenick", aliases: ["setnick"], description: "Force a nickname on a member (leave nickname empty to reset).", category: "moderation", permission: "mod", guildOnly: true,
+  name: "forcenick", aliases: ["setnick"], description: "Force a nickname on a member (leave nickname empty to reset).", category: "moderation", permission: "manage_nicknames", guildOnly: true,
   options: [
     { name: "user", description: "Member to rename", type: ApplicationCommandOptionType.User, required: true },
     { name: "nickname", description: "New nickname (leave empty to reset)", type: ApplicationCommandOptionType.String, required: false },

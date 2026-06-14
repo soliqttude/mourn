@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "antispam [action]",
   examples: ["antispam"],
   category: "moderation",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     {

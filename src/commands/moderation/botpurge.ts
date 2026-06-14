@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name:"botpurge",description:"Delete messages sent by bots.",category:"moderation",permission:"mod",guildOnly:true,aliases:["purgebots"],
+  name:"botpurge",description:"Delete messages sent by bots.",category:"moderation",permission: "manage_messages",guildOnly:true,aliases:["purgebots"],
   options:[{name:"amount",description:"Messages to scan (max 100)",type:ApplicationCommandOptionType.Number,required:true}],
   async execute(ctx){
     if(!ctx.guild||!ctx.channel||!ctx.member)return;

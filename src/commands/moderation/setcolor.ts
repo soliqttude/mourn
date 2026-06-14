@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "setcolor", aliases: ["colorset"], description: "Set the color of a role.", category: "moderation", permission: "mod", guildOnly: true,
+  name: "setcolor", aliases: ["colorset"], description: "Set the color of a role.", category: "moderation", permission: "manage_roles", guildOnly: true,
   options: [
     { name: "role", description: "Role to recolor", type: ApplicationCommandOptionType.Role, required: true },
     { name: "color", description: "Hex color (e.g. #ff0000) or 'reset'", type: ApplicationCommandOptionType.String, required: true },

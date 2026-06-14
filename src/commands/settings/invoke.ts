@@ -17,7 +17,7 @@ export const command: HybridCommand = {
   aliases: ["invokemsg", "invokeresponse"],
   description: "Customize bot response messages when moderation commands are used.",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "invoke (set|remove|list|variables) [command] [message|dm] [content]",
   examples: [

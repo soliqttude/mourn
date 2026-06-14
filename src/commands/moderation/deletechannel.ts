@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
-  name: "deletechannel", aliases: ["delchannel", "removechannel"], description: "Delete a channel.", category: "moderation", permission: "admin", guildOnly: true,
+  name: "deletechannel", aliases: ["delchannel", "removechannel"], description: "Delete a channel.", category: "moderation", permission: "manage_channels", guildOnly: true,
   options: [{ name: "channel", description: "Channel to delete", type: ApplicationCommandOptionType.Channel, required: true }],
   async execute(ctx) {
     if (!ctx.guild) return;

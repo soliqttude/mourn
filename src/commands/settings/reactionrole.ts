@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   usage: "reactionrole [action] [message_id] [emoji] [role]",
   examples: ["reactionrole"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_roles",
   guildOnly: true,
   options: [
     { name: "action", description: "add | remove", type: ApplicationCommandOptionType.String, required: true },

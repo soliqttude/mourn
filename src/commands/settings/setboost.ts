@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "setboost [channel]",
   examples: ["setboost"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "channel", description: "Boost channel", type: ApplicationCommandOptionType.Channel, required: true },

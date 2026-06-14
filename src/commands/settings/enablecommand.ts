@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "enablecommand <command> [#channel|@role]",
   examples: ["enablecommand ban #general", "enablecommand warn @Members"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   userPermissions: ["ManageGuild"],
   options: [

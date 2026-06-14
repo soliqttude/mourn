@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   name: "greroll",
   description: "Reroll winners for an ended giveaway.",
   category: "giveaway",
-  permission: "mod",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "greroll (id) [winners]",
   examples: ["greroll 12", "greroll 5 2"],

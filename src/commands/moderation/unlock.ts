@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   usage: "unlock",
   examples: ["unlock"],
   category: "moderation",
-  permission: "mod",
+  permission: "manage_channels",
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.channel || !ctx.guild) return;

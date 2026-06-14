@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   description: "Temporarily ban a user.",
   category: "moderation",
   aliases: ["tban"],
-  permission: "mod",
+  permission: "ban_members",
   guildOnly: true,
   options: [
     { name: "user",     description: "User to ban",                            type: ApplicationCommandOptionType.User,   required: true  },

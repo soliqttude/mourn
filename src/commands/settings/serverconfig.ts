@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   usage: "serverconfig",
   examples: ["serverconfig"],
   category: "settings",
-  permission: "mod",
+  permission: "manage_guild",
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.guild) return;

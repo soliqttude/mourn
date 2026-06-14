@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   aliases: ["rtrigger", "reacttrigger"],
   description: "Manage auto-reaction triggers — bot reacts with an emoji when a trigger word is detected.",
   category: "settings",
-  permission: "mod",
+  permission: "manage_messages",
   guildOnly: true,
   usage: "reactiontrigger (add|remove|list) [trigger] [emoji]",
   examples: [

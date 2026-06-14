@@ -17,7 +17,7 @@ export const command: HybridCommand = {
     "stickymessage view #general",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_messages",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "add | remove | list | view", type: ApplicationCommandOptionType.String, required: true,

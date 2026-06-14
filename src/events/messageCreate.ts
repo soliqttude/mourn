@@ -87,12 +87,6 @@ const ANTINUKE_CMD_MAP: Record<string, string> = {
   kick: "kick",
   delrole: "role",
 };
-const TIER_TO_PERM: Record<string, string> = {
-  mod:      "ban_members",
-  admin:    "manage_guild",
-  owner:    "server_owner",
-  botowner: "bot_owner",
-};
 
 export const event = {
   name: "messageCreate",
@@ -214,8 +208,7 @@ export const event = {
     }
     if (cmd.permission && cmd.permission !== "everyone" && message.member) {
       if (!checkTier(message.member, cmd.permission)) {
-        const permName = TIER_TO_PERM[cmd.permission] ?? cmd.permission;
-        return message.reply({ embeds: [errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: ${permName}`)] });
+        return message.reply({ embeds: [errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: ${cmd.permission}`)] });
       }
     }
 

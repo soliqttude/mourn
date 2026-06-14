@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "wordfilter [action] [word]",
   examples: ["wordfilter"],
   category: "moderation",
-  permission: "mod",
+  permission: "manage_messages",
   guildOnly: true,
   options: [
     { name: "action", description: "add · remove · list", type: ApplicationCommandOptionType.String, required: true },

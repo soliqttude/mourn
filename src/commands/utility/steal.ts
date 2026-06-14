@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "steal [emoji] [name]",
   examples: ["steal"],
   category: "utility",
-  permission: "admin",
+  permission: "manage_expressions",
   guildOnly: true,
   options: [
     { name: "emoji", description: "Emoji to steal", type: ApplicationCommandOptionType.String, required: true },

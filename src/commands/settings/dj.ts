@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   name: "dj",
   description: "Set or remove the DJ role required to use music commands.",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "dj [role|off]",
   examples: ["dj @DJ", "dj off"],

@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   usage: "shopremove [id]",
   examples: ["shopremove"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "id", description: "Shop item ID (use /shop to see IDs)", type: ApplicationCommandOptionType.Number, required: true },

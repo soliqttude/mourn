@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   usage: "removeemoji [emoji]",
   examples: ["removeemoji"],
   category: "utility",
-  permission: "admin",
+  permission: "manage_expressions",
   guildOnly: true,
   aliases: ["delemoji", "deleteemoji"],
   options: [{ name: "emoji", description: "Emoji to remove", type: ApplicationCommandOptionType.String, required: true }],

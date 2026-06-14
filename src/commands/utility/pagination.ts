@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   aliases: ["pages"],
   description: "Create and manage paginated embeds. Subcommands: create, add, update, remove, delete, list",
   category: "utility",
-  permission: "mod",
+  permission: "manage_messages",
   guildOnly: true,
   usage: "pagination [create|add|update|remove|delete|list] [args]",
   examples: [

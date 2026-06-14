@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   usage: "rolecolor [role] [color]",
   examples: ["rolecolor"],
   category: "utility",
-  permission: "admin",
+  permission: "manage_roles",
   guildOnly: true,
   aliases: ["rolecolour"],
   options: [

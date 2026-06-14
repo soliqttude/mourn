@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   aliases: ["automessage", "autom"],
   description: "Schedule repeating messages in a channel. Supports embed scripting.",
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "timer (add|remove|list) [channel] [interval] [message]",
   examples: [

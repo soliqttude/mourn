@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "raidmode",
   examples: ["raidmode"],
   category: "moderation",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [],
   async execute(ctx) {

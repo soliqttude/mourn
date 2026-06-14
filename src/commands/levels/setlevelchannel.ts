@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "setlevelchannel [channel]",
   examples: ["setlevelchannel"],
   category: "levels",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [{ name: "channel", description: "Channel for level-up messages", type: ApplicationCommandOptionType.Channel, required: true }],
   async execute(ctx) {

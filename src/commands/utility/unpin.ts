@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   usage: "unpin <message link or ID>",
   examples: ["unpin https://discord.com/channels/..."],
   category: "utility",
-  permission: "mod",
+  permission: "manage_messages",
   guildOnly: true,
   options: [{ name: "message", description: "Message link or ID", type: ApplicationCommandOptionType.String, required: true }],
   async execute(ctx) {

@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   usage: "rcategory [action] [name] [role]",
   examples: ["rcategory"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "action", description: "create | add | remove | delete | list", type: ApplicationCommandOptionType.String, required: true },

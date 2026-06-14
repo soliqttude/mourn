@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "say [text]",
   examples: ["say"],
   category: "utility",
-  permission: "mod",
+  permission: "manage_messages",
   guildOnly: true,
   options: [
     { name: "text", description: "What to say", type: ApplicationCommandOptionType.String, required: true },

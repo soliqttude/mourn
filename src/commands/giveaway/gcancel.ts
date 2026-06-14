@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   name: "gcancel",
   description: "Cancel an active giveaway and delete its embed.",
   category: "giveaway",
-  permission: "mod",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "gcancel (id)",
   examples: ["gcancel 5"],

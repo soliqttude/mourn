@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   aliases: ["modsetup", "setupmoderation"],
   description: "Create case logs channel, jail channel, and Jailed role with proper overwrites.",
   category: "moderation",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   usage: "setupmod",
   examples: ["setupmod"],

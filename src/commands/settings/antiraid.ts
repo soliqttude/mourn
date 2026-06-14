@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   usage: "antiraid [subcommand] [value] [channel]",
   examples: ["antiraid"],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "(blank = toggle) status | threshold | joinage | action | log | lockdown", type: ApplicationCommandOptionType.String, required: false },

@@ -17,7 +17,7 @@ export const command: HybridCommand = {
     "bumpreminder config",
   ],
   category: "settings",
-  permission: "admin",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "channel | message | thankyou | autolock | autoclean | config | disable", type: ApplicationCommandOptionType.String, required: true,
