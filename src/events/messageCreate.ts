@@ -207,11 +207,11 @@ export const event = {
       return message.reply({ content: "this isn't yours to touch." });
     }
     if (cmd.permission && cmd.permission !== "everyone") {
-      // Fetch fresh member so partial/stale role cache never skips this check
-      const member = (message.member?.partial)
-        ? await message.guild!.members.fetch(message.author.id).catch(() => message.member)
+      // Always resolve a fresh member so null/partial never skips the check
+      const member = (!message.member || message.member.partial)
+        ? await message.guild!.members.fetch(message.author.id).catch(() => null)
         : message.member;
-      if (member && !checkTier(member, cmd.permission)) {
+      if (!member || !checkTier(member, cmd.permission)) {
         const permEmbed = errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: ${cmd.permission}`);
         await message.reply({ embeds: [permEmbed] }).catch(() =>
           message.channel.send({ embeds: [permEmbed] }).catch(() => {})
