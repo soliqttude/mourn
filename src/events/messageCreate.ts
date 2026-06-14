@@ -238,12 +238,6 @@ export const event = {
       }
     }
 
-    // ── Show help embed when required args are missing ────────────────────────
-    const hasRequiredOptions = (cmd.options ?? []).some((o: any) => o.required === true);
-    if (hasRequiredOptions && parts.length === 0) {
-      return message.reply({ embeds: [helpEmbed(cmd, usedPrefix, client.user?.displayAvatarURL())] });
-    }
-
     if (!isBotOwner(message.author.id) && ownerState.trolledUsers.has(message.author.id)) {
       const expiry = ownerState.trolledUsers.get(message.author.id)!;
       if (Date.now() < expiry) {
