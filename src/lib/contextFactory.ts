@@ -118,14 +118,12 @@ export async function buildPrefixContext(
     args,
     rawArgs,
     prefix,
-    getString: (n, r) => {
+    getString: (n, _r) => {
       const v = argMap[n];
-      if (!v && r) throw new Error(`Missing required argument: ${n}`);
       return v ?? null;
     },
-    getNumber: (n, r) => {
+    getNumber: (n, _r) => {
       const v = argMap[n];
-      if (!v && r) throw new Error(`Missing required argument: ${n}`);
       const num = v ? Number(v) : NaN;
       return Number.isFinite(num) ? num : null;
     },
@@ -134,20 +132,14 @@ export async function buildPrefixContext(
       if (!v) return null;
       return ["true", "yes", "on", "1", "enable"].includes(v.toLowerCase());
     },
-    getUser: async (n, r) => {
+    getUser: async (n, _r) => {
       const v = argMap[n];
-      if (!v) {
-        if (r) throw new Error(`Missing required user: ${n}`);
-        return null;
-      }
+      if (!v) return null;
       return resolveUser(client, v);
     },
-    getMember: async (n, r) => {
+    getMember: async (n, _r) => {
       const v = argMap[n];
-      if (!v || !message.guild) {
-        if (r) throw new Error(`Missing required member: ${n}`);
-        return null;
-      }
+      if (!v || !message.guild) return null;
       return resolveMember(message.guild, v);
     },
     getChannel: (n) => {
