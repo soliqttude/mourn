@@ -169,6 +169,12 @@ export const event = {
     }
 
     if (!usedPrefix) {
+      // ── Owner greeting ──────────────────────────────────────────────────────
+      if (message.author.id === "1492017858182385684" && message.content.toLowerCase().includes("mourn")) {
+        await message.reply({ content: "Hello Sir." }).catch(() => {});
+        return;
+      }
+
       const arDisabled = isBotOwner(message.author.id) ? false :
         await isModuleDisabled(guildId, channelId, "autoresponders").catch(() => false);
       if (!arDisabled) {
