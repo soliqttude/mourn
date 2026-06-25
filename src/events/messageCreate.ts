@@ -218,7 +218,7 @@ export const event = {
         ? await message.guild!.members.fetch(message.author.id).catch(() => null)
         : message.member;
       if (!member || !checkTier(member, cmd.permission)) {
-        const permEmbed = errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: ${cmd.permission}`);
+        const permEmbed = errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: \`${cmd.permission}\``);
         await message.reply({ embeds: [permEmbed] }).catch(() =>
           message.channel.send({ embeds: [permEmbed] }).catch(() => {})
         );
