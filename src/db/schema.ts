@@ -18,6 +18,7 @@ export const guildSettings = pgTable("guild_settings", {
   goodbyeMessage: text("goodbye_message"),
   boostChannel: text("boost_channel"),
   boostMessage: text("boost_message"),
+  boostRoleId: text("boost_role_id"),
   antinukeEnabled: boolean("antinuke_enabled").default(false).notNull(),
   antinukeAction: text("antinuke_action").default("ban").notNull(),
   antinukeThreshold: integer("antinuke_threshold").default(3).notNull(),
