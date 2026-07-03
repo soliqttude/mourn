@@ -13,10 +13,7 @@ export const command: HybridCommand = {
       embeds: [
         brandEmbed({
           title: "Creator",
-          description: [
-            "> made mourn by myself, still working on it.",
-            "> hit me up if something's broken or u got ideas.",
-          ].join("\n"),
+          description: "> bot still in development, hit me up if something's broken or u got ideas.",
           fields: [
             { name: "Discord", value: "@remandment", inline: true },
           ],
