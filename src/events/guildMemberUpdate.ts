@@ -3,6 +3,9 @@ import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { handleBoostEnd } from "../features/boosterRoles.js";
 import { handlePermissionEscalation } from "../features/antinuke.js";
+import { db } from "../db/index.js";
+import { boostAutoRole } from "../db/schema.js";
+import { eq } from "drizzle-orm";
 
 export const event = {
   name: "guildMemberUpdate",
@@ -13,20 +16,18 @@ export const event = {
 
     // Auto-assign boost role when someone starts boosting
     if (!wasBooster && isBooster) {
-      const settings = await getGuildSettings(newMember.guild.id);
-      const boostRoleId = (settings as any).boostRoleId as string | null;
-      if (boostRoleId) {
-        const role = newMember.guild.roles.cache.get(boostRoleId);
+      const [cfg] = await db.select().from(boostAutoRole).where(eq(boostAutoRole.guildId, newMember.guild.id)).catch(() => []);
+      if (cfg?.roleId) {
+        const role = newMember.guild.roles.cache.get(cfg.roleId);
         if (role) await newMember.roles.add(role, "server boost").catch(() => {});
       }
     }
 
     // Remove boost role when someone stops boosting
     if (wasBooster && !isBooster) {
-      const settings = await getGuildSettings(newMember.guild.id);
-      const boostRoleId = (settings as any).boostRoleId as string | null;
-      if (boostRoleId && newMember.roles.cache.has(boostRoleId)) {
-        await newMember.roles.remove(boostRoleId, "boost ended").catch(() => {});
+      const [cfg] = await db.select().from(boostAutoRole).where(eq(boostAutoRole.guildId, newMember.guild.id)).catch(() => []);
+      if (cfg?.roleId && newMember.roles.cache.has(cfg.roleId)) {
+        await newMember.roles.remove(cfg.roleId, "boost ended").catch(() => {});
       }
     }
 
@@ -73,9 +74,7 @@ export const event = {
     const embed = new EmbedBuilder()
       .setColor(0x000000)
       .setAuthor({ name: action, iconURL: avatarURL })
-      .setDescription(
-        `<@${newMember.id}> was updated${executor && executor !== newMember.id ? ` by <@${executor}>` : ""}`
-      )
+      .setDescription(`<@${newMember.id}> was updated${executor && executor !== newMember.id ? ` by <@${executor}>` : ""}`)
       .addFields(...fields)
       .setTimestamp()
       .setFooter({ text: `User ID: ${newMember.id}` });
