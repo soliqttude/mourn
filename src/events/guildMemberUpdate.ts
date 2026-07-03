@@ -11,6 +11,25 @@ export const event = {
     const isBooster  = newMember.premiumSince !== null;
     if (wasBooster && !isBooster) await handleBoostEnd(newMember.guild, newMember).catch(() => {});
 
+    // Auto-assign boost role when someone starts boosting
+    if (!wasBooster && isBooster) {
+      const settings = await getGuildSettings(newMember.guild.id);
+      const boostRoleId = (settings as any).boostRoleId as string | null;
+      if (boostRoleId) {
+        const role = newMember.guild.roles.cache.get(boostRoleId);
+        if (role) await newMember.roles.add(role, "server boost").catch(() => {});
+      }
+    }
+
+    // Remove boost role when someone stops boosting
+    if (wasBooster && !isBooster) {
+      const settings = await getGuildSettings(newMember.guild.id);
+      const boostRoleId = (settings as any).boostRoleId as string | null;
+      if (boostRoleId && newMember.roles.cache.has(boostRoleId)) {
+        await newMember.roles.remove(boostRoleId, "boost ended").catch(() => {});
+      }
+    }
+
     const oldRoles = (oldMember as GuildMember).roles?.cache;
     if (oldRoles) {
       const addedRoleIds = newMember.roles.cache.filter(r => !oldRoles.has(r.id)).map(r => r.id);
