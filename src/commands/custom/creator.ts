@@ -12,16 +12,13 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "geico. — Creator of Mourn",
+          title: "Creator",
           description: [
-            "> Built **Mourn** entirely from the ground up, alone.",
-            "> Every command, every feature, every fix — personally.",
-            "> A project driven by the desire to build something that actually works.",
+            "> made mourn by myself, still working on it.",
+            "> hit me up if something's broken or u got ideas.",
           ].join("\n"),
           fields: [
-            { name: "Discord",  value: "@udrs",                                          inline: true  },
-            { name: "Handle",   value: "geico",                                          inline: true  },
-            { name: "Feedback", value: "Have a bug report or feature idea? Reach out directly.", inline: false },
+            { name: "Discord", value: "@remandment", inline: true },
           ],
           page: "Creator",
         }),
