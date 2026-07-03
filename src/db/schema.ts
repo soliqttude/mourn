@@ -18,7 +18,6 @@ export const guildSettings = pgTable("guild_settings", {
   goodbyeMessage: text("goodbye_message"),
   boostChannel: text("boost_channel"),
   boostMessage: text("boost_message"),
-  boostRoleId: text("boost_role_id"),
   antinukeEnabled: boolean("antinuke_enabled").default(false).notNull(),
   antinukeAction: text("antinuke_action").default("ban").notNull(),
   antinukeThreshold: integer("antinuke_threshold").default(3).notNull(),
@@ -501,6 +500,11 @@ export const goodbyeChannels = pgTable("goodbye_channels",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
+
+export const boostAutoRole = pgTable("boost_auto_role", {
+  guildId: text("guild_id").primaryKey(),
+  roleId:  text("role_id").notNull(),
+});
 
 export const boostChannels = pgTable("boost_channels",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
