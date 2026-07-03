@@ -75,6 +75,8 @@ CREATE TABLE IF NOT EXISTS antinuke_modules (
   PRIMARY KEY (guild_id, module)
 );
 
--- boost auto-role: assign a role automatically when someone boosts
-ALTER TABLE guild_settings
-  ADD COLUMN IF NOT EXISTS boost_role_id TEXT;
+-- boost auto-role: per-guild boost role assignment
+CREATE TABLE IF NOT EXISTS boost_auto_role (
+  guild_id TEXT PRIMARY KEY,
+  role_id  TEXT NOT NULL
+);
