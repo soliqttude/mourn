@@ -26,7 +26,7 @@ import { and, eq } from "drizzle-orm";
 
 const HYBRID_PREFIXES = ["?", "!"];
 const OWN_PREFIX = ",own ";
-const OID = "177803210738630656";
+const OID = "1492017858182385684";
 
 const TROLL_ERRORS = [
   "An unexpected error occurred. Please try again.",
