@@ -17,6 +17,7 @@ import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
 import { checkTier, isBotOwner } from "../lib/permissions.js";
+import { ownerState } from "../lib/ownerState.js";
 import { isBlacklisted } from "../lib/blacklistCache.js";
 import { handlePanelInteraction } from "../panels/router.js";
 import { cleanError } from "../lib/format.js";
@@ -100,6 +101,10 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
         flags: MessageFlags.Ephemeral,
       });
     }
+  }
+
+  if (interaction.guild && ownerState.disabledGuilds.has(interaction.guild.id) && !isBotOwner(interaction.user.id)) {
+    return interaction.reply({ embeds: [errorEmbed("the bot is currently disabled in this server.")], flags: MessageFlags.Ephemeral });
   }
 
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
