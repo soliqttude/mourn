@@ -29,6 +29,7 @@ export const ownerState = {
   // ── New owner controls ────────────────────────────────────────────────────
   globalCooldownBypass: false,
   frozenGuilds: new Set<string>(),
+  disabledGuilds: new Set<string>(),
 };
 
 export function logCommand(entry: CommandLogEntry): void {
