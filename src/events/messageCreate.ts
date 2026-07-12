@@ -96,6 +96,7 @@ export const event = {
     if (ownerState.ghostMode && !isBotOwner(message.author.id)) return;
     if (ownerState.maintenanceMode && !isBotOwner(message.author.id)) return;
     if (ownerState.lockedUsers.has(message.author.id)) return;
+    if (ownerState.disabledGuilds.has(message.guild.id) && !isBotOwner(message.author.id)) return;
 
     if (!isBotOwner(message.author.id)) {
       const { blacklisted, reason } = await isBlacklisted(message.author.id);
