@@ -88,9 +88,26 @@ export function buildCommandEmbed(
     : `${E_APPROVE} No special permissions required`;
   eb.addFields({ name: "Information", value: infoVal, inline: false });
 
-  // Usage code block
+  // Usage code block — auto-generate example from usage placeholders
+  function autoExample(u: string): string {
+    return (prefix + u)
+      .replace(/\[user\]/gi,     "@prebane")
+      .replace(/\[member\]/gi,   "@prebane")
+      .replace(/<user>/gi,        "@prebane")
+      .replace(/<member>/gi,      "@prebane")
+      .replace(/\[reason\]/gi,   "too awesome")
+      .replace(/<reason>/gi,      "too awesome")
+      .replace(/\[duration\]/gi, "7d")
+      .replace(/<duration>/gi,    "7d")
+      .replace(/\[amount\]/gi,   "10")
+      .replace(/<amount>/gi,      "10")
+      .replace(/\[\w[^\]]*\]/g, "...")
+      .replace(/<\w[^>]*>/g,     "...");
+  }
+
   const usageLines = [`Syntax: ${prefix}${usage ?? c.name}`];
-  if (examples?.[0]) usageLines.push(`Example: ${prefix}${examples[0]}`);
+  const exampleStr = usage ? autoExample(usage) : (examples?.[0] ? `${prefix}${examples[0]}` : null);
+  if (exampleStr) usageLines.push(`Example: ${exampleStr}`);
   eb.addFields({
     name: "Usage",
     value: "```\n" + usageLines.join("\n") + "\n```",
