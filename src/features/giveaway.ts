@@ -4,7 +4,7 @@ import { db } from "../db/index.js";
 import { giveaways } from "../db/schema.js";
 import { config } from "../config.js";
 import { logger } from "../lib/logger.js";
-import { getLevel } from "./levelings.js";
+import { getLevel } from "./leveling.js";
 
 function buildGiveawayEmbed(gw: {
   id: number;
