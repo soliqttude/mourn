@@ -111,12 +111,7 @@ export function buildPagedCategoryEmbed(
   const pgIdx    = Math.max(0, Math.min(cmdPage, totalCmdPages - 1));
   const pageCmds = cmds.slice(pgIdx * CMDS_PER_PAGE, (pgIdx + 1) * CMDS_PER_PAGE);
 
-  const maxLen = Math.max(...pageCmds.map((c) => c.name.length), 4);
-  const lines = pageCmds.map((c) => {
-    const pad  = " ".repeat(maxLen - c.name.length + 3);
-    const desc = c.description.length > 44 ? c.description.slice(0, 41) + "\u2026" : c.description;
-    return `${c.name}${pad}${desc}`;
-  });
+  const lines = pageCmds.map((c) => `\`${c.name}\`  ${c.description}`);
 
   const label      = CAT_LABEL[category] ?? category;
   const pageInfo   = totalCmdPages > 1 ? `  ·  page ${pgIdx + 1}/${totalCmdPages}` : "";
@@ -124,7 +119,7 @@ export function buildPagedCategoryEmbed(
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
     .setTitle(label)
-    .setDescription("```\n" + lines.join("\n") + "\n```")
+    .setDescription(lines.join("\n"))
     .addFields([
       { name: "\u200b", value: `\`${prefix}help <command>\`  for details${pageInfo}`, inline: false },
     ])
