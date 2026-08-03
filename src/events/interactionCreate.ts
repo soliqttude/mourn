@@ -208,15 +208,15 @@ async function handleHelpButton(interaction: ButtonInteraction) {
     if (action === "pg") {
       const catIdx = parseInt(parts[2] ?? "0", 10);
       const cmdPage = parseInt(parts[3] ?? "0", 10);
-      const { embed, row } = buildPagedCategoryEmbed(catIdx, categories, prefix, cmdPage);
-      return await interaction.update({ embeds: [embed], components: [row as any] });
+      const { embed, rows } = buildPagedCategoryEmbed(catIdx, categories, prefix, cmdPage);
+      return await interaction.update({ embeds: [embed], components: rows as any[] });
     }
 
     if (action === "cat") {
       const category = parts[2];
       if (!category) return await interaction.deferUpdate();
-      const { embed, row } = buildCategoryEmbed(category, prefix);
-      return await interaction.update({ embeds: [embed], components: [row as any] });
+      const { embed, rows } = buildCategoryEmbed(category, prefix);
+      return await interaction.update({ embeds: [embed], components: rows as any[] });
     }
 
     await interaction.deferUpdate();
@@ -306,6 +306,18 @@ async function handleSuggestionVote(interaction: ButtonInteraction) {
 
 async function handleSelect(client: Client, interaction: StringSelectMenuInteraction) {
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction);
+  if (interaction.customId === "help:select") {
+    try {
+      const category = interaction.values[0];
+      if (!category) return interaction.deferUpdate();
+      const prefix = config.defaultPrefix;
+      const { embed, rows } = buildCategoryEmbed(category, prefix);
+      return interaction.update({ embeds: [embed], components: rows as any[] });
+    } catch (err) {
+      logger.error({ err }, "help select error");
+      try { await interaction.deferUpdate(); } catch { /* already acked */ }
+    }
+  }
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
