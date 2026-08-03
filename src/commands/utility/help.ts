@@ -49,44 +49,55 @@ function catCommandCount(cat: string): number {
 
 // ── Single command embed ──────────────────────────────────────────────────────
 
+const E_WARN    = "<:warn:1508824473992696049>";
+const E_APPROVE = "<:approve:1508824442422431876>";
+
 export function buildCommandEmbed(
   c: HybridCommand,
   prefix: string,
   clientUser?: { username: string; displayAvatarURL(): string } | null,
 ): EmbedBuilder {
-  const usage    = (c as any).usage    as string | undefined;
-  const examples = (c as any).examples as string[] | undefined;
+  const usage      = (c as any).usage      as string | undefined;
+  const examples   = (c as any).examples   as string[] | undefined;
+  const permission = (c as any).permission as string | undefined;
+  const options    = (c as any).options    as Array<{ name: string }> | undefined;
 
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
-    .setTitle(c.name)
+    .setTitle(`Command: ${c.name}`)
     .setDescription(c.description);
 
   if (clientUser) {
     eb.setAuthor({ name: clientUser.username, iconURL: clientUser.displayAvatarURL() });
   }
 
-  const mainFields: { name: string; value: string; inline: boolean }[] = [
-    { name: "usage", value: `\`${prefix}${usage ?? c.name}\``, inline: false },
-  ];
-  if (examples?.[0]) {
-    mainFields.push({ name: "example", value: `\`${prefix}${examples[0]}\``, inline: false });
-  }
-  eb.addFields(mainFields);
+  // Aliases
+  eb.addFields({
+    name: "Aliases",
+    value: c.aliases?.length ? c.aliases.join(", ") : "n/a",
+    inline: false,
+  });
 
-  const meta: { name: string; value: string; inline: boolean }[] = [];
-  if (c.category) {
-    meta.push({ name: "category", value: CAT_LABEL[c.category] ?? c.category, inline: true });
-  }
-  if ((c as any).permission && (c as any).permission !== "everyone") {
-    meta.push({ name: "permission", value: (c as any).permission, inline: true });
-  }
-  if (c.aliases?.length) {
-    meta.push({ name: "aliases", value: c.aliases.map((a) => `\`${a}\``).join("  "), inline: false });
-  }
-  if (meta.length) eb.addFields(meta);
+  // Parameters — derived from slash options if available
+  const params = options?.length ? options.map((o) => o.name).join(", ") : "n/a";
+  eb.addFields({ name: "Parameters", value: params, inline: false });
 
-  eb.setFooter({ text: "mourn" });
+  // Information — permission gating
+  const infoVal = permission && permission !== "everyone"
+    ? `${E_WARN} ${permission}`
+    : `${E_APPROVE} No special permissions required`;
+  eb.addFields({ name: "Information", value: infoVal, inline: false });
+
+  // Usage code block
+  const usageLines = [`Syntax: ${prefix}${usage ?? c.name}`];
+  if (examples?.[0]) usageLines.push(`Example: ${prefix}${examples[0]}`);
+  eb.addFields({
+    name: "Usage",
+    value: "```\n" + usageLines.join("\n") + "\n```",
+    inline: false,
+  });
+
+  eb.setFooter({ text: `mourn · module: ${CAT_LABEL[c.category ?? ""] ?? c.category ?? ""}` });
   return eb;
 }
 
