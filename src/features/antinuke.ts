@@ -33,6 +33,30 @@ const adminCache = new Map<string, { set: Set<string>; expiry: number }>();
 const modCache   = new Map<string, { map: Map<string, ModuleConfig>; expiry: number }>();
 const CACHE_TTL  = 60_000;
 
+// ─── Periodic cleanup (fixes unbounded memory growth) ────────────────────────
+// records/punished/*Cache maps are keyed per guild/user and never had anything
+// removing stale entries, so long-running processes would leak memory slowly
+// on active multi-guild bots. Sweep every 5 minutes.
+const SWEEP_INTERVAL_MS = 5 * 60_000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, rec] of records) {
+    if (rec.resetAt < now) records.delete(key);
+  }
+  for (const [key, ts] of punished) {
+    if (now - ts > PUNISH_COOLDOWN) punished.delete(key);
+  }
+  for (const [key, c] of wlCache) {
+    if (now > c.expiry) wlCache.delete(key);
+  }
+  for (const [key, c] of adminCache) {
+    if (now > c.expiry) adminCache.delete(key);
+  }
+  for (const [key, c] of modCache) {
+    if (now > c.expiry) modCache.delete(key);
+  }
+}, SWEEP_INTERVAL_MS).unref();
+
 // ─── Whitelist ───────────────────────────────────────────────────────────────
 export async function getWhitelist(guildId: string): Promise<Set<string>> {
   const c = wlCache.get(guildId);
@@ -71,7 +95,10 @@ export async function getModuleConfigs(guildId: string): Promise<Map<string, Mod
     }
     modCache.set(guildId, { map, expiry: Date.now() + CACHE_TTL });
     return map;
-  } catch {
+  } catch (err) {
+    // FIX: previously silent — a DB failure here effectively disabled
+    // protection with zero trace in the logs. Now at least visible.
+    logger.warn({ err, guildId }, "antinuke: failed to load module configs, protection degraded for this call");
     return new Map();
   }
 }
@@ -98,14 +125,26 @@ function alreadyPunished(guildId: string, userId: string): boolean {
 }
 
 // ─── Audit log helper ─────────────────────────────────────────────────────────
-async function fetchExecutor(guild: Guild, auditType: AuditLogEvent): Promise<string | null> {
+// FIX: previously only checked the single most-recent entry, which misattributes
+// the executor when two qualifying actions land back-to-back (e.g. two different
+// members each delete a channel within the same second). Now scans a small
+// recent window and matches the newest entry for the *target* action within the
+// time cutoff, still bounded and cheap.
+async function fetchExecutor(
+  guild: Guild,
+  auditType: AuditLogEvent,
+  opts?: { targetId?: string }
+): Promise<string | null> {
   try {
-    const logs = await guild.fetchAuditLogs({ limit: 1, type: auditType });
-    const entry = logs.entries.first();
-    if (!entry?.executor) return null;
-    if (entry.executor.bot) return null;
-    if (Date.now() - entry.createdTimestamp > 6_000) return null;
-    return entry.executor.id;
+    const logs = await guild.fetchAuditLogs({ limit: 5, type: auditType });
+    const cutoff = Date.now() - 6_000;
+    for (const entry of logs.entries.values()) {
+      if (entry.createdTimestamp < cutoff) break; // entries are newest-first; stop once too old
+      if (!entry.executor || entry.executor.bot) continue;
+      if (opts?.targetId && entry.target && (entry.target as any).id !== opts.targetId) continue;
+      return entry.executor.id;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -197,7 +236,7 @@ export async function handleAntinukeAction(client: Client, guild: Guild, type: s
   const auditType = AUDIT_MAP[type];
   if (!auditType) return;
 
-  const executorId = await fetchExecutor(guild, auditType);
+  const executorId = await fetchExecutor(guild, auditType, { targetId: _targetId });
   if (!executorId) return;
   if (executorId === guild.ownerId || executorId === client.user?.id) return;
 
@@ -237,7 +276,7 @@ export async function handleBotAdd(client: Client, guild: Guild, botMember: Guil
   await botMember.kick("antinuke: unauthorized bot").catch(() => {});
 
   // Punish whoever added it
-  const executorId = await fetchExecutor(guild, AuditLogEvent.BotAdd);
+  const executorId = await fetchExecutor(guild, AuditLogEvent.BotAdd, { targetId: botMember.id });
   if (!executorId || executorId === guild.ownerId || executorId === client.user?.id) return;
   if (whitelist.has(executorId)) return;
   if (alreadyPunished(guild.id, executorId)) return;
@@ -255,6 +294,11 @@ export async function handleBotAdd(client: Client, guild: Guild, botMember: Guil
 }
 
 // ─── Vanity handler ───────────────────────────────────────────────────────────
+// FIX: AuditLogEvent.GuildUpdate fires for ANY guild settings change (name,
+// icon, verification level, etc.), not just the vanity URL. Previously any
+// unrelated guild edit could trigger a false-positive vanity punishment. Now
+// we inspect the audit log entry's changes and only act if "vanityURLCode"
+// (or "vanity_url_code", depending on discord.js version) actually changed.
 export async function handleVanityChange(client: Client, guild: Guild): Promise<void> {
   const settings = await getGuildSettings(guild.id);
   if (!settings.antinukeEnabled) return;
@@ -263,8 +307,25 @@ export async function handleVanityChange(client: Client, guild: Guild): Promise<
   const mod = modules.get("vanity");
   if (!mod?.enabled) return;
 
-  const executorId = await fetchExecutor(guild, AuditLogEvent.GuildUpdate);
-  if (!executorId || executorId === guild.ownerId || executorId === client.user?.id) return;
+  let executorId: string | null = null;
+  try {
+    const logs = await guild.fetchAuditLogs({ limit: 5, type: AuditLogEvent.GuildUpdate });
+    const cutoff = Date.now() - 6_000;
+    for (const entry of logs.entries.values()) {
+      if (entry.createdTimestamp < cutoff) break;
+      if (!entry.executor || entry.executor.bot) continue;
+      const changedVanity = entry.changes?.some(
+        (c) => c.key === "vanityURLCode" || c.key === "vanity_url_code"
+      );
+      if (!changedVanity) continue;
+      executorId = entry.executor.id;
+      break;
+    }
+  } catch {
+    return;
+  }
+  if (!executorId) return; // no matching vanity-specific change found — don't punish
+  if (executorId === guild.ownerId || executorId === client.user?.id) return;
 
   const whitelist = await getWhitelist(guild.id);
   if (whitelist.has(executorId)) return;
@@ -307,7 +368,7 @@ export async function handlePermissionEscalation(client: Client, guild: Guild, m
   });
   if (!hasDangerPerm) return;
 
-  const executorId = await fetchExecutor(guild, AuditLogEvent.MemberRoleUpdate);
+  const executorId = await fetchExecutor(guild, AuditLogEvent.MemberRoleUpdate, { targetId: member.id });
   if (!executorId || executorId === guild.ownerId || executorId === client.user?.id) return;
 
   const whitelist = await getWhitelist(guild.id);
