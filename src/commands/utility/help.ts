@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  StringSelectMenuBuilder,
 } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
@@ -117,8 +118,8 @@ export function buildPagedCategoryEmbed(
     return `${c.name}${pad}${desc}`;
   });
 
-  const label    = CAT_LABEL[category] ?? category;
-  const pageInfo = totalCmdPages > 1 ? `  ·  page ${pgIdx + 1}/${totalCmdPages}` : "";
+  const label      = CAT_LABEL[category] ?? category;
+  const pageInfo   = totalCmdPages > 1 ? `  ·  page ${pgIdx + 1}/${totalCmdPages}` : "";
 
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
@@ -133,50 +134,62 @@ export function buildPagedCategoryEmbed(
     eb.setAuthor({ name: clientUser.username, iconURL: clientUser.displayAvatarURL() });
   }
 
+  // Row 1: nav buttons
   const btns: ButtonBuilder[] = [
     new ButtonBuilder()
       .setCustomId(`help:pg:${catIdx - 1}:0`)
-      .setLabel("← prev")
+      .setLabel("←")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(catIdx === 0),
-  ];
-
-  if (totalCmdPages > 1) {
-    btns.push(
-      new ButtonBuilder()
-        .setCustomId(`help:pg:${catIdx}:${pgIdx - 1}`)
-        .setLabel("‹")
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(pgIdx === 0),
-    );
-  }
-
-  btns.push(
     new ButtonBuilder()
       .setCustomId("help:home")
       .setLabel("directory")
       .setStyle(ButtonStyle.Secondary),
-  );
+    new ButtonBuilder()
+      .setCustomId(`help:pg:${catIdx + 1}:0`)
+      .setLabel("→")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(catIdx === total - 1),
+  ];
 
   if (totalCmdPages > 1) {
-    btns.push(
+    btns.splice(
+      1, 0,
+      new ButtonBuilder()
+        .setCustomId(`help:pg:${catIdx}:${pgIdx - 1}`)
+        .setLabel("‹ prev page")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(pgIdx === 0),
+    );
+    btns.splice(
+      btns.length - 1, 0,
       new ButtonBuilder()
         .setCustomId(`help:pg:${catIdx}:${pgIdx + 1}`)
-        .setLabel("›")
+        .setLabel("next page ›")
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(pgIdx === totalCmdPages - 1),
     );
   }
 
-  btns.push(
-    new ButtonBuilder()
-      .setCustomId(`help:pg:${catIdx + 1}:0`)
-      .setLabel("next →")
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(catIdx === total - 1),
+  const navRow = new ActionRowBuilder<ButtonBuilder>().addComponents(btns);
+
+  // Row 2: category dropdown so users can jump between categories
+  const visibleCats = sortedCategories.filter((c) => c !== "developer" && c !== "animedeveloper");
+  const selectRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId("help:select")
+      .setPlaceholder(`currently viewing: ${label}`)
+      .addOptions(
+        visibleCats.slice(0, 25).map((cat) => ({
+          label: CAT_LABEL[cat] ?? cat,
+          value: cat,
+          description: `${catCommandCount(cat)} commands`,
+          default: cat === category,
+        })),
+      ),
   );
 
-  return { embed: eb, row: new ActionRowBuilder<ButtonBuilder>().addComponents(btns) };
+  return { embed: eb, row: new ActionRowBuilder<ButtonBuilder>().addComponents(btns), rows: [navRow, selectRow] };
 }
 
 // ── Category embed (by name) ──────────────────────────────────────────────────
@@ -200,18 +213,8 @@ export function buildHelpHome(
   prefix: string,
   clientUser?: { username: string; displayAvatarURL(): string } | null,
 ) {
-  const visibleCats = categories.filter((c) => c !== "owner");
+  const visibleCats = categories.filter((c) => c !== "owner" && c !== "developer" && c !== "animedeveloper");
   const support = config.supportServer;
-
-  // Category inline field grid — 3 columns, padded to a multiple of 3
-  const catFields: { name: string; value: string; inline: boolean }[] = visibleCats.map((cat) => ({
-    name: CAT_LABEL[cat] ?? cat,
-    value: `${catCommandCount(cat)} commands`,
-    inline: true,
-  }));
-  while (catFields.length % 3 !== 0) {
-    catFields.push({ name: "\u200b", value: "\u200b", inline: true });
-  }
 
   const descLines = [
     `**${totalCmds}** commands  ·  **${visibleCats.length}** categories`,
@@ -222,7 +225,6 @@ export function buildHelpHome(
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
     .setDescription(descLines.join("\n"))
-    .addFields(catFields)
     .setFooter({ text: `mourn  ·  prefix: ${prefix}` });
 
   if (clientUser) {
@@ -230,21 +232,21 @@ export function buildHelpHome(
     eb.setThumbnail(clientUser.displayAvatarURL());
   }
 
-  // Category navigation buttons — 4 per row, max 5 rows
-  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-  for (let i = 0; i < visibleCats.length; i += 4) {
-    const chunk = visibleCats.slice(i, i + 4);
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      chunk.map((cat) =>
-        new ButtonBuilder()
-          .setCustomId(`help:cat:${cat}`)
-          .setLabel(CAT_LABEL[cat] ?? cat)
-          .setStyle(ButtonStyle.Secondary),
-      ),
+  // Single dropdown — clean and premium
+  const selectMenu = new StringSelectMenuBuilder()
+    .setCustomId("help:select")
+    .setPlaceholder("browse a category")
+    .addOptions(
+      visibleCats.slice(0, 25).map((cat) => ({
+        label: CAT_LABEL[cat] ?? cat,
+        value: cat,
+        description: `${catCommandCount(cat)} commands`,
+      })),
     );
-    rows.push(row);
-    if (rows.length === 5) break;
-  }
+
+  const rows = [
+    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu),
+  ];
 
   return { embed: eb, rows };
 }
