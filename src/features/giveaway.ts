@@ -4,6 +4,7 @@ import { db } from "../db/index.js";
 import { giveaways } from "../db/schema.js";
 import { config } from "../config.js";
 import { logger } from "../lib/logger.js";
+import { getLevel } from "./levelings.js";
 
 function buildGiveawayEmbed(gw: {
   id: number;
@@ -75,7 +76,10 @@ export async function createGiveaway(
   const id = result[0].id;
 
   const ch = client.channels.cache.get(channelId) as TextChannel | undefined;
-  if (!ch) return id;
+  // FIX: previously cast to TextChannel and called .send() without checking
+  // isTextBased() — a bad/non-text channelId would throw and leave a DB row
+  // with no message ever attached to it.
+  if (!ch || !ch.isTextBased()) return id;
 
   const embed = buildGiveawayEmbed({
     id, prize, winnersCount, hostId, endsAt,
@@ -93,12 +97,72 @@ export async function createGiveaway(
   return id;
 }
 
+// FIX: previously fetched only the first page (100 users) of reactors with no
+// pagination — giveaways with 100+ entrants silently dropped everyone past
+// that point. Now pages through with `after` cursors until exhausted.
+async function fetchAllReactors(reaction: any): Promise<string[]> {
+  const ids: string[] = [];
+  let after: string | undefined;
+  for (;;) {
+    const batch = await reaction.users.fetch({ limit: 100, after }).catch(() => null);
+    if (!batch || batch.size === 0) break;
+    for (const u of batch.values()) {
+      if (!u.bot) ids.push(u.id);
+    }
+    if (batch.size < 100) break;
+    after = batch.last()?.id;
+    if (!after) break;
+  }
+  return ids;
+}
+
+// FIX: requiredRoleIds/minLevel/maxLevel were stored and shown in the embed
+// but never actually enforced — anyone who reacted could win regardless of
+// requirements. This now filters entrants against them before picking winners.
+async function filterEligible(
+  guildId: string,
+  entrantIds: string[],
+  guild: Client["guilds"]["cache"] extends Map<string, infer G> ? G : never,
+  requiredRoleIds: string[] | null | undefined,
+  minLevel: number | null | undefined,
+  maxLevel: number | null | undefined,
+): Promise<string[]> {
+  const eligible: string[] = [];
+  for (const userId of entrantIds) {
+    if (requiredRoleIds?.length) {
+      const member = await (guild as any).members.fetch(userId).catch(() => null);
+      if (!member) continue;
+      const hasAllRoles = requiredRoleIds.every((r) => member.roles.cache.has(r));
+      if (!hasAllRoles) continue;
+    }
+    if (minLevel != null || maxLevel != null) {
+      const levelRow = await getLevel(guildId, userId);
+      const level = levelRow?.level ?? 0;
+      if (minLevel != null && level < minLevel) continue;
+      if (maxLevel != null && level > maxLevel) continue;
+    }
+    eligible.push(userId);
+  }
+  return eligible;
+}
+
+// FIX: previously SELECT -> check `ended` -> UPDATE were three separate
+// steps, so two concurrent calls (e.g. manual /end racing the 15s loop)
+// could both pass the ended check before either wrote, picking winners
+// twice. Now the UPDATE itself is the guard: it only flips ended=true if it
+// was still false, and we check rowCount to know if we "won" the race.
 export async function endGiveaway(client: Client, giveawayId: number): Promise<void> {
+  const claimed = await db
+    .update(giveaways)
+    .set({ ended: true })
+    .where(and(eq(giveaways.id, giveawayId), eq(giveaways.ended, false)))
+    .returning({ id: giveaways.id });
+
+  if (claimed.length === 0) return; // already ended by another caller, or doesn't exist
+
   const rows = await db.select().from(giveaways).where(eq(giveaways.id, giveawayId));
   const giveaway = rows[0];
-  if (!giveaway || giveaway.ended) return;
-
-  await db.update(giveaways).set({ ended: true }).where(eq(giveaways.id, giveawayId));
+  if (!giveaway) return;
 
   const ch = client.channels.cache.get(giveaway.channelId) as TextChannel | undefined;
   if (!ch || !giveaway.messageId) return;
@@ -107,14 +171,22 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<v
   if (!msg) return;
 
   const reaction = msg.reactions.cache.get("🎉");
-  const users = reaction ? await reaction.users.fetch().catch(() => null) : null;
-  const entrants = users ? [...users.values()].filter((u) => !u.bot) : [];
+  const allEntrants = reaction ? await fetchAllReactors(reaction) : [];
+
+  const eligible = await filterEligible(
+    giveaway.guildId,
+    allEntrants,
+    msg.guild as any,
+    giveaway.requiredRoleIds,
+    giveaway.minLevel,
+    giveaway.maxLevel,
+  );
 
   const winners: string[] = [];
-  const pool = [...entrants];
+  const pool = [...eligible];
   for (let i = 0; i < giveaway.winnersCount && pool.length > 0; i++) {
     const idx = Math.floor(Math.random() * pool.length);
-    winners.push(pool[idx].id);
+    winners.push(pool[idx]);
     pool.splice(idx, 1);
   }
 
@@ -135,7 +207,7 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<v
       allowedMentions: { users: winners },
     }).catch(() => {});
   } else {
-    await ch.send({ content: `No one entered the giveaway for **${giveaway.prize}**.` }).catch(() => {});
+    await ch.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` }).catch(() => {});
   }
 }
 
