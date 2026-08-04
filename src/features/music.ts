@@ -1,5 +1,6 @@
 import { DisTube, type Queue, type Song, type Playlist } from "distube";
 import { YouTubePlugin } from "@distube/youtube";
+import { SoundCloudPlugin } from "@distube/soundcloud";
 import { type Client, type TextChannel, EmbedBuilder } from "discord.js";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
@@ -64,7 +65,7 @@ export function formatTime(seconds: number): string {
 export function setupMusic(client: Client): void {
   distube = new DisTube(client, {
     emitNewSongOnly: true,
-    plugins: [new YouTubePlugin()],
+    plugins: [new YouTubePlugin(), new SoundCloudPlugin()],
     ffmpeg: {
       path: ffmpegPath ?? "ffmpeg",
       args: { global: {}, input: {}, output: {} },
@@ -106,16 +107,16 @@ export function setupMusic(client: Client): void {
       logger.debug({ guildId: queue.id }, "distube disconnected");
     })
     .on("error", (queue: Queue, error: Error) => {
-      // FIX: DisTube v5 error event is (queue, error) — was previously swapped causing silent failures
       logger.warn({ err: error, guildId: queue?.id }, "distube error");
       const ch = queue?.textChannel as TextChannel | undefined;
+      const msg = error?.message ?? String(error);
+      const isYtBlock = /sign in|403|blocked|unavailable|age.restrict|confirm.*human/i.test(msg);
+      const description = isYtBlock
+        ? "YouTube is blocking this request. Try a **SoundCloud** or **Spotify** URL directly, or prefix your search with `soundcloud:` (e.g. `,play soundcloud:song name`)."
+        : `Music error: ${msg}`;
       if (ch) {
         ch.send({
-          embeds: [new EmbedBuilder()
-            .setColor(0xffa500)
-            .setTitle("⚠️ Music Error")
-            .setDescription(`\`\`\`${error.message}\`\`\``)
-          ]
+          embeds: [new EmbedBuilder().setColor(0xF0B429).setDescription(description)]
         }).catch(() => {});
       }
     });
