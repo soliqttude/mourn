@@ -26,6 +26,8 @@ export const command: HybridCommand = {
     await ctx.defer();
     try {
       await distube.play(vc, query, { member, textChannel: ctx.channel as any });
+      const label = query.length > 80 ? query.slice(0, 80) + "…" : query;
+      await ctx.reply({ embeds: [successEmbed(`searching **${label}**…`)] });
     } catch (err: any) {
       return ctx.reply({ embeds: [errorEmbed(err?.message ?? "failed to play that song.")] });
     }
