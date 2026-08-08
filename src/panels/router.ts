@@ -2,11 +2,11 @@ import {
   type Client,
   type ButtonInteraction,
   type StringSelectMenuInteraction,
-  type ModalSubmitInteraction,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  GuildMember,
   StringSelectMenuBuilder,
   MessageFlags,
 } from "discord.js";
@@ -25,16 +25,25 @@ export type PanelTab =
   | "tickets"
   | "owner";
 
-const TAB_LABELS: Record<PanelTab, string> = {
-  home: "🏠 Home",
-  security: "🛡️ Security",
-  moderation: "⚖️ Moderation",
-  logs: "📜 Logs",
-  welcome: "👋 Welcome",
-  economy: "💰 Economy",
-  levels: "🏆 Levels",
-  tickets: "🎟️ Tickets",
-  owner: "👑 Owner",
+// ── Presentation ─────────────────────────────────────────────────────────
+// Monochrome glyphs only — no color emoji. Keeps the panel feeling like a
+// single designed surface instead of a row of mismatched icons.
+const ON = "◆ Active";
+const OFF = "◇ Inactive";
+const status = (enabled: boolean) => (enabled ? ON : OFF);
+const channelOrDash = (id: string | null | undefined) => (id ? `<#${id}>` : "—");
+const roleOrDash = (id: string | null | undefined) => (id ? `<@&${id}>` : "—");
+
+const TAB_META: Record<PanelTab, { label: string; blurb: string }> = {
+  home: { label: "Home", blurb: "Overview & quick status" },
+  security: { label: "Security", blurb: "Anti-nuke & anti-raid" },
+  moderation: { label: "Moderation", blurb: "Mute, jail, mod log" },
+  logs: { label: "Logs", blurb: "Audit & event logging" },
+  welcome: { label: "Welcome", blurb: "Welcome, goodbye, boost" },
+  economy: { label: "Economy", blurb: "Currency & economy commands" },
+  levels: { label: "Levels", blurb: "XP & leveling system" },
+  tickets: { label: "Tickets", blurb: "Support ticket system" },
+  owner: { label: "Owner", blurb: "Bot owner utilities" },
 };
 
 const TABS: PanelTab[] = [
@@ -49,120 +58,109 @@ const TABS: PanelTab[] = [
   "owner",
 ];
 
-export function buildPanelRows(active: PanelTab) {
+export function buildPanelRows(
+  active: PanelTab
+): ActionRowBuilder<StringSelectMenuBuilder>[] {
   const select = new StringSelectMenuBuilder()
     .setCustomId("panel:tab")
-    .setPlaceholder(`Tab: ${TAB_LABELS[active]}`)
+    .setPlaceholder(`⎯ ${TAB_META[active].label} ⎯`)
     .addOptions(
       TABS.map((t) => ({
-        label: TAB_LABELS[t],
+        label: TAB_META[t].label,
+        description: TAB_META[t].blurb,
         value: t,
         default: t === active,
       }))
     );
-  const row1 = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
-  return [row1];
+  return [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)];
 }
 
 export async function buildPanelEmbed(active: PanelTab, guildId: string) {
   const s = await getGuildSettings(guildId);
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
-    .setFooter({ text: `Mourn • Panel • ${TAB_LABELS[active]}` })
+    .setAuthor({ name: "MOURN" })
+    .setFooter({ text: `Panel · ${TAB_META[active].label}` })
     .setTimestamp();
 
   if (active === "home") {
-    eb.setTitle("Mourn Control Panel").setDescription(
-      [
-        "Pick a tab from the menu below to view its settings.",
-        "",
-        `**Prefix:** \`${s.prefix}\``,
-        `**Anti-Nuke:** ${s.antinukeEnabled ? "✅" : "❌"}`,
-        `**Anti-Raid:** ${s.antiraidEnabled ? "✅" : "❌"}`,
-        `**Automod:** ${s.automodEnabled ? "✅" : "❌"}`,
-        `**Welcome:** ${s.welcomeChannel ? `<#${s.welcomeChannel}>` : "off"}`,
-        `**Goodbye:** ${s.goodbyeChannel ? `<#${s.goodbyeChannel}>` : "off"}`,
-        `**Starboard:** ${s.starboardChannel ? `<#${s.starboardChannel}>` : "off"}`,
-        `**Voicemaster:** ${s.voicemasterHub ? `<#${s.voicemasterHub}>` : "off"}`,
-      ].join("\n")
+    eb.setDescription("*A refined command centre for your server.*").addFields(
+      { name: "Prefix", value: `\`${s.prefix}\``, inline: true },
+      { name: "Anti-Nuke", value: status(s.antinukeEnabled), inline: true },
+      { name: "Anti-Raid", value: status(s.antiraidEnabled), inline: true },
+      { name: "Automod", value: status(s.automodEnabled), inline: true },
+      { name: "Welcome", value: channelOrDash(s.welcomeChannel), inline: true },
+      { name: "Goodbye", value: channelOrDash(s.goodbyeChannel), inline: true },
+      { name: "Starboard", value: channelOrDash(s.starboardChannel), inline: true },
+      { name: "Voicemaster", value: channelOrDash(s.voicemasterHub), inline: true }
     );
   } else if (active === "security") {
-    eb.setTitle("Security").setDescription(
-      [
-        `**Anti-Nuke:** ${s.antinukeEnabled ? "✅" : "❌"} (action: ${s.antinukeAction})`,
-        `**Anti-Raid:** ${s.antiraidEnabled ? "✅" : "❌"}`,
-        `└ Threshold: ${s.antiraidThreshold} joins / 10s`,
-        `└ Min account age: ${s.antiraidJoinAge} days`,
-        "",
-        "Use `/antinuke`, `/antiraid` to configure.",
-      ].join("\n")
+    eb.setDescription("*Guardrails against nukes, raids, and abuse.*").addFields(
+      { name: "Anti-Nuke", value: `${status(s.antinukeEnabled)} · action: ${s.antinukeAction}` },
+      { name: "Anti-Raid", value: status(s.antiraidEnabled) },
+      { name: "Join Threshold", value: `${s.antiraidThreshold} joins / 10s`, inline: true },
+      { name: "Minimum Account Age", value: `${s.antiraidJoinAge} days`, inline: true },
+      { name: "Configure", value: "`/antinuke` · `/antiraid`" }
     );
   } else if (active === "moderation") {
-    eb.setTitle("Moderation").setDescription(
-      [
-        `**Mute role:** ${s.muteRole ? `<@&${s.muteRole}>` : "—"}`,
-        `**Jail role:** ${s.jailRole ? `<@&${s.jailRole}>` : "—"}`,
-        `**Mod log:** ${s.modLogChannel ? `<#${s.modLogChannel}>` : "—"}`,
-        "",
-        "Available: `/ban`, `/kick`, `/timeout`, `/warn`, `/purge`, `/lock`, `/slowmode`.",
-      ].join("\n")
+    eb.setDescription("*Tools for keeping order.*").addFields(
+      { name: "Mute Role", value: roleOrDash(s.muteRole), inline: true },
+      { name: "Jail Role", value: roleOrDash(s.jailRole), inline: true },
+      { name: "Mod Log", value: channelOrDash(s.modLogChannel), inline: true },
+      {
+        name: "Commands",
+        value: "`/ban` · `/kick` · `/timeout` · `/warn` · `/purge` · `/lock` · `/slowmode`",
+      }
     );
   } else if (active === "logs") {
-    eb.setTitle("Logs").setDescription(
-      [
-        `**Mod log:** ${s.modLogChannel ? `<#${s.modLogChannel}>` : "—"}`,
-        `**Message log:** ${s.msgLogChannel ? `<#${s.msgLogChannel}>` : "—"}`,
-        `**Join log:** ${s.joinLogChannel ? `<#${s.joinLogChannel}>` : "—"}`,
-        `**Voice log:** ${s.voiceLogChannel ? `<#${s.voiceLogChannel}>` : "—"}`,
-        "",
-        "Use `/setlog <type> <channel>` to configure.",
-      ].join("\n")
+    eb.setDescription("*A record of everything that happens here.*").addFields(
+      { name: "Mod Log", value: channelOrDash(s.modLogChannel), inline: true },
+      { name: "Message Log", value: channelOrDash(s.msgLogChannel), inline: true },
+      { name: "Join Log", value: channelOrDash(s.joinLogChannel), inline: true },
+      { name: "Voice Log", value: channelOrDash(s.voiceLogChannel), inline: true },
+      { name: "Configure", value: "`/setlog <type> <channel>`" }
     );
   } else if (active === "welcome") {
-    eb.setTitle("Welcome / Goodbye / Boost").setDescription(
-      [
-        `**Welcome:** ${s.welcomeChannel ? `<#${s.welcomeChannel}>` : "—"}`,
-        `**Goodbye:** ${s.goodbyeChannel ? `<#${s.goodbyeChannel}>` : "—"}`,
-        `**Boost:** ${s.boostChannel ? `<#${s.boostChannel}>` : "—"}`,
-        "",
-        "Use `/setwelcome`, `/setgoodbye`, `/setboost`.",
-      ].join("\n")
+    eb.setDescription("*First and last impressions.*").addFields(
+      { name: "Welcome", value: channelOrDash(s.welcomeChannel), inline: true },
+      { name: "Goodbye", value: channelOrDash(s.goodbyeChannel), inline: true },
+      { name: "Boost", value: channelOrDash(s.boostChannel), inline: true },
+      { name: "Configure", value: "`/setwelcome` · `/setgoodbye` · `/setboost`" }
     );
   } else if (active === "economy") {
-    eb.setTitle("Economy").setDescription(
-      [
-        "Members can use:",
-        "`,balance` `,daily` `,work` `,deposit` `,withdraw` `,give` `,richest`",
-      ].join("\n")
-    );
+    eb.setDescription("*A currency system for your members.*").addFields({
+      name: "Commands",
+      value: [
+        `\`${s.prefix}balance\``,
+        `\`${s.prefix}daily\``,
+        `\`${s.prefix}work\``,
+        `\`${s.prefix}deposit\``,
+        `\`${s.prefix}withdraw\``,
+        `\`${s.prefix}give\``,
+        `\`${s.prefix}richest\``,
+      ].join(" · "),
+    });
   } else if (active === "levels") {
-    eb.setTitle("Levels").setDescription(
-      [
-        `**Levels enabled:** ${s.levelsEnabled ? "✅" : "❌"}`,
-        "",
-        "Click a button below to toggle.",
-      ].join("\n")
-    );
+    eb.setDescription("*Reward activity with experience and rank.*").addFields({
+      name: "Levels",
+      value: status(s.levelsEnabled),
+    });
   } else if (active === "tickets") {
-    eb.setTitle("Tickets").setDescription(
-      [
-        `**Category:** ${s.ticketCategory ? `<#${s.ticketCategory}>` : "—"}`,
-        `**Support role:** ${s.ticketSupportRole ? `<@&${s.ticketSupportRole}>` : "—"}`,
-        `**Log:** ${s.ticketLogChannel ? `<#${s.ticketLogChannel}>` : "—"}`,
-        "",
-        "Use `/ticketsetup` to configure, `/ticketpanel` to deploy a panel.",
-      ].join("\n")
+    eb.setDescription("*Give members a direct line to your team.*").addFields(
+      { name: "Category", value: channelOrDash(s.ticketCategory), inline: true },
+      { name: "Support Role", value: roleOrDash(s.ticketSupportRole), inline: true },
+      { name: "Log", value: channelOrDash(s.ticketLogChannel), inline: true },
+      { name: "Configure", value: "`/ticketsetup` · `/ticketpanel`" }
     );
   } else if (active === "owner") {
-    eb.setTitle("Owner Tools").setDescription(
-      [
-        "These are restricted to the bot owner.",
-        "",
+    eb.setDescription("*Restricted to the bot owner.*").addFields({
+      name: "Commands",
+      value: [
         "`/broadcast` — message every server",
         "`/blacklist` — block a user from using the bot",
         "`/customcommand` — make custom server commands",
-      ].join("\n")
-    );
+      ].join("\n"),
+    });
   }
   return eb;
 }
@@ -171,14 +169,18 @@ export function buildLevelsToggleRow(enabled: boolean) {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId("panel:levels:toggle")
-      .setLabel(enabled ? "Disable Levels" : "Enable Levels")
-      .setStyle(enabled ? ButtonStyle.Danger : ButtonStyle.Success)
+      .setLabel(enabled ? "◆ Disable Levels" : "◇ Enable Levels")
+      .setStyle(ButtonStyle.Secondary)
   );
 }
 
 export async function buildPanel(active: PanelTab, guildId: string) {
   const eb = await buildPanelEmbed(active, guildId);
-  const components: any[] = buildPanelRows(active);
+  const components: (
+    | ActionRowBuilder<StringSelectMenuBuilder>
+    | ActionRowBuilder<ButtonBuilder>
+  )[] = buildPanelRows(active);
+
   if (active === "levels") {
     const s = await getGuildSettings(guildId);
     components.push(buildLevelsToggleRow(s.levelsEnabled));
@@ -188,7 +190,7 @@ export async function buildPanel(active: PanelTab, guildId: string) {
 
 export async function handlePanelInteraction(
   _client: Client,
-  interaction: ButtonInteraction | StringSelectMenuInteraction | ModalSubmitInteraction
+  interaction: ButtonInteraction | StringSelectMenuInteraction
 ) {
   if (!interaction.guild || !interaction.member) {
     return interaction.reply({
@@ -196,7 +198,15 @@ export async function handlePanelInteraction(
       flags: MessageFlags.Ephemeral,
     });
   }
-  const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+
+  // Interaction.member is already populated from the gateway cache in the
+  // vast majority of cases — only fall back to a REST fetch when it isn't,
+  // instead of hitting the API on every tab switch.
+  const member =
+    interaction.member instanceof GuildMember
+      ? interaction.member
+      : await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+
   if (!member || !checkTier(member, "admin")) {
     return interaction.reply({
       content: "You need admin permission to use the panel.",
@@ -204,16 +214,20 @@ export async function handlePanelInteraction(
     });
   }
 
+  // Ack immediately — the fetch above plus the DB read in buildPanel can
+  // exceed Discord's 3s interaction window under load.
+  await interaction.deferUpdate();
+
   if (interaction.isStringSelectMenu() && interaction.customId === "panel:tab") {
     const tab = interaction.values[0] as PanelTab;
     const payload = await buildPanel(tab, interaction.guild.id);
-    return interaction.update(payload);
+    return interaction.editReply(payload);
   }
 
   if (interaction.isButton() && interaction.customId === "panel:levels:toggle") {
     const s = await getGuildSettings(interaction.guild.id);
     await updateGuildSettings(interaction.guild.id, { levelsEnabled: !s.levelsEnabled });
     const payload = await buildPanel("levels", interaction.guild.id);
-    return interaction.update(payload);
+    return interaction.editReply(payload);
   }
 }
