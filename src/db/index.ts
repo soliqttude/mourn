@@ -6,7 +6,7 @@ import * as schema from "./schema.js";
 const { Pool } = pg;
 
 export const pool = new Pool({
-  connectionString: config.databaseUrl,
+  ...(config.databaseUrl ? { connectionString: config.databaseUrl } : {}),
   max: 10,
   ssl: config.databaseUrl.includes("railway")
     ? { rejectUnauthorized: false }
