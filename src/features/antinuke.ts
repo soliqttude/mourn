@@ -315,7 +315,7 @@ export async function handleVanityChange(client: Client, guild: Guild): Promise<
       if (entry.createdTimestamp < cutoff) break;
       if (!entry.executor || entry.executor.bot) continue;
       const changedVanity = entry.changes?.some(
-        (c) => c.key === "vanityURLCode" || c.key === "vanity_url_code"
+        (c) => { const key = (c as any).key as string; return key === "vanityURLCode" || key === "vanity_url_code"; }
       );
       if (!changedVanity) continue;
       executorId = entry.executor.id;
