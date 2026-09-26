@@ -15,7 +15,7 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const s = await getGuildSettings(ctx.guild.id);
     return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle(`⚙️ ${ctx.guild.name} Settings`).addFields(
-      { name: "Prefix", value: (s as any)?.prefix ?? config.prefix ?? "!", inline: true },
+      { name: "Prefix", value: (s as any)?.prefix ?? config.defaultPrefix ?? "!", inline: true },
       { name: "Log Channel", value: (s as any)?.logChannelId ? `<#${(s as any).logChannelId}>` : "Not set", inline: true },
       { name: "Welcome Channel", value: (s as any)?.welcomeChannelId ? `<#${(s as any).welcomeChannelId}>` : "Not set", inline: true },
       { name: "Mute Role", value: (s as any)?.muteRoleId ? `<@&${(s as any).muteRoleId}>` : "Not set", inline: true },
