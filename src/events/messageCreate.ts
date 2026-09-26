@@ -221,7 +221,7 @@ export const event = {
       if (!member || !checkTier(member, cmd.permission)) {
         const permEmbed = errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: \`${cmd.permission}\``);
         await message.reply({ embeds: [permEmbed] }).catch(() =>
-          message.channel.send({ embeds: [permEmbed] }).catch(() => {})
+          (message.channel as any).send({ embeds: [permEmbed] }).catch(() => {})
         );
         return;
       }
