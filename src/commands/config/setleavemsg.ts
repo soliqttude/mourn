@@ -15,7 +15,7 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const message = ctx.getString("message") ?? ctx.args.join(" ");
     if (!message) return ctx.reply({ content: "Provide a message.", ephemeral: true } as any);
-    await updateGuildSettings(ctx.guild.id, { leaveMessage: message });
+    await updateGuildSettings(ctx.guild.id, { goodbyeMessage: message });
     return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setDescription(`✅ Leave message set.\n> ${message}`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };
