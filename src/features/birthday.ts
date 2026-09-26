@@ -86,7 +86,6 @@ export async function checkBirthdays(client: Client) {
           ].join("\n"),
           thumbnail: user.displayAvatarURL({ size: 256 }),
           color: 0xd4af37, // champagne gold
-          footer: "wishing you a year as golden as this one",
           page: "Birthday",
         })],
       }).catch(() => {});
