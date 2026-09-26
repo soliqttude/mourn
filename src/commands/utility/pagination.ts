@@ -38,8 +38,8 @@ export const command: HybridCommand = {
       if (!ch?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Provide a valid text **channel**.")] });
       const code = ctx.getString("code") ?? ctx.args.slice(2).join(" ");
       if (!code) return ctx.reply({ embeds: [errorEmbed("Provide the first page content.")] });
-      const { embed, content } = parseScript(code, { guild: ctx.guild });
-      const msg = await (ch as any).send({ content: content ?? undefined, embeds: embed ? [embed] : [], components: [buildNavRow(0, 1, "placeholder")] });
+      const { embeds, content } = parseScript(code, { guild: ctx.guild });
+      const msg = await (ch as any).send({ content: content ?? undefined, embeds, components: [buildNavRow(0, 1, "placeholder")] });
       await db.insert(paginatedEmbeds).values({ messageId: msg.id, guildId, channelId: ch.id, pages: [code], currentPage: 0 });
       await msg.edit({ components: [buildNavRow(0, 1, msg.id)] });
       return ctx.reply({ embeds: [successEmbed(`paginated embed created in <#${ch.id}>. use \`pagination add ${msg.id}\` to add more pages.`)] });
