@@ -12,12 +12,12 @@ export const event = {
     const settings    = await getGuildSettings(invite.guild.id);
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
-    const logCh = invite.guild.channels.cache.get(logChannelId);
+    const logCh = (invite.guild as any).channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
     let executor: string | null = null;
     try {
-      const audit = await invite.guild.fetchAuditLogs({ type: AuditLogEvent.InviteDelete, limit: 1 });
+      const audit = await (invite.guild as any).fetchAuditLogs({ type: AuditLogEvent.InviteDelete, limit: 1 });
       const entry = audit.entries.first();
       if (entry && (Date.now() - entry.createdTimestamp) < 5000)
         executor = entry.executorId ?? null;
