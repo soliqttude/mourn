@@ -40,8 +40,8 @@ export async function handlePageButton(client: Client, interaction: ButtonIntera
 
   await db.update(paginatedEmbeds).set({ currentPage: page }).where(eq(paginatedEmbeds.messageId, messageId));
 
-  const { embed, content } = parseScript(paginated.pages[page] ?? "");
+  const { embeds, content } = parseScript(paginated.pages[page] ?? "");
   const navRow = buildNavRow(page, paginated.pages.length, messageId);
 
-  await interaction.update({ content: content ?? "", embeds: embed ? [embed] : [], components: [navRow] }).catch(() => {});
+  await interaction.update({ content: content ?? "", embeds, components: [navRow] }).catch(() => {});
 }
