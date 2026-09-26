@@ -109,6 +109,7 @@ const STATEMENTS: string[] = [
     guild_id TEXT, message TEXT NOT NULL, remind_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE IF NOT EXISTS ignored_xp_channels (guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, PRIMARY KEY (guild_id, channel_id))`,
   `CREATE TABLE IF NOT EXISTS economy (
     guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
     balance BIGINT NOT NULL DEFAULT 0, bank BIGINT NOT NULL DEFAULT 0,
