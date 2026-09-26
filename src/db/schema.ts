@@ -587,3 +587,9 @@ export const userItems = pgTable("user_items", {
   itemId: integer("item_id").notNull(),
   quantity: integer("quantity").default(1).notNull(),
 }, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId, t.itemId] }) }));
+
+
+export const ignoredXpChannels = pgTable("ignored_xp_channels", {
+  guildId: text("guild_id").notNull(),
+  channelId: text("channel_id").notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) }));
