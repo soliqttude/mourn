@@ -81,7 +81,7 @@ export const command: HybridCommand = {
     }
 
     const rest = new REST({ version: "10" }).setToken(config.token);
-    const memberEndpoint = `/guilds/${ctx.guild.id}/members/@me`;
+    const memberEndpoint = `/guilds/${ctx.guild.id}/members/@me` as `/${string}`;
 
     if (field === "reset") {
       // Reset guild member avatar/banner
