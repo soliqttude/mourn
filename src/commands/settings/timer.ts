@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   category: "settings",
   permission: "manage_guild",
   guildOnly: true,
-  usage: "timer (add|remove|list) [channel] [interval] [message]",
+  usage: "timer (add|remove|view|list) [channel] [interval] [message]",
   examples: [
     "timer add #announcements 2h Reminder: follow the rules!",
     "timer add #general 30m {embed}$v{title: Daily Reminder}$v{description: Be kind}",
@@ -26,7 +26,7 @@ export const command: HybridCommand = {
       description: "add, remove, or list",
       type: ApplicationCommandOptionType.String,
       required: true,
-      choices: [{ name: "add", value: "add" }, { name: "remove", value: "remove" }, { name: "list", value: "list" }],
+      choices: [{ name: "add", value: "add" }, { name: "remove", value: "remove" }, { name: "view", value: "view" }, { name: "list", value: "list" }],
     },
     { name: "channel", description: "Channel to post in", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "interval", description: "Interval e.g. 30m, 1h, 6h", type: ApplicationCommandOptionType.String, required: false },
