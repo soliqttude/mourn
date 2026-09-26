@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, Message, StickerFormatType, AttachmentBuilder } from "discord.js";
+import { ApplicationCommandOptionType, Message, StickerFormatType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
@@ -53,11 +53,9 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed(`Failed to download sticker: ${(e as Error).message}`)] });
     }
 
-    const attachment = new AttachmentBuilder(fileBuffer, { name: `sticker.${ext}` });
-
     const added = await ctx.guild.stickers
       .create({
-        file:   attachment,
+        file:   fileBuffer,
         name:   stickerName,
         tags:   "⭐",
         reason: `Stolen by ${ctx.user.tag}`,
