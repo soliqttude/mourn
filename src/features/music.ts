@@ -37,8 +37,8 @@ function nowPlayingEmbed(song: Song, queue: Queue): EmbedBuilder {
     .setColor(config.brandColor)
     .setAuthor({ name: "now playing", iconURL: song.user?.displayAvatarURL() })
     .setTitle(song.name ?? "Unknown")
-    .setURL(song.url)
-    .setThumbnail(song.thumbnail ?? undefined)
+    .setURL(song.url ?? "")
+    .setThumbnail(song.thumbnail ?? null)
     .addFields(
       { name: "duration", value: song.formattedDuration ?? "live", inline: true },
       { name: "requested by", value: song.user?.username ?? "unknown", inline: true },
