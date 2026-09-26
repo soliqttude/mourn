@@ -28,7 +28,7 @@ export const command: HybridCommand = {
       .filter((r) => r.inviterId !== null)
       .map(
         (r, i) =>
-          `**${i + 1}.** <@${r.inviterId}> — **${r.total}** invited · **${r.joined}** here · **${r.left}** left`
+          `**${i + 1}.** <@${r.inviterId}> — **${r.regular + r.left + r.fake + r.bonus}** invited · **${r.regular + r.bonus}** here · **${r.left}** left`
       )
       .join("\n");
     return ctx.reply({
