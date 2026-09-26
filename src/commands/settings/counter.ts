@@ -64,7 +64,7 @@ export const command: HybridCommand = {
         if (!raw) return null;
         return ctx.guild!.channels.cache.get(raw) ?? null;
       })();
-      const template = ctx.getString("template") ?? ctx.args.slice(3).join(" ") || null;
+      const template = (ctx.getString("template") ?? ctx.args.slice(3).join(" ")) || null;
 
       if (!channel) return ctx.reply({ embeds: [errorEmbed("Please specify a **channel**.")] });
       if (!template || !template.includes("{count}")) {
