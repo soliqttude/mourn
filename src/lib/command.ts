@@ -19,6 +19,8 @@ export interface HybridCommand {
   description: string;
   category: string;
   permission?: PermTier;
+  /** Discord permission names required by the command (legacy command metadata). */
+  userPermissions?: string[];
   aliases?: string[];
   guildOnly?: boolean;
   ownerOnly?: boolean;
