@@ -44,6 +44,7 @@ export const guildSettings = pgTable("guild_settings", {
   clownboardChannel: text("clownboard_channel"),
   clownboardThreshold: integer("clownboard_threshold").default(5).notNull(),
   dropChannel: text("drop_channel"),
+  economyFrozen: boolean("economy_frozen").default(false).notNull(),
   voicemasterHub: text("voicemaster_hub"),
   voicemasterCategory: text("voicemaster_category"),
   ticketCategory: text("ticket_category"),
@@ -593,3 +594,18 @@ export const ignoredXpChannels = pgTable("ignored_xp_channels", {
   guildId: text("guild_id").notNull(),
   channelId: text("channel_id").notNull(),
 }, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) }));
+
+
+export const userMood = pgTable("user_mood", {
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  mood: text("mood").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));
+
+export const reputation = pgTable("reputation", {
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  repCount: integer("rep_count").default(0).notNull(),
+  lastGivenAt: timestamp("last_given_at", { withTimezone: true }),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));
