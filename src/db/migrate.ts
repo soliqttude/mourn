@@ -241,7 +241,7 @@ const STATEMENTS: string[] = [
     emoji TEXT NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS reaction_triggers_guild_idx ON reaction_triggers (guild_id)`,
-  `CREATE TABLE IF NOT EXISTS fake_permissions (
+  `CREATE TABLE IF NOT EXISTS honeypots (\n    guild_id TEXT NOT NULL,\n    channel_id TEXT NOT NULL,\n    punishment TEXT NOT NULL,\n    PRIMARY KEY (guild_id, channel_id)\n  )`,\n  `CREATE TABLE IF NOT EXISTS fake_permissions (
     guild_id TEXT NOT NULL,
     role_id TEXT NOT NULL,
     permissions JSONB NOT NULL DEFAULT '[]',
