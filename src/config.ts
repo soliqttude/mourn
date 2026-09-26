@@ -15,7 +15,7 @@ export const config = {
   ownerId: required("BOT_OWNER_ID"),
   ownerIds: new Set(ownerIdsRaw.split(",").map((s) => s.trim()).filter(Boolean)),
   defaultPrefix: process.env.DEFAULT_PREFIX || ",",
-  databaseUrl: required("DATABASE_URL"),
+  databaseUrl: process.env.DATABASE_URL || "",
   logLevel: process.env.LOG_LEVEL || "info",
   botInviteUrl: process.env.BOT_INVITE_URL || "",
   voteUrl: process.env.VOTE_URL || "",
