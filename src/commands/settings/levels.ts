@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 import { db } from "../../db/index.js";
-import { levels, levelRewards } from "../../db/schema.js";
+import { levels, levelRewards, ignoredXpChannels } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 
 export const command: HybridCommand = {
@@ -108,8 +108,9 @@ export const command: HybridCommand = {
     if (sub === "ignore") {
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(firstArg.replace(/[<#>]/g, ""));
       if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a **channel** to ignore xp in.")] });
-      const { ignoredXpChannels } = await import("../../db/schema.js").catch(() => ({ ignoredXpChannels: null }));
-      if (!ignoredXpChannels) return ctx.reply({ embeds: [errorEmbed("Xp ignore not yet available — update the DB.")] });
+      await db.insert(ignoredXpChannels)
+        .values({ guildId: ctx.guild.id, channelId: ch.id })
+        .onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`xp gain ignored in <#${ch.id}>.`)] });
     }
 
