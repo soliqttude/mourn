@@ -306,6 +306,12 @@ export const reactionTriggers = pgTable("reaction_triggers",
   (t) => ({ guildIdx: index("reaction_triggers_guild_idx").on(t.guildId) })
 );
 
+export const honeypots = pgTable("honeypots", {
+  guildId: text("guild_id").notNull(),
+  channelId: text("channel_id").notNull(),
+  punishment: text("punishment").notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) }));
+
 export const fakePermissions = pgTable("fake_permissions",
   {
     guildId: text("guild_id").notNull(),
