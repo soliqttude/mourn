@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { blacklist } from "../db/schema.js";
+import { config } from "../config.js";
 
 interface CacheEntry { blacklisted: boolean; reason: string | null; expiresAt: number }
 
@@ -8,6 +9,7 @@ const cache = new Map<string, CacheEntry>();
 const TTL = 5 * 60 * 1000; // 5 minutes
 
 export async function isBlacklisted(userId: string): Promise<{ blacklisted: boolean; reason: string | null }> {
+  if (!config.databaseEnabled) return { blacklisted: false, reason: null };
   const cached = cache.get(userId);
   if (cached && Date.now() < cached.expiresAt) {
     return { blacklisted: cached.blacklisted, reason: cached.reason };
