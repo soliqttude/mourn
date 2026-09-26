@@ -1,4 +1,5 @@
 import { pool } from './index.js';
+import { config } from '../config.js';
 import { logger } from '../lib/logger.js';
 
 const STATEMENTS: string[] = [
@@ -511,6 +512,11 @@ const STATEMENTS: string[] = [
 ];
 
 export async function runMigrations(): Promise<void> {
+  if (!config.databaseUrl) {
+    logger.warn("DATABASE_URL is not set; starting Mourn without database migrations.");
+    return;
+  }
+
   const client = await pool.connect();
   try {
     for (const sql of STATEMENTS) {
