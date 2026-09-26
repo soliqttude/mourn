@@ -41,7 +41,7 @@ export const command: HybridCommand = {
     const netWorth = eco.balance + eco.bank;
 
     const activeBuffStr = buffs.length
-      ? buffs.map(b => `\`${b.buffType}\` until <t:${Math.floor(b.expiresAt.getTime() / 1000)}:R>`).join("\n")
+      ? buffs.map((b: { buffType: string; expiresAt: Date }) => `\`${b.buffType}\` until <t:${Math.floor(b.expiresAt.getTime() / 1000)}:R>`).join("\n")
       : "none";
 
     const prestige = eco.prestige > 0 ? `${"⭐".repeat(Math.min(eco.prestige, 5))} prestige ${eco.prestige}` : null;
