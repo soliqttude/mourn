@@ -512,8 +512,8 @@ const STATEMENTS: string[] = [
 ];
 
 export async function runMigrations(): Promise<void> {
-  if (!config.databaseUrl) {
-    logger.warn("DATABASE_URL is not set; starting Mourn without database migrations.");
+  if (!config.databaseEnabled) {
+    logger.warn("Database is disabled; starting Mourn without database migrations.");
     return;
   }
 
