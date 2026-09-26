@@ -20,7 +20,7 @@ export const event = {
 
     const settings = await getGuildSettings(member.guild.id);
 
-    await handleAntiraidJoin(member, settings);
+    await handleAntiraidJoin(member);
 
     const avatarCheck = (settings as any).antiraidAvatarCheck ?? false;
     if (avatarCheck && !member.user.avatar) {
