@@ -12,7 +12,7 @@ export const event = {
     const settings    = await getGuildSettings(invite.guild.id);
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
-    const logCh = invite.guild.channels.cache.get(logChannelId);
+    const logCh = (invite.guild as any).channels.cache.get(logChannelId);
     if (!logCh?.isTextBased()) return;
 
     const inviter   = invite.inviter;
