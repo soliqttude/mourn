@@ -18,7 +18,6 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (!hasApiKey()) return ctx.reply({ embeds: [errorEmbed("Last.fm api key not configured.")] });
-
     const target = (await ctx.getUser("user")) ?? ctx.user;
     const row = await db.select().from(lastfmAccounts).where(eq(lastfmAccounts.userId, target.id)).then(r => r[0]);
     if (!row) return ctx.reply({ embeds: [errorEmbed("That **user** hasn't linked a last.fm account.")] });
@@ -27,14 +26,15 @@ export const command: HybridCommand = {
     try {
       tracks = await getRecentTracks(row.username, 10);
     } catch (err: any) {
-      return ctx.reply({ embeds: [errorEmbed(err.message ?? "failed to fetch data.")] });
+      return ctx.reply({ embeds: [errorEmbed(err?.message ?? "failed to fetch data.")] });
     }
-
     if (!tracks.length) return ctx.reply({ embeds: [errorEmbed(`**${row.username}** has no recent scrobbles.`)] });
 
     const lines = tracks.slice(0, 10).map((t, i) => {
-      const np = t["@attr"]?.nowplaying === "true" ? "🎵 " : `\`${String(i + 1).padStart(2, " ")}.\` ";
-      return `${np}**${t.name}** by ${t.artist?.["#text"] ?? "unknown"}`;
+      const prefix = t["@attr"]?.nowplaying === "true"
+        ? "🎵 "
+        : `\`${String(i + 1).padStart(2, " ")}.\` `;
+      return `${prefix}**${t.name}** by ${t.artist?.["#text"] ?? "unknown"}`;
     });
 
     return ctx.reply({
