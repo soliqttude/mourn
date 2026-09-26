@@ -41,6 +41,9 @@ export const guildSettings = pgTable("guild_settings", {
   starboardChannel: text("starboard_channel"),
   starboardEmoji: text("starboard_emoji").default("⭐").notNull(),
   starboardThreshold: integer("starboard_threshold").default(3).notNull(),
+  clownboardChannel: text("clownboard_channel"),
+  clownboardThreshold: integer("clownboard_threshold").default(5).notNull(),
+  dropChannel: text("drop_channel"),
   voicemasterHub: text("voicemaster_hub"),
   voicemasterCategory: text("voicemaster_category"),
   ticketCategory: text("ticket_category"),
@@ -556,3 +559,31 @@ export const filterWhitelist = pgTable("filter_whitelist",
   { guildId: text("guild_id").notNull(), filterType: text("filter_type").notNull(), value: text("value").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.filterType, t.value] }) })
 );
+
+
+export const economy = pgTable("economy", {
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  balance: bigint("balance", { mode: "number" }).default(0).notNull(),
+  bank: bigint("bank", { mode: "number" }).default(0).notNull(),
+  lastDaily: timestamp("last_daily", { withTimezone: true }),
+  lastRob: timestamp("last_rob", { withTimezone: true }),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));
+
+export const shopItems = pgTable("shop_items", {
+  id: serial("id").primaryKey(),
+  guildId: text("guild_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description").default("").notNull(),
+  price: bigint("price", { mode: "number" }).default(100).notNull(),
+  roleId: text("role_id"),
+  stock: integer("stock").default(-1).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const userItems = pgTable("user_items", {
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  itemId: integer("item_id").notNull(),
+  quantity: integer("quantity").default(1).notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId, t.itemId] }) }));
