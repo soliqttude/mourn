@@ -15,7 +15,7 @@ export const command: HybridCommand = {
     { name: "private", description: "Make the thread private", type: ApplicationCommandOptionType.Boolean, required: false },
   ],
   async execute(ctx) {
-    if (!ctx.guild || !ctx.channel || ctx.channel.type === ChannelType.DM) return;
+    if (!ctx.guild || !ctx.channel) return;
     const name = ctx.getString("name") ?? ctx.args[0];
     if (!name) return ctx.reply({ content: "Provide a thread name.", ephemeral: true } as any);
     const isPrivate = ctx.getBoolean("private") ?? false;
