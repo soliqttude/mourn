@@ -129,10 +129,9 @@ export const event = {
         const { and, eq } = await import("drizzle-orm");
         const hp = await db.select().from(honeypots).where(and(eq(honeypots.guildId, message.guild.id), eq(honeypots.channelId, message.channelId)));
         const bait = hp[0];
-        if (bait && !message.member?.permissions.has("Administrator") && !(message.member?.roles.cache.some(r => {
-          const ids = (message.guild?.members.me ? [] : []) as string[];
-          return ids.includes(r.id);
-        }))) {
+        const settings = bait ? await getGuildSettings(message.guild.id) : null;
+        const isStaff = settings?.staffRoleIds?.some((id: string) => message.member?.roles.cache.has(id)) ?? false;
+        if (bait && !message.member?.permissions.has("Administrator") && !isStaff) {
           if (bait.punishment === "ban") await message.guild.members.ban(message.author.id, { reason: "Honeypot triggered" }).catch(() => {});
           else if (bait.punishment === "softban") {
             await message.guild.members.ban(message.author.id, { reason: "Honeypot triggered", deleteMessageSeconds: 604800 }).catch(() => {});
