@@ -16,7 +16,7 @@ export const command: HybridCommand = {
     const ch = ctx.getChannel ? ctx.getChannel("channel") : null;
     const channelId = (ch as any)?.id ?? ctx.args[0]?.replace(/[<#>]/g,"");
     if (!channelId) return ctx.reply({ content: "Provide a channel.", ephemeral: true } as any);
-    await updateGuildSettings(ctx.guild.id, { welcomeChannelId: channelId });
+    await updateGuildSettings(ctx.guild.id, { welcomeChannel: channelId });
     return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setDescription(`✅ Welcome channel set to <#${channelId}>.`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };
