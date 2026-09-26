@@ -1,4 +1,5 @@
 import { Client, GatewayIntentBits, Partials, ActivityType } from "discord.js";
+import http from "node:http";
 import { config } from "./config.js";
 import { logger } from "./lib/logger.js";
 import { runMigrations } from "./db/migrate.js";
@@ -12,7 +13,20 @@ import { startAutoMessageLoop } from "./features/autoMessages.js";
 import { startSocialNotificationLoop } from "./features/socialNotifications.js";
 import { setupMusic } from "./features/music.js";
 
+function startHealthServer() {
+  const port = Number(process.env.PORT || 3000);
+  const server = http.createServer((_req, res) => {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Mourn is alive");
+  });
+
+  server.listen(port, "0.0.0.0", () => {
+    logger.info(`Health server listening on port ${port}`);
+  });
+}
+
 async function main() {
+  startHealthServer();
   await runMigrations();
 
   const client = new Client({
