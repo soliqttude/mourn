@@ -8,7 +8,7 @@ export const command: HybridCommand = {
   guildOnly: true,
   userPermissions: ["ManageChannels"],
   async execute(ctx) {
-    if (!ctx.guild || !ctx.channel || ctx.channel.type === 1) return;
+    if (!ctx.guild || !ctx.channel) return;
     const ch = ctx.channel as any;
     const position = ch.position;
     const clone = await ch.clone({ reason: `Nuked by ${ctx.user.tag}` });
