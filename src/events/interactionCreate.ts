@@ -305,7 +305,7 @@ async function handleSuggestionVote(interaction: ButtonInteraction) {
 }
 
 async function handleSelect(client: Client, interaction: StringSelectMenuInteraction) {
-  if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction);
+  if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction as any);
   if (interaction.customId === "help:select") {
     try {
       const category = interaction.values[0];
