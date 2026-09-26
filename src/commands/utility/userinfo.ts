@@ -13,7 +13,7 @@ const KEY_PERMS: [bigint, string][] = [
   [PermissionFlagsBits.MentionEveryone,   "Mention Everyone"],
   [PermissionFlagsBits.ManageNicknames,   "Manage Nicknames"],
   [PermissionFlagsBits.ManageWebhooks,    "Manage Webhooks"],
-  [PermissionFlagsBits.ManageExpressions, "Manage Expressions"],
+  [PermissionFlagsBits.ManageGuildExpressions, "Manage Expressions"],
   [PermissionFlagsBits.ModerateMembers,   "Timeout Members"],
 ];
 
