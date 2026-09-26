@@ -38,7 +38,7 @@ function nowPlayingEmbed(song: Song, queue: Queue): EmbedBuilder {
     .setAuthor({ name: "now playing", iconURL: song.user?.displayAvatarURL() })
     .setTitle(song.name ?? "Unknown")
     .setURL(song.url)
-    .setThumbnail(song.thumbnail ?? null)
+    .setThumbnail(song.thumbnail ?? undefined)
     .addFields(
       { name: "duration", value: song.formattedDuration ?? "live", inline: true },
       { name: "requested by", value: song.user?.username ?? "unknown", inline: true },
@@ -67,12 +67,12 @@ export function setupMusic(client: Client): void {
     emitNewSongOnly: true,
     plugins: [new YouTubePlugin(), new SoundCloudPlugin()],
     ffmpeg: {
-      path: ffmpegPath ?? "ffmpeg",
+      path: (ffmpegPath as unknown as string | undefined) ?? "ffmpeg",
       args: { global: {}, input: {}, output: {} },
     },
   });
 
-  distube
+  (distube as any)
     .on("playSong", (queue: Queue, song: Song) => {
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
