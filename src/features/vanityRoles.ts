@@ -4,8 +4,10 @@ import { db } from "../db/index.js";
 import { vanityConfig, vanityRoles, vanityMembers } from "../db/schema.js";
 import { parseScript } from "../lib/scripting.js";
 import { logger } from "../lib/logger.js";
+import { config } from "../config.js";
 
 export async function handleVanityPresence(client: Client, member: GuildMember): Promise<void> {
+  if (!config.databaseEnabled) return;
   try {
     const rows = await db.select().from(vanityConfig).where(eq(vanityConfig.guildId, member.guild.id));
     const cfg = rows[0];
