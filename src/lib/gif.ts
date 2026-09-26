@@ -60,7 +60,7 @@ export async function getGif(action: string): Promise<string> {
       { signal: AbortSignal.timeout(4000) }
     );
     if (res.ok) {
-      const data = await res.json() as { results: { media: { gif: { url: string } }[][] }[] };
+      const data = await res.json() as { results: { media: { gif: { url: string } }[] }[] };
       const results = data.results ?? [];
       if (results.length) {
         const pick = results[Math.floor(Math.random() * Math.min(results.length, 8))];
