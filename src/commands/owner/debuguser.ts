@@ -27,7 +27,7 @@ export const command: HybridCommand = {
     if (!userId) return ctx.reply({ embeds: [errorEmbed("Provide a **user**.")] });
 
     const user = await ctx.client.users.fetch(userId).catch(() => null);
-    const [eco, lvl, warnCount, caseCount, isBlacklisted] = await Promise.all([
+    const [eco, lvl, warnCount, isBlacklisted] = await Promise.all([
       getBalance(ctx.guild.id, userId).catch(() => null),
       db.select().from(levels).where(and(eq(levels.guildId, ctx.guild.id), eq(levels.userId, userId))).then(r => r[0] ?? null).catch(() => null),
       db.select({ c: count() }).from(warnings).where(and(eq(warnings.guildId, ctx.guild.id), eq(warnings.userId, userId))).then(r => r[0]?.c ?? 0).catch(() => 0),
@@ -49,7 +49,7 @@ export const command: HybridCommand = {
         { name: "✨ XP", value: lvl ? `${lvl.xp.toLocaleString()}` : "0", inline: true },
         { name: "📨 Last Msg", value: lvl?.lastMessageAt ? `<t:${Math.floor(lvl.lastMessageAt.getTime() / 1000)}:R>` : "N/A", inline: true },
         { name: "⚠️ Warnings", value: `${warnCount}`, inline: true },
-        { name: "📋 Mod Cases", value: `${caseCount}`, inline: true },
+        { name: "📋 Mod Cases", value: `${warnCount}`, inline: true },
       )
       .setTimestamp();
     return ctx.reply({ embeds: [eb], ephemeral: true } as any);
