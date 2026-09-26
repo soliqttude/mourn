@@ -32,7 +32,7 @@ export async function handlePageButton(client: Client, interaction: ButtonIntera
 
   const rows = await db.select().from(paginatedEmbeds).where(eq(paginatedEmbeds.messageId, messageId));
   const paginated = rows[0];
-  if (!paginated) return interaction.reply({ content: "Paginated embed not found.", ephemeral: true });
+  if (!paginated) { await interaction.reply({ content: "Paginated embed not found.", ephemeral: true }); return; }
 
   let page = paginated.currentPage;
   if (dir === "next") page = Math.min(page + 1, paginated.pages.length - 1);
