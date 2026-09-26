@@ -38,7 +38,7 @@ export const command: HybridCommand = {
 
     // Economy rows across all guilds
     const ecoRows = await db.select().from(economy).where(eq(economy.userId, userId)).catch(() => []);
-    const totalCoins = ecoRows.reduce((sum, r) => sum + Number(r.wallet ?? 0) + Number(r.bank ?? 0), 0);
+    const totalCoins = ecoRows.reduce((sum, r) => sum + Number(r.balance ?? 0) + Number(r.bank ?? 0), 0);
 
     // Level rows
     const lvlRows = await db.select().from(levels).where(eq(levels.userId, userId)).catch(() => []);
