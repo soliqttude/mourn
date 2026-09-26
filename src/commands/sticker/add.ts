@@ -20,7 +20,15 @@ export const command: HybridCommand = {
     const url = ctx.getString("url") ?? ctx.args[1];
     const emoji = ctx.getString("emoji") ?? ctx.args[2] ?? "⭐";
     if (!name || !url) return ctx.reply({ content: "Provide name and URL.", ephemeral: true } as any);
-    const sticker = await ctx.guild.stickers.create({ name, url, tags: emoji, reason: `Added by ${ctx.user.tag}` }).catch((e: Error) => e);
+    let file: Buffer;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      file = Buffer.from(await res.arrayBuffer());
+    } catch (e) {
+      return ctx.reply({ content: `Failed to download sticker: ${(e as Error).message}`, ephemeral: true } as any);
+    }
+    const sticker = await ctx.guild.stickers.create({ file, name, tags: emoji, reason: `Added by ${ctx.user.tag}` }).catch((e: Error) => e);
     if (sticker instanceof Error) return ctx.reply({ content: `Failed: ${sticker.message}`, ephemeral: true } as any);
     return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setTitle("✅ Sticker Added").setDescription(`**${(sticker as any).name}** has been added.`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
