@@ -41,6 +41,8 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_log_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_lock_on_raid BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS drop_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS clownboard_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS clownboard_threshold INTEGER NOT NULL DEFAULT 5`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS economy_frozen BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS welcome_mode TEXT NOT NULL DEFAULT 'default'`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_threshold INTEGER NOT NULL DEFAULT 5`,
