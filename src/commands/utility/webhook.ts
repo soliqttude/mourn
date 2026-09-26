@@ -66,10 +66,10 @@ export const command: HybridCommand = {
       const wh = rows[0];
       try {
         const client = new WebhookClient({ id: wh.webhookId, token: wh.webhookToken });
-        const { embed, content } = parseScript(messageText);
+        const { embeds, content } = parseScript(messageText);
         const usernameOverride = ctx.getString("username") ?? undefined;
         const avatarOverride = ctx.getString("avatar") ?? undefined;
-        await client.send({ content: content ?? messageText, embeds: embed ? [embed] : [], username: usernameOverride, avatarURL: avatarOverride });
+        await client.send({ content: content ?? messageText, embeds, username: usernameOverride, avatarURL: avatarOverride });
         return ctx.reply({ embeds: [successEmbed(`message sent via \`${name}\`.`)] });
       } catch {
         return ctx.reply({ embeds: [errorEmbed("Failed to send **webhook** message.")] });
