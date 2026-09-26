@@ -123,6 +123,32 @@ export const event = {
       if (evtDisabled) return;
     }
 
+    if (config.databaseEnabled) {
+      try {
+        const { honeypots } = await import("../db/schema.js");
+        const { and, eq } = await import("drizzle-orm");
+        const hp = await db.select().from(honeypots).where(and(eq(honeypots.guildId, message.guild.id), eq(honeypots.channelId, message.channelId)));
+        const bait = hp[0];
+        if (bait && !message.member?.permissions.has("Administrator") && !(message.member?.roles.cache.some(r => {
+          const ids = (message.guild?.members.me ? [] : []) as string[];
+          return ids.includes(r.id);
+        }))) {
+          if (bait.punishment === "ban") await message.guild.members.ban(message.author.id, { reason: "Honeypot triggered" }).catch(() => {});
+          else if (bait.punishment === "softban") {
+            await message.guild.members.ban(message.author.id, { reason: "Honeypot triggered", deleteMessageSeconds: 604800 }).catch(() => {});
+            await message.guild.members.unban(message.author.id, "Honeypot softban").catch(() => {});
+          } else if (bait.punishment === "jail") {
+            const { getGuildSettings } = await import("../db/settings.js");
+            const settings = await getGuildSettings(message.guild.id);
+            if (settings.jailRole) await message.member?.roles.add(settings.jailRole, "Honeypot triggered").catch(() => {});
+          }
+          return;
+        }
+      } catch (err) {
+        logger.warn({ err }, "honeypot check failed");
+      }
+    }
+
     const channelId = message.channelId;
     const guildId = message.guild.id;
     const memberRoleIds = message.member?.roles.cache.map(r => r.id) ?? [];
