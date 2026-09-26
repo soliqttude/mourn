@@ -17,8 +17,8 @@ export function startAutoMessageLoop(client: Client): void {
         const ch = client.channels.cache.get(am.channelId) as TextChannel | undefined;
         if (!ch) continue;
 
-        const { embed, content } = parseScript(am.message);
-        await ch.send({ content, embeds: embed ? [embed] : [] }).catch(() => {});
+        const { embeds, content } = parseScript(am.message);
+        await ch.send({ content, embeds }).catch(() => {});
         await db.update(autoMessages).set({ lastSentAt: now }).where(eq(autoMessages.id, am.id));
       }
     } catch (err) {
