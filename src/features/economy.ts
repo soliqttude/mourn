@@ -9,7 +9,7 @@ export type EconomyBalance = {
 
 export async function getBalance(guildId: string, userId: string): Promise<EconomyBalance> {
   const row = await db.select().from(economy).where(and(eq(economy.guildId, guildId), eq(economy.userId, userId))).then(r => r[0]);
-  return { balance: row?.balance ?? 0, bank: row?.bank ?? 0 };
+  return { balance: row?.balance ?? 0, bank: row?.bank ?? 0, lastDaily: row?.lastDaily ?? null };
 }
 
 export async function getEconomy(guildId: string, userId: string) {
