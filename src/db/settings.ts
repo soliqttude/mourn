@@ -6,6 +6,17 @@ import { config } from "../config.js";
 const cache = new Map<string, typeof guildSettings.$inferSelect>();
 
 export async function getGuildSettings(guildId: string) {
+  if (!config.databaseEnabled) {
+    const cached = cache.get(guildId);
+    if (cached) return cached;
+    const defaults = new Proxy(
+      { guildId, prefix: config.defaultPrefix } as typeof guildSettings.$inferSelect,
+      { get: (target, property) => property in target ? target[property as keyof typeof target] : null }
+    );
+    cache.set(guildId, defaults);
+    return defaults;
+  }
+
   const cached = cache.get(guildId);
   if (cached) return cached;
   const rows = await db
@@ -37,6 +48,7 @@ export async function updateGuildSettings(
   guildId: string,
   patch: Partial<typeof guildSettings.$inferInsert>
 ) {
+  if (!config.databaseEnabled) return getGuildSettings(guildId);
   await getGuildSettings(guildId);
   await db
     .update(guildSettings)
