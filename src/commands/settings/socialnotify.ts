@@ -42,7 +42,7 @@ export const command: HybridCommand = {
       if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a target (**channel** ID, **username**, or subreddit).")] });
       const ch = ctx.getChannel("channel") ?? (ctx.args[3] ? resolveChannel(ctx.guild, ctx.args[3]) : null);
       if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a discord **channel**.")] });
-      const message = ctx.getString("message") ?? ctx.args.slice(4).join(" ") || null;
+      const message = (ctx.getString("message") ?? ctx.args.slice(4).join(" ")) || null;
 
       const existing = await db.select().from(socialSubscriptions).where(and(eq(socialSubscriptions.guildId, guildId), eq(socialSubscriptions.platform, platform), eq(socialSubscriptions.target, target)));
       if (existing.length) return ctx.reply({ embeds: [errorEmbed(`already subscribed to \`${platform}/${target}\`.`)] });
