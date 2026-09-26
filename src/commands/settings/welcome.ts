@@ -145,9 +145,9 @@ export const command: HybridCommand = {
         });
 
       // ── Live preview rendered against the command author ──────────────────
-      const member = ctx.guild.members.cache.get(ctx.author?.id ?? "") ?? null;
+      const member = ctx.guild.members.cache.get(ctx.user.id) ?? null;
       const { embeds: previewEmbeds, content: previewContent, components } = parseScript(msg, {
-        user: member ?? ctx.author,
+        user: member ?? ctx.user,
         guild: ctx.guild,
         channel: ch,
         client: ctx.client,
