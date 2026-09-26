@@ -31,8 +31,8 @@ export async function handleVanityPresence(client: Client, member: GuildMember):
       if (cfg.channelId && cfg.message) {
         const ch = member.guild.channels.cache.get(cfg.channelId);
         if (ch?.isTextBased()) {
-          const { embed, content } = parseScript(cfg.message, { user: member, guild: member.guild });
-          await (ch as any).send({ content, embeds: embed ? [embed] : [] }).catch(() => {});
+          const { embeds, content } = parseScript(cfg.message, { user: member, guild: member.guild });
+          await (ch as any).send({ content, embeds }).catch(() => {});
         }
       }
     } else if (!hasVanity && hadVanity) {
