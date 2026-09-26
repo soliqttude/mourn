@@ -29,7 +29,7 @@ export const command: HybridCommand = {
       .setColor(config.brandColor)
       .setAuthor({ name: "now playing", iconURL: song.user?.displayAvatarURL() })
       .setTitle(song.name ?? "Unknown")
-      .setURL(song.url)
+      .setURL(song.url ?? null)
       .setThumbnail(song.thumbnail ?? null)
       .setDescription(bar)
       .addFields(
