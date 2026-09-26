@@ -15,8 +15,8 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const ch = ctx.getChannel ? ctx.getChannel("channel") : null;
     const msg = ctx.getString("message");
-    if (ch) await updateGuildSettings(ctx.guild.id, { welcomeChannelId: (ch as any).id } as any);
-    if (msg) await updateGuildSettings(ctx.guild.id, { joinMessage: msg } as any);
+    if (ch) await updateGuildSettings(ctx.guild.id, { welcomeChannel: (ch as any).id } as any);
+    if (msg) await updateGuildSettings(ctx.guild.id, { welcomeMessage: msg } as any);
     return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setTitle("⚙️ Join Message Config").setDescription(`${ch ? `Channel: <#${(ch as any).id}>\n` : ""}${msg ? `Message: ${msg}` : ""}`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };
