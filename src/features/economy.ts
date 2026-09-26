@@ -5,6 +5,7 @@ import { economy, reputation } from "../db/schema.js";
 export type EconomyBalance = {
   balance: number;
   bank: number;
+  lastDaily: Date | null;
 };
 
 export async function getBalance(guildId: string, userId: string): Promise<EconomyBalance> {
