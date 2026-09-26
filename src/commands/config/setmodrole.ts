@@ -16,7 +16,7 @@ export const command: HybridCommand = {
     const role = ctx.getRole ? ctx.getRole("role") : null;
     const roleId = (role as any)?.id ?? ctx.args[0]?.replace(/[<@&>]/g,"");
     if (!roleId) return ctx.reply({ content: "Provide a role.", ephemeral: true } as any);
-    await updateGuildSettings(ctx.guild.id, { modRoleId: roleId });
+    await updateGuildSettings(ctx.guild.id, { staffRoleIds: [roleId] });
     return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setDescription(`✅ Mod role set to <@&${roleId}>.`).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };
