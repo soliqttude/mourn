@@ -323,5 +323,5 @@ async function handleSelect(client: Client, interaction: StringSelectMenuInterac
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction as any);
   const { handleTicketModal } = await import("../features/tickets.js");
-  if (interaction.customId.startsWith("ticket_close_modal_")) return handleTicketModal(interaction);
+  if (interaction.customId.startsWith("ticket_close_modal_")) return handleTicketModal(interaction as any);
 }
