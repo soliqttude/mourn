@@ -22,8 +22,8 @@ export const command: HybridCommand = {
 
     const fields = [
       { name: "prefix",        value: `\`${s.prefix ?? ","}\``,         inline: true },
-      { name: "mod role",      value: role(s.modRoleId),                 inline: true },
-      { name: "admin role",    value: role(s.adminRoleId),               inline: true },
+      { name: "mod role",      value: role(a.modRoleId),                 inline: true },
+      { name: "admin role",    value: role(a.adminRoleId),               inline: true },
       { name: "welcome",       value: ch(s.welcomeChannel),              inline: true },
       { name: "goodbye",       value: ch(s.goodbyeChannel),              inline: true },
       { name: "autorole",      value: role(s.autoroleId),                inline: true },
