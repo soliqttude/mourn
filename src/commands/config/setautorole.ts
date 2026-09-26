@@ -15,7 +15,7 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const role = ctx.getRole ? ctx.getRole("role") : null;
     const roleId = (role as any)?.id ?? ctx.args[0]?.replace(/[<@&>]/g,"") ?? null;
-    await updateGuildSettings(ctx.guild.id, { autoRoleId: roleId });
+    await updateGuildSettings(ctx.guild.id, { autoroleId: roleId });
     return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x00e676).setDescription(roleId ? `✅ Auto role set to <@&${roleId}>.` : "✅ Auto role disabled.").setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };
