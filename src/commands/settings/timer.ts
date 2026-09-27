@@ -5,6 +5,7 @@ import { db } from "../../db/index.js";
 import { autoMessages } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { parseDuration } from "../../lib/time.js";
+import { config } from "../../config.js";
 
 export const command: HybridCommand = {
   name: "timer",
@@ -35,6 +36,9 @@ export const command: HybridCommand = {
   async execute(ctx) {
     const guild = ctx.guild;
     if (!guild) return;
+    if (!config.databaseEnabled) {
+      return ctx.reply({ embeds: [errorEmbed("timer requires the database to be enabled. Add DATABASE_URL to Render.")] });
+    }
 
     const action = ctx.getString("action");
 
