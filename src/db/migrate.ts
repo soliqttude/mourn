@@ -230,6 +230,19 @@ const STATEMENTS: string[] = [
     socials JSONB NOT NULL DEFAULT '{}',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE IF NOT EXISTS button_role_bindings (
+    id SERIAL PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    channel_id TEXT NOT NULL,
+    message_id TEXT NOT NULL,
+    role_id TEXT NOT NULL,
+    style TEXT NOT NULL DEFAULT 'gray',
+    emoji TEXT,
+    label TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(message_id, role_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS button_role_bindings_message_idx ON button_role_bindings (message_id)`,
   `CREATE TABLE IF NOT EXISTS button_role_categories (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, name TEXT NOT NULL,
     position INTEGER NOT NULL DEFAULT 0, UNIQUE(guild_id, name)
