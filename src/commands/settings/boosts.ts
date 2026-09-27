@@ -54,7 +54,7 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`boost message removed from <#${ch.id}>.`)] });
     }
     if (sub === "add") {
-      const selfDestructSeconds = ctx.getInteger("self_destruct") ?? null;
+      const selfDestructSeconds = ctx.getNumber("self_destruct") ?? null;
       if (selfDestructSeconds !== null && (selfDestructSeconds < 6 || selfDestructSeconds > 60)) return ctx.reply({ embeds: [errorEmbed("The **--self_destruct** time must be between **6 and 60 seconds.")] });
       const msg = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
       if (!msg) return ctx.reply({ embeds: [errorEmbed("Please provide a **boost** message.")] });
