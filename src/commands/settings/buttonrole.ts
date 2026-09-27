@@ -102,7 +102,7 @@ export const command: HybridCommand = {
     if (!message) return ctx.reply({ embeds: [errorEmbed("Message not found.")] });
 
     if (action === "add") {
-      if (message.author.id !== ctx.client.user.id) {
+      if (message.author.id !== ctx.client.user?.id) {
         return ctx.reply({ embeds: [errorEmbed("Button roles can only be placed on messages sent by Mourn.")] });
       }
       const role = ctx.getRole("role");
@@ -129,7 +129,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "remove") {
-      const raw = ctx.getString("index") ?? ctx.args[2] ?? "0";
+      const raw = (ctx.getNumber("index") != null ? String(ctx.getNumber("index")) : (ctx.args[2] ?? "0"));
       const index = Number.parseInt(raw, 10) - 1;
       if (!Number.isFinite(index) || index < 0) return ctx.reply({ embeds: [errorEmbed("Provide a valid button number.")] });
       const ok = await removeButtonRole(message.id, index);
