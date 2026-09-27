@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
 import { fakePermissions } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
+import { config } from "../../config.js";
 
 const VALID_PERMS = [
   "administrator", "ban_members", "kick_members", "manage_guild", "manage_channels",
@@ -48,6 +49,10 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
 
+    if (!config.databaseEnabled) {
+      return ctx.reply({ embeds: [errorEmbed("fake permissions require the database to be enabled.")] });
+    }
+
     const action = ctx.getString("action");
     const role = ctx.getRole("role");
 
@@ -76,6 +81,9 @@ export const command: HybridCommand = {
       await db.delete(fakePermissions).where(eq(fakePermissions.guildId, guild.id));
       return ctx.reply({ embeds: [successEmbed("reset all fake permissions.", "settings")] });
     }
+
+    if (action !== "add" && action !== "remove")
+      return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
 
     if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a **role**.")] });
 
