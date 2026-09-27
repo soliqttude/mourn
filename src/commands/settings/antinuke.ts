@@ -45,11 +45,11 @@ function parseFlags(args: string[]): Flags {
     const next = args[i + 1];
     if ((a === "--threshold" || a === "-threshold") && next) {
       const n = parseInt(next);
-      if (!isNaN(n) && n >= 1 && n <= 20) out.threshold = n;
+      if (!isNaN(n) && n >= 1) out.threshold = n;
       i++;
     } else if ((a === "--do" || a === "-do") && next) {
       const p = next.toLowerCase();
-      if (["ban", "kick", "strip"].includes(p)) out.do = p;
+      if (["ban", "kick", "timeout", "strip", "stripstaff", "jail"].includes(p)) out.do = p;
       i++;
     } else if ((a === "--command" || a === "-command") && next) {
       out.command = ["on", "true", "yes", "1"].includes(next.toLowerCase());
@@ -85,6 +85,9 @@ export const command: HybridCommand = {
     "antinuke ban off",
     "antinuke ban threshold 3",
     "antinuke ban punishment ban",
+    "antinuke config",
+    "antinuke list",
+    "antinuke admins",
     "antinuke whitelist @user",
     "antinuke whitelist remove @user",
     "antinuke whitelist list",
@@ -117,6 +120,34 @@ export const command: HybridCommand = {
 
     if (!isAdmin) {
       return ctx.reply({ embeds: [errorEmbed("you must be the server **owner** or an **antinuke admin**.")] });
+    }
+
+    // ── config / list / admins ───────────────────────────────────────────────
+    if (sub === "config") {
+      return ctx.reply({ embeds: [brandEmbed({
+        authorName: ctx.user.globalName ?? ctx.user.username,
+        authorIcon: ctx.user.displayAvatarURL({ size: 64 }),
+        title: "antinuke",
+        description: `antinuke is **${settings.antinukeEnabled ? "enabled" : "disabled"}**\\nlog channel: ${settings.antinukeLogChannel ? `<#${settings.antinukeLogChannel}>` : "not set"}`,
+      })] });
+    }
+
+    if (sub === "admins") {
+      const rows = await db.select().from(antinukeAdmins).where(eq(antinukeAdmins.guildId, ctx.guild.id));
+      return ctx.reply({ embeds: [brandEmbed({
+        title: "antinuke admins",
+        description: rows.length ? rows.map((r, i) => `${i + 1}. <@${r.userId}> (\\`${r.userId}\\`)`).join("\\n") : "no antinuke admins set.",
+      })] });
+    }
+
+    if (sub === "list") {
+      const rows = await db.select().from(antinukeWhitelist).where(eq(antinukeWhitelist.guildId, ctx.guild.id));
+      const modules = await getModuleConfigs(ctx.guild.id);
+      const enabled = MODULES.filter(m => modules.get(m)?.enabled).map(m => `**${MODULE_LABELS[m]}**`).join(", ") || "none";
+      return ctx.reply({ embeds: [brandEmbed({
+        title: "antinuke list",
+        description: [`**enabled modules** — ${enabled}`, "", `**whitelisted** — ${rows.length ? rows.map(r => `<@${r.userId}>`).join(", ") : "none"}`].join("\\n"),
+      })] });
     }
 
     // ── enable / disable ─────────────────────────────────────────────────────
@@ -281,7 +312,7 @@ export const command: HybridCommand = {
           return ctx.reply({ embeds: [errorEmbed(`the **${MODULE_LABELS[module]}** module has no threshold.`)] });
         }
         const n = parseInt(arg2);
-        if (isNaN(n) || n < 1 || n > 20) return ctx.reply({ embeds: [errorEmbed("threshold must be between **1** and **20**.")] });
+        if (isNaN(n) || n < 1 || n > 20) return ctx.reply({ embeds: [errorEmbed("threshold must be **1 or higher**.")] });
         await db
           .insert(antinukeModules)
           .values({ guildId: ctx.guild.id, module, enabled: cfg?.enabled ?? false, threshold: n, punishment: cfg?.punishment ?? "ban", countCommands: cfg?.countCommands ?? false })
@@ -292,8 +323,8 @@ export const command: HybridCommand = {
 
       // ── standalone punishment subcommand (backwards compat) ─────────────
       if (arg1 === "punishment" || arg1 === "do") {
-        if (!["ban", "kick", "strip"].includes(arg2)) {
-          return ctx.reply({ embeds: [errorEmbed("punishment must be `ban`, `kick`, or `strip`.")] });
+        if (!["ban", "kick", "timeout", "strip", "stripstaff", "jail"].includes(arg2)) {
+          return ctx.reply({ embeds: [errorEmbed("punishment must be `ban`, `kick`, `timeout`, `strip`, `stripstaff`, or `jail`.")] });
         }
         await db
           .insert(antinukeModules)
@@ -317,7 +348,7 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`**${MODULE_LABELS[module]}** command detection is now **${on ? "on" : "off"}**.`)] });
       }
 
-      return ctx.reply({ embeds: [errorEmbed(`usage: \`antinuke ${module} on|off [--threshold <n>] [--do ban|kick|strip] [--command on|off]\``)] });
+      return ctx.reply({ embeds: [errorEmbed(`usage: \`antinuke ${module} on|off [--threshold <n>] [--do ban|kick|timeout|strip|stripstaff|jail] [--command on|off]\``)] });
     }
 
     // ── overview ─────────────────────────────────────────────────────────────
