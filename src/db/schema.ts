@@ -507,12 +507,12 @@ export const logIgnores = pgTable("log_ignores",
 );
 
 export const welcomeChannels = pgTable("welcome_channels",
-  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), selfDestructSeconds: integer("self_destruct_seconds"), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
 
 export const goodbyeChannels = pgTable("goodbye_channels",
-  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), selfDestructSeconds: integer("self_destruct_seconds"), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
 
@@ -522,7 +522,7 @@ export const boostAutoRole = pgTable("boost_auto_role", {
 });
 
 export const boostChannels = pgTable("boost_channels",
-  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
+  { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), message: text("message").notNull(), selfDestructSeconds: integer("self_destruct_seconds"), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId] }) })
 );
 
