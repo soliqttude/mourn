@@ -70,12 +70,8 @@ export const event = {
           "{invite_code}":  inviter?.code ?? "unknown",
         },
       });
-      await (ch as TextChannel).send({
-        content:    content ?? undefined,
-        embeds:     embeds.length ? embeds : undefined,
-        components: components.length ? components : undefined,
-        allowedMentions: { users: [member.id] },
-      }).catch(() => {});
+      const sent = await (ch as TextChannel).send({ content: content ?? undefined, embeds: embeds.length ? embeds : undefined, components: components.length ? components : undefined, allowedMentions: { users: [member.id] } }).catch(() => null);
+      if (sent && row.selfDestructSeconds) setTimeout(() => sent.delete().catch(() => {}), row.selfDestructSeconds * 1000);
     }
 
     if (welcomeRows.length === 0 && settings.welcomeChannel) {
