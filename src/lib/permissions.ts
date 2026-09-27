@@ -4,6 +4,9 @@ import {
   type PermissionResolvable,
 } from "discord.js";
 import { config } from "../config.js";
+import { db } from "../db/index.js";
+import { fakePermissions } from "../db/schema.js";
+import { eq, and } from "drizzle-orm";
 
 export type PermTier =
   | "everyone"
@@ -100,4 +103,30 @@ export function memberHas(
   perm: PermissionResolvable
 ): boolean {
   return member.permissions.has(perm);
+}
+
+
+/**
+ * Promise fake permissions: these grant Mourn command authorization only.
+ * They never grant native Discord permissions, so Discord's own UI/API
+ * remains restricted to the role's real permissions.
+ */
+export async function checkTierWithFake(member: GuildMember, required: PermTier): Promise<boolean> {
+  if (checkTier(member, required)) return true;
+  if (required === "everyone" || required === "botowner" || required === "owner" || required === "admin" || required === "mod") return false;
+  if (!config.databaseEnabled) return false;
+
+  try {
+    const rows = await db.select().from(fakePermissions)
+      .where(eq(fakePermissions.guildId, member.guild.id));
+
+    const roleIds = new Set(member.roles.cache.keys());
+    return rows.some((row) => {
+      if (!roleIds.has(row.roleId)) return false;
+      const permissions = (row.permissions as string[] | null) ?? [];
+      return permissions.includes(required);
+    });
+  } catch {
+    return false;
+  }
 }
