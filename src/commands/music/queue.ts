@@ -8,12 +8,12 @@ export const command: HybridCommand = {
   name: "queue",
   aliases: ["q"],
   description: "View, remove, or move tracks in the queue.",
-  usage: "queue [remove <position>|move <from> <to>]",
-  examples: ["queue", "queue remove 3", "queue move 2 5"],
+  usage: "queue [shuffle|empty|remove <position>|move <from> <to>]",
+  examples: ["queue", "queue shuffle", "queue empty", "queue remove 3", "queue move 2 5"],
   category: "music",
   guildOnly: true,
   options: [
-    { name: "subcommand", description: "view | remove | move (blank = view)", type: ApplicationCommandOptionType.String, required: false },
+    { name: "subcommand", description: "view | shuffle | empty | remove | move (blank = view)", type: ApplicationCommandOptionType.String, required: false },
     { name: "position", description: "Track position (for remove/move)", type: ApplicationCommandOptionType.Number, required: false },
     { name: "new_position", description: "New position (for move)", type: ApplicationCommandOptionType.Number, required: false },
   ],
@@ -23,6 +23,23 @@ export const command: HybridCommand = {
     if (!queue || queue.songs.length === 0) return ctx.reply({ embeds: [errorEmbed("The queue is empty.")] });
 
     const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
+
+    if (sub === "shuffle") {
+      const current = queue.songs[0];
+      const rest = queue.songs.slice(1);
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j]!, rest[i]!];
+      }
+      queue.songs.splice(1, queue.songs.length - 1, ...rest);
+      return ctx.reply({ embeds: [successEmbed("queue shuffled.")] });
+    }
+
+    if (sub === "empty") {
+      const removed = Math.max(0, queue.songs.length - 1);
+      queue.songs.splice(1);
+      return ctx.reply({ embeds: [successEmbed(`removed **${removed}** queued track${removed === 1 ? "" : "s"}.`)] });
+    }
 
     if (sub === "remove") {
       const pos = (ctx.getNumber("position") ?? parseInt(ctx.args[1] ?? "")) ;
