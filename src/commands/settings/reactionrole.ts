@@ -19,7 +19,7 @@ export const command: HybridCommand = {
   options: [
     { name: "action", description: "add | remove | removeall | reset | list", type: ApplicationCommandOptionType.String, required: true },
     { name: "message_id", description: "Message link or message ID", type: ApplicationCommandOptionType.String, required: false },
-    { name: "emoji", description: "Emoji (unicode)", type: ApplicationCommandOptionType.String, required: true },
+    { name: "emoji", description: "Emoji (unicode)", type: ApplicationCommandOptionType.String, required: false },
     { name: "role", description: "Role (for add)", type: ApplicationCommandOptionType.Role, required: false },
   ],
   async execute(ctx) {
@@ -29,7 +29,7 @@ export const command: HybridCommand = {
     if (action === "list") {
       const rows = await db.select().from(reactionRoles).where(eq(reactionRoles.guildId, ctx.guild.id));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No reaction roles are configured.")] });
-      return ctx.reply({ embeds: [successEmbed(rows.map((r, i) => "**#" + (i + 1) + "** " + r.emoji + " → <@&" + r.roleId + "> — <#" + r.channelId + ">/" + r.messageId).join("\\n"))] });
+      return ctx.reply({ embeds: [successEmbed(rows.map((r, i) => "**#" + (i + 1) + "** " + r.emoji + " → <@&" + r.roleId + "> — <#" + r.channelId + ">/" + r.messageId).join("\n"))] });
     }
     const rawLink = ctx.getString("message_id") ?? ctx.args[1] ?? "";
     const linkMatch = rawLink.match(/\\/channels\\/(\\d+)\\/(\\d+)\\/(\\d+)/);
