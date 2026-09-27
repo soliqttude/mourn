@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import type { Client, GuildMember, Message } from "discord.js";
+import type { Client, GuildMember, GuildTextBasedChannel, Message } from "discord.js";
 import { db } from "../db/index.js";
 import { config } from "../config.js";
 import { autoresponders } from "../db/schema.js";
@@ -116,10 +116,12 @@ export async function handleAutoresponders(client: Client, message: Message) {
     if (ar.exclusiveChannelId && message.channelId !== ar.exclusiveChannelId) continue;
     if (ar.exclusiveRoleId && (!member || !member.roles.cache.has(ar.exclusiveRoleId))) continue;
 
+    const channel = message.channel as GuildTextBasedChannel;
+
     const scriptingContext: ScriptingContext = {
       user: message.member ?? message.author,
       guild: message.guild,
-      channel: message.channel,
+      channel: channel as unknown as ScriptingContext["channel"],
       client,
     };
     const { embeds, content, components } = parseScript(ar.response, scriptingContext);
@@ -131,7 +133,7 @@ export async function handleAutoresponders(client: Client, message: Message) {
           components: components.length ? components : undefined,
           allowedMentions: { parse: [] },
         }).catch(() => null)
-      : await message.channel.send({
+      : await channel.send({
           content: content || undefined,
           embeds: embeds.length ? embeds : undefined,
           components: components.length ? components : undefined,
