@@ -71,6 +71,8 @@ export const command: HybridCommand = {
       }).join("\n")})]});
     }
 
+    if(action==="variables") return ctx.reply({embeds:[brandEmbed({title:"Autoresponder Variables",description:"Use the same dynamic variables and embed scripting supported by Mourn message scripting."})]});
+
     if(action==="reset"){
       await resetAutoresponders(ctx.guild.id);
       return ctx.reply({embeds:[successEmbed("all autoresponders have been reset.","tags")]});
@@ -101,7 +103,8 @@ export const command: HybridCommand = {
 
     if(action==="exclusive"){
       const mode=(ctx.args[1]??"").toLowerCase();
-      if(mode!=="channel"&&mode!=="role") return ctx.reply({embeds:[errorEmbed("Use exclusive channel <channel> <trigger> or exclusive role <role> <trigger>.")]});
+      if(mode!=="channel"&&mode!=="role"&&mode!=="list") return ctx.reply({embeds:[errorEmbed("Use exclusive channel <channel> <trigger>, exclusive role <role> <trigger>, or exclusive list <trigger>.")]});
+      if(mode==="list") { const trigger=ctx.args.slice(2).join(" ").trim().toLowerCase(); const rows=await listAutoresponders(ctx.guild.id); const a=rows.find(x=>x.trigger===trigger); if(!a) return ctx.reply({embeds:[errorEmbed("No autoresponder exists for **"+trigger+"**.")]}); return ctx.reply({embeds:[brandEmbed({title:"Autoresponder Exclusive",description:`channel: ${a.exclusiveChannelId?`<#${a.exclusiveChannelId}>`:"none"}\nrole: ${a.exclusiveRoleId?`<@&${a.exclusiveRoleId}>`:"none"}`})]}); }
       const rows=await listAutoresponders(ctx.guild.id);
       const value=ctx.args[2]??"";
       const trigger=ctx.args.slice(3).join(" ").trim();
@@ -110,18 +113,19 @@ export const command: HybridCommand = {
       if(mode==="channel"){
         const ch=ctx.getChannel("channel")??ctx.guild.channels.cache.get(value.replace(/[<#>]/g,""));
         if(!ch) return ctx.reply({embeds:[errorEmbed("Provide a channel.")]});
-        await updateAutoresponderExclusive(target.id,ch.id,null);
+        await updateAutoresponderExclusive(target.id,target.exclusiveChannelId===ch.id?null:ch.id,null);
         return ctx.reply({embeds:[successEmbed("autoresponder **"+trigger+"** is exclusive to <#"+ch.id+">.","tags")]});
       }
       const role=ctx.getRole("role")??ctx.guild.roles.cache.get(value.replace(/[<@&>]/g,""));
       if(!role) return ctx.reply({embeds:[errorEmbed("Provide a role.")]});
-      await updateAutoresponderExclusive(target.id,null,role.id);
+      await updateAutoresponderExclusive(target.id,null,target.exclusiveRoleId===role.id?null:role.id);
       return ctx.reply({embeds:[successEmbed("autoresponder **"+trigger+"** is exclusive to <@&"+role.id+">.","tags")]});
     }
 
     if(action==="role"){
       const mode=(ctx.args[1]??"").toLowerCase();
-      if(mode!=="add"&&mode!=="remove") return ctx.reply({embeds:[errorEmbed("Use role add <role> <trigger> or role remove <role> <trigger>.")]});
+      if(mode!=="add"&&mode!=="remove"&&mode!=="list") return ctx.reply({embeds:[errorEmbed("Use role add/remove <role> <trigger> or role add/remove list <trigger>.")]});
+      if(mode==="list"){ const trigger=ctx.args.slice(2).join(" ").trim().toLowerCase(); const a=(await listAutoresponders(ctx.guild.id)).find(x=>x.trigger===trigger); if(!a) return ctx.reply({embeds:[errorEmbed("No autoresponder exists for **"+trigger+"**.")]}); return ctx.reply({embeds:[brandEmbed({title:"Autoresponder Roles",description:`add: ${a.rewardRoleAdd?`<@&${a.rewardRoleAdd}>`:"none"}\nremove: ${a.rewardRoleRemove?`<@&${a.rewardRoleRemove}>`:"none"}`})]}); }
       const roleId=(ctx.args[2]??"").replace(/[<@&>]/g,"");
       const trigger=ctx.args.slice(3).join(" ").trim();
       const role=ctx.getRole("role")??ctx.guild.roles.cache.get(roleId);
