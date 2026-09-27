@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   aliases: ["fakeperm", "fakeperms", "fp"],
   description: "Grant a role fake permissions that the bot will treat as real for command access.",
   category: "settings",
-  permission: "administrator",
+  permission: "owner",
   guildOnly: true,
   usage: "fakepermissions (add|remove|list|reset) [role] [permission]",
   examples: [
