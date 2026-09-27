@@ -33,6 +33,10 @@ export async function handlePageButton(client: Client, interaction: ButtonIntera
   const rows = await db.select().from(paginatedEmbeds).where(eq(paginatedEmbeds.messageId, messageId));
   const paginated = rows[0];
   if (!paginated) { await interaction.reply({ content: "Paginated embed not found.", ephemeral: true }); return; }
+  if (interaction.guildId !== paginated.guildId || interaction.message.id !== paginated.messageId) {
+    await interaction.reply({ content: "This pagination belongs to another server or message.", ephemeral: true }).catch(() => {});
+    return;
+  }
 
   let page = paginated.currentPage;
   if (dir === "next") page = Math.min(page + 1, paginated.pages.length - 1);
