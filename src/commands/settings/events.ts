@@ -6,16 +6,29 @@ import { eventsSettings } from "../../db/schema.js";
 import { eq, and } from "drizzle-orm";
 
 const TOGGLEABLE_EVENTS: Record<string, string> = {
+  "y/n":               "Yes/no responses",
+  "v/s":               "Vouch/support responses",
   "afk":               "AFK mention detection",
+  "previousreaction": "Previous reaction handling",
   "autoresponder":     "Autoresponders on message",
-  "reaction_trigger":  "Reaction triggers on message",
+  "reactiontrigger":  "Reaction triggers on message",
   "snipe":             "Snipe (message delete tracking)",
   "level_up":          "Level up messages",
-  "command_error":     "Command error messages",
-  "bump_reminder":     "Bump reminders",
-  "counting":          "Counting channel",
-  "highlight":         "Highlight keyword pings",
-  "autopublish":       "Auto-publish news channel",
+  "commandfailure":    "Command failure responses",
+  "automodmessage":    "Automod message handling",
+  "instagram":         "Instagram notifications",
+  "tiktok":            "TikTok notifications",
+  "grailed":            "Grailed notifications",
+  "twitch":             "Twitch notifications",
+  "streamable":         "Streamable notifications",
+  "twitter":            "Twitter/X notifications",
+  "medal":              "Medal notifications",
+  "soundcloud":         "SoundCloud notifications",
+  "tumblr":             "Tumblr notifications",
+  "shorts":             "YouTube Shorts notifications",
+  "kick":               "Kick notifications",
+  "youtube":            "YouTube notifications",
+  "reddit":             "Reddit notifications",
 };
 
 export async function isEventEnabled(guildId: string, event: string): Promise<boolean> {
