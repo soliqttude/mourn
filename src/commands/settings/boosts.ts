@@ -15,7 +15,7 @@ export const command: HybridCommand = {
   name: "boosts",
   aliases: ["setboost", "boost"],
   description: "Manage boost messages. Supports multiple channels.",
-  usage: "boosts <add|remove|list|view|variables> [channel] [message]",
+  usage: "boosts <add|remove|list|view|variables> [channel] [message] [--self_destruct 6-60]",
   examples: [
     "boosts add #boosts {user.mention} just boosted! 🚀",
     "boosts remove #boosts",
@@ -31,6 +31,7 @@ export const command: HybridCommand = {
       choices: [{ name: "add", value: "add" }, { name: "remove", value: "remove" }, { name: "list", value: "list" }, { name: "view", value: "view" }, { name: "variables", value: "variables" }] },
     { name: "channel", description: "Target channel", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "message", description: "Boost message (supports embed scripting)", type: ApplicationCommandOptionType.String, required: false },
+    { name: "self_destruct", description: "Delete sent message after 6-60 seconds", type: ApplicationCommandOptionType.Integer, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
@@ -53,10 +54,12 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`boost message removed from <#${ch.id}>.`)] });
     }
     if (sub === "add") {
+      const selfDestructSeconds = ctx.getInteger("self_destruct") ?? null;
+      if (selfDestructSeconds !== null && (selfDestructSeconds < 6 || selfDestructSeconds > 60)) return ctx.reply({ embeds: [errorEmbed("The **--self_destruct** time must be between **6 and 60 seconds.")] });
       const msg = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
       if (!msg) return ctx.reply({ embeds: [errorEmbed("Please provide a **boost** message.")] });
-      await db.insert(boostChannels).values({ guildId: ctx.guild.id, channelId: ch.id, message: msg })
-        .onConflictDoUpdate({ target: [boostChannels.guildId, boostChannels.channelId], set: { message: msg } });
+      await db.insert(boostChannels).values({ guildId: ctx.guild.id, channelId: ch.id, message: msg, selfDestructSeconds })
+        .onConflictDoUpdate({ target: [boostChannels.guildId, boostChannels.channelId], set: { message: msg, selfDestructSeconds } });
       return ctx.reply({ embeds: [successEmbed(`boost message set for <#${ch.id}>.`)] });
     }
     return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
