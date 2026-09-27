@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
 import { boostChannels } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
+import { config } from "../../config.js";
 
 const VARIABLES = [
   "`{user}` — booster's display name", "`{user.mention}` — mention the booster",
@@ -35,6 +36,9 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
+    if (!config.databaseEnabled) {
+      return ctx.reply({ embeds: [errorEmbed("boosts requires the database to be enabled. Add DATABASE_URL to Render.")] });
+    }
     const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
     if (sub === "variables") return ctx.reply({ embeds: [brandEmbed({ title: "Boost Variables", description: VARIABLES.join("\n") })] });
     if (sub === "list") {
