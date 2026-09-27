@@ -124,6 +124,11 @@ export const autoresponders = pgTable("autoresponders",
     exclusiveRoleId: text("exclusive_role_id"),
     rewardRoleAdd: text("reward_role_add"),
     rewardRoleRemove: text("reward_role_remove"),
+    notStrict: boolean("not_strict").default(false).notNull(),
+    selfDestructSeconds: integer("self_destruct_seconds"),
+    deleteTrigger: boolean("delete_trigger").default(false).notNull(),
+    reply: boolean("reply").default(false).notNull(),
+    ignoreCommandCheck: boolean("ignore_command_check").default(false).notNull(),
   },
   (t) => ({ guildIdx: index("ar_guild_idx").on(t.guildId) })
 );
