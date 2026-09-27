@@ -24,7 +24,7 @@ export const command: HybridCommand = {
     "fakepermissions add @Moderator manage_messages",
     "fakepermissions remove @Helper kick_members",
     "fakepermissions list @Helper",
-    "fakepermissions reset @Helper",
+    "fakepermissions reset",
   ],
   options: [
     {
@@ -70,12 +70,12 @@ export const command: HybridCommand = {
       });
     }
 
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a **role**.")] });
-
     if (action === "reset") {
-      await db.delete(fakePermissions).where(and(eq(fakePermissions.guildId, guild.id), eq(fakePermissions.roleId, role.id)));
-      return ctx.reply({ embeds: [successEmbed(`reset all fake permissions for <@&${role.id}>.`, "settings")] });
+      await db.delete(fakePermissions).where(eq(fakePermissions.guildId, guild.id));
+      return ctx.reply({ embeds: [successEmbed("reset all fake permissions.", "settings")] });
     }
+
+    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a **role**.")] });
 
     const perm = ctx.getString("permission")?.toLowerCase();
     if (!perm) return ctx.reply({ embeds: [errorEmbed("Please specify a **permission**.")] });
