@@ -23,6 +23,7 @@ import { isBlacklisted } from "../lib/blacklistCache.js";
 import { db } from "../db/index.js";
 import { commandAliases, disabledCommands, disabledModules, eventsSettings } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
+import { isEventEnabled } from "../commands/settings/events.js";
 
 const HYBRID_PREFIXES = ["?", "!"];
 const OWN_PREFIX = ",own ";
@@ -155,18 +156,18 @@ export const event = {
     // ── Feature handlers — each guarded by module disable check ───────────────
     try {
       // afk is always active (no module gating)
-      await handleAfk(client, message);
+      if (await isEventEnabled(guildId, "afk")) await handleAfk(client, message);
 
       const automodDisabled = isBotOwner(message.author.id) ? false :
         await isModuleDisabled(guildId, channelId, "automod").catch(() => false);
       if (!automodDisabled) {
-        await handleAutomod(client, message);
+        if (await isEventEnabled(guildId, "automodmessage")) await handleAutomod(client, message);
         await handleWordFilter(client, message);
       }
 
       const levelsDisabled = isBotOwner(message.author.id) ? false :
         await isModuleDisabled(guildId, channelId, "levels").catch(() => false);
-      if (!levelsDisabled) await handleLevelXp(client, message);
+      if (!levelsDisabled && await isEventEnabled(guildId, "level_up")) await handleLevelXp(client, message);
 
       const countingDisabled = isBotOwner(message.author.id) ? false :
         await isModuleDisabled(guildId, channelId, "counting").catch(() => false);
@@ -174,7 +175,7 @@ export const event = {
 
       await handleHighlights(client, message);
       await handleAutopublish(client, message);
-      await handleReactionTriggers(client, message);
+      if (await isEventEnabled(guildId, "reactiontrigger")) await handleReactionTriggers(client, message);
     } catch (err) {
       logger.error({ err }, "messageCreate feature handler error");
     }
@@ -203,7 +204,7 @@ export const event = {
 
       const arDisabled = isBotOwner(message.author.id) ? false :
         await isModuleDisabled(guildId, channelId, "autoresponders").catch(() => false);
-      if (!arDisabled) {
+      if (!arDisabled && await isEventEnabled(guildId, "autoresponder")) {
         try { await handleAutoresponders(client, message); } catch (err) {
           logger.error({ err }, "autoresponder error");
         }
@@ -218,7 +219,7 @@ export const event = {
     // --ignore_command_check. Normal responders remain skipped for commands.
     const arDisabledForCommand = isBotOwner(message.author.id) ? false :
       await isModuleDisabled(guildId, channelId, "autoresponders").catch(() => false);
-    if (!arDisabledForCommand) {
+    if (!arDisabledForCommand && await isEventEnabled(guildId, "autoresponder")) {
       try { await handleAutoresponders(client, message); } catch (err) {
         logger.error({ err }, "autoresponder error");
       }
