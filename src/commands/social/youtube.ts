@@ -1,0 +1,1 @@
+import { makeSocialCommand } from "../../lib/socialCommand.js"; export const command = makeSocialCommand("youtube");
