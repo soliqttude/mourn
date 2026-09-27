@@ -56,13 +56,13 @@ export const command: HybridCommand = {
   name: "welcome",
   aliases: ["setwelcome"],
   description: "Manage welcome messages with full embed scripting support.",
-  usage: "welcome <add|remove|list|view|variables> [channel] [message]",
+  usage: "welcome <add|remove|list|view> [channel] [message] [--self_destruct 6-60]",
   examples: [
     "welcome add #welcome hi {user.mention} {embed}$v{title: welcome to {guild.name}}$v{thumbnail: {user.avatar}}$v{footer: {guild.member_count} members}$v{timestamp: now}",
     "welcome remove #welcome",
     "welcome list",
     "welcome view #welcome",
-    "welcome variables",
+    "welcome add #welcome hello {user.mention} --self_destruct 10",
   ],
   category: "settings",
   permission: "manage_guild",
@@ -83,6 +83,7 @@ export const command: HybridCommand = {
     },
     { name: "channel", description: "Target channel", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "message", description: "Welcome message (supports embed scripting)", type: ApplicationCommandOptionType.String, required: false },
+    { name: "self_destruct", description: "Delete sent system message after 6-60 seconds", type: ApplicationCommandOptionType.Integer, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
@@ -138,10 +139,10 @@ export const command: HybridCommand = {
 
       await db
         .insert(welcomeChannels)
-        .values({ guildId: ctx.guild.id, channelId: ch.id, message: msg })
+        .values({ guildId: ctx.guild.id, channelId: ch.id, message: msg, selfDestructSeconds })
         .onConflictDoUpdate({
           target: [welcomeChannels.guildId, welcomeChannels.channelId],
-          set: { message: msg },
+          set: { message: msg, selfDestructSeconds },
         });
 
       // ── Live preview rendered against the command author ──────────────────
