@@ -43,7 +43,7 @@ export const command: HybridCommand = {
     const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
     const rawMessage = ctx.getString("message") ?? ctx.args[1];
     const msgId = rawMessage ? extractMessageId(rawMessage) : "";
-    const pageArg = ctx.getInteger("page") ?? (ctx.args[2] ? Number(ctx.args[2]) : NaN);
+    const pageArg = ctx.getNumber("page") ?? (ctx.args[2] ? Number(ctx.args[2]) : NaN);
     const code = ctx.getString("code") ?? (ctx.args.length > 3 ? ctx.args.slice(3).join(" ") : "");
 
     if (sub === "reset") {
