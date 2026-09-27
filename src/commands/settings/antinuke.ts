@@ -75,7 +75,7 @@ export const command: HybridCommand = {
   name: "antinuke",
   aliases: ["an"],
   description: "Configure anti-nuke protection for your server.",
-  usage: "antinuke [module|whitelist|admin|log|enable|disable]",
+  usage: "antinuke [module|config|list|whitelist|admin|admins|log|enable|disable]",
   examples: [
     "antinuke",
     "antinuke enable",
@@ -312,7 +312,7 @@ export const command: HybridCommand = {
           return ctx.reply({ embeds: [errorEmbed(`the **${MODULE_LABELS[module]}** module has no threshold.`)] });
         }
         const n = parseInt(arg2);
-        if (isNaN(n) || n < 1 || n > 20) return ctx.reply({ embeds: [errorEmbed("threshold must be **1 or higher**.")] });
+        if (isNaN(n) || n < 1) return ctx.reply({ embeds: [errorEmbed("threshold must be **1 or higher**.")] });
         await db
           .insert(antinukeModules)
           .values({ guildId: ctx.guild.id, module, enabled: cfg?.enabled ?? false, threshold: n, punishment: cfg?.punishment ?? "ban", countCommands: cfg?.countCommands ?? false })
