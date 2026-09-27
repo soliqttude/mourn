@@ -213,6 +213,16 @@ export const event = {
 
     const after = message.content.slice(usedPrefix.length).trimStart();
     if (!after) return;
+
+    // Promise-compatible autoresponders may opt into command messages with
+    // --ignore_command_check. Normal responders remain skipped for commands.
+    const arDisabledForCommand = isBotOwner(message.author.id) ? false :
+      await isModuleDisabled(guildId, channelId, "autoresponders").catch(() => false);
+    if (!arDisabledForCommand) {
+      try { await handleAutoresponders(client, message); } catch (err) {
+        logger.error({ err }, "autoresponder error");
+      }
+    }
     const parts = splitArgs(after);
     const rawName = parts.shift()!;
 
