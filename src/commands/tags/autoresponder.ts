@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed, successEmbed } from "../../lib/embeds.js";
+import { config } from "../../config.js";
 import {
   addAutoresponder, listAutoresponders, removeAutoresponderByTrigger,
   resetAutoresponders, updateAutoresponder, updateAutoresponderExclusive,
@@ -60,6 +61,9 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
+    if (!config.databaseEnabled) {
+      return ctx.reply({embeds:[errorEmbed("autoresponder requires the database to be enabled. Add DATABASE_URL to Render.")]});
+    }
     const action=(ctx.getString("action")??ctx.args[0]??"").toLowerCase();
 
     if(action==="list"){
