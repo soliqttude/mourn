@@ -156,6 +156,7 @@ async function handleButton(client: Client, interaction: ButtonInteraction) {
     return handleVerificationButton(client, interaction);
   }
   if (id.startsWith("role:")) return handleRoleButton(interaction);
+  if (id.startsWith("buttonrole:")) return handleButtonRoleInteraction(interaction);
   if (id.startsWith("trivia_")) return handleTriviaButton(interaction);
   if (id === "suggest_up" || id === "suggest_down") return handleSuggestionVote(interaction);
 }
@@ -256,6 +257,35 @@ async function handleTriviaButton(interaction: ButtonInteraction) {
       ),
     });
   }
+}
+
+
+async function handleButtonRoleInteraction(interaction: ButtonInteraction) {
+  const bindingId = Number(interaction.customId.split(":")[1] ?? "0");
+  if (!interaction.guild || !bindingId) return;
+  const { pool } = await import("../db/index.js");
+  const result = await pool.query(
+    `SELECT role_id FROM button_role_bindings WHERE id=$1 AND guild_id=$2`,
+    [bindingId, interaction.guild.id],
+  );
+  const row = result.rows[0];
+  if (!row?.role_id) {
+    return interaction.reply({ embeds: [errorEmbed("This button role is no longer configured.")], flags: MessageFlags.Ephemeral });
+  }
+  const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+  if (!member) return;
+  const role = interaction.guild.roles.cache.get(row.role_id);
+  if (!role) return interaction.reply({ embeds: [errorEmbed("The configured role no longer exists.")], flags: MessageFlags.Ephemeral });
+  if (role.managed || role.position >= interaction.guild.members.me!.roles.highest.position) {
+    return interaction.reply({ embeds: [errorEmbed("I cannot manage that role.")], flags: MessageFlags.Ephemeral });
+  }
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  if (member.roles.cache.has(role.id)) {
+    await member.roles.remove(role).catch(() => null);
+    return interaction.editReply({ embeds: [successEmbed("removed **" + role.name + "**.")] });
+  }
+  await member.roles.add(role).catch(() => null);
+  return interaction.editReply({ embeds: [successEmbed("gave you **" + role.name + "**.")] });
 }
 
 async function handleRoleButton(interaction: ButtonInteraction) {
