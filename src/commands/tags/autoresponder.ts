@@ -132,8 +132,8 @@ export const command: HybridCommand = {
       if(!role||!trigger) return ctx.reply({embeds:[errorEmbed("Provide a role and trigger.")]});
       const target=(await listAutoresponders(ctx.guild.id)).find(a=>a.trigger===trigger.toLowerCase());
       if(!target) return ctx.reply({embeds:[errorEmbed("No autoresponder exists for **"+trigger+"**.")]});
-      if(mode==="add") await updateAutoresponderRoles(target.id,role.id,null);
-      else await updateAutoresponderRoles(target.id,null,role.id);
+      if(mode==="add") await updateAutoresponderRoles(target.id,target.rewardRoleAdd===role.id?null:role.id,null);
+      else await updateAutoresponderRoles(target.id,null,target.rewardRoleRemove===role.id?null:role.id);
       return ctx.reply({embeds:[successEmbed("autoresponder role "+mode+" configured for **"+trigger+"**.","tags")]});
     }
 
