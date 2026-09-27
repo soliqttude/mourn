@@ -77,6 +77,11 @@ const STATEMENTS: string[] = [
     created_by TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS ar_guild_idx ON autoresponders (guild_id)`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS not_strict BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS delete_trigger BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS reply BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS ignore_command_check BOOLEAN NOT NULL DEFAULT false`,
   `CREATE TABLE IF NOT EXISTS reaction_roles (
     guild_id TEXT NOT NULL, message_id TEXT NOT NULL, emoji TEXT NOT NULL,
     role_id TEXT NOT NULL, channel_id TEXT NOT NULL, PRIMARY KEY (message_id, emoji)
