@@ -16,14 +16,14 @@ export const command: HybridCommand = {
   usage: "timer (add|remove|view|list) [channel] [interval] [message]",
   examples: [
     "timer add #announcements 2h Reminder: follow the rules!",
-    "timer add #general 30m {embed}$v{title: Daily Reminder}$v{description: Be kind}",
+    "timer view #announcements",
+    "timer remove #announcements",
     "timer list",
-    "timer remove 3",
   ],
   options: [
     {
       name: "action",
-      description: "add, remove, or list",
+      description: "add, remove, view, or list",
       type: ApplicationCommandOptionType.String,
       required: true,
       choices: [{ name: "add", value: "add" }, { name: "remove", value: "remove" }, { name: "view", value: "view" }, { name: "list", value: "list" }],
@@ -54,14 +54,14 @@ export const command: HybridCommand = {
       });
     }
 
-    if (action === "remove") {
-      const id = ctx.getNumber("id");
-      if (!id) return ctx.reply({ embeds: [errorEmbed("Please provide the timer id.")] });
-      const rows = await db.select().from(autoMessages)
-        .where(and(eq(autoMessages.id, id), eq(autoMessages.guildId, guild.id)));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`no timer found with id \`${id}\`.`)] });
-      await db.delete(autoMessages).where(eq(autoMessages.id, id));
-      return ctx.reply({ embeds: [successEmbed(`removed timer #${id}.`, "settings")] });
+    if (action === "view" || action === "remove") {
+      const channel = ctx.getChannel("channel");
+      if (!channel) return ctx.reply({ embeds: [errorEmbed("Please provide the channel.")] });
+      const rows = await db.select().from(autoMessages).where(and(eq(autoMessages.channelId, channel.id), eq(autoMessages.guildId, guild.id)));
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`No timer found for <#${channel.id}>.`)] });
+      if (action === "view") return ctx.reply({ embeds: [brandEmbed({ title: "Timer", description: `**channel:** <#${channel.id}>\\n**interval:** ${Math.round(rows[0].intervalMs / 60000)} minutes\\n**message:** ${rows[0].message}` })] });
+      await db.delete(autoMessages).where(and(eq(autoMessages.channelId, channel.id), eq(autoMessages.guildId, guild.id)));
+      return ctx.reply({ embeds: [successEmbed(`removed timer for <#${channel.id}>.`, "settings")] });
     }
 
     if (action === "add") {
@@ -74,14 +74,14 @@ export const command: HybridCommand = {
       if (!msg) return ctx.reply({ embeds: [errorEmbed("Please specify a message.")] });
 
       const ms = parseDuration(intervalStr);
-      if (!ms || ms < 60_000)
-        return ctx.reply({ embeds: [errorEmbed("Minimum interval is 1 minute.")] });
+      if (!ms || ms < 10 * 60_000)
+        return ctx.reply({ embeds: [errorEmbed("Minimum interval is 10 minutes.")] });
       if (ms > 7 * 24 * 60 * 60 * 1000)
         return ctx.reply({ embeds: [errorEmbed("Maximum interval is 7 days.")] });
 
-      const existing = await db.select().from(autoMessages).where(eq(autoMessages.guildId, guild.id));
-      if (existing.length >= 10)
-        return ctx.reply({ embeds: [errorEmbed("Maximum of 10 auto messages per server.")] });
+      const existing = await db.select().from(autoMessages).where(and(eq(autoMessages.guildId, guild.id), eq(autoMessages.channelId, channel.id)));
+      if (existing.length)
+        return ctx.reply({ embeds: [errorEmbed(`A timer already exists for <#${channel.id}>. Remove it first.`)] });
 
       const result = await db.insert(autoMessages).values({
         guildId: guild.id,
