@@ -18,9 +18,18 @@ export const command: HybridCommand = {
   name: "antiraid",
   aliases: ["raid"],
   description: "Configure anti-raid protection for your server.",
-  usage: "antiraid [enable|disable|threshold|punishment|age|avatar|log|lock|whitelist]",
+  usage: "antiraid [massjoin|avatar|age|whitelist|config|state]",
   examples: [
     "antiraid",
+    "antiraid massjoin on",
+    "antiraid massjoin on --threshold 5 --do kick --lock true --punish true",
+    "antiraid avatar on",
+    "antiraid age on --threshold 7 --do kick",
+    "antiraid whitelist @user",
+    "antiraid whitelist view",
+    "antiraid config",
+    "antiraid state",
+    "antiraid state off",
     "antiraid enable",
     "antiraid disable",
     "antiraid threshold 8",
@@ -64,6 +73,44 @@ export const command: HybridCommand = {
     if (sub === "disable") {
       await updateGuildSettings(ctx.guild.id, { antiraidEnabled: false });
       return ctx.reply({ embeds: [successEmbed("antiraid protection has been **disabled**.")] });
+    }
+
+    // ── documented massjoin module ───────────────────────────────────────────
+    if (sub === "massjoin") {
+      const status = arg1;
+      if (status && status !== "on" && status !== "off") return ctx.reply({ embeds: [errorEmbed("usage: `antiraid massjoin on|off [--threshold N] [--do kick|ban] [--lock true|false] [--punish true|false]`")] });
+      const patch: any = {};
+      if (status) patch.antiraidEnabled = status === "on";
+      const flags = ctx.args.slice(2);
+      for (let i = 0; i < flags.length; i++) {
+        const key = flags[i].toLowerCase(); const value = flags[i + 1]?.toLowerCase();
+        if (key === "--threshold") { const n = Number(value); if (!Number.isInteger(n) || n < 1) return ctx.reply({ embeds: [errorEmbed("threshold must be a positive number.")] }); patch.antiraidThreshold = n; i++; }
+        else if (key === "--do") { if (value !== "kick" && value !== "ban") return ctx.reply({ embeds: [errorEmbed("action must be `kick` or `ban`.")] }); patch.antiraidAction = value; i++; }
+        else if (key === "--lock") { if (value !== "true" && value !== "false") return ctx.reply({ embeds: [errorEmbed("lock must be `true` or `false`.")] }); patch.antiraidLockOnRaid = value === "true"; i++; }
+        else if (key === "--punish") { if (value !== "true" && value !== "false") return ctx.reply({ embeds: [errorEmbed("punish must be `true` or `false`.")] }); patch.antiraidPunish = value === "true"; i++; }
+      }
+      await updateGuildSettings(ctx.guild.id, patch);
+      return ctx.reply({ embeds: [successEmbed("antiraid massjoin configuration updated.")] });
+    }
+
+    if (sub === "config") {
+      return ctx.reply({ embeds: [brandEmbed({ title: "antiraid", description: [
+        `**massjoin** — ${settings.antiraidEnabled ? "on" : "off"}`,
+        `**threshold** — ${settings.antiraidThreshold ?? 8}`,
+        `**action** — ${settings.antiraidAction ?? "kick"}`,
+        `**lock** — ${settings.antiraidLockOnRaid ? "true" : "false"}`,
+        `**punish** — ${settings.antiraidPunish === false ? "false" : "true"}`,
+        `**avatar** — ${settings.antiraidRequireAvatar ? "on" : "off"}`,
+        `**age** — ${(settings.antiraidJoinAge ?? 0) > 0 ? `${settings.antiraidJoinAge} days` : "off"}`,
+        `**state** — ${settings.antiraidManualState ? "raid" : "normal"}`,
+        `**log** — ${settings.antiraidLogChannel ? `<#${settings.antiraidLogChannel}>` : "not set"}`
+      ].join("\n") })] });
+    }
+
+    if (sub === "state") {
+      const on = arg1 !== "off";
+      await updateGuildSettings(ctx.guild.id, { antiraidManualState: on });
+      return ctx.reply({ embeds: [successEmbed(on ? "raid state is now **active**." : "raid state has been **disabled**.")] });
     }
 
     // ── threshold ──────────────────────────────────────────────────────────────
