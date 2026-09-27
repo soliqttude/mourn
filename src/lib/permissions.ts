@@ -124,7 +124,9 @@ export async function checkTierWithFake(member: GuildMember, required: PermTier)
     return rows.some((row) => {
       if (!roleIds.has(row.roleId)) return false;
       const permissions = (row.permissions as string[] | null) ?? [];
-      return permissions.includes(required);
+      // A fake Administrator grants every fake Discord permission, while still
+      // never changing the member's real Discord permissions.
+      return permissions.includes("administrator") || permissions.includes(required);
     });
   } catch {
     return false;
