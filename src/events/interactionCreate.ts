@@ -25,6 +25,7 @@ import { buildHelpHome, buildPagedCategoryEmbed, buildCategoryEmbed } from "../c
 import { buildLeaderboardMessage } from "../commands/utility/invites.js";
 import { EmbedBuilder } from "discord.js";
 import { handlePageButton } from "../features/pagination.js";
+import { handlePageButton } from "../features/pagination.js";
 
 // Inject "emoji @user: " into styled embeds — used in button handlers that bypass contextFactory
 function applyMention(embeds: EmbedBuilder[], userId: string): EmbedBuilder[] {
@@ -143,6 +144,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
 
 async function handleButton(client: Client, interaction: ButtonInteraction) {
   const id = interaction.customId;
+  if (id.startsWith("page:")) return handlePageButton(client, interaction);
   if (id.startsWith("page:")) return handlePageButton(client, interaction);
   if (id.startsWith("help:")) return handleHelpButton(interaction);
   if (id.startsWith("invites:")) return handleInvitesButton(interaction);
