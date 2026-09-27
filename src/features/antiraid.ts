@@ -164,7 +164,7 @@ async function checkFlood(member: GuildMember, settings: any): Promise<void> {
     lockdownTimers.set(guild.id, timer);
   }
 
-  logger.warn({ guild: guild.id, raiderCount: actioned, action, didLock, wasPattern }, "antiraid: raid detected and actioned");
+  logger.warn({ guild: guild.id, raiderCount: actioned, action, didLock }, "antiraid: raid detected and actioned");
   const lines = [
     `**type** — join flood`,
     `**actioned** — ${actioned} members`,
