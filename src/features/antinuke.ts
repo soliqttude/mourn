@@ -396,6 +396,10 @@ export async function handlePermissionEscalation(client: Client, guild: Guild, m
   const settings = await getGuildSettings(guild.id);
   if (!settings.antinukeEnabled) return;
 
+  const modules = await getModuleConfigs(guild.id);
+  const mod = modules.get("permissions");
+  if (!mod?.enabled) return;
+
   const DANGER_PERMS = [
     PermissionFlagsBits.Administrator,
     PermissionFlagsBits.ManageGuild,
@@ -434,8 +438,8 @@ export async function handlePermissionEscalation(client: Client, guild: Guild, m
   }
 
   try {
-    const actionTaken = await punish(guild, executor, settings.antinukeAction ?? "ban", settings);
-    logger.warn({ guild: guild.id, executor: executorId, target: member.id, action: actionTaken }, "antinuke: perm escalation punishment executed");
+    const actionTaken = await punish(guild, executor, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
+    logger.warn({ guild: guild.id, executor: executorId, target: member.id, action: actionTaken }, "antinuke: permission escalation punishment executed");
     await sendAlert(guild, settings.antinukeLogChannel, executorId, "perm_escalation", actionTaken);
   } catch (err) {
     logger.warn({ err }, "antinuke: perm escalation punishment failed");
