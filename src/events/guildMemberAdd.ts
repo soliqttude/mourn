@@ -9,6 +9,7 @@ import { welcomeChannels } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { parseScript } from "../lib/scripting.js";
 import { brandEmbed } from "../lib/embeds.js";
+import { config } from "../config.js";
 
 export const event = {
   name: "guildMemberAdd",
@@ -57,6 +58,7 @@ export const event = {
 
     const inviter = await trackInviteUse(member);
 
+    if (!config.databaseEnabled) return;
     const welcomeRows = await db.select().from(welcomeChannels).where(eq(welcomeChannels.guildId, member.guild.id));
     for (const row of welcomeRows) {
       const ch = member.guild.channels.cache.get(row.channelId);
