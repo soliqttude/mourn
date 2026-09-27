@@ -4,6 +4,7 @@ import { db } from "../db/index.js";
 import { socialSubscriptions } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { config } from "../config.js";
+import { decodeSocialMessage } from "../lib/socialCommand.js";
 
 async function fetchYouTube(channelId: string): Promise<{ id: string; title: string; url: string; thumbnail: string } | null> {
   try {
@@ -65,7 +66,8 @@ async function checkSubscription(client: Client, sub: typeof socialSubscriptions
   const ch = client.channels.cache.get(sub.channelId) as TextChannel | undefined;
   if (!ch) return;
 
-  const content = sub.message ?? (sub.platform === "twitch" ? `🔴 **${sub.target}** is now live!` : `📢 New post from **${sub.target}**`);
+  const social = decodeSocialMessage(sub.message);
+  const content = social.message ?? (sub.platform === "twitch" ? `🔴 **${sub.target}** is now live!` : `📢 New post from **${sub.target}**`);
 
   const embed = new EmbedBuilder()
     .setColor(config.brandColor)
@@ -77,7 +79,7 @@ async function checkSubscription(client: Client, sub: typeof socialSubscriptions
   if (post.game) embed.addFields({ name: "Game", value: post.game, inline: true });
   if (post.author) embed.addFields({ name: "Posted by", value: `u/${post.author}`, inline: true });
 
-  await ch.send({ content, embeds: [embed] }).catch(() => {});
+  await ch.send({ content, embeds: [embed], allowedMentions: social.pingable ? undefined : { parse: [] } }).catch(() => {});
 }
 
 export function startSocialNotificationLoop(client: Client): void {
