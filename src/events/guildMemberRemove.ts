@@ -23,8 +23,8 @@ export const event = {
       for (const row of rows) {
         const ch = member.guild.channels.cache.get(row.channelId);
         if (!ch?.isTextBased()) continue;
-        const parsed = parseScript(row.message, { user: member.user, guild: member.guild, channel: ch, client });
-        const sent = await (ch as TextChannel).send({ content: parsed.content ?? undefined, embeds: parsed.embeds.length ? parsed.embeds : undefined, components: parsed.components.length ? parsed.components : undefined, allowedMentions: { parse: ["users"] } }).catch(() => null);
+        const parsed = parseScript(row.message, { user: member.user, guild: member.guild, channel: ch as unknown as TextChannel, client });
+        const sent = await (ch as unknown as TextChannel).send({ content: parsed.content ?? undefined, embeds: parsed.embeds.length ? parsed.embeds : undefined, components: parsed.components.length ? parsed.components : undefined, allowedMentions: { parse: ["users"] } }).catch(() => null);
         if (sent && row.selfDestructSeconds) setTimeout(() => sent.delete().catch(() => {}), row.selfDestructSeconds * 1000);
       }
     } else if (settings.goodbyeChannel) {
