@@ -31,7 +31,6 @@ export const command: HybridCommand = {
     { name: "channel", description: "Channel to post in", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "interval", description: "Interval e.g. 30m, 1h, 6h", type: ApplicationCommandOptionType.String, required: false },
     { name: "message", description: "Message to send (supports embed scripting)", type: ApplicationCommandOptionType.String, required: false },
-    { name: "id", description: "Timer ID (for remove)", type: ApplicationCommandOptionType.Number, required: false },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
@@ -76,8 +75,6 @@ export const command: HybridCommand = {
       const ms = parseDuration(intervalStr);
       if (!ms || ms < 10 * 60_000)
         return ctx.reply({ embeds: [errorEmbed("Minimum interval is 10 minutes.")] });
-      if (ms > 7 * 24 * 60 * 60 * 1000)
-        return ctx.reply({ embeds: [errorEmbed("Maximum interval is 7 days.")] });
 
       const existing = await db.select().from(autoMessages).where(and(eq(autoMessages.guildId, guild.id), eq(autoMessages.channelId, channel.id)));
       if (existing.length)
