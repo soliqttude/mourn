@@ -1,4 +1,4 @@
-import { type Client, type TextChannel } from "discord.js";
+import { type Client, type GuildTextBasedChannel } from "discord.js";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { autoMessages } from "../db/schema.js";
@@ -22,15 +22,15 @@ export function startAutoMessageLoop(client: Client): void {
         if (now.getTime() - last < am.intervalMs) continue;
 
         const channel = client.channels.cache.get(am.channelId);
-        if (!channel?.isTextBased() || !("send" in channel)) continue;
+        if (!channel?.isTextBased() || !("send" in channel) || !("guild" in channel)) continue;
 
         const parsed = parseScript(am.message, {
-          guild: channel.guild ?? undefined,
+          guild: channel.guild,
           channel,
           client,
         });
 
-        const sent = await (channel as TextChannel).send({
+        const sent = await (channel as GuildTextBasedChannel).send({
           content: parsed.content || undefined,
           embeds: parsed.embeds.length ? parsed.embeds : undefined,
           components: parsed.components.length ? parsed.components : undefined,
