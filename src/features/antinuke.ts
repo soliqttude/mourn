@@ -8,7 +8,7 @@ import {
   PermissionFlagsBits,
 } from "discord.js";
 import { db } from "../db/index.js";
-import { antinukeWhitelist, antinukeAdmins, antinukeModules } from "../db/schema.js";
+import { antinukeWhitelist, antinukeAdmins, antinukeModules, guildSettings } from "../db/schema.js";
 import { getGuildSettings } from "../db/settings.js";
 import { logger } from "../lib/logger.js";
 import { eq } from "drizzle-orm";
@@ -181,19 +181,67 @@ async function sendAlert(guild: Guild, logChannelId: string | null | undefined, 
 }
 
 // ─── Punish ───────────────────────────────────────────────────────────────────
-async function punish(guild: Guild, member: GuildMember, action: string): Promise<string> {
-  const removable = member.roles.cache.filter(r => !r.managed && r.id !== guild.id);
-  for (const [, role] of removable) {
-    await member.roles.remove(role, "antinuke: strip before punishment").catch(() => {});
-  }
-  if (action === "kick") {
-    if (member.kickable) { await member.kick("antinuke: destructive activity"); return "kicked"; }
-  } else if (action === "strip") {
+async function punish(guild: Guild, member: GuildMember, action: string, settings: typeof guildSettings.$inferSelect): Promise<string> {
+  const normalized = action.toLowerCase();
+
+  if (normalized === "strip") {
+    const removable = member.roles.cache.filter(r => !r.managed && r.id !== guild.id);
+    for (const [, role] of removable) {
+      await member.roles.remove(role, "antinuke: strip").catch(() => {});
+    }
     return "stripped";
-  } else {
-    if (member.bannable) { await member.ban({ reason: "antinuke: destructive activity" }); return "banned"; }
   }
-  return "stripped (hierarchy prevents kick/ban)";
+
+  if (normalized === "stripstaff") {
+    const staffRoleIds = settings.staffRoleIds ?? [];
+    let removed = 0;
+    for (const roleId of staffRoleIds) {
+      const role = guild.roles.cache.get(roleId);
+      if (role && !role.managed && member.roles.cache.has(role.id)) {
+        await member.roles.remove(role, "antinuke: stripstaff").catch(() => {});
+        removed++;
+      }
+    }
+    return removed > 0 ? "staff roles stripped" : "no configured staff roles removed";
+  }
+
+  if (normalized === "jail") {
+    const jailRoleId = settings.jailRole;
+    if (!jailRoleId) return "jail role not configured";
+    const jailRole = guild.roles.cache.get(jailRoleId);
+    if (!jailRole || jailRole.managed) return "jail role unavailable";
+    if (!member.roles.cache.has(jailRole.id)) {
+      await member.roles.add(jailRole, "antinuke: jail");
+    }
+    return "jailed";
+  }
+
+  if (normalized === "timeout") {
+    const maxTimeoutMs = 28 * 24 * 60 * 60 * 1000;
+    if (member.moderatable) {
+      await member.timeout(maxTimeoutMs, "antinuke: destructive activity");
+      return "timed out";
+    }
+    return "timeout blocked by hierarchy";
+  }
+
+  if (normalized === "kick") {
+    if (member.kickable) {
+      await member.kick("antinuke: destructive activity");
+      return "kicked";
+    }
+    return "kick blocked by hierarchy";
+  }
+
+  if (normalized === "ban") {
+    if (member.bannable) {
+      await member.ban({ reason: "antinuke: destructive activity" });
+      return "banned";
+    }
+    return "ban blocked by hierarchy";
+  }
+
+  return "unsupported punishment";
 }
 
 // ─── Type → module name ───────────────────────────────────────────────────────
@@ -252,7 +300,7 @@ export async function handleAntinukeAction(client: Client, guild: Guild, type: s
   if (!member) return;
 
   try {
-    const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban");
+    const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
     logger.warn({ guild: guild.id, executor: executorId, type, action: actionTaken }, "antinuke: punishment executed");
     await sendAlert(guild, settings.antinukeLogChannel, executorId, type, actionTaken);
   } catch (err) {
@@ -285,7 +333,7 @@ export async function handleBotAdd(client: Client, guild: Guild, botMember: Guil
   if (!executor) return;
 
   try {
-    const actionTaken = await punish(guild, executor, mod.punishment ?? settings.antinukeAction ?? "ban");
+    const actionTaken = await punish(guild, executor, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
     logger.warn({ guild: guild.id, bot: botMember.id, executor: executorId, action: actionTaken }, "antinuke: botadd punishment executed");
     await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", actionTaken);
   } catch (err) {
@@ -335,7 +383,7 @@ export async function handleVanityChange(client: Client, guild: Guild): Promise<
   if (!member) return;
 
   try {
-    const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban");
+    const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
     logger.warn({ guild: guild.id, executor: executorId, action: actionTaken }, "antinuke: vanity change punishment executed");
     await sendAlert(guild, settings.antinukeLogChannel, executorId, "vanity_update", actionTaken);
   } catch (err) {
@@ -386,7 +434,7 @@ export async function handlePermissionEscalation(client: Client, guild: Guild, m
   }
 
   try {
-    const actionTaken = await punish(guild, executor, settings.antinukeAction ?? "ban");
+    const actionTaken = await punish(guild, executor, settings.antinukeAction ?? "ban", settings);
     logger.warn({ guild: guild.id, executor: executorId, target: member.id, action: actionTaken }, "antinuke: perm escalation punishment executed");
     await sendAlert(guild, settings.antinukeLogChannel, executorId, "perm_escalation", actionTaken);
   } catch (err) {
@@ -417,7 +465,7 @@ export async function tickCommandUsage(client: Client, guild: Guild, userId: str
   if (!member) return;
 
   try {
-    const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban");
+    const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
     logger.warn({ guild: guild.id, executor: userId, module: moduleName, action: actionTaken }, "antinuke: command-based punishment executed");
     await sendAlert(guild, settings.antinukeLogChannel, userId, moduleName + "_cmd", actionTaken);
   } catch (err) {
