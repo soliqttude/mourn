@@ -23,7 +23,7 @@ function parseInput(args: string[]) {
     else if (a==="--ignore_command_check") o.ignoreCommandCheck=true;
     else if (a==="--self_destruct") {
       const n=args[i+1];
-      if (n && /^\\d+$/.test(n)) { o.selfDestructSeconds=Number(n); i++; }
+      if (n && /^\d+$/.test(n)) { o.selfDestructSeconds=Number(n); i++; }
       else o.selfDestructSeconds=6;
     } else kept.push(a);
   }
@@ -49,7 +49,7 @@ export const command: HybridCommand = {
     "autoresponder exclusive channel #general hello",
     "autoresponder role add @Member hello",
   ],
-  category:"tags", permission:"manage_guild", guildOnly:true,
+  category:"tags", permission:"manage_channels", guildOnly:true,
   options:[
     {name:"action",description:"add|remove|update|list|reset|exclusive|role",type:ApplicationCommandOptionType.String,required:true},
     {name:"trigger",description:"Trigger",type:ApplicationCommandOptionType.String,required:false},
