@@ -32,8 +32,14 @@ const TOGGLEABLE_EVENTS: Record<string, string> = {
 };
 
 export async function isEventEnabled(guildId: string, event: string): Promise<boolean> {
-  const rows = await db.select().from(eventsSettings).where(and(eq(eventsSettings.guildId, guildId), eq(eventsSettings.event, event)));
-  return rows[0]?.enabled ?? true;
+  if (process.env.ENABLE_DATABASE !== "true" || !process.env.DATABASE_URL) return true;
+  try {
+    const rows = await db.select().from(eventsSettings)
+      .where(and(eq(eventsSettings.guildId, guildId), eq(eventsSettings.event, event)));
+    return rows[0]?.enabled ?? true;
+  } catch {
+    return true;
+  }
 }
 
 export const command: HybridCommand = {
