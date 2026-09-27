@@ -13,7 +13,7 @@ import {
   getModuleConfigs,
 } from "../../features/antinuke.js";
 
-const MODULES = ["ban", "kick", "channel", "role", "emoji", "webhook", "botadd", "vanity"] as const;
+const MODULES = ["ban", "kick", "channel", "role", "emoji", "webhook", "botadd", "vanity", "permissions"] as const;
 type Module = typeof MODULES[number];
 
 const MODULE_LABELS: Record<Module, string> = {
@@ -25,6 +25,7 @@ const MODULE_LABELS: Record<Module, string> = {
   webhook: "webhook",
   botadd:  "bot add",
   vanity:  "vanity",
+  permissions: "permissions",
 };
 
 // Modules that support --threshold and --command flags
@@ -258,6 +259,47 @@ export const command: HybridCommand = {
       await db.insert(antinukeAdmins).values({ guildId: ctx.guild.id, userId: user.id }).onConflictDoNothing();
       invalidateAdminCache(ctx.guild.id);
       return ctx.reply({ embeds: [successEmbed(`<@${user.id}> can now manage antinuke settings.`)], allowedMentions: { parse: [] } });
+    }
+
+    // ── dangerous permission protection ──────────────────────────────────────
+    if (sub === "permissions") {
+      const modules = await getModuleConfigs(ctx.guild.id);
+      const cfg = modules.get("permissions");
+
+      if (!arg1) {
+        return ctx.reply({ embeds: [brandEmbed({
+          title: "antinuke — permissions",
+          description: [
+            `**status** — ${cfg?.enabled ? "**enabled**" : "**disabled**"}`,
+            `**punishment** — \`${cfg?.punishment ?? settings.antinukeAction ?? "ban"}\``,
+            "",
+            "This module watches dangerous permissions being granted through role updates.",
+          ].join("\\n"),
+        })] });
+      }
+
+      if (arg1 !== "on" && arg1 !== "off") {
+        return ctx.reply({ embeds: [errorEmbed("usage: `antinuke permissions on|off`")] });
+      }
+
+      const enabled = arg1 === "on";
+      await db
+        .insert(antinukeModules)
+        .values({
+          guildId: ctx.guild.id,
+          module: "permissions",
+          enabled,
+          threshold: cfg?.threshold ?? 1,
+          punishment: cfg?.punishment ?? settings.antinukeAction ?? "ban",
+          countCommands: false,
+        })
+        .onConflictDoUpdate({
+          target: [antinukeModules.guildId, antinukeModules.module],
+          set: { enabled },
+        });
+      invalidateModuleCache(ctx.guild.id);
+
+      return ctx.reply({ embeds: [successEmbed(`antinuke permission protection is now **${arg1}**.`)] });
     }
 
     // ── module subcommands ───────────────────────────────────────────────────
