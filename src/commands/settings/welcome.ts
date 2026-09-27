@@ -88,6 +88,10 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
+    const selfDestructSeconds = ctx.getNumber("self_destruct") ?? null;
+    if (selfDestructSeconds !== null && (selfDestructSeconds < 6 || selfDestructSeconds > 60)) {
+      return ctx.reply({ embeds: [errorEmbed("The **--self_destruct** time must be between **6 and 60 seconds.")] });
+    }
 
     if (sub === "variables") {
       return ctx.reply({
