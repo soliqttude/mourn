@@ -39,7 +39,7 @@ export const command: HybridCommand = {
   aliases: ["botcustomize", "botcustom"],
   description: "customize the bot's avatar, banner, or bio for this server",
   category: "settings",
-  permission: "manage_guild",
+  permission: "owner",
   guildOnly: true,
   usage: "customize <avatar|banner|bio|reset> [value]",
   examples: [
