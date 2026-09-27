@@ -7,26 +7,41 @@ import { and, eq } from "drizzle-orm";
 import { config } from "../../config.js";
 
 const VALID_PERMS = [
-  "administrator", "ban_members", "kick_members", "manage_guild", "manage_channels",
-  "manage_roles", "manage_messages", "view_audit_log", "manage_webhooks",
-  "manage_expressions", "mute_members", "deafen_members", "move_members",
-  "manage_nicknames", "mention_everyone", "view_guild_insights", "external_emojis",
-  "change_nickname", "moderate_members",
+  "administrator",
+  "ban_members",
+  "kick_members",
+  "manage_guild",
+  "manage_channels",
+  "manage_roles",
+  "manage_messages",
+  "view_audit_log",
+  "manage_webhooks",
+  "manage_expressions",
+  "mute_members",
+  "deafen_members",
+  "move_members",
+  "manage_nicknames",
+  "mention_everyone",
+  "view_guild_insights",
+  "external_emojis",
+  "change_nickname",
+  "moderate_members",
 ] as const;
 
 export const command: HybridCommand = {
   name: "fakepermissions",
   aliases: ["fakeperm", "fakeperms", "fp"],
-  description: "Grant a role fake permissions that the bot will treat as real for command access.",
+  description: "Set up fake permissions for role through the bot.",
   category: "settings",
   permission: "owner",
   guildOnly: true,
   usage: "fakepermissions (add|remove|list|reset) [role] [permission]",
   examples: [
-    "fakepermissions add @Helper kick_members",
     "fakepermissions add @Moderator manage_messages",
-    "fakepermissions remove @Helper kick_members",
-    "fakepermissions list @Helper",
+    "fakepermissions add @Moderator moderate_members",
+    "fakepermissions remove @Moderator manage_messages",
+    "fakepermissions list @Moderator",
+    "fakepermissions list",
     "fakepermissions reset",
   ],
   options: [
@@ -42,82 +57,206 @@ export const command: HybridCommand = {
         { name: "reset", value: "reset" },
       ],
     },
-    { name: "role", description: "Target role", type: ApplicationCommandOptionType.Role, required: false },
-    { name: "permission", description: "Permission name", type: ApplicationCommandOptionType.String, required: false },
+    {
+      name: "role",
+      description: "Target role",
+      type: ApplicationCommandOptionType.Role,
+      required: false,
+    },
+    {
+      name: "permission",
+      description: "Permission name",
+      type: ApplicationCommandOptionType.String,
+      required: false,
+    },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
     if (!guild) return;
 
     if (!config.databaseEnabled) {
-      return ctx.reply({ embeds: [errorEmbed("fake permissions require the database to be enabled.")] });
+      return ctx.reply({
+        embeds: [errorEmbed("fake permissions require the database to be enabled.")],
+      });
     }
 
     const action = ctx.getString("action");
     const role = ctx.getRole("role");
 
     if (action === "list") {
+      const rows = await db
+        .select()
+        .from(fakePermissions)
+        .where(eq(fakePermissions.guildId, guild.id));
+
       if (!role) {
-        const all = await db.select().from(fakePermissions).where(eq(fakePermissions.guildId, guild.id));
-        if (!all.length)
-          return ctx.reply({ embeds: [errorEmbed("No fake **permissions** configured.")] });
-        const lines = all.map((r) => `<@&${r.roleId}> — ${(r.permissions as string[]).join(", ")}`).join("\n");
+        if (!rows.length) {
+          return ctx.reply({
+            embeds: [errorEmbed("No fake **permissions** configured.")],
+          });
+        }
+
+        const lines = rows
+          .map((row) => {
+            const permissions = row.permissions ?? [];
+            return `<@&${row.roleId}> — ${permissions.length ? permissions.join(", ") : "none"}`;
+          })
+          .join("\n");
+
         return ctx.reply({
-          embeds: [brandEmbed({ description: `**fake permissions**\n\n${lines}`, page: "settings" })],
+          embeds: [
+            brandEmbed({
+              description: `**fake permissions**\n\n${lines}`,
+              page: "settings",
+            }),
+          ],
         });
       }
 
-      const rows = await db.select().from(fakePermissions)
-        .where(and(eq(fakePermissions.guildId, guild.id), eq(fakePermissions.roleId, role.id)));
-      const perms = rows[0]?.permissions as string[] | undefined;
-      if (!perms?.length)
-        return ctx.reply({ embeds: [errorEmbed(`no fake permissions for <@&${role.id}>.`)] });
+      const row = rows.find((entry) => entry.roleId === role.id);
+      const permissions = row?.permissions ?? [];
+
+      if (!permissions.length) {
+        return ctx.reply({
+          embeds: [errorEmbed(`no fake permissions for <@&${role.id}>.`)],
+        });
+      }
+
       return ctx.reply({
-        embeds: [brandEmbed({ description: `**fake perms for <@&${role.id}>**\n\n${perms.join(", ")}`, page: "settings" })],
+        embeds: [
+          brandEmbed({
+            description: `**fake perms for <@&${role.id}>**\n\n${permissions.join(", ")}`,
+            page: "settings",
+          }),
+        ],
       });
     }
 
     if (action === "reset") {
-      await db.delete(fakePermissions).where(eq(fakePermissions.guildId, guild.id));
-      return ctx.reply({ embeds: [successEmbed("reset all fake permissions.", "settings")] });
+      await db
+        .delete(fakePermissions)
+        .where(eq(fakePermissions.guildId, guild.id));
+
+      return ctx.reply({
+        embeds: [successEmbed("reset all fake permissions.", "settings")],
+      });
     }
 
-    if (action !== "add" && action !== "remove")
-      return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
+    if (action !== "add" && action !== "remove") {
+      return ctx.reply({
+        embeds: [errorEmbed("Invalid action.")],
+      });
+    }
 
-    if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify a **role**.")] });
+    if (!role) {
+      return ctx.reply({
+        embeds: [errorEmbed("Please specify a **role**.")],
+      });
+    }
 
-    const perm = ctx.getString("permission")?.toLowerCase();
-    if (!perm) return ctx.reply({ embeds: [errorEmbed("Please specify a **permission**.")] });
-    if (!VALID_PERMS.includes(perm as typeof VALID_PERMS[number]))
-      return ctx.reply({ embeds: [errorEmbed(`invalid permission.\n\nvalid options:\n\`\`\`\n${VALID_PERMS.join(", ")}\n\`\`\``)] });
+    const permission = ctx.getString("permission")?.toLowerCase();
 
-    const rows = await db.select().from(fakePermissions)
-      .where(and(eq(fakePermissions.guildId, guild.id), eq(fakePermissions.roleId, role.id)));
-    const existing = (rows[0]?.permissions as string[]) ?? [];
+    if (!permission) {
+      return ctx.reply({
+        embeds: [errorEmbed("Please specify a **permission**.")],
+      });
+    }
+
+    if (!VALID_PERMS.includes(permission as (typeof VALID_PERMS)[number])) {
+      return ctx.reply({
+        embeds: [
+          errorEmbed(
+            `invalid permission.\n\nvalid options:\n\`\`\`\n${VALID_PERMS.join(", ")}\n\`\`\``,
+          ),
+        ],
+      });
+    }
+
+    const perm = permission as (typeof VALID_PERMS)[number];
+
+    const rows = await db
+      .select()
+      .from(fakePermissions)
+      .where(
+        and(
+          eq(fakePermissions.guildId, guild.id),
+          eq(fakePermissions.roleId, role.id),
+        ),
+      );
+
+    const existing = rows[0]?.permissions ?? [];
 
     if (action === "add") {
-      if (existing.includes(perm))
-        return ctx.reply({ embeds: [errorEmbed(`<@&${role.id}> already has fake \`${perm}\`.`)] });
-      const updated = [...existing, perm];
-      await db.insert(fakePermissions).values({ guildId: guild.id, roleId: role.id, permissions: updated })
-        .onConflictDoUpdate({ target: [fakePermissions.guildId, fakePermissions.roleId], set: { permissions: updated } });
-      return ctx.reply({ embeds: [successEmbed(`granted fake \`${perm}\` to <@&${role.id}>.`, "settings")] });
-    }
-
-    if (action === "remove") {
-      if (!existing.includes(perm))
-        return ctx.reply({ embeds: [errorEmbed(`<@&${role.id}> doesn't have fake \`${perm}\`.`)] });
-      const updated = existing.filter((p) => p !== perm);
-      if (!updated.length) {
-        await db.delete(fakePermissions).where(and(eq(fakePermissions.guildId, guild.id), eq(fakePermissions.roleId, role.id)));
-      } else {
-        await db.update(fakePermissions).set({ permissions: updated })
-          .where(and(eq(fakePermissions.guildId, guild.id), eq(fakePermissions.roleId, role.id)));
+      if (existing.includes(perm)) {
+        return ctx.reply({
+          embeds: [
+            errorEmbed(`<@&${role.id}> already has fake \`${perm}\`.`),
+          ],
+        });
       }
-      return ctx.reply({ embeds: [successEmbed(`removed fake \`${perm}\` from <@&${role.id}>.`, "settings")] });
+
+      const updated = [...existing, perm];
+
+      await db
+        .insert(fakePermissions)
+        .values({
+          guildId: guild.id,
+          roleId: role.id,
+          permissions: updated,
+        })
+        .onConflictDoUpdate({
+          target: [fakePermissions.guildId, fakePermissions.roleId],
+          set: { permissions: updated },
+        });
+
+      return ctx.reply({
+        embeds: [
+          successEmbed(
+            `granted fake \`${perm}\` to <@&${role.id}>.`,
+            "settings",
+          ),
+        ],
+      });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
+    if (!existing.includes(perm)) {
+      return ctx.reply({
+        embeds: [
+          errorEmbed(`<@&${role.id}> doesn't have fake \`${perm}\`.`),
+        ],
+      });
+    }
+
+    const updated = existing.filter((value) => value !== perm);
+
+    if (!updated.length) {
+      await db
+        .delete(fakePermissions)
+        .where(
+          and(
+            eq(fakePermissions.guildId, guild.id),
+            eq(fakePermissions.roleId, role.id),
+          ),
+        );
+    } else {
+      await db
+        .update(fakePermissions)
+        .set({ permissions: updated })
+        .where(
+          and(
+            eq(fakePermissions.guildId, guild.id),
+            eq(fakePermissions.roleId, role.id),
+          ),
+        );
+    }
+
+    return ctx.reply({
+      embeds: [
+        successEmbed(
+          `removed fake \`${perm}\` from <@&${role.id}>.`,
+          "settings",
+        ),
+      ],
+    });
   },
 };
