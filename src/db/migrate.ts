@@ -444,6 +444,7 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS mass_mention_enabled BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_require_avatar BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_manual_state BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_punish BOOLEAN NOT NULL DEFAULT true`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_trainee_role TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_inactivity_hours INTEGER`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS ticket_naming_template TEXT`,
