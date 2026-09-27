@@ -137,7 +137,7 @@ export const command: HybridCommand = {
       const rows = await db.select().from(antinukeAdmins).where(eq(antinukeAdmins.guildId, ctx.guild.id));
       return ctx.reply({ embeds: [brandEmbed({
         title: "antinuke admins",
-        description: rows.length ? rows.map((r, i) => `${i + 1}. <@${r.userId}> (\\`${r.userId}\\`)`).join("\\n") : "no antinuke admins set.",
+        description: rows.length ? rows.map((r, i) => `${i + 1}. <@${r.userId}> (\`${r.userId}\`)`).join("\\n") : "no antinuke admins set.",
       })] });
     }
 
