@@ -6,6 +6,7 @@ import { db } from "../../db/index.js";
 import { antinukeWhitelist } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { invalidateWhitelistCache } from "../../features/antinuke.js";
+import { setAntiraidRaidState } from "../../features/antiraid.js";
 
 async function resolveUser(ctx: any, raw: string) {
   try { const u = await ctx.getUser("user"); if (u) return u; } catch {}
@@ -110,6 +111,7 @@ export const command: HybridCommand = {
     if (sub === "state") {
       const on = arg1 !== "off";
       await updateGuildSettings(ctx.guild.id, { antiraidManualState: on });
+      if (settings.antiraidLockOnRaid || !on) await setAntiraidRaidState(ctx.guild, on);
       return ctx.reply({ embeds: [successEmbed(on ? "raid state is now **active**." : "raid state has been **disabled**.")] });
     }
 
