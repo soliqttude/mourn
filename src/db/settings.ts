@@ -48,7 +48,12 @@ export async function updateGuildSettings(
   guildId: string,
   patch: Partial<typeof guildSettings.$inferInsert>
 ) {
-  if (!config.databaseEnabled) return getGuildSettings(guildId);
+  if (!config.databaseEnabled) {
+    const current = await getGuildSettings(guildId);
+    Object.assign(current as object, patch);
+    cache.set(guildId, current);
+    return current;
+  }
   await getGuildSettings(guildId);
   await db
     .update(guildSettings)
