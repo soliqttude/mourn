@@ -6,7 +6,7 @@ import {
 import { config } from "../config.js";
 import { db } from "../db/index.js";
 import { fakePermissions } from "../db/schema.js";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export type PermTier =
   | "everyone"
@@ -35,25 +35,25 @@ export type PermTier =
   | "botowner";
 
 const DISCORD_PERM_MAP: Partial<Record<PermTier, bigint>> = {
-  administrator:       PermissionFlagsBits.Administrator,
-  ban_members:         PermissionFlagsBits.BanMembers,
-  kick_members:        PermissionFlagsBits.KickMembers,
-  manage_guild:        PermissionFlagsBits.ManageGuild,
-  manage_channels:     PermissionFlagsBits.ManageChannels,
-  manage_roles:        PermissionFlagsBits.ManageRoles,
-  manage_messages:     PermissionFlagsBits.ManageMessages,
-  view_audit_log:      PermissionFlagsBits.ViewAuditLog,
-  manage_webhooks:     PermissionFlagsBits.ManageWebhooks,
-  manage_expressions:  PermissionFlagsBits.ManageEmojisAndStickers,
-  mute_members:        PermissionFlagsBits.MuteMembers,
-  deafen_members:      PermissionFlagsBits.DeafenMembers,
-  move_members:        PermissionFlagsBits.MoveMembers,
-  manage_nicknames:    PermissionFlagsBits.ManageNicknames,
-  mention_everyone:    PermissionFlagsBits.MentionEveryone,
+  administrator: PermissionFlagsBits.Administrator,
+  ban_members: PermissionFlagsBits.BanMembers,
+  kick_members: PermissionFlagsBits.KickMembers,
+  manage_guild: PermissionFlagsBits.ManageGuild,
+  manage_channels: PermissionFlagsBits.ManageChannels,
+  manage_roles: PermissionFlagsBits.ManageRoles,
+  manage_messages: PermissionFlagsBits.ManageMessages,
+  view_audit_log: PermissionFlagsBits.ViewAuditLog,
+  manage_webhooks: PermissionFlagsBits.ManageWebhooks,
+  manage_expressions: PermissionFlagsBits.ManageEmojisAndStickers,
+  mute_members: PermissionFlagsBits.MuteMembers,
+  deafen_members: PermissionFlagsBits.DeafenMembers,
+  move_members: PermissionFlagsBits.MoveMembers,
+  manage_nicknames: PermissionFlagsBits.ManageNicknames,
+  mention_everyone: PermissionFlagsBits.MentionEveryone,
   view_guild_insights: PermissionFlagsBits.ViewGuildInsights,
-  external_emojis:     PermissionFlagsBits.UseExternalEmojis,
-  change_nickname:     PermissionFlagsBits.ChangeNickname,
-  moderate_members:    PermissionFlagsBits.ModerateMembers,
+  external_emojis: PermissionFlagsBits.UseExternalEmojis,
+  change_nickname: PermissionFlagsBits.ChangeNickname,
+  moderate_members: PermissionFlagsBits.ModerateMembers,
 };
 
 export function isBotOwner(userId: string): boolean {
@@ -87,11 +87,9 @@ export function checkTier(member: GuildMember, required: PermTier): boolean {
   if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
   if (isServerOwner(member)) return true;
 
-  // Direct Discord permission check
   const discordPerm = DISCORD_PERM_MAP[required];
   if (discordPerm !== undefined) return member.permissions.has(discordPerm);
 
-  // Legacy tier fallback
   if (required === "owner") return isServerOwner(member);
   if (required === "admin") return hasAdminPerms(member);
   if (required === "mod") return hasModPerms(member) || hasAdminPerms(member);
@@ -105,27 +103,45 @@ export function memberHas(
   return member.permissions.has(perm);
 }
 
-
 /**
- * Promise fake permissions: these grant Mourn command authorization only.
- * They never grant native Discord permissions, so Discord's own UI/API
- * remains restricted to the role's real permissions.
+ * Fake permissions only affect Mourn command authorization.
+ * They do not modify Discord's native role/member permissions.
  */
-export async function checkTierWithFake(member: GuildMember, required: PermTier): Promise<boolean> {
+export async function checkTierWithFake(
+  member: GuildMember,
+  required: PermTier,
+): Promise<boolean> {
   if (checkTier(member, required)) return true;
-  if (required === "everyone" || required === "botowner" || required === "owner" || required === "admin" || required === "mod") return false;
+
+  // Fake permissions are Discord permission equivalents only.
+  // Internal Mourn tiers cannot be granted through a role.
+  if (
+    required === "everyone" ||
+    required === "botowner" ||
+    required === "owner" ||
+    required === "admin" ||
+    required === "mod"
+  ) {
+    return false;
+  }
+
   if (!config.databaseEnabled) return false;
 
   try {
-    const rows = await db.select().from(fakePermissions)
+    const rows = await db
+      .select()
+      .from(fakePermissions)
       .where(eq(fakePermissions.guildId, member.guild.id));
 
     const roleIds = new Set(member.roles.cache.keys());
+
     return rows.some((row) => {
       if (!roleIds.has(row.roleId)) return false;
-      const permissions = (row.permissions as string[] | null) ?? [];
-      // A fake Administrator grants every fake Discord permission, while still
-      // never changing the member's real Discord permissions.
+
+      const permissions = row.permissions ?? [];
+
+      // Promise documents administrator as allowing all administrative actions.
+      // This remains bot-only authorization and never changes Discord permissions.
       return permissions.includes("administrator") || permissions.includes(required);
     });
   } catch {
