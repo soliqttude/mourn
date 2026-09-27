@@ -4,6 +4,7 @@ import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
 import { goodbyeChannels } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
+import { config } from "../../config.js";
 
 const VARIABLES = [
   "`{user}` — display name", "`{user.mention}` — mention",
@@ -28,6 +29,9 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
+    if (!config.databaseEnabled) {
+      return ctx.reply({ embeds: [errorEmbed("goodbye requires the database to be enabled. Add DATABASE_URL to Render.")] });
+    }
     const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
     const selfDestructSeconds = ctx.getNumber("self_destruct") ?? null;
     if (selfDestructSeconds !== null && (selfDestructSeconds < 6 || selfDestructSeconds > 60)) {
