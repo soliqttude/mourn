@@ -174,6 +174,14 @@ async function checkFlood(member: GuildMember, settings: any): Promise<void> {
   await sendAlert(guild, settings.antiraidLogChannel, lines, "raid stopped");
 }
 
+export async function setAntiraidRaidState(guild: GuildMember["guild"], active: boolean): Promise<void> {
+  if (active) {
+    await lockServer(guild);
+    return;
+  }
+  await unlockServer(guild);
+}
+
 export async function handleAntiraidJoin(member: GuildMember): Promise<void> {
   const settings = await getGuildSettings(member.guild.id);
   if (!settings.antiraidEnabled) return;
