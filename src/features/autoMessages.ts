@@ -26,7 +26,7 @@ export function startAutoMessageLoop(client: Client): void {
 
         const parsed = parseScript(am.message, {
           guild: channel.guild,
-          channel,
+          channel: channel as unknown as import("discord.js").TextChannel,
           client,
         });
 
