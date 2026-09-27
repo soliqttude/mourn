@@ -24,6 +24,7 @@ export const command: HybridCommand = {
       choices: [{ name: "add", value: "add" }, { name: "remove", value: "remove" }, { name: "list", value: "list" }, { name: "view", value: "view" }, { name: "variables", value: "variables" }] },
     { name: "channel", description: "Target channel", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "message", description: "Goodbye message", type: ApplicationCommandOptionType.String, required: false },
+    { name: "self_destruct", description: "Delete sent message after 6-60 seconds", type: ApplicationCommandOptionType.Integer, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
@@ -48,8 +49,8 @@ export const command: HybridCommand = {
     if (sub === "add") {
       const msg = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
       if (!msg) return ctx.reply({ embeds: [errorEmbed("Please provide a goodbye message.")] });
-      await db.insert(goodbyeChannels).values({ guildId: ctx.guild.id, channelId: ch.id, message: msg })
-        .onConflictDoUpdate({ target: [goodbyeChannels.guildId, goodbyeChannels.channelId], set: { message: msg } });
+      await db.insert(goodbyeChannels).values({ guildId: ctx.guild.id, channelId: ch.id, message: msg, selfDestructSeconds })
+        .onConflictDoUpdate({ target: [goodbyeChannels.guildId, goodbyeChannels.channelId], set: { message: msg, selfDestructSeconds } });
       return ctx.reply({ embeds: [successEmbed(`goodbye message set for <#${ch.id}>.`)] });
     }
     return ctx.reply({ embeds: [errorEmbed("Unknown subcommand.")] });
