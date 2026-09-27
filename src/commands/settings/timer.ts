@@ -9,11 +9,11 @@ import { parseDuration } from "../../lib/time.js";
 export const command: HybridCommand = {
   name: "timer",
   aliases: ["automessage", "autom"],
-  description: "Schedule repeating messages in a channel. Supports embed scripting.",
+  description: "Schedule one repeating message per channel. Supports raw text, embed scripting, and dynamic variables.",
   category: "settings",
-  permission: "manage_guild",
+  permission: "manage_channels",
   guildOnly: true,
-  usage: "timer (add|remove|view|list) [channel] [interval] [message]",
+  usage: "timer <add|remove|view|list> [channel] [interval] [message]",
   examples: [
     "timer add #announcements 2h Reminder: follow the rules!",
     "timer view #announcements",
