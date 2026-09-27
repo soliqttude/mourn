@@ -6,9 +6,11 @@ import { fakePermissions } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 
 const VALID_PERMS = [
-  "administrator", "manage_guild", "manage_channels", "manage_roles", "manage_messages",
-  "manage_nicknames", "manage_webhooks", "kick_members", "ban_members", "mute_members",
-  "deafen_members", "move_members", "moderate_members", "mention_everyone",
+  "administrator", "ban_members", "kick_members", "manage_guild", "manage_channels",
+  "manage_roles", "manage_messages", "view_audit_log", "manage_webhooks",
+  "manage_expressions", "mute_members", "deafen_members", "move_members",
+  "manage_nicknames", "mention_everyone", "view_guild_insights", "external_emojis",
+  "change_nickname", "moderate_members",
 ] as const;
 
 export const command: HybridCommand = {
