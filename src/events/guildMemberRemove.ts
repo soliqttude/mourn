@@ -4,6 +4,11 @@ import { getGuildSettings } from "../db/settings.js";
 import { renderTemplate } from "../lib/template.js";
 import { trackMemberLeave } from "../features/invites.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
+import { db } from "../db/index.js";
+import { goodbyeChannels } from "../db/schema.js";
+import { and, eq } from "drizzle-orm";
+import { parseScript } from "../lib/scripting.js";
+import { config } from "../config.js";
 
 export const event = {
   name: "guildMemberRemove",
@@ -13,7 +18,16 @@ export const event = {
     const settings = await getGuildSettings(member.guild.id);
     await trackMemberLeave(member.guild.id, member.id);
 
-    if (settings.goodbyeChannel) {
+    if (config.databaseEnabled) {
+      const rows = await db.select().from(goodbyeChannels).where(eq(goodbyeChannels.guildId, member.guild.id));
+      for (const row of rows) {
+        const ch = member.guild.channels.cache.get(row.channelId);
+        if (!ch?.isTextBased()) continue;
+        const parsed = parseScript(row.message, { user: member.user, guild: member.guild, channel: ch, client });
+        const sent = await (ch as TextChannel).send({ content: parsed.content ?? undefined, embeds: parsed.embeds.length ? parsed.embeds : undefined, components: parsed.components.length ? parsed.components : undefined, allowedMentions: { parse: ["users"] } }).catch(() => null);
+        if (sent && row.selfDestructSeconds) setTimeout(() => sent.delete().catch(() => {}), row.selfDestructSeconds * 1000);
+      }
+    } else if (settings.goodbyeChannel) {
       const ch = member.guild.channels.cache.get(settings.goodbyeChannel);
       if (ch?.isTextBased()) {
         const tmpl = settings.goodbyeMessage || "{user.mention} just left **{server}**. We now have {member_count} members.";
