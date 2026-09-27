@@ -6,7 +6,6 @@ import { paginatedEmbeds } from "../../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { parseScript } from "../../lib/scripting.js";
 import { buildNavRow } from "../../features/pagination.js";
-import { resolveChannel } from "../../lib/parsing.js";
 
 function extractMessageId(input: string): string {
   const match = input.match(/(?:channels\/\d+\/\d+\/)?(\d{15,25})/);
