@@ -102,20 +102,6 @@ async function unlockServer(guild: GuildMember["guild"]): Promise<void> {
   }
 }
 
-function detectUsernamePattern(members: GuildMember[]): boolean {
-  if (members.length < 3) return false;
-  const names = members.map(m => m.user.username.toLowerCase().replace(/\d+/g, ""));
-  const counts = new Map<string, number>();
-  for (const name of names) {
-    if (name.length >= 4) {
-      const prefix = name.slice(0, 4);
-      counts.set(prefix, (counts.get(prefix) ?? 0) + 1);
-    }
-  }
-  for (const count of counts.values()) { if (count >= 3) return true; }
-  return false;
-}
-
 async function sendAlert(
   guild: GuildMember["guild"],
   logChannelId: string | null | undefined,
@@ -149,19 +135,19 @@ async function checkFlood(member: GuildMember, settings: any): Promise<void> {
   track.members.push(member);
 
   if (track.raidActioned) {
-    await actionMember(member, action);
+    if (settings.antiraidPunish !== false) await actionMember(member, action);
     return;
   }
 
   const threshold = settings.antiraidThreshold ?? 8;
-  const wasPattern = detectUsernamePattern(track.members);
-
-  if (track.members.length < threshold && !wasPattern) return;
+  if (track.members.length < threshold) return;
 
   track.raidActioned = true;
   const raiders = [...track.members];
   let actioned = 0;
-  await Promise.allSettled(raiders.map(r => actionMember(r, action).then(ok => { if (ok) actioned++; })));
+  if (settings.antiraidPunish !== false) {
+    await Promise.allSettled(raiders.map(r => actionMember(r, action).then(ok => { if (ok) actioned++; })));
+  }
 
   let didLock = false;
   if (settings.antiraidLockOnRaid) {
@@ -180,7 +166,7 @@ async function checkFlood(member: GuildMember, settings: any): Promise<void> {
 
   logger.warn({ guild: guild.id, raiderCount: actioned, action, didLock, wasPattern }, "antiraid: raid detected and actioned");
   const lines = [
-    `**type** — ${wasPattern ? "coordinated raid (name pattern)" : "join flood"}`,
+    `**type** — join flood`,
     `**actioned** — ${actioned} members`,
     `**punishment** — ${action}`,
   ];
@@ -195,7 +181,7 @@ export async function handleAntiraidJoin(member: GuildMember): Promise<void> {
   const guild = member.guild;
   const action = settings.antiraidAction ?? "kick";
   const ageDays = (Date.now() - member.user.createdTimestamp) / 86_400_000;
-  const requireAvatar = (settings as any).antiraidRequireAvatar ?? false;
+  const requireAvatar = settings.antiraidRequireAvatar ?? false;
   const manualState = (settings as any).antiraidManualState ?? false;
 
   // Manual raid mode — action all joins immediately
@@ -236,8 +222,7 @@ export async function handleAntiraidJoin(member: GuildMember): Promise<void> {
 
   // Age gate
   const minAge = settings.antiraidJoinAge ?? 0;
-  const isHighRisk = ageDays < 0.5 || (!member.user.avatar && ageDays < Math.max(minAge, 3));
-  if (isHighRisk || (minAge > 0 && ageDays < minAge)) {
+  if (minAge > 0 && ageDays < minAge) {
     const ok = await actionMember(member, action);
     if (ok) {
       logger.info({ guild: guild.id, user: member.id, ageDays: ageDays.toFixed(2) }, `antiraid: age/risk-gated member (${action})`);
