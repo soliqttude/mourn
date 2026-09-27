@@ -335,10 +335,12 @@ export const event = {
       }
     } catch (err) {
       logger.error({ err, cmd: cmd.name }, "prefix command error");
-      try {
-        await message.reply({ embeds: [errorEmbed(cleanError(err))] });
-      } catch (replyErr) {
-        logger.warn({ replyErr }, "failed to send error reply");
+      if (await isEventEnabled(guildId, "commandfailure")) {
+        try {
+          await message.reply({ embeds: [errorEmbed(cleanError(err))] });
+        } catch (replyErr) {
+          logger.warn({ replyErr }, "failed to send error reply");
+        }
       }
     }
   },
