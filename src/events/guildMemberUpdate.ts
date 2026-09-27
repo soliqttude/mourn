@@ -4,7 +4,9 @@ import { getGuildSettings } from "../db/settings.js";
 import { handleBoostEnd } from "../features/boosterRoles.js";
 import { handlePermissionEscalation } from "../features/antinuke.js";
 import { db } from "../db/index.js";
-import { boostAutoRole } from "../db/schema.js";
+import { boostAutoRole, boostChannels } from "../db/schema.js";
+import { parseScript } from "../lib/scripting.js";
+import { config } from "../config.js";
 import { eq } from "drizzle-orm";
 
 export const event = {
@@ -14,8 +16,20 @@ export const event = {
     const isBooster  = newMember.premiumSince !== null;
     if (wasBooster && !isBooster) await handleBoostEnd(newMember.guild, newMember).catch(() => {});
 
+    // Dispatch configured boost system messages when boosting starts.
+    if (!wasBooster && isBooster && config.databaseEnabled) {
+      const rows = await db.select().from(boostChannels).where(eq(boostChannels.guildId, newMember.guild.id)).catch(() => []);
+      for (const row of rows) {
+        const ch = newMember.guild.channels.cache.get(row.channelId);
+        if (!ch?.isTextBased()) continue;
+        const parsed = parseScript(row.message, { user: newMember, guild: newMember.guild, channel: ch, client });
+        const sent = await (ch as TextChannel).send({ content: parsed.content ?? undefined, embeds: parsed.embeds.length ? parsed.embeds : undefined, components: parsed.components.length ? parsed.components : undefined, allowedMentions: { users: [newMember.id] } }).catch(() => null);
+        if (sent && row.selfDestructSeconds) setTimeout(() => sent.delete().catch(() => {}), row.selfDestructSeconds * 1000);
+      }
+    }
+
     // Auto-assign boost role when someone starts boosting
-    if (!wasBooster && isBooster) {
+    if (!wasBooster && isBooster && config.databaseEnabled) {
       const [cfg] = await db.select().from(boostAutoRole).where(eq(boostAutoRole.guildId, newMember.guild.id)).catch(() => []);
       if (cfg?.roleId) {
         const role = newMember.guild.roles.cache.get(cfg.roleId);
@@ -24,7 +38,7 @@ export const event = {
     }
 
     // Remove boost role when someone stops boosting
-    if (wasBooster && !isBooster) {
+    if (wasBooster && !isBooster && config.databaseEnabled) {
       const [cfg] = await db.select().from(boostAutoRole).where(eq(boostAutoRole.guildId, newMember.guild.id)).catch(() => []);
       if (cfg?.roleId && newMember.roles.cache.has(cfg.roleId)) {
         await newMember.roles.remove(cfg.roleId, "boost ended").catch(() => {});
