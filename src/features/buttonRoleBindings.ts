@@ -1,4 +1,3 @@
-import type { ButtonStyle } from "discord.js";
 import { pool } from "../db/index.js";
 
 export type StoredButtonRole = {
