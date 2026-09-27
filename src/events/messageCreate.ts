@@ -5,7 +5,7 @@ import { errorEmbed, helpEmbed } from "../lib/embeds.js";
 import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
-import { checkTier, isBotOwner } from "../lib/permissions.js";
+import { checkTierWithFake, isBotOwner } from "../lib/permissions.js";
 import { splitArgs } from "../lib/parsing.js";
 import { handleAfk } from "../features/afk.js";
 import { handleAutoresponders } from "../features/autoresponders.js";
@@ -254,7 +254,7 @@ export const event = {
       const member = (!message.member || message.member.partial)
         ? await message.guild!.members.fetch(message.author.id).catch(() => null)
         : message.member;
-      if (!member || !checkTier(member, cmd.permission)) {
+      if (!member || !(await checkTierWithFake(member, cmd.permission))) {
         const permEmbed = errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: \`${cmd.permission}\``);
         await message.reply({ embeds: [permEmbed] }).catch(() =>
           (message.channel as any).send({ embeds: [permEmbed] }).catch(() => {})
