@@ -16,7 +16,7 @@ import { errorEmbed, successEmbed, brandEmbed, getEmbedStyle, EMOJIS } from "../
 import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
-import { checkTier, isBotOwner } from "../lib/permissions.js";
+import { checkTierWithFake, isBotOwner } from "../lib/permissions.js";
 import { ownerState } from "../lib/ownerState.js";
 import { isBlacklisted } from "../lib/blacklistCache.js";
 import { handlePanelInteraction } from "../panels/router.js";
@@ -110,7 +110,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   }
 
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
-    if (!checkTier(interaction.member as any, cmd.permission)) {
+    if (!(await checkTierWithFake(interaction.member as any, cmd.permission))) {
       return interaction.reply({
         embeds: [errorEmbed(`<:warn:1508824473992696049> <@${interaction.user.id}>: You're **missing** permission: \`${cmd.permission}\``)],
         flags: MessageFlags.Ephemeral,
