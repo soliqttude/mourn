@@ -30,6 +30,7 @@ export const guildSettings = pgTable("guild_settings", {
   antiraidLockOnRaid: boolean("antiraid_lock_on_raid").default(false).notNull(),
   antiraidRequireAvatar: boolean("antiraid_require_avatar").default(false).notNull(),
   antiraidManualState: boolean("antiraid_manual_state").default(false).notNull(),
+  antiraidPunish: boolean("antiraid_punish").default(true).notNull(),
   automodEnabled: boolean("automod_enabled").default(false).notNull(),
   linkFilterEnabled: boolean("link_filter_enabled").default(false).notNull(),
   inviteFilterEnabled: boolean("invite_filter_enabled").default(false).notNull(),
