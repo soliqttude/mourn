@@ -281,6 +281,15 @@ const STATEMENTS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS auto_messages_guild_idx ON auto_messages (guild_id)`,
+  `CREATE TABLE IF NOT EXISTS custom_commands (
+    guild_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    response TEXT NOT NULL,
+    created_by TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (guild_id, name)
+  )`,
+  `CREATE INDEX IF NOT EXISTS custom_commands_guild_idx ON custom_commands (guild_id)`,
   `CREATE TABLE IF NOT EXISTS command_aliases (
     guild_id TEXT NOT NULL,
     alias TEXT NOT NULL,
