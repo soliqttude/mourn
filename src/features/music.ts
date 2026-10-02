@@ -1,6 +1,7 @@
 import { DisTube, type Queue, type Song, type Playlist } from "distube";
 import { YouTubePlugin } from "@distube/youtube";
 import { SoundCloudPlugin } from "@distube/soundcloud";
+import { SpotifyPlugin } from "@distube/spotify";
 import { type Client, type TextChannel, EmbedBuilder } from "discord.js";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
@@ -65,7 +66,10 @@ export function formatTime(seconds: number): string {
 export function setupMusic(client: Client): void {
   distube = new DisTube(client, {
     emitNewSongOnly: true,
-    plugins: [new YouTubePlugin(), new SoundCloudPlugin()],
+    plugins: [new SpotifyPlugin(), new YouTubePlugin(), new SoundCloudPlugin()],
+    joinNewVoiceChannel: true,
+    nsfw: true,
+    savePreviousSongs: true,
     ffmpeg: {
       path: (ffmpegPath as unknown as string | undefined) ?? "ffmpeg",
       args: { global: {}, input: {}, output: {} },
@@ -106,13 +110,13 @@ export function setupMusic(client: Client): void {
     .on("disconnect", (queue: Queue) => {
       logger.debug({ guildId: queue.id }, "distube disconnected");
     })
-    .on("error", (queue: Queue, error: Error) => {
+     .on("error", (error: Error, queue: Queue) => {
       logger.warn({ err: error, guildId: queue?.id }, "distube error");
       const ch = queue?.textChannel as TextChannel | undefined;
       const msg = error?.message ?? String(error);
       const isYtBlock = /sign in|403|blocked|unavailable|age.restrict|confirm.*human/i.test(msg);
       const description = isYtBlock
-        ? "YouTube is blocking this request. Try a **SoundCloud** or **Spotify** URL directly, or prefix your search with `soundcloud:` (e.g. `,play soundcloud:song name`)."
+        ? "YouTube is blocking this request. Try a **SoundCloud** or **Spotify** URL directly, or use a supported source URL."
         : `Music error: ${msg}`;
       if (ch) {
         ch.send({
