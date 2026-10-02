@@ -340,6 +340,17 @@ export const autoMessages = pgTable("auto_messages",
   (t) => ({ guildIdx: index("auto_messages_guild_idx").on(t.guildId) })
 );
 
+export const customCommands = pgTable("custom_commands", {
+  guildId: text("guild_id").notNull(),
+  name: text("name").notNull(),
+  response: text("response").notNull(),
+  createdBy: text("created_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.guildId, t.name] }),
+  guildIdx: index("custom_commands_guild_idx").on(t.guildId),
+}));
+
 export const commandAliases = pgTable("command_aliases",
   {
     guildId: text("guild_id").notNull(),
