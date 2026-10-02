@@ -104,7 +104,7 @@ export function setupMusic(client: Client): void {
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
       ch.send({
-        embeds: [new EmbedBuilder().setColor(config.brandColor).setDescription("queue finished. leaving voice channel.")]
+        embeds: [new EmbedBuilder().setColor(config.brandColor).setDescription("queue finished.")]
       }).catch(() => {});
     })
     .on("disconnect", (queue: Queue) => {
