@@ -9,6 +9,15 @@ import { getGuildSettings } from "../db/settings.js";
 import { eq, and } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 
+export interface TicketFormField {
+  label: string;
+  style: "short" | "paragraph";
+  required?: boolean;
+  placeholder?: string;
+  minLength?: number;
+  maxLength?: number;
+}
+
 export interface TicketTopic {
   name: string;
   emoji?: string;
@@ -93,7 +102,14 @@ export async function createTicketPanel(
     .onConflictDoNothing();
 }
 
-export async function createTicket(guild: Guild, member: GuildMember, topic?: string): Promise<TextChannel | null> {
+export async function getTicketForm(guildId: string, topic?: string): Promise<TicketFormField[]> {
+  const rows = await db.select().from(ticketForms).where(eq(ticketForms.guildId, guildId));
+  const exact = rows.find(r => (r.topic ?? "").toLowerCase() === (topic ?? "").toLowerCase());
+  const generic = rows.find(r => !r.topic);
+  return (exact ?? generic)?.fields ?? [];
+}
+
+export async function createTicket(guild: Guild, member: GuildMember, topic?: string, answers?: Array<{ label: string; value: string }>): Promise<TextChannel | null> {
   const settings = await getGuildSettings(guild.id);
   if (!settings.ticketCategory) return null;
 
@@ -165,6 +181,7 @@ export async function createTicket(guild: Guild, member: GuildMember, topic?: st
         "",
         "our team will be with you shortly.",
         "describe your issue in as much detail as possible.",
+        ...(answers?.length ? ["", "**form responses**", ...answers.map(a => `**${a.label}**\n${a.value}`)] : []),
       ].join("\n"),
     )
     .setFooter({ text: "use the buttons below to manage this ticket." })
@@ -276,16 +293,40 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
 
   if (customId.startsWith("ticket_open_")) {
     const topic = customId.replace("ticket_open_", "") || undefined;
+    const fields = await getTicketForm(guild.id, topic);
+    if (fields.length) {
+      const modal = new ModalBuilder().setCustomId("ticket_form_" + Buffer.from(topic ?? "general").toString("base64url")).setTitle((topic ?? "support") + " ticket");
+      for (let i = 0; i < Math.min(fields.length, 5); i++) {
+        const f = fields[i];
+        const input = new TextInputBuilder().setCustomId("field_" + i).setLabel(f.label.slice(0, 45)).setStyle(f.style === "paragraph" ? TextInputStyle.Paragraph : TextInputStyle.Short).setRequired(f.required !== false);
+        if (f.placeholder) input.setPlaceholder(f.placeholder.slice(0, 100));
+        if (f.minLength) input.setMinLength(f.minLength);
+        if (f.maxLength) input.setMaxLength(Math.min(f.maxLength, 4000));
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+      }
+      return void interaction.showModal(modal);
+    }
     const gMember = member as GuildMember;
     const ch = await createTicket(guild, gMember, topic);
     if (!ch) return void interaction.reply({ content: "couldn't create ticket — make sure a ticket category is set.", ephemeral: true });
-    return void interaction.reply({ content: `your ticket has been opened — <#${ch.id}>`, ephemeral: true });
+    return void interaction.reply({ content: "your ticket has been opened — <#" + ch.id + ">", ephemeral: true });
   }
 }
 
 export async function handleTicketModal(interaction: any): Promise<void> {
   const { customId, guild, user } = interaction;
   if (!guild) return;
+
+  if (customId.startsWith("ticket_form_")) {
+    const topic = Buffer.from(customId.slice("ticket_form_".length), "base64url").toString("utf8") || undefined;
+    const fields = await getTicketForm(guild.id, topic);
+    const answers = fields.slice(0, 5).map((f, i) => ({ label: f.label, value: interaction.fields.getTextInputValue("field_" + i) }));
+    await interaction.deferReply({ ephemeral: true });
+    const member = await guild.members.fetch(user.id);
+    const ch = await createTicket(guild, member, topic, answers);
+    if (!ch) return void interaction.editReply({ content: "couldn't create ticket — make sure a ticket category is set." });
+    return void interaction.editReply({ content: "your ticket has been opened — <#" + ch.id + ">" });
+  }
 
   if (customId.startsWith("ticket_close_modal_")) {
     const ticketId = parseInt(customId.replace("ticket_close_modal_", ""));
