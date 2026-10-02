@@ -561,6 +561,12 @@ const STATEMENTS: string[] = [
   `ALTER TABLE shame_messages ADD COLUMN IF NOT EXISTS shame_message_id TEXT`,
   `ALTER TABLE shame_messages ADD COLUMN IF NOT EXISTS count INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE shame_messages ADD COLUMN IF NOT EXISTS guild_id TEXT`,
+  `UPDATE user_rep SET rep_count = rep WHERE rep_count = 0 AND rep IS NOT NULL`,
+  `UPDATE user_rep SET last_rep_given = last_given WHERE last_rep_given IS NULL AND last_given IS NOT NULL`,
+  `UPDATE shame_messages SET original_message_id = message_id WHERE original_message_id IS NULL AND message_id IS NOT NULL`,
+  `UPDATE shame_messages SET shame_message_id = message_id WHERE shame_message_id IS NULL AND message_id IS NOT NULL`,
+  `UPDATE shame_messages SET guild_id = COALESCE(guild_id, '') WHERE guild_id IS NULL`,
+
   `CREATE INDEX IF NOT EXISTS shame_messages_guild_idx ON shame_messages (guild_id)`,
 ];
 
