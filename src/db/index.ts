@@ -7,7 +7,9 @@ const { Pool } = pg;
 
 export const pool = new Pool({
   ...(config.databaseUrl ? { connectionString: config.databaseUrl } : {}),
-  max: 10,
+  max: config.database.maxConnections,
+  idleTimeoutMillis: config.database.idleTimeoutMs,
+  connectionTimeoutMillis: config.database.connectionTimeoutMs,
   ssl: config.databaseUrl.includes("railway")
     ? { rejectUnauthorized: false }
     : config.databaseUrl.includes("sslmode=require")
