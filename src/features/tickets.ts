@@ -288,8 +288,20 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
   }
 
   if (customId.startsWith("ticket_transcript_")) {
-    await interaction.reply({ content: "📄 transcript coming soon.", ephemeral: true });
-    return;
+    const ticketId = parseInt(customId.replace("ticket_transcript_", ""));
+    const [ticket] = await db.select().from(tickets).where(and(eq(tickets.id, ticketId), eq(tickets.guildId, guild.id)));
+    if (!ticket) return void interaction.reply({ content: "ticket not found.", ephemeral: true });
+    const settings = await getGuildSettings(guild.id);
+    const logCh = settings.ticketLogChannel ? guild.channels.cache.get(settings.ticketLogChannel) as TextChannel | undefined : undefined;
+    if (!logCh?.isTextBased()) return void interaction.reply({ content: "ticket transcript logging is not configured.", ephemeral: true });
+    const channel = guild.channels.cache.get(ticket.channelId) as TextChannel | undefined;
+    if (!channel) return void interaction.reply({ content: "ticket channel no longer exists.", ephemeral: true });
+    const messages = await channel.messages.fetch({ limit: 100 });
+    const lines = [...messages.values()].reverse().map(m => "[" + m.createdAt.toISOString() + "] " + m.author.tag + ": " + (m.content || "[attachment/embed]"));
+    const { AttachmentBuilder } = await import("discord.js");
+    const attachment = new AttachmentBuilder(Buffer.from(lines.join("\n"), "utf8"), { name: "ticket-" + ticket.number + "-transcript.txt" });
+    await logCh.send({ content: "transcript for ticket #" + ticket.number, files: [attachment] }).catch(() => {});
+    return void interaction.reply({ content: "transcript sent to the ticket log channel.", ephemeral: true });
   }
 
   if (customId.startsWith("ticket_open_")) {
