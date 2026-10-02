@@ -21,8 +21,8 @@ async function fetchYouTube(channelId: string): Promise<{ id: string; title: str
 }
 
 async function fetchTwitch(username: string): Promise<{ id: string; title: string; url: string; game: string } | null> {
-  const clientId = process.env.TWITCH_CLIENT_ID;
-  const clientSecret = process.env.TWITCH_CLIENT_SECRET;
+  const clientId = config.integrations.twitchClientId;
+  const clientSecret = config.integrations.twitchClientSecret;
   if (!clientId || !clientSecret) return null;
   try {
     const tokenRes = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`, { method: "POST", signal: AbortSignal.timeout(8000) });
