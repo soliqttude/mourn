@@ -21,7 +21,7 @@ import { ownerState, logCommand } from "../lib/ownerState.js";
 import { cleanError } from "../lib/format.js";
 import { isBlacklisted } from "../lib/blacklistCache.js";
 import { db } from "../db/index.js";
-import { commandAliases, disabledCommands, disabledModules, eventsSettings } from "../db/schema.js";
+import { commandAliases, customCommands, disabledCommands, disabledModules, eventsSettings } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { isEventEnabled } from "../commands/settings/events.js";
 
@@ -236,6 +236,22 @@ export const event = {
       if (aliased) {
         resolvedName = aliased;
         cmd = findCommand(aliased);
+      }
+    }
+
+    if (!cmd && config.databaseEnabled) {
+      const customRows = await db.select().from(customCommands).where(
+        and(eq(customCommands.guildId, guildId), eq(customCommands.name, rawName.toLowerCase()))
+      );
+      const custom = customRows[0];
+      if (custom) {
+        const response = custom.response
+          .replace(/\{user\}/gi, message.author.toString())
+          .replace(/\{username\}/gi, message.author.username)
+          .replace(/\{server\}/gi, message.guild.name)
+          .replace(/\{channel\}/gi, message.channel.toString());
+        await message.reply({ content: response.slice(0, 2000) });
+        return;
       }
     }
 
