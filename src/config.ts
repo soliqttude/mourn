@@ -10,6 +10,8 @@ function required(name: string): string {
 
 const ownerIdsRaw = process.env.BOT_OWNER_IDS || process.env.BOT_OWNER_ID || "";
 
+const optional = (name: string): string => process.env[name]?.trim() || "";
+
 export const config = {
   token: required("DISCORD_TOKEN"),
   ownerId: required("BOT_OWNER_ID"),
@@ -26,4 +28,16 @@ export const config = {
   successColor: 0x2a9d54,
   neutralColor: 0x111114,
   embedFooter: process.env.EMBED_FOOTER || "mourn",
+  database: {
+    maxConnections: Number(process.env.DB_MAX_CONNECTIONS || 10),
+    idleTimeoutMs: Number(process.env.DB_IDLE_TIMEOUT_MS || 30000),
+    connectionTimeoutMs: Number(process.env.DB_CONNECTION_TIMEOUT_MS || 10000),
+  },
+  integrations: {
+    lastfmApiKey: optional("LASTFM_API_KEY"),
+    twitchClientId: optional("TWITCH_CLIENT_ID"),
+    twitchClientSecret: optional("TWITCH_CLIENT_SECRET"),
+    fortniteApiKey: optional("FORTNITE_API_KEY"),
+    geminiApiKey: optional("GEMINI_API_KEY"),
+  },
 };
