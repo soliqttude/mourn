@@ -239,7 +239,8 @@ export async function closeTicket(
     }
   }
 
-  await ch.delete("ticket closed").catch(() => {});
+  await ch.permissionOverwrites.edit(ticket.openerId, { ViewChannel: false, SendMessages: false }).catch(() => {});
+  await ch.setName(("closed-" + ch.name).slice(0, 100), "ticket closed").catch(() => {});
 }
 
 export async function handleTicketButton(interaction: ButtonInteraction): Promise<void> {
@@ -369,11 +370,11 @@ export async function reopenTicketCmd(channel: TextChannel, openerId: string, gu
   const [ticket] = await db.select().from(tickets).where(eq(tickets.channelId, channel.id));
   if (!ticket) return;
 
-  await db.update(tickets).set({ status: "open", closedAt: null, closeReason: null }).where(eq(tickets.id, ticket.id));
+  await db.update(tickets).set({ status: "open", closedAt: null, closeReason: null, lastActivityAt: new Date() }).where(eq(tickets.id, ticket.id));
 
   const newName = channel.name.replace(/^closed-/, "").slice(0, 100);
   await channel.setName(newName, "ticket reopened").catch(() => {});
-  await channel.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: null }).catch(() => {});
+  await channel.permissionOverwrites.edit(ticket.openerId, { ViewChannel: true, SendMessages: true, AttachFiles: true }).catch(() => {});
 
   const embed = new EmbedBuilder()
     .setColor(0x57f287)
