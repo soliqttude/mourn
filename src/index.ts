@@ -59,11 +59,15 @@ async function main() {
     if (client.application?.id) {
       await registerSlashCommands(client.application.id);
     }
-    startReminderLoop(client);
-    startGiveawayLoop(client);
-    startTempBanLoop(client);
-    startAutoMessageLoop(client);
-    startSocialNotificationLoop(client);
+    if (config.databaseEnabled) {
+      startReminderLoop(client);
+      startGiveawayLoop(client);
+      startTempBanLoop(client);
+      startAutoMessageLoop(client);
+      startSocialNotificationLoop(client);
+    } else {
+      logger.warn("Database is disabled; persistent background features are not started.");
+    }
     setupMusic(client);
   });
 
