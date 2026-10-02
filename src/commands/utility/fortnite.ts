@@ -10,7 +10,7 @@ const BASE = "https://fortnite-api.com/v2";
 
 async function fnFetch<T>(path: string): Promise<T | null> {
   try {
-    const apiKey = process.env.FORTNITE_API_KEY ?? "";
+    const apiKey = config.integrations.fortniteApiKey;
     const headers: Record<string, string> = apiKey ? { Authorization: apiKey } : {};
     const res = await fetch(`${BASE}${path}`, { headers, signal: AbortSignal.timeout(8000) });
     if (!res.ok) return null;
