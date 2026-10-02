@@ -2,6 +2,9 @@ import { ApplicationCommandOptionType, ChannelType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
+import { db } from "../../db/index.js";
+import { ticketForms } from "../../db/schema.js";
+import { eq, and } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "ticketsetup",
@@ -18,6 +21,9 @@ export const command: HybridCommand = {
     "ticketsetup topic add bug-report 🐛",
     "ticketsetup topic remove general",
     "ticketsetup topic list",
+    "ticketsetup form add support issue paragraph true",
+    "ticketsetup form remove support issue",
+    "ticketsetup form list support",
     "ticketsetup config",
     "ticketsetup reset",
   ],
@@ -74,6 +80,27 @@ export const command: HybridCommand = {
           description: "list all ticket topics",
           type: ApplicationCommandOptionType.Subcommand,
         },
+      ],
+    },
+    {
+      name: "form",
+      description: "manage ticket forms",
+      type: ApplicationCommandOptionType.SubcommandGroup,
+      options: [
+        { name: "add", description: "add a form field", type: ApplicationCommandOptionType.Subcommand, options: [
+          { name: "topic", description: "topic", type: ApplicationCommandOptionType.String, required: true },
+          { name: "label", description: "field label", type: ApplicationCommandOptionType.String, required: true },
+          { name: "style", description: "field style", type: ApplicationCommandOptionType.String, required: true, choices: [{ name: "short", value: "short" }, { name: "paragraph", value: "paragraph" }] },
+          { name: "required", description: "required", type: ApplicationCommandOptionType.Boolean, required: false },
+          { name: "placeholder", description: "placeholder", type: ApplicationCommandOptionType.String, required: false },
+        ] },
+        { name: "remove", description: "remove a form field", type: ApplicationCommandOptionType.Subcommand, options: [
+          { name: "topic", description: "topic", type: ApplicationCommandOptionType.String, required: true },
+          { name: "label", description: "field label", type: ApplicationCommandOptionType.String, required: true },
+        ] },
+        { name: "list", description: "list form fields", type: ApplicationCommandOptionType.Subcommand, options: [
+          { name: "topic", description: "topic", type: ApplicationCommandOptionType.String, required: true },
+        ] },
       ],
     },
     {
@@ -176,6 +203,39 @@ export const command: HybridCommand = {
           brandEmbed({ description: lines.join("\n"), authorName: "ticket topics", page: "settings" }),
         ],
       });
+    }
+
+    // ── forms ────────────────────────────────────────────────────────────────
+    const formAction = ctx.source === "slash" ? ((ctx.raw as any).options?.getSubcommand?.(false) ?? "") : (ctx.args[2] ?? "").toLowerCase();
+    const formGroup = ctx.source === "slash" ? ((ctx.raw as any).options?.getSubcommandGroup?.(false) ?? "") : (sub === "form" ? "form" : "");
+    if (formGroup === "form") {
+      const topic = ctx.getString("topic") ?? ctx.args[3];
+      const label = ctx.getString("label") ?? ctx.args[4];
+      const rows = topic ? await db.select().from(ticketForms).where(and(eq(ticketForms.guildId, ctx.guild.id), eq(ticketForms.topic, topic))) : [];
+      const current = rows[0];
+      const fields = current?.fields ?? [];
+      if (formAction === "add") {
+        if (!label) return ctx.reply({ embeds: [errorEmbed("provide a field label.")] });
+        if (fields.length >= 5) return ctx.reply({ embeds: [errorEmbed("a ticket form can have a maximum of 5 fields.")] });
+        const style = (ctx.getString("style") ?? ctx.args[5] ?? "short").toLowerCase();
+        if (style !== "short" && style !== "paragraph") return ctx.reply({ embeds: [errorEmbed("style must be short or paragraph.")] });
+        if (fields.some((x: any) => x.label.toLowerCase() === label.toLowerCase())) return ctx.reply({ embeds: [errorEmbed("that field already exists.")] });
+        const field = { label: label.slice(0, 45), style, required: ctx.getBoolean?.("required") ?? true, placeholder: ctx.getString?.("placeholder")?.slice(0, 100) };
+        if (current) await db.update(ticketForms).set({ fields: [...fields, field as any] }).where(eq(ticketForms.id, current.id));
+        else await db.insert(ticketForms).values({ guildId: ctx.guild.id, topic, fields: [field as any] });
+        return ctx.reply({ embeds: [successEmbed("ticket form field added.")] });
+      }
+      if (formAction === "remove") {
+        if (!current) return ctx.reply({ embeds: [errorEmbed("no form exists for that topic.")] });
+        const next = fields.filter((x: any) => x.label.toLowerCase() !== (label ?? "").toLowerCase());
+        if (next.length === fields.length) return ctx.reply({ embeds: [errorEmbed("field not found.")] });
+        await db.update(ticketForms).set({ fields: next as any }).where(eq(ticketForms.id, current.id));
+        return ctx.reply({ embeds: [successEmbed("ticket form field removed.")] });
+      }
+      if (formAction === "list") {
+        if (!fields.length) return ctx.reply({ embeds: [errorEmbed("no fields configured for that topic.")] });
+        return ctx.reply({ embeds: [brandEmbed({ title: "ticket form — " + topic, description: fields.map((x: any, i: number) => (i + 1) + ". **" + x.label + "** — " + x.style + (x.required === false ? " · optional" : " · required")).join("\n") })] });
+      }
     }
 
     // ── config ────────────────────────────────────────────────────────────────
