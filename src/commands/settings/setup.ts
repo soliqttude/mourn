@@ -95,7 +95,7 @@ const PRESETS: Record<SetupType, ServerCfg> = {
 };
 
 async function callGemini(description: string): Promise<ServerCfg | null> {
-  const key = process.env.GEMINI_API_KEY;
+  const key = config.integrations.geminiApiKey;
   if (!key) return null;
   const prompt = [
     `You are setting up a Discord server. Description: "${description}"`,
@@ -188,7 +188,7 @@ export const command: HybridCommand = {
             "**Step 2 — create roles:**",
             "  🏷️ `,setup roles`",
             "",
-            process.env.GEMINI_API_KEY
+            config.integrations.geminiApiKey
               ? "✅ AI mode is **enabled** (custom setup available)"
               : "⚠️ Add `GEMINI_API_KEY` to Railway to enable AI setup",
           ].join("\n"),
