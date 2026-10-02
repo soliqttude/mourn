@@ -545,6 +545,22 @@ const STATEMENTS: string[] = [
     content TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
+  `ALTER TABLE user_rep ADD COLUMN IF NOT EXISTS rep_count INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE user_rep ADD COLUMN IF NOT EXISTS last_rep_given TIMESTAMPTZ`,
+  `ALTER TABLE user_rep ADD COLUMN IF NOT EXISTS last_rep_recipient TEXT`,
+  `CREATE TABLE IF NOT EXISTS custom_commands (
+    guild_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    response TEXT NOT NULL,
+    created_by TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (guild_id, name)
+  )`,
+  `CREATE INDEX IF NOT EXISTS custom_commands_guild_idx ON custom_commands (guild_id)`,
+  `ALTER TABLE shame_messages ADD COLUMN IF NOT EXISTS original_message_id TEXT`,
+  `ALTER TABLE shame_messages ADD COLUMN IF NOT EXISTS shame_message_id TEXT`,
+  `ALTER TABLE shame_messages ADD COLUMN IF NOT EXISTS count INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE shame_messages ADD COLUMN IF NOT EXISTS guild_id TEXT`,
   `CREATE INDEX IF NOT EXISTS shame_messages_guild_idx ON shame_messages (guild_id)`,
 ];
 
