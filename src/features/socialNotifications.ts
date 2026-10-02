@@ -92,5 +92,5 @@ export function startSocialNotificationLoop(client: Client): void {
     } catch (err) {
       logger.warn({ err }, "social notifications loop error");
     }
-  }, 5 * 60 * 1000);
+  }, config.integrationPollIntervalMs);
 }
