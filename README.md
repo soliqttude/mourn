@@ -164,3 +164,25 @@ src/
 ## License
 
 MIT
+
+
+## Configuration
+
+Required environment variables:
+- `DISCORD_TOKEN`
+- `BOT_OWNER_ID`
+- `DATABASE_URL` (recommended for persistence)
+
+Optional database tuning:
+- `ENABLE_DATABASE=false` — disable PostgreSQL persistence
+- `DB_MAX_CONNECTIONS` — PostgreSQL pool size (default 10)
+- `DB_IDLE_TIMEOUT_MS` — idle connection timeout (default 30000)
+- `DB_CONNECTION_TIMEOUT_MS` — connection timeout (default 10000)
+
+Optional integrations:
+- `LASTFM_API_KEY`
+- `TWITCH_CLIENT_ID` + `TWITCH_CLIENT_SECRET`
+- `FORTNITE_API_KEY`
+- `GEMINI_API_KEY`
+
+Use `settings` to inspect server configuration and `integrations` to see which external integrations are configured.
