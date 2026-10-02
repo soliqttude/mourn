@@ -1,7 +1,8 @@
 import { logger } from "../lib/logger.js";
+import { config } from "../config.js";
 
 const API_BASE = "https://ws.audioscrobbler.com/2.0/";
-const API_KEY  = process.env.LASTFM_API_KEY ?? "";
+const API_KEY  = config.integrations.lastfmApiKey;
 
 export function hasApiKey(): boolean { return !!API_KEY; }
 
