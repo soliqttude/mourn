@@ -1,11 +1,13 @@
 import type { Client, TextChannel } from "discord.js";
 import { EmbedBuilder, GuildEmoji, AuditLogEvent } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
+import { handleAntinukeAction } from "../features/antinuke.js";
 
 export const event = {
   name: "emojiCreate",
   async execute(client: Client, emoji: GuildEmoji) {
     if (!emoji.guild) return;
+    await handleAntinukeAction(client, emoji.guild, "emoji_create", emoji.id).catch(() => {});
 
     const settings = await getGuildSettings(emoji.guild.id);
     const logChannelId = (settings as any).serverLogChannel as string | null;
