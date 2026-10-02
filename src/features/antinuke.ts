@@ -141,7 +141,12 @@ async function fetchExecutor(
     for (const entry of logs.entries.values()) {
       if (entry.createdTimestamp < cutoff) break; // entries are newest-first; stop once too old
       if (!entry.executor || entry.executor.bot) continue;
-      if (opts?.targetId && entry.target && (entry.target as any).id !== opts.targetId) continue;
+      if (opts?.targetId && entry.target) {
+        const target = entry.target as any;
+        const targetId = target.id ?? entry.targetId;
+        const channelId = target.channelId ?? target.channel_id ?? (entry.extra as any)?.channelId ?? (entry.extra as any)?.channel_id;
+        if (targetId !== opts.targetId && !(auditType === AuditLogEvent.WebhookCreate && channelId === opts.targetId)) continue;
+      }
       return entry.executor.id;
     }
     return null;
@@ -249,9 +254,11 @@ const TYPE_MODULE: Record<string, string> = {
   ban_add:        "ban",
   member_kick:    "kick",
   role_delete:    "role",
+  role_create:    "role",
   channel_delete: "channel",
   channel_create: "channel",
   emoji_delete:   "emoji",
+  emoji_create:   "emoji",
   webhook_create: "webhook",
   bot_add:        "botadd",
   vanity_update:  "vanity",
@@ -261,9 +268,11 @@ const AUDIT_MAP: Record<string, AuditLogEvent> = {
   ban_add:        AuditLogEvent.MemberBanAdd,
   member_kick:    AuditLogEvent.MemberKick,
   role_delete:    AuditLogEvent.RoleDelete,
+  role_create:    AuditLogEvent.RoleCreate,
   channel_delete: AuditLogEvent.ChannelDelete,
   channel_create: AuditLogEvent.ChannelCreate,
   emoji_delete:   AuditLogEvent.EmojiDelete,
+  emoji_create:   AuditLogEvent.EmojiCreate,
   webhook_create: AuditLogEvent.WebhookCreate,
   bot_add:        AuditLogEvent.BotAdd,
   vanity_update:  AuditLogEvent.GuildUpdate,
