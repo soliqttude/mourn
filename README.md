@@ -48,8 +48,8 @@ promise is a hybrid Discord bot — every command works as both a **slash comman
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/soliqttude/mournbot.git
-cd mournbot
+git clone https://github.com/soliqttude/promisebot.git
+cd promisebot
 npm install
 ```
 
