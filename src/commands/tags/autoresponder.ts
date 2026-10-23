@@ -75,7 +75,7 @@ export const command: HybridCommand = {
       }).join("\n")})]});
     }
 
-    if(action==="variables") return ctx.reply({embeds:[brandEmbed({title:"Autoresponder Variables",description:"Use the same dynamic variables and embed scripting supported by Mourn message scripting."})]});
+    if(action==="variables") return ctx.reply({embeds:[brandEmbed({title:"Autoresponder Variables",description:"Use the same dynamic variables and embed scripting supported by Promise message scripting."})]});
 
     if(action==="reset"){
       await resetAutoresponders(ctx.guild.id);
