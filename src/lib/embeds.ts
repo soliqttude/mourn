@@ -1,6 +1,6 @@
 import { EmbedBuilder, type Guild, type User } from "discord.js";
 
-// ── Mourn-style color palette ──────────────────────────────────────────────────
+// ── Promise-style color palette ──────────────────────────────────────────────────
 const C = {
   success: 0x57F287,
   error:   0xF0B429,
@@ -119,7 +119,7 @@ export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
   return eb;
 }
 
-// ── Help embed — Mourn.bot style (bot PFP in author) ──────────────────────────
+// ── Help embed — Promise.bot style (bot PFP in author) ──────────────────────────
 export function helpEmbed(
   cmd: { name: string; description: string; usage?: string },
   prefix: string,
@@ -154,7 +154,7 @@ export function helpEmbed(
   const code = `Syntax:  ${usageLine}\nExample: ${exampleLine}`;
 
   const eb = new EmbedBuilder()
-    .setAuthor({ name: "mourn help", iconURL: botAvatarURL })
+    .setAuthor({ name: "promise help", iconURL: botAvatarURL })
     .setTitle(`Command: ${cmd.name}`)
     .setDescription(`${cmd.description}\n\`\`\`\n${code}\n\`\`\``);
   _styles.set(eb, "brand");
