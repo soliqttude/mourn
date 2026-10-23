@@ -51,11 +51,11 @@ const THREADS: ThreadDef[] = [
       "",
       "**Levelling System**",
       "A common issue with the levelling system is not running `,levelstoggle`.",
-      "∙ This is needed for mourn to start caching levels and awarding XP.",
+      "∙ This is needed for Promise to start caching levels and awarding XP.",
       "",
       "**Starboard / Clownboard**",
       "A common issue is not running `,starboard unlock` / `,clownboard unlock`.",
-      "∙ This is needed for mourn to start monitoring messages and counting reactions.",
+      "∙ This is needed for Promise to start monitoring messages and counting reactions.",
       "",
       "**Lock and Mute fixes**",
       "If your mutes or jails are not working, this will be a permission issue.",
@@ -77,7 +77,7 @@ const THREADS: ThreadDef[] = [
       "**Parameters**",
       "`--do <punishment>` — punishment applied to the moderator.",
       "`--threshold <number>` — number of actions before punishment (recommended: 1–6).",
-      "`--command on|off` — whether mourn commands count toward the threshold.",
+      "`--command on|off` — whether Promise commands count toward the threshold.",
       "",
       "**Antinuke Modules**",
       "permissions, channel, role, emoji, ban, kick, webhook, botadd",
@@ -182,7 +182,7 @@ const THREADS: ThreadDef[] = [
     section: "Security Setup",
     content: [
       "**How do fake permissions work?**",
-      "When a moderator is given a fake permission such as `ban_members`, they will be able to use `,ban` with mourn, but they won't be able to use the native Discord ban feature.",
+      "When a moderator is given a fake permission such as `ban_members`, they will be able to use `,ban` with Promise, but they won't be able to use the native Discord ban feature.",
       "",
       "**Getting command permissions**",
       "You can locate the required permissions for a command with `,help <command>`.",
@@ -223,7 +223,7 @@ const THREADS: ThreadDef[] = [
     section: "Security Setup",
     content: [
       "**Filter Setup**",
-      "mourn uses Discord's built-in AutoMod system along with its own word filter.",
+      "Promise uses Discord's built-in AutoMod system along with its own word filter.",
       "",
       "**Adding words to the filter**",
       "`,wordfilter add <word>` — adds a word to the filter.",
@@ -342,10 +342,10 @@ const THREADS: ThreadDef[] = [
       "`,createembed <embed code>` — create an embed from raw embed code.",
       "",
       "**Embed scripting**",
-      "mourn supports a full embed scripting language with dynamic variables.",
+      "Promise supports a full embed scripting language with dynamic variables.",
       "Use the button builder (`,embed create`) to get started without needing to learn the syntax.",
       "",
-      "**Sending an embed as mourn**",
+      "**Sending an embed as Promise**",
       "`,embed send #channel <embed code>`",
       "",
       "**Editing an existing embed**",
@@ -358,7 +358,7 @@ const THREADS: ThreadDef[] = [
     content: [
       "**Initial Command**",
       "Run `,levelstoggle` to enable the levelling system.",
-      "∙ This is required for mourn to start caching levels and awarding XP.",
+      "∙ This is required for Promise to start caching levels and awarding XP.",
       "",
       "**Setting the level-up message channel**",
       "`,setlevelchannel #channel` — set where level-up messages are sent.",
@@ -425,7 +425,7 @@ const THREADS: ThreadDef[] = [
     content: [
       "**Step 1**",
       "Send the message you want reaction roles attached to in the channel of your choice.",
-      "∙ This can be an embed created by mourn.",
+      "∙ This can be an embed created by Promise.",
       "",
       "**Step 2**",
       "`,rr add <message link> <emoji> @role`",
@@ -494,10 +494,10 @@ const THREADS: ThreadDef[] = [
       "`,vanity role add @role` — set what role to give when the vanity is being used.",
       "`,vanity role remove` — remove the current award role.",
       "`,vanity log #channel` — set the log channel for vanity add/removal.",
-      "`,vanity award #channel` — set where mourn says thanks.",
+      "`,vanity award #channel` — set where Promise says thanks.",
       "`,vanity message <text>` — set the thank you message.",
       "`,vanity role list` — list all award roles.",
-      "`,vanity view substring` — show the current vanity mourn is looking for.",
+      "`,vanity view substring` — show the current vanity Promise is looking for.",
       "`,vanity view message` — show the current thank you message.",
     ].join("\n"),
   },
@@ -690,14 +690,14 @@ export const command: HybridCommand = {
           name: thread.display ?? thread.name,
           autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
           type: ChannelType.PublicThread,
-          reason: "mourn setup directory",
+          reason: "Promise setup directory",
         });
 
         const embed = new EmbedBuilder()
           .setColor(COLOR)
           .setTitle(thread.display ?? thread.name)
           .setDescription(thread.content)
-          .setFooter({ text: `mourn • ${SUPPORT}` });
+          .setFooter({ text: `Promise • ${SUPPORT}` });
 
         await created.send({ embeds: [embed] });
         links.set(thread.name, `https://discord.com/channels/${ctx.guild.id}/${created.id}`);
@@ -717,7 +717,7 @@ export const command: HybridCommand = {
           .setColor(COLOR)
           .setTitle("🧰 Server Setup Directory")
           .setDescription(updated)
-          .setFooter({ text: "mourn • setup directory" }),
+          .setFooter({ text: "Promise • setup directory" }),
       ],
     });
 
