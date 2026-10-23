@@ -79,7 +79,7 @@ export async function buildPanelEmbed(active: PanelTab, guildId: string) {
   const s = await getGuildSettings(guildId);
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
-    .setAuthor({ name: "MOURN" })
+    .setAuthor({ name: "PROMISE" })
     .setFooter({ text: `Panel · ${TAB_META[active].label}` })
     .setTimestamp();
 
