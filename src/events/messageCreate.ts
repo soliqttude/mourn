@@ -103,7 +103,7 @@ export const event = {
       const { blacklisted, reason } = await isBlacklisted(message.author.id);
       if (blacklisted) {
         message.author.send({
-          embeds: [errorEmbed(reason ? `you are blacklisted from mourn.\n**reason** — ${reason}` : "you are blacklisted from mourn.")],
+          embeds: [errorEmbed(reason ? `you are blacklisted from Promise.\n**reason** — ${reason}` : "you are blacklisted from mourn.")],
         }).catch(() => {});
         return;
       }
@@ -197,7 +197,7 @@ export const event = {
 
     if (!usedPrefix) {
       // ── Owner greeting ──────────────────────────────────────────────────────
-      if (message.author.id === "1492017858182385684" && message.content.toLowerCase().includes("mourn")) {
+      if (message.author.id === "1492017858182385684" && message.content.toLowerCase().includes("promise")) {
         await message.reply({ content: "Hello Sir." }).catch(() => {});
         return;
       }
