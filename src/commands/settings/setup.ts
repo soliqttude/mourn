@@ -284,7 +284,7 @@ async function doRoles(ctx: any, roles: RoleCfg[], label: string): Promise<void>
 
   for (const r of roles) {
     try {
-      await guild.roles.create({ name: r.name, color: r.color, hoist: r.hoist, permissions: r.permissions, reason: `Mourn setup ${label}` });
+      await guild.roles.create({ name: r.name, color: r.color, hoist: r.hoist, permissions: r.permissions, reason: `Promise setup ${label}` });
       created.push(r.name);
     } catch { failed.push(r.name); }
   }
