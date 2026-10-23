@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>promise</h1>
+  <h1>Promise</h1>
   <p>A powerful, feature-rich Discord bot built for community servers — hybrid prefix + slash commands out of the box.</p>
   <p>
     <img src="https://img.shields.io/badge/discord.js-v14-5865F2?style=flat-square&logo=discord&logoColor=white" />
