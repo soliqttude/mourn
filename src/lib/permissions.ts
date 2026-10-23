@@ -104,7 +104,7 @@ export function memberHas(
 }
 
 /**
- * Fake permissions only affect Mourn command authorization.
+ * Fake permissions only affect Promise command authorization.
  * They do not modify Discord's native role/member permissions.
  */
 export async function checkTierWithFake(
@@ -114,7 +114,7 @@ export async function checkTierWithFake(
   if (checkTier(member, required)) return true;
 
   // Fake permissions are Discord permission equivalents only.
-  // Internal Mourn tiers cannot be granted through a role.
+  // Internal Promise tiers cannot be granted through a role.
   if (
     required === "everyone" ||
     required === "botowner" ||
