@@ -49,7 +49,7 @@ export const command: HybridCommand = {
       const existing = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.identifier, name)));
       if (existing.length) return ctx.reply({ embeds: [errorEmbed(`webhook \`${name}\` already exists.`)] });
       try {
-        const wh = await (ch as any).createWebhook({ name: `${name} (bestmourn)` });
+        const wh = await (ch as any).createWebhook({ name: `${name} (promise)` });
         await db.insert(managedWebhooks).values({ guildId, identifier: name, webhookId: wh.id, webhookToken: wh.token!, channelId: ch.id });
         return ctx.reply({ embeds: [successEmbed(`webhook \`${name}\` created in <#${ch.id}>.`)] });
       } catch {
