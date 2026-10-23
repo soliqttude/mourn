@@ -93,7 +93,7 @@ export const command: HybridCommand = {
           .setColor(added.length ? 0x57F287 : 0xED4245)
           .setTitle(`Emoji Steal — ${ctx.guild.name}`)
           .addFields(fields)
-          .setFooter({ text: "Mourn  ·  Utility" })
+          .setFooter({ text: "Promise  ·  Utility" })
           .setTimestamp(),
       ],
     });
