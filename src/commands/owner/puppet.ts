@@ -29,8 +29,8 @@ export const command: HybridCommand = {
 
     try {
       const webhooks = await (ctx.channel as any).fetchWebhooks();
-      let wh = webhooks.find((w: any) => w.name === "Mourn Puppet");
-      if (!wh) wh = await (ctx.channel as any).createWebhook({ name: "Mourn Puppet" });
+      let wh = webhooks.find((w: any) => w.name === "Promise Puppet");
+      if (!wh) wh = await (ctx.channel as any).createWebhook({ name: "Promise Puppet" });
 
       await wh.send({ content: msg, username: displayName, avatarURL: avatar });
       return ctx.reply({ content: "✅ Sent.", ephemeral: true } as any);
