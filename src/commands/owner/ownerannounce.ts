@@ -25,7 +25,7 @@ export const command: HybridCommand = {
       .setColor(color)
       .setTitle(`📣 ${title}`)
       .setDescription(body)
-      .setAuthor({ name: ctx.client.user?.username ?? "Mourn", iconURL: ctx.client.user?.displayAvatarURL() })
+      .setAuthor({ name: ctx.client.user?.username ?? "Promise", iconURL: ctx.client.user?.displayAvatarURL() })
       .setFooter({ text: config.embedFooter })
       .setTimestamp();
     let ok = 0, fail = 0;
