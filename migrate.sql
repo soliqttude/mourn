@@ -1,4 +1,4 @@
--- mourn migration: add new columns and tables
+-- promise migration: add new columns and tables
 -- Run once on your production database:
 --   psql $DATABASE_URL -f migrate.sql
 -- OR with your DB tool of choice.
