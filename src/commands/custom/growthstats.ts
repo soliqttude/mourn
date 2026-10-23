@@ -3,7 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "growthstats",
-  description: "See Mourn's growth across all servers.",
+  description: "See Promise's growth across all servers.",
   usage: "growthstats",
   examples: ["growthstats"],
   category: "custom",
@@ -15,13 +15,13 @@ export const command: HybridCommand = {
     const uptime = Math.floor((client.uptime ?? 0) / 1000 / 60 / 60);
     return ctx.reply({
       embeds: [brandEmbed({
-        title: "mourn — growth.",
+        title: "promise — growth.",
         description: [
-          `**${guilds}** servers trust mourn.`,
+          `**${guilds}** servers trust promise.`,
           `**${users.toLocaleString()}** users reached.`,
           `**${uptime}h** of uptime.`,
           "",
-          "every server added makes mourn better.",
+          "every server added makes promise better.",
           "share it. help it grow.",
         ].join("\n"),
         page: "Growth",
