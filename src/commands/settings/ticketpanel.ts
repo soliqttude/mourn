@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   usage: "ticketpanel [title] [description]",
   examples: [
     "ticketpanel",
-    "ticketpanel mourn support  need help with the bot? open a ticket below",
+    "ticketpanel promise support  need help with the bot? open a ticket below",
   ],
   options: [
     { name: "title",       description: "panel title (default: server name)",       type: ApplicationCommandOptionType.String, required: false },
