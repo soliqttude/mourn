@@ -17,12 +17,12 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     let role = guild.roles.cache.find(r => r.name.toLowerCase() === "jail");
-    if (!role) role = await guild.roles.create({ name: "jail", reason: "Mourn jail setup" });
+    if (!role) role = await guild.roles.create({ name: "jail", reason: "Promise jail setup" });
     let log = guild.channels.cache.find(c => c.type === ChannelType.GuildText && c.name === "jail-log");
     if (!log) log = await guild.channels.create({ name: "jail-log", type: ChannelType.GuildText, permissionOverwrites: [
       { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
       { id: guild.members.me?.id ?? guild.client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
-    ], reason: "Mourn jail setup" });
+    ], reason: "Promise jail setup" });
     await updateGuildSettings(guild.id, { jailRole: role.id, joinLogChannel: log.id });
     return ctx.reply({ embeds: [successEmbed("jail setup complete — role <@&" + role.id + "> and log <#" + log.id + "> created.", "moderation")] });
   },
