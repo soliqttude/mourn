@@ -41,7 +41,7 @@ async function fetchTwitch(username: string): Promise<{ id: string; title: strin
 async function fetchReddit(subreddit: string): Promise<{ id: string; title: string; url: string; author: string } | null> {
   try {
     const res = await fetch(`https://www.reddit.com/r/${subreddit}/new.json?limit=1`, {
-      headers: { "User-Agent": "bestmourn-bot/1.0" },
+      headers: { "User-Agent": "promise-bot/1.0" },
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return null;
