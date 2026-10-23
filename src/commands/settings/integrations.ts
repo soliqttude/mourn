@@ -14,6 +14,6 @@ export const command: HybridCommand = {
     const statuses = getIntegrationStatuses();
     const lines = statuses.map(s => `${s.configured ? "✅" : "⚪"} **${s.name}** — ${s.detail}${s.configured ? "" : ` · ${integrationEnvHelp(s.name) ?? "no credentials required"}`}`);
     const dbLine = config.databaseEnabled ? `✅ PostgreSQL enabled · pool ${config.database.maxConnections}` : "⚪ PostgreSQL disabled";
-    return ctx.reply({ embeds: [new EmbedBuilder().setColor(config.brandColor).setTitle("🔌 Mourn Integrations").setDescription(lines.join("\n")).addFields({ name: "Configured", value: `${configuredIntegrationCount()}/${statuses.length}`, inline: true }, { name: "Database", value: dbLine, inline: true }, { name: "Polling", value: `${Math.round(config.integrationPollIntervalMs / 1000)}s`, inline: true }).setFooter({ text: config.embedFooter }).setTimestamp()] });
+    return ctx.reply({ embeds: [new EmbedBuilder().setColor(config.brandColor).setTitle("🔌 Promise Integrations").setDescription(lines.join("\n")).addFields({ name: "Configured", value: `${configuredIntegrationCount()}/${statuses.length}`, inline: true }, { name: "Database", value: dbLine, inline: true }, { name: "Polling", value: `${Math.round(config.integrationPollIntervalMs / 1000)}s`, inline: true }).setFooter({ text: config.embedFooter }).setTimestamp()] });
   },
 };
