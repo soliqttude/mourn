@@ -563,7 +563,7 @@ const STATEMENTS: string[] = [
 
 export async function runMigrations(): Promise<void> {
   if (!config.databaseEnabled) {
-    logger.warn("Database is disabled; starting Mourn without database migrations.");
+    logger.warn("Database is disabled; starting Promise without database migrations.");
     return;
   }
 
