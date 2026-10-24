@@ -26,7 +26,7 @@ export function makeSocialCommand(platform: SocialPlatform): HybridCommand {
     name: platform,
     description: `Manage ${platform} social feeds and notification messages.`,
     category: "social",
-    permission: "none",
+    permission: "everyone",
     guildOnly: true,
     usage: `${platform} [add|remove|message|message view|list]`,
     examples: [`${platform} add #channel username`,`${platform} remove #channel username`,`${platform} message username New post: {title}`,`${platform} list`],
