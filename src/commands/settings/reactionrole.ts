@@ -32,7 +32,7 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(rows.map((r, i) => "**#" + (i + 1) + "** " + r.emoji + " → <@&" + r.roleId + "> — <#" + r.channelId + ">/" + r.messageId).join("\n"))] });
     }
     const rawLink = ctx.getString("message_id") ?? ctx.args[1] ?? "";
-    const linkMatch = rawLink.match(/\\/channels\\/(\\d+)\\/(\\d+)\\/(\\d+)/);
+    const linkMatch = rawLink.match(/\/channels\/(\d+)\/(\d+)\/(\d+)/);
     const msgId = linkMatch?.[3] ?? rawLink;
     const channelId = linkMatch?.[2] ?? ctx.channel.id;
     const emoji = ctx.getString("emoji") ?? ctx.args[2] ?? "";
