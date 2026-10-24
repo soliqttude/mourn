@@ -1,6 +1,6 @@
 import { config } from "../config.js";
 
-export type IntegrationStatus = { name: string; configured: boolean; detail: string };
+export type IntegrationStatus = { name: string; configured: boolean; detail: string; env?: string };
 
 export function getIntegrationStatuses(): IntegrationStatus[] {
   const i = config.integrations;
