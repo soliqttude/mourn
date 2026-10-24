@@ -66,7 +66,7 @@ export function formatTime(seconds: number): string {
 export function setupMusic(client: Client): void {
   distube = new DisTube(client, {
     emitNewSongOnly: true,
-    plugins: [new SpotifyPlugin(), new YouTubePlugin(), new SoundCloudPlugin()],
+    plugins: [new SpotifyPlugin() as any, new YouTubePlugin(), new SoundCloudPlugin()],
     joinNewVoiceChannel: true,
     nsfw: true,
     savePreviousSongs: true,
