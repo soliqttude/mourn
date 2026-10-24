@@ -7,6 +7,7 @@ import {
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
+import { config } from "../../config.js";
 
 type SetupType = "gambling" | "community" | "gaming" | "anime";
 interface RoleCfg { name: string; color: number; hoist: boolean; permissions: bigint; }
