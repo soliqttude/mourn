@@ -54,7 +54,7 @@ export async function removeButtonRole(messageId: string, index: number) {
      ) RETURNING id`,
     [messageId, index],
   );
-  return result.rowCount > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 export async function removeAllButtonRoles(messageId: string) {
