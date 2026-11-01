@@ -3,7 +3,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "creator",
-  description: "About the creator of Promise.",
+  description: "About the creator of Villain.",
   usage: "creator",
   examples: ["creator"],
   category: "custom",
