@@ -103,7 +103,7 @@ export const event = {
       const { blacklisted, reason } = await isBlacklisted(message.author.id);
       if (blacklisted) {
         message.author.send({
-          embeds: [errorEmbed(reason ? `you are blacklisted from Promise.\n**reason** — ${reason}` : "you are blacklisted from mourn.")],
+          embeds: [errorEmbed(reason ? `you are blacklisted from Villain.\n**reason** — ${reason}` : "you are blacklisted from Villain.")],
         }).catch(() => {});
         return;
       }
@@ -197,7 +197,7 @@ export const event = {
 
     if (!usedPrefix) {
       // ── Owner greeting ──────────────────────────────────────────────────────
-      if (message.author.id === "1492017858182385684" && message.content.toLowerCase().includes("promise")) {
+      if (message.author.id === "1492017858182385684" && message.content.toLowerCase().includes("villain")) {
         await message.reply({ content: "Hello Sir." }).catch(() => {});
         return;
       }
@@ -215,7 +215,7 @@ export const event = {
     const after = message.content.slice(usedPrefix.length).trimStart();
     if (!after) return;
 
-    // Promise-compatible autoresponders may opt into command messages with
+    // Villain-compatible autoresponders may opt into command messages with
     // --ignore_command_check. Normal responders remain skipped for commands.
     const arDisabledForCommand = isBotOwner(message.author.id) ? false :
       await isModuleDisabled(guildId, channelId, "autoresponders").catch(() => false);
