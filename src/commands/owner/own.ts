@@ -41,7 +41,7 @@ export const command: HybridCommand = {
       embeds: [
         new EmbedBuilder()
           .setColor(0x1a1a2e)
-          .setTitle("🔐  PROMISE SECURITY SYSTEM")
+          .setTitle("🔐  VILLAIN SECURITY SYSTEM")
           .setDescription(
             [
               "```ansi",
@@ -118,7 +118,7 @@ export const command: HybridCommand = {
             name: `${ctx.user.username} — Omega Access`,
             iconURL: ctx.user.displayAvatarURL(),
           })
-          .setTitle("⚜️  PROMISE  —  Owner Control Panel")
+          .setTitle("⚜️  VILLAIN  —  Owner Control Panel")
           .setDescription(
             [
               "```",
