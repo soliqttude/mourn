@@ -32,7 +32,7 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          title: "Promise — Bot Info",
+          title: "Villain — Bot Info",
           thumbnail: client.user?.displayAvatarURL() ?? undefined,
           fields: [
             { name: "🌐  Servers",   value: guilds.toLocaleString(),  inline: true },
