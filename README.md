@@ -64,8 +64,6 @@ Copy the example file:
 cp .env.example .env
 ```
 
-Set these values in `.env` or in your hosting provider's environment settings:
-
 | Variable | Required | Purpose |
 |---|:---:|---|
 | `DISCORD_TOKEN` | Yes | Discord bot token |
