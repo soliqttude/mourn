@@ -1,7 +1,7 @@
 {
-  "name": "promise-bot",
+  "name": "villain-bot",
   "version": "1.0.0",
-  "description": "Promise — a feature-rich Discord bot for community and utility server management.",
+  "description": "Villain — a feature-rich Discord bot for community and server management.",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
