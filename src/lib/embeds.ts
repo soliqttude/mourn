@@ -154,7 +154,7 @@ export function helpEmbed(
   const code = `Syntax:  ${usageLine}\nExample: ${exampleLine}`;
 
   const eb = new EmbedBuilder()
-    .setAuthor({ name: "promise help", iconURL: botAvatarURL })
+    .setAuthor({ name: "villain help", iconURL: botAvatarURL })
     .setTitle(`Command: ${cmd.name}`)
     .setDescription(`${cmd.description}\n\`\`\`\n${code}\n\`\`\``);
   _styles.set(eb, "brand");
