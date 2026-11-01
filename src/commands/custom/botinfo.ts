@@ -15,7 +15,7 @@ function formatUptime(ms: number): string {
 
 export const command: HybridCommand = {
   name: "botinfo",
-  description: "Detailed stats about Promise.",
+  description: "Detailed stats about Villain.",
   usage: "botinfo",
   examples: ["botinfo"],
   category: "custom",
