@@ -5,7 +5,7 @@ import { errorEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "panel",
   aliases: ["dashboard"],
-  description: "Open the Promise control panel.",
+  description: "Open the Villain control panel.",
   usage: "panel",
   examples: ["panel"],
   category: "settings",
