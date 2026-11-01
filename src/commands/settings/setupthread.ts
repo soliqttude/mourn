@@ -703,7 +703,7 @@ export const command: HybridCommand = {
         links.set(thread.name, `https://discord.com/channels/${ctx.guild.id}/${created.id}`);
 
         // Small delay to avoid rate limits
-        await new Villain((r) => setTimeout(r, 600));
+        await new Promise<void>((resolve) => setTimeout(resolve, 600));
       } catch {
         // continue even if one thread fails
       }
