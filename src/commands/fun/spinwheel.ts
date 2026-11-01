@@ -30,7 +30,7 @@ export const command: HybridCommand = {
             { name: "options", value: display.slice(0, 1000), inline: false },
             { name: "🏆 result", value: `**${winner}**`, inline: false },
           )
-          .setFooter({ text: `${config.embedFooter} • totally random, i promise` })
+          .setFooter({ text: `${config.embedFooter} • totally random, i swear` })
           .setTimestamp(),
       ],
     });
