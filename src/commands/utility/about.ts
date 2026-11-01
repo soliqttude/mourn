@@ -4,7 +4,7 @@ import { brandEmbed } from "../../lib/embeds.js";
 export const command: HybridCommand = {
   name: "about",
   aliases: ["info"],
-  description: "About promise.",
+  description: "About villain.",
   usage: "about",
   examples: ["about"],
   category: "utility",
@@ -18,12 +18,12 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [
         brandEmbed({
-          authorName: ctx.client.user?.username ?? "promise",
+          authorName: ctx.client.user?.username ?? "villain",
           authorIcon: ctx.client.user?.displayAvatarURL({ size: 64 }) ?? undefined,
           thumbnail:  ctx.client.user?.displayAvatarURL({ size: 256 }) ?? undefined,
-          description: `promise is a free all-in-one Discord bot built for modern communities.
+          description: `villain is a free all-in-one Discord bot built for modern communities.
 
-Featuring moderation, security, automod, antinuke, antiraid, leveling, tickets, giveaways, utility tools, and much more, promise is designed to provide everything your server needs in a single, reliable experience.
+Featuring moderation, security, automod, antinuke, antiraid, leveling, tickets, giveaways, utility tools, and much more, villain is designed to provide everything your server needs in a single, reliable experience.
 
 The bot is actively maintained and continuously updated with new features, improvements, and fixes.
 
