@@ -1,6 +1,6 @@
 import { EmbedBuilder, type Guild, type User } from "discord.js";
 
-// ── Promise-style color palette ──────────────────────────────────────────────────
+// ── Villain-style color palette ──────────────────────────────────────────────────
 const C = {
   success: 0x57F287,
   error:   0xF0B429,
@@ -119,7 +119,7 @@ export function modEmbed(opts: ModEmbedOpts): EmbedBuilder {
   return eb;
 }
 
-// ── Help embed — Promise.bot style (bot PFP in author) ──────────────────────────
+// ── Help embed — Villain style (bot PFP in author) ──────────────────────────
 export function helpEmbed(
   cmd: { name: string; description: string; usage?: string },
   prefix: string,
