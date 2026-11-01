@@ -95,8 +95,8 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
         embeds: [
           errorEmbed(
             reason
-              ? `you are blacklisted from Promise.\n**reason** — ${reason}`
-              : "you are blacklisted from Promise."
+              ? `you are blacklisted from Villain.\n**reason** — ${reason}`
+              : "you are blacklisted from Villain."
           ),
         ],
         flags: MessageFlags.Ephemeral,
