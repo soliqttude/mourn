@@ -28,8 +28,8 @@ export const command: HybridCommand = {
       .setColor(nowDisabled ? 0xff4444 : config.successColor)
       .setTitle(nowDisabled ? "Bot Disabled" : "Bot Enabled")
       .setDescription(nowDisabled
-        ? `Promise is now **disabled** in **${ctx.guild.name}**. no one can use commands here until you run this again.`
-        : `Promise is back **online** in **${ctx.guild.name}**.`)
+        ? `Villain is now **disabled** in **${ctx.guild.name}**. no one can use commands here until you run this again.`
+        : `Villain is back **online** in **${ctx.guild.name}**.`)
       .setFooter({ text: config.embedFooter })
       .setTimestamp();
 
