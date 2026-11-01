@@ -104,7 +104,7 @@ export function memberHas(
 }
 
 /**
- * Fake permissions only affect Promise command authorization.
+ * Fake permissions only affect Villain command authorization.
  * They do not modify Discord's native role/member permissions.
  */
 export async function checkTierWithFake(
