@@ -103,7 +103,7 @@ export const command: HybridCommand = {
 
     if (action === "add") {
       if (message.author.id !== ctx.client.user?.id) {
-        return ctx.reply({ embeds: [errorEmbed("Button roles can only be placed on messages sent by Promise.")] });
+        return ctx.reply({ embeds: [errorEmbed("Button roles can only be placed on messages sent by Villain.")] });
       }
       const role = ctx.getRole("role");
       const style = (ctx.getString("style") ?? ctx.args[3] ?? "gray").toLowerCase();
