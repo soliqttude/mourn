@@ -9,7 +9,7 @@ export const event = {
   name: "ready",
   once: false,
   async execute(client: Client) {
-    logger.info(`Promise is online as ${client.user?.tag}`);
+    logger.info(`Villain is online as ${client.user?.tag}`);
 
     // ── Music — initialise DisTube with the client ────────────────────────────
     try {
