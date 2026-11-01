@@ -52,7 +52,7 @@ export const command: HybridCommand = {
               "```",
             ].join("\n")
           )
-          .setFooter({ text: "Promise Security Protocol v2 • Stand by…" })
+          .setFooter({ text: "Villain Security Protocol v2 • Stand by…" })
           .setTimestamp(),
       ],
       ephemeral: true,
