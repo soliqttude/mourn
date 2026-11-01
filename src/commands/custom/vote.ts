@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     return ctx.reply({
       embeds: [brandEmbed({
-        title: "vote for Promise.",
+        title: "vote for Villain.",
         description: `support the bot by voting:\n\n[**vote here**](${VOTE_URL})\n${VOTE_URL}\n\nvoting helps Villain grow. it takes 10 seconds.`,
         page: "Vote",
       })],
