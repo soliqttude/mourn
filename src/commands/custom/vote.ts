@@ -5,7 +5,7 @@ const VOTE_URL = "https://top.gg/bot/1499466116768993461";
 
 export const command: HybridCommand = {
   name: "vote",
-  description: "Vote for Promise on top.gg.",
+  description: "Vote for Villain on top.gg.",
   usage: "vote",
   examples: ["vote"],
   category: "custom",
@@ -13,7 +13,7 @@ export const command: HybridCommand = {
     return ctx.reply({
       embeds: [brandEmbed({
         title: "vote for Promise.",
-        description: `support the bot by voting:\n\n[**vote here**](${VOTE_URL})\n${VOTE_URL}\n\nvoting helps Promise grow. it takes 10 seconds.`,
+        description: `support the bot by voting:\n\n[**vote here**](${VOTE_URL})\n${VOTE_URL}\n\nvoting helps Villain grow. it takes 10 seconds.`,
         page: "Vote",
       })],
     });
