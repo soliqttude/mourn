@@ -114,7 +114,7 @@ export function buildCommandEmbed(
     inline: false,
   });
 
-  eb.setFooter({ text: `promise · module: ${CAT_LABEL[c.category ?? ""] ?? c.category ?? ""}` });
+  eb.setFooter({ text: `villain · module: ${CAT_LABEL[c.category ?? ""] ?? c.category ?? ""}` });
   return eb;
 }
 
@@ -151,7 +151,7 @@ export function buildPagedCategoryEmbed(
     .addFields([
       { name: "\u200b", value: `\`${prefix}help <command>\`  for details${pageInfo}`, inline: false },
     ])
-    .setFooter({ text: `promise  ·  ${cmds.length} commands` });
+    .setFooter({ text: `villain  ·  ${cmds.length} commands` });
 
   if (clientUser) {
     eb.setAuthor({ name: clientUser.username, iconURL: clientUser.displayAvatarURL() });
@@ -248,7 +248,7 @@ export function buildHelpHome(
   const eb = new EmbedBuilder()
     .setColor(config.brandColor)
     .setDescription(descLines.join("\n"))
-    .setFooter({ text: `promise  ·  prefix: ${prefix}` });
+    .setFooter({ text: `villain  ·  prefix: ${prefix}` });
 
   if (clientUser) {
     eb.setAuthor({ name: clientUser.username, iconURL: clientUser.displayAvatarURL() });
