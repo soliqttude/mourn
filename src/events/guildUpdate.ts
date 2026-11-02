@@ -1,7 +1,7 @@
 import type { Client, Guild, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { handleVanityChange } from "../features/antinuke.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 
 export const event = {
   name: "guildUpdate",
@@ -45,7 +45,7 @@ export const event = {
     const guildIcon = newGuild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "channels"))
       .setAuthor({ name: "Server Updated", iconURL: guildIcon })
       .setDescription(
         `Server settings were updated${executor ? ` by <@${executor}>` : ""}`
