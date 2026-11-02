@@ -25,6 +25,7 @@ const STATEMENTS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS autorole_id TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS log_colors JSONB NOT NULL DEFAULT '{}'::jsonb`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS confession_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS report_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS level_up_channel TEXT`,
