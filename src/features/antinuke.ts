@@ -167,6 +167,7 @@ const ACTION_LABELS: Record<string, string> = {
   bot_add:        "unauthorized bot added",
   vanity_update:  "vanity URL changed",
   perm_escalation:"admin permission escalation",
+  role_permission_change:"watched role permission change",
 };
 
 async function sendAlert(guild: Guild, logChannelId: string | null | undefined, executorId: string, type: string, actionTaken: string): Promise<void> {
