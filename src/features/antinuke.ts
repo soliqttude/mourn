@@ -166,7 +166,6 @@ const ACTION_LABELS: Record<string, string> = {
   webhook_create: "mass webhook creation",
   bot_add:        "unauthorized bot added",
   vanity_update:  "vanity URL changed",
-  perm_escalation:"admin permission escalation",
   role_permission_change:"watched role permission change",
 };
 
@@ -180,7 +179,7 @@ async function sendAlert(guild: Guild, logChannelId: string | null | undefined, 
     .setAuthor({ name: "antinuke · threat neutralized" })
     .setDescription([
       `**threat** — ${ACTION_LABELS[type] ?? type}`,
-      `**by** — <@${executorId}> (\`${executorId}\`)`,
+      `**by** — ${executorId === "unknown" ? "unknown (audit log unavailable)" : `<@${executorId}> (\`${executorId}\`)`}`,
       `**action** — ${actionTaken}`,
     ].join("\n"));
   await ch.send({ embeds: [embed] }).catch(() => {});
@@ -401,61 +400,6 @@ export async function handleVanityChange(client: Client, guild: Guild): Promise<
   }
 }
 
-// ─── Permission escalation handler ───────────────────────────────────────────
-export async function handlePermissionEscalation(client: Client, guild: Guild, member: GuildMember, addedRoleIds: string[]): Promise<void> {
-  const settings = await getGuildSettings(guild.id);
-  if (!settings.antinukeEnabled) return;
-
-  const modules = await getModuleConfigs(guild.id);
-  const mod = modules.get("permissions");
-  if (!mod?.enabled) return;
-
-  const DANGER_PERMS = [
-    PermissionFlagsBits.Administrator,
-    PermissionFlagsBits.ManageGuild,
-    PermissionFlagsBits.BanMembers,
-    PermissionFlagsBits.KickMembers,
-    PermissionFlagsBits.ManageRoles,
-    PermissionFlagsBits.ManageChannels,
-    PermissionFlagsBits.ManageWebhooks,
-    PermissionFlagsBits.MentionEveryone,
-    PermissionFlagsBits.ManageNicknames,
-    PermissionFlagsBits.ViewAuditLog,
-    PermissionFlagsBits.ModerateMembers,
-  ];
-
-  const hasDangerPerm = addedRoleIds.some(roleId => {
-    const role = guild.roles.cache.get(roleId);
-    return role ? DANGER_PERMS.some(p => role.permissions.has(p)) : false;
-  });
-  if (!hasDangerPerm) return;
-
-  const executorId = await fetchExecutor(guild, AuditLogEvent.MemberRoleUpdate, { targetId: member.id });
-  if (!executorId || executorId === guild.ownerId || executorId === client.user?.id) return;
-
-  const whitelist = await getWhitelist(guild.id);
-  if (whitelist.has(executorId)) return;
-  if (alreadyPunished(guild.id, executorId)) return;
-
-  const executor = await guild.members.fetch(executorId).catch(() => null);
-  if (!executor) return;
-
-  for (const roleId of addedRoleIds) {
-    const role = guild.roles.cache.get(roleId);
-    if (role && !role.managed) {
-      await member.roles.remove(role, "antinuke: perm escalation").catch(() => {});
-    }
-  }
-
-  try {
-    const actionTaken = await punish(guild, executor, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
-    logger.warn({ guild: guild.id, executor: executorId, target: member.id, action: actionTaken }, "antinuke: permission escalation punishment executed");
-    await sendAlert(guild, settings.antinukeLogChannel, executorId, "perm_escalation", actionTaken);
-  } catch (err) {
-    logger.warn({ err }, "antinuke: perm escalation punishment failed");
-  }
-}
-
 // ─── Command-usage tick ─────────────────────────────────────────────────────────────
 // Called from messageCreate when a mod command (ban/kick/role) is used.
 // If countCommands is enabled for that module, counts towards threshold.
@@ -568,7 +512,8 @@ export async function handleWatchedRolePermissions(
   }
 
   if (!executorId) {
-    await sendAlert(guild, settings.antinukeLogChannel, guild.ownerId, "role_permission_change", "watched role permission reverted; executor unavailable");
+    logger.warn({ guild: guild.id, role: newRole.id, permissions: matched }, "antinuke: watched permission reverted; audit-log executor unavailable");
+    await sendAlert(guild, settings.antinukeLogChannel, "unknown", "role_permission_change", "watched role permission reverted; executor unavailable");
     return;
   }
 
