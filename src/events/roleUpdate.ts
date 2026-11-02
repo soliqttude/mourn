@@ -2,11 +2,14 @@ import type { Client, Role, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { handleWatchedRolePermissions } from "../features/antinuke.js";
+import { logger } from "../lib/logger.js";
 
 export const event = {
   name: "roleUpdate",
   async execute(client: Client, oldRole: Role, newRole: Role) {
-    await handleWatchedRolePermissions(client, oldRole, newRole).catch(() => {});
+    await handleWatchedRolePermissions(client, oldRole, newRole).catch((err) => {
+      logger.error({ err, guild: newRole.guild.id, role: newRole.id }, "antinuke: watched role permission handler failed");
+    });
     const settings    = await getGuildSettings(newRole.guild.id);
     const logChannelId = (settings as any).roleLogChannel as string | null;
     if (!logChannelId) return;
