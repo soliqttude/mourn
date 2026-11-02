@@ -414,6 +414,7 @@ export const command: HybridCommand = {
             set: { enabled, threshold: newThreshold, punishment: newPunishment, countCommands: newCountCmds },
           });
         invalidateModuleCache(ctx.guild.id);
+        if (enabled) await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
 
         const lines = [
           `**${MODULE_LABELS[module]}** protection is now **${arg1}**`,
