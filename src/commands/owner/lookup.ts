@@ -2,7 +2,7 @@ import { EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { config } from "../../config.js";
 import { db } from "../../db/index.js";
-import { economy, levels, blacklist } from "../../db/schema.js";
+import { levels, blacklist } from "../../db/schema.js";
 import { eq, and } from "drizzle-orm";
 
 function msToAge(ms: number): string {
@@ -15,7 +15,7 @@ function msToAge(ms: number): string {
 export const command: HybridCommand = {
   name: "lookup",
   aliases: ["userinfo2", "investigate", "stalk"],
-  description: "(Owner only) Deep-dive on any user by ID — servers, economy, level, blacklist status.",
+  description: "(Owner only) Deep-dive on any user by ID — servers, level, blacklist status.",
   usage: "lookup <user_id>",
   examples: ["lookup 123456789012345678"],
   category: "owner",
@@ -35,10 +35,6 @@ export const command: HybridCommand = {
     const mutualGuilds = ctx.client.guilds.cache
       .filter((g) => g.members.cache.has(userId))
       .sort((a, b) => b.memberCount - a.memberCount);
-
-    // Economy rows across all guilds
-    const ecoRows = await db.select().from(economy).where(eq(economy.userId, userId)).catch(() => []);
-    const totalCoins = ecoRows.reduce((sum, r) => sum + Number(r.balance ?? 0) + Number(r.bank ?? 0), 0);
 
     // Level rows
     const lvlRows = await db.select().from(levels).where(eq(levels.userId, userId)).catch(() => []);
@@ -76,13 +72,6 @@ export const command: HybridCommand = {
                 .join("\n") + (mutualGuilds.size > 8 ? `\n*+${mutualGuilds.size - 8} more*` : "")
             : "none cached — try after fetching members",
           inline: false,
-        },
-        {
-          name: "Economy",
-          value: ecoRows.length
-            ? `**Total coins:** ${totalCoins.toLocaleString()} across ${ecoRows.length} server(s)`
-            : "no economy data",
-          inline: true,
         },
         {
           name: "Levels",
