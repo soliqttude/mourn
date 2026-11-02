@@ -4,7 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "imute",
-  aliases: ["imagemute", "imgmute"],
+  aliases: [],
   description: "Prevent a user from sending images/attachments.",
   usage: "imute <member> [reason]",
   examples: ["imute @mmoudder rule violation"],
