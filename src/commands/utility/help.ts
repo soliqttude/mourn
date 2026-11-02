@@ -303,6 +303,11 @@ export const command: HybridCommand = {
     const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
     const categories  = [...new Set(visibleCmds.map((c) => c.category))].sort();
     const { embed, rows } = buildHelpHome(visibleCmds.length, categories, ctx.prefix, clientUser);
-    return ctx.reply({ embeds: [embed], components: rows as any[] });
+    return ctx.reply({
+      content: `<@${ctx.user.id}>\n<https://villain.best/commands>\nJoin the Discord server: <https://discord.gg/villainbot>`,
+      embeds: [embed],
+      components: rows as any[],
+      allowedMentions: { users: [ctx.user.id] },
+    });
   },
 };
