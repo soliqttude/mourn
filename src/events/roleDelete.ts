@@ -25,7 +25,7 @@ export const event = {
     const guildIcon = role.guild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "roles"))
+      .setColor(getLogEmbedColor(settings, "roles", settings.roleLogChannel))
       .setAuthor({ name: "Role Deleted", iconURL: guildIcon })
       .setDescription(
         `Role \`${role.name}\` was deleted${executor ? ` by <@${executor}>` : ""}`
