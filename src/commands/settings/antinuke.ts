@@ -111,9 +111,9 @@ export const command: HybridCommand = {
       description: `Configure ${name} protection`,
       options: [
         { type: ApplicationCommandOptionType.String, name: "setting", description: "On or Off", required: true, choices: [{ name: "On", value: "on" }, { name: "Off", value: "off" }] },
-        ...(name === "botadd" ? [] : [{ type: ApplicationCommandOptionType.String, name: "punishment", description: "Action to take", required: name !== "channel" && name !== "emoji" && name !== "webhook", choices: ["ban", "kick", "timeout", "strip", "stripstaff", "jail"].map((value) => ({ name: value, value })) }]),
-        ...(["ban", "kick", "role", "channel", "emoji", "webhook"].includes(name) ? [{ type: ApplicationCommandOptionType.Number, name: "threshold", description: "Number of actions before punishment", required: false, min_value: 1, max_value: 100 }] : []),
-        ...(["ban", "kick", "role"].includes(name) ? [{ type: ApplicationCommandOptionType.Boolean, name: "command_detection", description: "Count actions performed using Villain commands", required: false }] : []),
+        ...(name === "botadd" ? [] : [{ type: ApplicationCommandOptionType.String, name: "punishment", description: "Action to take", required: name !== "botadd", choices: ["ban", "kick", "timeout", "strip", "stripstaff", "jail"].map((value) => ({ name: value, value })) }]),
+        ...(["ban", "kick", "role", "channel", "emoji", "webhook"].includes(name) ? [{ type: ApplicationCommandOptionType.Number, name: "threshold", description: "Number of actions before punishment", required: true, min_value: 1, max_value: 100 }] : []),
+        ...(["ban", "kick", "role"].includes(name) ? [{ type: ApplicationCommandOptionType.Boolean, name: "command_detection", description: "Count actions performed using Villain commands", required: true }] : []),
       ],
     })),
     { type: ApplicationCommandOptionType.SubcommandGroup, name: "admin", description: "Manage AntiNuke admins", options: [
@@ -381,10 +381,12 @@ export const command: HybridCommand = {
         const enabled = arg1 === "on";
         // flags start at args[2] (everything after "ban on")
         const flags = parseFlags(args.slice(2));
+        const slashThreshold = ctx.source === "slash" ? ctx.getNumber("threshold") : null;
+        const slashCommandDetection = ctx.source === "slash" ? ctx.getBoolean("command_detection") : null;
 
-        const newThreshold    = flags.threshold                 ?? cfg?.threshold     ?? 3;
-        const newPunishment   = flags.do                        ?? cfg?.punishment    ?? "ban";
-        const newCountCmds    = flags.command !== undefined      ? flags.command       : (cfg?.countCommands ?? false);
+        const newThreshold    = slashThreshold ?? flags.threshold ?? cfg?.threshold ?? 3;
+        const newPunishment   = (ctx.source === "slash" ? (ctx.getString("punishment") ?? undefined) : undefined) ?? flags.do ?? cfg?.punishment ?? "ban";
+        const newCountCmds    = slashCommandDetection ?? (flags.command !== undefined ? flags.command : (cfg?.countCommands ?? false));
 
         await db
           .insert(antinukeModules)
