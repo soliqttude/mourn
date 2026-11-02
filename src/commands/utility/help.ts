@@ -20,7 +20,6 @@ export const CAT_LABEL: Record<string, string> = {
   custom:         "Custom",
   customgiveaway: "Giveaway",
   developer:      "Developer",
-  economy:        "Economy",
   fun:            "Fun",
   giveaway:       "Giveaway",
   image:          "Image",
