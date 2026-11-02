@@ -26,7 +26,7 @@ export const event = {
     const guildIcon = emoji.guild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "channels"))
+      .setColor(getLogEmbedColor(settings, "emojis"))
       .setAuthor({ name: "Emoji Created", iconURL: guildIcon })
       .setDescription(
         `Emoji \`:${emoji.name}:\` was added${executor ? ` by <@${executor}>` : ""}`
