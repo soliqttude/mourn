@@ -166,6 +166,9 @@ const ACTION_LABELS: Record<string, string> = {
   webhook_create: "mass webhook creation",
   bot_add:        "unauthorized bot added",
   vanity_update:  "vanity URL changed",
+  ban_cmd:        "bans performed with Villain commands",
+  kick_cmd:       "kicks performed with Villain commands",
+  role_cmd:       "role deletions performed with Villain commands",
   role_permission_change:"watched role permission change",
 };
 
