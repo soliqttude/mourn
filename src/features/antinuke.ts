@@ -544,21 +544,25 @@ export async function handleWatchedRolePermissions(
     return;
   }
 
-  await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", `reverted ${matched.join(", ")}`);
-
+  const revertedMessage = `reverted ${matched.join(", ")}`;
   const modules = await getModuleConfigs(guild.id);
   const mod = modules.get("permissions");
-  if (!mod?.enabled) return;
-  if (!tick(`${guild.id}:${executorId}:permissions`, Math.max(1, mod.threshold))) return;
-  if (alreadyPunished(guild.id, executorId)) return;
+  if (!mod?.enabled || !tick(`${guild.id}:${executorId}:permissions`, Math.max(1, mod.threshold)) || alreadyPunished(guild.id, executorId)) {
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", revertedMessage);
+    return;
+  }
 
   const member = await guild.members.fetch(executorId).catch(() => null);
-  if (!member) return;
+  if (!member) {
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", revertedMessage + "; actor no longer in server");
+    return;
+  }
   try {
     const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
     logger.warn({ guild: guild.id, executor: executorId, role: newRole.id, permissions: matched, action: actionTaken }, "antinuke: watched permission actor punished");
-    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", actionTaken);
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", revertedMessage + "; punishment: " + actionTaken);
   } catch (err) {
     logger.warn({ err, guild: guild.id, executor: executorId }, "antinuke: watched permission punishment failed");
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", revertedMessage + "; punishment failed");
   }
 }
