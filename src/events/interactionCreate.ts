@@ -379,6 +379,50 @@ async function handleSelect(client: Client, interaction: StringSelectMenuInterac
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
+  if (interaction.customId.startsWith("antinuke:config:")) {
+    const [, , guildId, requesterId] = interaction.customId.split(":");
+    if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
+      return interaction.reply({ content: "This AntiNuke configuration form is not valid for this user or server.", flags: MessageFlags.Ephemeral });
+    }
+    const { isAntinukeAdmin, getModuleConfigs, invalidateModuleCache } = await import("../features/antinuke.js");
+    if (!(await isAntinukeAdmin(guildId, interaction.user.id, interaction.guild.ownerId))) {
+      return interaction.reply({ content: "You are not authorized to configure AntiNuke.", flags: MessageFlags.Ephemeral });
+    }
+    const moduleName = interaction.fields.getTextInputValue("module").trim().toLowerCase();
+    const setting = interaction.fields.getTextInputValue("setting").trim().toLowerCase();
+    const punishmentInput = interaction.fields.getTextInputValue("punishment").trim().toLowerCase();
+    const thresholdInput = interaction.fields.getTextInputValue("threshold").trim();
+    const commandInput = interaction.fields.getTextInputValue("command_detection").trim().toLowerCase();
+    const validModules = ["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity", "permissions"];
+    const validPunishments = ["ban", "kick", "timeout", "strip", "stripstaff", "jail"];
+    if (!validModules.includes(moduleName)) return interaction.reply({ content: "Invalid module. Use one of: " + validModules.join(", ") + ".", flags: MessageFlags.Ephemeral });
+    if (setting !== "on" && setting !== "off") return interaction.reply({ content: "Setting must be on or off.", flags: MessageFlags.Ephemeral });
+    if (punishmentInput && !validPunishments.includes(punishmentInput)) return interaction.reply({ content: "Invalid punishment. Use: " + validPunishments.join(", ") + ".", flags: MessageFlags.Ephemeral });
+    const threshold = thresholdInput ? Number(thresholdInput) : null;
+    if (thresholdInput && (!Number.isInteger(threshold) || Number(threshold) < 1 || Number(threshold) > 100)) return interaction.reply({ content: "Threshold must be a whole number from 1 to 100.", flags: MessageFlags.Ephemeral });
+    if (commandInput && !["true", "false", "on", "off"].includes(commandInput)) return interaction.reply({ content: "Command detection must be true or false.", flags: MessageFlags.Ephemeral });
+    if (commandInput && !["ban", "kick", "role"].includes(moduleName)) return interaction.reply({ content: "Command detection is supported only for ban, kick, and role modules.", flags: MessageFlags.Ephemeral });
+    const { db } = await import("../db/index.js");
+    const { antinukeModules } = await import("../db/schema.js");
+    const { getGuildSettings } = await import("../db/settings.js");
+    const { eq } = await import("drizzle-orm");
+    const current = (await getModuleConfigs(guildId)).get(moduleName);
+    const guildSettings = await getGuildSettings(guildId);
+    const enabled = setting === "on";
+    const countCommands = commandInput ? ["true", "on"].includes(commandInput) : (current?.countCommands ?? false);
+    const values = {
+      guildId, module: moduleName, enabled,
+      threshold: ["botadd", "vanity"].includes(moduleName) ? 1 : (threshold ?? current?.threshold ?? 3),
+      punishment: punishmentInput || current?.punishment || guildSettings.antinukeAction || "ban",
+      countCommands: ["ban", "kick", "role"].includes(moduleName) ? countCommands : false,
+    };
+    await db.insert(antinukeModules).values(values).onConflictDoUpdate({
+      target: [antinukeModules.guildId, antinukeModules.module],
+      set: { enabled: values.enabled, threshold: values.threshold, punishment: values.punishment, countCommands: values.countCommands },
+    });
+    invalidateModuleCache(guildId);
+    return interaction.reply({ content: "AntiNuke " + moduleName + " protection is now " + setting + ".", flags: MessageFlags.Ephemeral });
+  }
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction as any);
   const { handleTicketModal } = await import("../features/tickets.js");
   if (interaction.customId.startsWith("ticket_close_modal_")) return handleTicketModal(interaction as any);
