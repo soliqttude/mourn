@@ -140,7 +140,7 @@ async function fetchExecutor(
     const cutoff = Date.now() - 6_000;
     for (const entry of logs.entries.values()) {
       if (entry.createdTimestamp < cutoff) break; // entries are newest-first; stop once too old
-      if (!entry.executor || entry.executor.bot) continue;
+      if (!entry.executor) continue;
       if (opts?.targetId && entry.target) {
         const target = entry.target as any;
         const targetId = target.id ?? entry.targetId;
@@ -379,7 +379,7 @@ export async function handleVanityChange(client: Client, guild: Guild): Promise<
     const cutoff = Date.now() - 6_000;
     for (const entry of logs.entries.values()) {
       if (entry.createdTimestamp < cutoff) break;
-      if (!entry.executor || entry.executor.bot) continue;
+      if (!entry.executor) continue;
       const changedVanity = entry.changes?.some(
         (c) => { const key = (c as any).key as string; return key === "vanityURLCode" || key === "vanity_url_code"; }
       );
