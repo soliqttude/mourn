@@ -2,16 +2,6 @@ import type { Client, Message, PartialMessage, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 import { storeSnipe } from "../features/snipes.js";
-import { db } from "../db/index.js";
-import { logIgnores } from "../db/schema.js";
-import { and, eq, inArray } from "drizzle-orm";
-
-async function isIgnored(guildId: string, ids: string[]): Promise<boolean> {
-  const clean = ids.filter(Boolean);
-  if (!clean.length) return false;
-  const rows = await db.select().from(logIgnores).where(and(eq(logIgnores.guildId, guildId), inArray(logIgnores.targetId, clean)));
-  return rows.length > 0;
-}
 
 export const event = {
   name: "messageDelete",
@@ -28,7 +18,6 @@ export const event = {
     const settings = await getGuildSettings(message.guild.id);
     if (message.author && await isLogTargetIgnored(message.guild.id, message.author.id)) return;
     if (!settings.msgLogChannel) return;
-    if (await isIgnored(message.guild.id, [message.author?.id ?? "", message.channel.id])) return;
     const ch = message.guild.channels.cache.get(settings.msgLogChannel);
     if (!ch?.isTextBased()) return;
     const author = message.author;
