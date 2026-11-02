@@ -1,6 +1,6 @@
 import type { Client, GuildMember, PartialGuildMember, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { renderTemplate } from "../lib/template.js";
 import { trackMemberLeave } from "../features/invites.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
@@ -65,7 +65,7 @@ export const event = {
     ].filter(Boolean);
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "members"))
       .setAuthor({ name: kicker ? "Member Kicked" : "Member Left", iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .setDescription(descLines.join("\n"))
