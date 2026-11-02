@@ -10,13 +10,13 @@ const C = {
 
 // ── Custom emoji config ────────────────────────────────────────────────────────
 export const EMOJIS = {
-  check: process.env.EMOJI_CHECK ?? "<:approve:1566647518337437777>",
+  check: "<:approve:1566647518337437777>",
   approve: "<:approve:1566647518337437777>",
-  warn: process.env.EMOJI_WARN ?? "<:warn:1566647521231503420>",
-  plus: process.env.EMOJI_PLUS ?? "<:add:1566647523366404166>",
+  warn: "<:warn:1566647521231503420>",
+  plus: "<:add:1566647523366404166>",
   add: "<:add:1566647523366404166>",
   remove: "<:remove:1566647525501305024>",
-  cross: process.env.EMOJI_CROSS ?? "<:deny:1566647515443363970>",
+  cross: "<:deny:1566647515443363970>",
   deny: "<:deny:1566647515443363970>",
   cooldown: "<:cooldown:1566647516747800668>",
   loading: "<:loading:1566648015866044476>",
