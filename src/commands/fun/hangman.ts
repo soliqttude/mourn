@@ -1,12 +1,11 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { addBalance } from "../../features/economy.js";
 import { config } from "../../config.js";
 
 const WORDS = [
-  "javascript","discord","economy","adventure","champion","inventory","community",
+  "javascript","discord","adventure","champion","community",
   "moderator","developer","reaction","starboard","prestige","giveaway","confession",
-  "minesweeper","gambling","legendary","achievement","multiplier","broadcast",
+  "minesweeper","legendary","achievement","broadcast",
 ];
 const STAGES = [
   "```\n  +---+\n  |   |\n      |\n      |\n      |\n      |\n=========```",
@@ -33,7 +32,6 @@ export const command: HybridCommand = {
     const guessed = new Set<string>();
     let wrong = 0;
     const MAX_WRONG = 6;
-    const REWARD = 150;
 
     const display = () => word.split("").map(c => (guessed.has(c) ? c : "_")).join(" ");
     const uniqueLetters = [...new Set(word.split(""))];
@@ -85,9 +83,8 @@ export const command: HybridCommand = {
       const won = uniqueLetters.every(c => guessed.has(c));
       const lost = wrong >= MAX_WRONG;
 
-      let status = won ? `✅ you got it! the word was **${word}**. +${REWARD} coins!` : lost ? `💀 you lost! the word was **${word}**.` : "keep guessing...";
+      let status = won ? `✅ you got it! the word was **${word}**.` : lost ? `💀 you lost! the word was **${word}**.` : "keep guessing...";
 
-      if (won && ctx.guild) await addBalance(ctx.guild.id, ctx.user.id, REWARD);
 
       await i.update({
         embeds: [buildEmbed(status)],
