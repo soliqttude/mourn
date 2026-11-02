@@ -1,6 +1,6 @@
 import type { Client, GuildMember, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { trackInviteUse } from "../features/invites.js";
 import { handleAntiraidJoin } from "../features/antiraid.js";
 import { handleBotAdd } from "../features/antinuke.js";
@@ -120,7 +120,7 @@ export const event = {
     if (isNew)   descLines.push(`⚠️ Account is only ${accountAgeDays} day${accountAgeDays === 1 ? "" : "s"} old`);
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "members"))
       .setAuthor({ name: "Member Joined", iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .setDescription(descLines.join("\n"))
