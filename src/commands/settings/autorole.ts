@@ -51,6 +51,8 @@ export const command: HybridCommand = {
     const role = ctx.guild.roles.cache.get(roleId);
     if (!role) return ctx.reply({ embeds: [errorEmbed("That role was not found in this server.")] });
     if (role.managed || role.id === ctx.guild.id) return ctx.reply({ embeds: [errorEmbed("That role cannot be assigned automatically.")] });
+    const botMember = ctx.guild.members.me;
+    if (!botMember || role.position >= botMember.roles.highest.position) return ctx.reply({ embeds: [errorEmbed("I cannot assign that role. Move my highest role above it first.")] });
     if (action === "add") {
       if (ids.includes(roleId)) return ctx.reply({ embeds: [errorEmbed("That role is already an autorole.")] });
       ids.push(roleId);
