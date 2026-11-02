@@ -1,6 +1,6 @@
 import type { Client, GuildChannel, TextChannel } from "discord.js";
 import { EmbedBuilder, ChannelType, AuditLogEvent } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 
 const CHANNEL_TYPE_NAMES: Partial<Record<ChannelType, string>> = {
@@ -34,7 +34,7 @@ export const event = {
     const parent    = (channel as any).parent;
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "channels"))
       .setAuthor({ name: "Channel Created", iconURL: guildIcon })
       .setDescription(
         `Channel <#${channel.id}> was created${executor ? ` by <@${executor}>` : ""}`
