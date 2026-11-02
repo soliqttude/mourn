@@ -109,7 +109,7 @@ export const command: HybridCommand = {
 
     if (action === "color") {
       if ((ctx.args[1] ?? "").toLowerCase() === "list") {
-        const listChannel = ctx.guild.channels.cache.get(cleanId(ctx.args[2]));
+        const listChannel = (ctx.getChannel("channel") as any) ?? ctx.guild.channels.cache.get(cleanId(ctx.args[2]));
         if (!listChannel) return ctx.reply({ embeds: [errorEmbed("Provide a channel.")] });
         const colors = (settings.logColors ?? {}) as Record<string, string>;
         const lines = Object.entries(colors).filter(([key]) => key.startsWith(`${listChannel.id}:`)).map(([key, color]) => `**${key.slice(listChannel.id.length + 1)}:** ${color}`);
