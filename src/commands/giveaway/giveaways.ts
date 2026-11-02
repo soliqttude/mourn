@@ -211,6 +211,14 @@ export const command: HybridCommand = {
         if (field === "image") update.imageUrl = url; else update.thumbnail = url;
       }
 
+      const nextMin = update.minLevel !== undefined ? update.minLevel : giveaway.minLevel;
+      const nextMax = update.maxLevel !== undefined ? update.maxLevel : giveaway.maxLevel;
+      if (nextMin != null && nextMax != null && nextMin > nextMax) {
+        return ctx.reply({ embeds: [errorEmbed("Minimum level cannot be higher than maximum level.")] });
+      }
+      if (update.prize !== undefined && !update.prize.trim()) {
+        return ctx.reply({ embeds: [errorEmbed("Prize cannot be empty.")] });
+      }
       await db.update(giveaways).set(update).where(eq(giveaways.id, giveaway.id));
       const refreshed = { ...giveaway, ...update };
       await refreshGiveawayMessage(ctx.client, refreshed as typeof giveaway);
