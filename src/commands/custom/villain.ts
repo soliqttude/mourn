@@ -16,7 +16,6 @@ export const command: HybridCommand = {
           fields: [
             { name: "🛡️ Moderation", value: "Ban, kick, warn, jail, timeout, case logs, word filter, anti-nuke, anti-raid", inline: false },
             { name: "⚙️ Utility", value: "Embeds, polls, reminders, starboard, reaction roles, voicemaster, tickets", inline: false },
-            { name: "💰 Economy", value: "Coins, shop, gambling, fishing, heists, leaderboards", inline: false },
             { name: "📈 Levels", value: "XP system, rank cards, role rewards", inline: true },
             { name: "🎉 Fun", value: "8ball, trivia, rps, ship, and more", inline: true },
             { name: "👤 Developer", value: "geico (@mmoudder)", inline: false },
