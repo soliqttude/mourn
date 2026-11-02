@@ -5,7 +5,7 @@ import { config } from "../../config.js";
 export const command: HybridCommand = {
   name: "numberrace",
   aliases: ["numrace", "countrace"],
-  description: "First person to type the secret number wins! Open to everyone."
+  description: "First person to type the secret number wins! Open to everyone.",
   usage: "numberrace",
   examples: ["numberrace"],
   category: "fun",
