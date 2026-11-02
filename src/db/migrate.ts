@@ -151,6 +151,11 @@ const STATEMENTS: string[] = [
   `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS required_role_ids JSONB NOT NULL DEFAULT '[]'`,
   `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS min_level INTEGER`,
   `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS max_level INTEGER`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS color TEXT`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS host_ids JSONB NOT NULL DEFAULT '[]'`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS award_role_ids JSONB NOT NULL DEFAULT '[]'`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS min_account_age_days INTEGER`,
+  `ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS min_server_stay_days INTEGER`,
   `CREATE TABLE IF NOT EXISTS word_filter (
     guild_id TEXT NOT NULL, word TEXT NOT NULL, PRIMARY KEY (guild_id, word)
   )`,
