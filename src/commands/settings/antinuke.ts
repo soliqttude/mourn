@@ -63,15 +63,28 @@ function parseFlags(args: string[]): Flags {
 }
 
 async function resolveUser(ctx: any, raw: string) {
-  try {
-    const u = await ctx.getUser?.("user");
-    if (u) return u;
-  } catch {}
-  const id = raw?.replace(/[<@!>]/g, "").trim();
-  if (/^\d{15,20}$/.test(id)) {
-    return ctx.guild!.client.users.fetch(id).catch(() => null);
+  // Slash commands provide a real User option; prefix commands provide a mention or ID.
+  if (ctx.source === "slash") {
+    try {
+      const selected = await ctx.getUser?.("user");
+      if (selected) return selected;
+    } catch {}
   }
-  return null;
+
+  const input = String(raw ?? "").trim();
+  const mention = input.match(/^<@!?(\d{15,21})>$/);
+  const id = mention?.[1] ?? (/^\d{15,21}$/.test(input) ? input : null);
+  if (id) return ctx.guild!.client.users.fetch(id).catch(() => null);
+
+  // Username/display-name lookup is best-effort and only uses members already cached.
+  const needle = input.replace(/^@/, "").toLowerCase();
+  if (!needle) return null;
+  const member = ctx.guild!.members.cache.find((m: any) =>
+    m.user.username.toLowerCase() === needle ||
+    m.user.globalName?.toLowerCase() === needle ||
+    m.displayName.toLowerCase() === needle
+  );
+  return member?.user ?? null;
 }
 
 export const command: HybridCommand = {
@@ -97,6 +110,13 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [
     { type: ApplicationCommandOptionType.Subcommand, name: "config", description: "Open AntiNuke configuration" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "enable", description: "Enable AntiNuke globally" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "disable", description: "Disable AntiNuke globally" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "list", description: "Show enabled modules and whitelist" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "admins", description: "List AntiNuke admins" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "log", description: "Set or remove the AntiNuke log channel", options: [
+      { type: ApplicationCommandOptionType.Channel, name: "channel", description: "Channel for AntiNuke alerts", required: false },
+    ] },
     ...(["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity"] as const).map((name) => ({
       type: ApplicationCommandOptionType.Subcommand,
       name,
@@ -146,8 +166,11 @@ export const command: HybridCommand = {
       : (args[3] ?? "")).toLowerCase();
 
     const settings = await getGuildSettings(ctx.guild.id);
-    const isOwner  = ctx.user.id === ctx.guild.ownerId;
-    const isAdmin  = await isAntinukeAdmin(ctx.guild.id, ctx.user.id, ctx.guild.ownerId);
+    // Resolve the current owner from Discord instead of trusting a possibly stale
+    // cached ownerId. Fall back to the cached value if the API request fails.
+    const ownerId = await ctx.guild.fetchOwner().then((owner: any) => owner.id).catch(() => ctx.guild!.ownerId);
+    const isOwner = ctx.user.id === ownerId;
+    const isAdmin = isOwner || await isAntinukeAdmin(ctx.guild.id, ctx.user.id, ownerId);
 
     if (!isAdmin) {
       return ctx.reply({ embeds: [errorEmbed("you must be the server **owner** or an **antinuke admin**.")] });
@@ -217,12 +240,17 @@ export const command: HybridCommand = {
 
     // ── log channel ──────────────────────────────────────────────────────────
     if (sub === "log") {
-      if (!arg1 || arg1 === "remove" || arg1 === "off") {
+      const slashChannel = ctx.source === "slash" ? ctx.getChannel?.("channel") : null;
+      if (ctx.source === "slash" && !slashChannel) {
         await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: null });
         return ctx.reply({ embeds: [successEmbed("antinuke log channel **removed**.")] });
       }
-      const ch = ctx.getChannel?.("channel") ?? ctx.guild.channels.cache.get(arg1.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("channel not found.")] });
+      if (ctx.source !== "slash" && (!arg1 || arg1 === "remove" || arg1 === "off")) {
+        await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: null });
+        return ctx.reply({ embeds: [successEmbed("antinuke log channel **removed**.")] });
+      }
+      const ch = slashChannel ?? ctx.getChannel?.("channel") ?? ctx.guild.channels.cache.get(arg1.replace(/[<#>]/g, ""));
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("channel not found. Use a channel mention or ID.")] });
       await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`antinuke logs will be sent to <#${ch.id}>.`)] });
     }
@@ -289,7 +317,7 @@ export const command: HybridCommand = {
         const rawId = args[2] ?? ctx.getString?.("arg2") ?? "";
         const user  = await resolveUser(ctx, rawId);
         if (!user) return ctx.reply({ embeds: [errorEmbed("user not found. provide a mention or user ID.")] });
-        if (user.id === ctx.guild.ownerId) return ctx.reply({ embeds: [errorEmbed("the server owner is always an antinuke admin.")] });
+        if (user.id === ownerId) return ctx.reply({ embeds: [errorEmbed("that user is the server owner and already has AntiNuke admin access.")] });
         const exists = await db.select().from(antinukeAdmins).where(
           and(eq(antinukeAdmins.guildId, ctx.guild.id), eq(antinukeAdmins.userId, user.id))
         );
@@ -314,25 +342,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`<@${user.id}> can now manage antinuke settings.`)], allowedMentions: { parse: [] } });
     }
 
-    if (sub === "permissions" && ["watch", "unwatch", "list"].includes(arg1)) {
-      if (arg1 === "list") {
-        const rows = await listAntinukePermissionWatches(ctx.guild.id);
-        const lines = rows.map((r) => r.direction + " — " + r.permission);
-        return ctx.reply({ embeds: [brandEmbed({ title: "antinuke — permission watches", description: lines.length ? lines.join("; ") : "no permission changes are being watched." })] });
-      }
-      const direction = arg2;
-      const permission = arg3.replace(/-/g, "_");
-      if (direction !== "granted" && direction !== "removed") return ctx.reply({ embeds: [errorEmbed("usage: antinuke permissions watch|unwatch granted|removed permission")] });
-      if (!Object.hasOwn(ANTINUKE_WATCH_PERMISSIONS, permission)) return ctx.reply({ embeds: [errorEmbed("invalid permission. supported: administrator, ban_members, mention_everyone, kick_members, moderate_members, manage_guild, manage_channels, manage_roles, view_audit_log, manage_webhooks, manage_expressions, manage_nicknames.")] });
-      const where = and(eq(antinukePermissionWatches.guildId, ctx.guild.id), eq(antinukePermissionWatches.direction, direction), eq(antinukePermissionWatches.permission, permission));
-      if (arg1 === "watch") {
-        await db.insert(antinukePermissionWatches).values({ guildId: ctx.guild.id, direction, permission }).onConflictDoNothing();
-        await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
-        return ctx.reply({ embeds: [successEmbed("watching when " + permission + " is " + direction + " on a role. Changes will be reverted.")] });
-      }
-      const deleted = await db.delete(antinukePermissionWatches).where(where).returning();
-      return ctx.reply({ embeds: [deleted.length ? successEmbed("stopped watching " + permission + " being " + direction + ".") : errorEmbed("that permission watch was not configured.")] });
-    }
     // ── dangerous permission protection ──────────────────────────────────────
     if (sub === "permissions") {
       const modules = await getModuleConfigs(ctx.guild.id);
