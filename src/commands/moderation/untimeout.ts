@@ -18,7 +18,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     const target = await ctx.getMember("user", true);
     if (!target) return;
-    const reason = ctx.getString("reason") ?? "No reason provided";
+    const reason = (ctx.getString("reason") ?? ctx.args.slice(1).join(" ")) || "No reason provided";
     try {
       await target.timeout(null, `Untimeout by ${ctx.user.tag}: ${reason}`);
       return ctx.reply({ embeds: [successEmbed(`Removed timeout from **${target.user.tag}**.`)] });
