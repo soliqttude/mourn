@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, type ChatInputCommandInteraction } from "discord.js";
+import { ApplicationCommandOptionType, ActionRowBuilder, StringSelectMenuBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
@@ -155,30 +155,34 @@ export const command: HybridCommand = {
 
     // ── config / list / admins ───────────────────────────────────────────────
     if (sub === "config") {
-      if (ctx.source !== "slash") {
-        return ctx.reply({ embeds: [brandEmbed({
-          title: "antinuke configuration",
-          description: "Use the /antinuke config slash command to open the configuration modal.",
-        })] });
-      }
       const modules = await getModuleConfigs(ctx.guild.id);
-      const enabled = MODULES.filter((name) => modules.get(name)?.enabled).join(", ") || "none";
-      const modal = new ModalBuilder()
-        .setCustomId("antinuke:config:" + ctx.guild.id + ":" + ctx.user.id)
-        .setTitle("AntiNuke module configuration");
-      const field = (id: string, label: string, placeholder: string, required: boolean) =>
-        new ActionRowBuilder<TextInputBuilder>().addComponents(
-          new TextInputBuilder().setCustomId(id).setLabel(label).setPlaceholder(placeholder)
-            .setStyle(TextInputStyle.Short).setRequired(required),
-        );
-      modal.addComponents(
-        field("module", "Module (fake perms recommended)", "ban, kick, role, channel, emoji, webhook, botadd, vanity, permissions", true),
-        field("setting", "Setting", "on/off. Enabled modules: " + enabled, true),
-        field("punishment", "Punishment", "ban, kick, timeout, strip, stripstaff, jail", false),
-        field("threshold", "Threshold", "1–100; defaults to current setting", false),
-        field("command_detection", "Command detection", "true or false; ban, kick, and role only", false),
-      );
-      return (ctx.raw as ChatInputCommandInteraction).showModal(modal);
+      const enabled = MODULES.filter((name) => modules.get(name)?.enabled);
+      const lines = MODULES.map((name) => {
+        const active = modules.get(name)?.enabled ? "enabled" : "disabled";
+        return "**" + MODULE_LABELS[name] + "** — " + active;
+      });
+      const select = new StringSelectMenuBuilder()
+        .setCustomId("antinuke:config-select:" + ctx.guild.id + ":" + ctx.user.id)
+        .setPlaceholder("Select an AntiNuke module")
+        .addOptions(MODULES.map((name) => ({
+          label: MODULE_LABELS[name],
+          value: name,
+          description: modules.get(name)?.enabled ? "Currently enabled" : "Currently disabled",
+        })));
+      return ctx.reply({
+        embeds: [brandEmbed({
+          title: "AntiNuke configuration",
+          description: [
+            "**Enabled modules** — " + (enabled.map((name) => MODULE_LABELS[name]).join(", ") || "none"),
+            "",
+            ...lines,
+            "",
+            "Select a module below to open its settings. Fake permissions are recommended for staff roles to reduce mass-ban bypass risk.",
+          ].join("\\n"),
+        })],
+        components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)],
+        ephemeral: true,
+      });
     }
 
     if (sub === "admins") {
