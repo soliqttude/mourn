@@ -1,6 +1,6 @@
 import type { Client, Role, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 
 export const event = {
   name: "roleUpdate",
@@ -35,7 +35,7 @@ export const event = {
     const guildIcon = newRole.guild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "roles"))
       .setAuthor({ name: "Role Updated", iconURL: guildIcon })
       .setDescription(
         `Role <@&${newRole.id}> was updated${executor ? ` by <@${executor}>` : ""}`
