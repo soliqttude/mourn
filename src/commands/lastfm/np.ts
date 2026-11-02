@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   aliases: ["nowplaying", "fm"],
   description: "Show what you or another user is listening to on Last.fm.",
   usage: "np [user]",
-  examples: ["np", "np @user"],
+  examples: ["np", "np @mmoudder"],
   category: "lastfm",
   options: [
     { name: "user", description: "Discord user to check", type: ApplicationCommandOptionType.User, required: false },
