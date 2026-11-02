@@ -5,11 +5,11 @@ import { REASON_DEFAULT } from "../../lib/format.js";
 import { parseDuration } from "../../lib/time.js";
 
 export const command: HybridCommand = {
-  name: "timeout",
-  aliases: ["mute"],
-  description: "Timeout a member.",
-  usage: "timeout [user] [duration] [reason]",
-  examples: ["timeout @mmoudder 10m Rule violation"],
+  name: "mute",
+  aliases: [],
+  description: "Mute a member for a set duration.",
+  usage: "mute <member> <duration> [reason]",
+  examples: ["mute @mmoudder 10m rule violation"],
   category: "moderation",
   permission: "moderate_members",
   guildOnly: true,
