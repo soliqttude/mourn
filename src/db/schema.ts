@@ -61,6 +61,7 @@ export const guildSettings = pgTable("guild_settings", {
   jailRole: text("jail_role"),
   muteRole: text("mute_role"),
   autoroleId: text("autorole_id"),
+  logColors: jsonb("log_colors").$type<Record<string, string>>().default({}).notNull(),
   confessionChannel: text("confession_channel"),
   reportChannel: text("report_channel"),
   suggestionsChannel: text("suggestions_channel"),
