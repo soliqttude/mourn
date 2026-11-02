@@ -76,7 +76,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "ignore") {
-      const sub = (ctx.args[1] ?? "").toLowerCase();
+      const sub = (ctx.args[1] ?? (ctx.getString("target") === "list" ? "list" : "")).toLowerCase();
       if (sub === "list") {
         const rows = await db.select().from(logIgnores).where(eq(logIgnores.guildId, ctx.guild.id));
         return ctx.reply({ embeds: [brandEmbed({ title: "Ignored Log Targets", description: rows.length ? rows.map(row => ctx.guild!.channels.cache.has(row.targetId) ? `<#${row.targetId}>` : `<@${row.targetId}>`).join("\n") : "No ignored members or channels." })] });
