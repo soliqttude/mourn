@@ -178,7 +178,7 @@ export const command: HybridCommand = {
             ...lines,
             "",
             "Select a module below to open its settings. Fake permissions are recommended for staff roles to reduce mass-ban bypass risk.",
-          ].join("\\n"),
+          ].join("\n"),
         })],
         components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)],
         ephemeral: true,
