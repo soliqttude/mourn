@@ -80,3 +80,36 @@ CREATE TABLE IF NOT EXISTS boost_auto_role (
   guild_id TEXT PRIMARY KEY,
   role_id  TEXT NOT NULL
 );
+
+
+-- Command rework: multi-role autoroles and per-channel log colors.
+ALTER TABLE guild_settings
+  ADD COLUMN IF NOT EXISTS autorole_id TEXT,
+  ADD COLUMN IF NOT EXISTS log_colors JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+-- Log ignore targets (members and channels).
+CREATE TABLE IF NOT EXISTS log_ignores (
+  guild_id TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  PRIMARY KEY (guild_id, target_id)
+);
+
+-- Multi-channel welcome and goodbye messages.
+CREATE TABLE IF NOT EXISTS welcome_channels (
+  guild_id TEXT NOT NULL,
+  channel_id TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  self_destruct_seconds INTEGER,
+  PRIMARY KEY (guild_id, channel_id)
+);
+CREATE TABLE IF NOT EXISTS goodbye_channels (
+  guild_id TEXT NOT NULL,
+  channel_id TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  self_destruct_seconds INTEGER,
+  PRIMARY KEY (guild_id, channel_id)
+);
+ALTER TABLE welcome_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER;
+ALTER TABLE goodbye_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER;
