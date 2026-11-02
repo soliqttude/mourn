@@ -26,7 +26,7 @@ function injectMention(embeds: unknown[], userMention: string): unknown[] {
     const desc = (eb.data as any).description ?? "";
     const emoji =
       style === "success" ? EMOJIS.check :
-      style === "error"   ? EMOJIS.warn  :
+      style === "error"   ? EMOJIS.deny  :
       style === "warn"    ? EMOJIS.warn  :
       style === "action"  ? EMOJIS.plus  : "";
     eb.setDescription(`${emoji} ${userMention}: ${desc}`);
