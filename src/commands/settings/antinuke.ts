@@ -110,6 +110,13 @@ export const command: HybridCommand = {
   guildOnly: true,
   options: [
     { type: ApplicationCommandOptionType.Subcommand, name: "config", description: "Open AntiNuke configuration" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "enable", description: "Enable AntiNuke globally" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "disable", description: "Disable AntiNuke globally" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "list", description: "Show enabled modules and whitelist" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "admins", description: "List AntiNuke admins" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "log", description: "Set or remove the AntiNuke log channel", options: [
+      { type: ApplicationCommandOptionType.Channel, name: "channel", description: "Channel for AntiNuke alerts", required: false },
+    ] },
     ...(["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity"] as const).map((name) => ({
       type: ApplicationCommandOptionType.Subcommand,
       name,
@@ -233,12 +240,17 @@ export const command: HybridCommand = {
 
     // ── log channel ──────────────────────────────────────────────────────────
     if (sub === "log") {
-      if (!arg1 || arg1 === "remove" || arg1 === "off") {
+      const slashChannel = ctx.source === "slash" ? ctx.getChannel?.("channel") : null;
+      if (ctx.source === "slash" && !slashChannel) {
         await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: null });
         return ctx.reply({ embeds: [successEmbed("antinuke log channel **removed**.")] });
       }
-      const ch = ctx.getChannel?.("channel") ?? ctx.guild.channels.cache.get(arg1.replace(/[<#>]/g, ""));
-      if (!ch) return ctx.reply({ embeds: [errorEmbed("channel not found.")] });
+      if (ctx.source !== "slash" && (!arg1 || arg1 === "remove" || arg1 === "off")) {
+        await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: null });
+        return ctx.reply({ embeds: [successEmbed("antinuke log channel **removed**.")] });
+      }
+      const ch = slashChannel ?? ctx.getChannel?.("channel") ?? ctx.guild.channels.cache.get(arg1.replace(/[<#>]/g, ""));
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("channel not found. Use a channel mention or ID.")] });
       await updateGuildSettings(ctx.guild.id, { antinukeLogChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`antinuke logs will be sent to <#${ch.id}>.`)] });
     }
