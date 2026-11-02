@@ -32,7 +32,7 @@ export const event = {
     const author = newMsg.author;
     const avatarURL = author?.displayAvatarURL({ size: 256 }) ?? undefined;
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "messages")).setAuthor({ name: "Message Edited", iconURL: avatarURL })
+      .setColor(getLogEmbedColor(settings, "messages", settings.msgLogChannel)).setAuthor({ name: "Message Edited", iconURL: avatarURL })
       .setDescription(`Message from <@${author?.id}> edited in <#${newMsg.channel.id}> — [jump](${newMsg.url})`)
       .addFields(
         { name: "Before", value: (oldMsg.content || "*no content*").slice(0, 1024), inline: false },
