@@ -446,7 +446,6 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction) 
     const threshold = thresholdInput ? Number(thresholdInput) : null;
     if (thresholdInput && (!Number.isInteger(threshold) || Number(threshold) < 1 || Number(threshold) > 100)) return interaction.reply({ content: "Threshold must be a whole number from 1 to 100.", flags: MessageFlags.Ephemeral });
     if (commandInput && !["true", "false", "on", "off"].includes(commandInput)) return interaction.reply({ content: "Command detection must be true or false.", flags: MessageFlags.Ephemeral });
-    if (commandInput && !["ban", "kick", "role"].includes(moduleName)) return interaction.reply({ content: "Command detection is supported only for ban, kick, and role modules.", flags: MessageFlags.Ephemeral });
     const { db } = await import("../db/index.js");
     const { antinukeModules } = await import("../db/schema.js");
     const { getGuildSettings, updateGuildSettings } = await import("../db/settings.js");
