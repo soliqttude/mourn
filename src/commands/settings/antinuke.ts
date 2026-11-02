@@ -116,11 +116,11 @@ export const command: HybridCommand = {
         ...(["ban", "kick", "role"].includes(name) ? [{ type: ApplicationCommandOptionType.Boolean, name: "command_detection", description: "Count actions performed using Villain commands", required: false }] : []),
       ],
     })),
-    { type: ApplicationCommandOptionType.Subcommand, name: "admin", description: "Manage AntiNuke admins", options: [
+    { type: ApplicationCommandOptionType.SubcommandGroup, name: "admin", description: "Manage AntiNuke admins", options: [
       { type: ApplicationCommandOptionType.Subcommand, name: "add", description: "Grant configuration access", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User to grant access to", required: true }] },
       { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Revoke configuration access", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User to remove", required: true }] },
     ] },
-    { type: ApplicationCommandOptionType.Subcommand, name: "whitelist", description: "Manage trusted users and bots", options: [
+    { type: ApplicationCommandOptionType.SubcommandGroup, name: "whitelist", description: "Manage trusted users and bots", options: [
       { type: ApplicationCommandOptionType.Subcommand, name: "add", description: "Whitelist a user or bot", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User or bot to whitelist", required: true }] },
       { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Remove a whitelist entry", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User or bot to remove", required: true }] },
     ] },
@@ -140,10 +140,18 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
 
     const args = ctx.args;
-    const sub  = (ctx.getString?.("sub")  ?? args[0] ?? "").toLowerCase();
-    const arg1 = (ctx.getString?.("arg1") ?? args[1] ?? "").toLowerCase();
-    const arg2 = (ctx.getString?.("arg2") ?? args[2] ?? "").toLowerCase();
-    const arg3 = (ctx.getString?.("arg3") ?? args[3] ?? "").toLowerCase();
+    const slashGroup = ctx.source === "slash" ? ctx.getSubcommandGroup(false) : null;
+    const slashSub = ctx.source === "slash" ? ctx.getSubcommand(false) : null;
+    const sub = (ctx.source === "slash" ? (slashGroup ?? slashSub ?? "") : (args[0] ?? "")).toLowerCase();
+    const arg1 = (ctx.source === "slash"
+      ? (slashGroup ? (slashSub ?? "") : (ctx.getString("setting") ?? ""))
+      : (args[1] ?? "")).toLowerCase();
+    const arg2 = (ctx.source === "slash"
+      ? (slashGroup === "permissions" ? (ctx.getString("direction") ?? "") : (ctx.getString("punishment") ?? ""))
+      : (args[2] ?? "")).toLowerCase();
+    const arg3 = (ctx.source === "slash"
+      ? (slashGroup === "permissions" ? (ctx.getString("permission") ?? "") : String(ctx.getNumber("threshold") ?? ""))
+      : (args[3] ?? "")).toLowerCase();
 
     const settings = await getGuildSettings(ctx.guild.id);
     const isOwner  = ctx.user.id === ctx.guild.ownerId;
