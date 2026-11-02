@@ -4,7 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "setmod",
-  aliases: ["modrole", "setmodrole"],
+  aliases: ["modrole"],
   description: "Give or remove the mod role from a member.",
   usage: "setmod [user] [role]",
   examples: ["setmod"],
