@@ -1,6 +1,6 @@
 import type { Client, GuildChannel, DMChannel, TextChannel } from "discord.js";
 import { EmbedBuilder, ChannelType, AuditLogEvent } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 import { db } from "../db/index.js";
 import { eq } from "drizzle-orm";
@@ -39,7 +39,7 @@ export const event = {
     const name      = "name" in channel ? channel.name : "unknown";
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "channels"))
       .setAuthor({ name: "Channel Deleted", iconURL: guildIcon })
       .setDescription(
         `Channel \`${name}\` was deleted${executor ? ` by <@${executor}>` : ""}`
