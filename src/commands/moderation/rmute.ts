@@ -18,7 +18,7 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
-    const reason = ctx.getString("reason") ?? "No reason provided";
+    const reason = (ctx.getString("reason") ?? ctx.args.slice(1).join(" ")) || "No reason provided";
     if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
     await Promise.all(ctx.guild.channels.cache
       .filter(c => c.isTextBased())
