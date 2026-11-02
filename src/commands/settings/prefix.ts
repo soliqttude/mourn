@@ -1,9 +1,8 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { config } from "../../config.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
-import { checkTier } from "../../lib/permissions.js";
 
 export const command: HybridCommand = {
   name: "prefix",
@@ -28,7 +27,7 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [brandEmbed({ title: "Server Prefix", description: "Current prefix: " + (settings.prefix || config.defaultPrefix) })] });
     }
 
-    if (!ctx.member || !checkTier(ctx.member as any, "admin")) {
+    if (!ctx.member || !ctx.member.permissions.has(PermissionFlagsBits.Administrator)) {
       return ctx.reply({ embeds: [errorEmbed("You need Administrator to change the server prefix.")] });
     }
 
