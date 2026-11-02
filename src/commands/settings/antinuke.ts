@@ -104,11 +104,37 @@ export const command: HybridCommand = {
   permission: "everyone",
   guildOnly: true,
   options: [
-    { name: "sub",   description: "subcommand", type: ApplicationCommandOptionType.String, required: false },
-    { name: "arg1",  description: "argument 1", type: ApplicationCommandOptionType.String, required: false },
-    { name: "arg2",  description: "argument 2", type: ApplicationCommandOptionType.String, required: false },
-    { name: "user",  description: "user",        type: ApplicationCommandOptionType.User,   required: false },
-    { name: "arg3", description: "argument 3", type: ApplicationCommandOptionType.String, required: false },
+    { type: ApplicationCommandOptionType.Subcommand, name: "config", description: "Open AntiNuke configuration" },
+    ...(["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity"] as const).map((name) => ({
+      type: ApplicationCommandOptionType.Subcommand,
+      name,
+      description: `Configure ${name} protection`,
+      options: [
+        { type: ApplicationCommandOptionType.String, name: "setting", description: "On or Off", required: true, choices: [{ name: "On", value: "on" }, { name: "Off", value: "off" }] },
+        ...(name === "botadd" ? [] : [{ type: ApplicationCommandOptionType.String, name: "punishment", description: "Action to take", required: name !== "channel" && name !== "emoji" && name !== "webhook", choices: ["ban", "kick", "timeout", "strip", "stripstaff", "jail"].map((value) => ({ name: value, value })) }]),
+        ...(["ban", "kick", "role", "channel", "emoji", "webhook"].includes(name) ? [{ type: ApplicationCommandOptionType.Number, name: "threshold", description: "Number of actions before punishment", required: false, min_value: 1, max_value: 100 }] : []),
+        ...(["ban", "kick", "role"].includes(name) ? [{ type: ApplicationCommandOptionType.Boolean, name: "command_detection", description: "Count actions performed using Villain commands", required: false }] : []),
+      ],
+    })),
+    { type: ApplicationCommandOptionType.Subcommand, name: "admin", description: "Manage AntiNuke admins", options: [
+      { type: ApplicationCommandOptionType.Subcommand, name: "add", description: "Grant configuration access", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User to grant access to", required: true }] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Revoke configuration access", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User to remove", required: true }] },
+    ] },
+    { type: ApplicationCommandOptionType.Subcommand, name: "whitelist", description: "Manage trusted users and bots", options: [
+      { type: ApplicationCommandOptionType.Subcommand, name: "add", description: "Whitelist a user or bot", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User or bot to whitelist", required: true }] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Remove a whitelist entry", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User or bot to remove", required: true }] },
+    ] },
+    { type: ApplicationCommandOptionType.SubcommandGroup, name: "permissions", description: "Watch role permission changes", options: [
+      { type: ApplicationCommandOptionType.Subcommand, name: "watch", description: "Revert a permission being granted or removed", options: [
+        { type: ApplicationCommandOptionType.String, name: "direction", description: "Permission change direction", required: true, choices: [{ name: "Granted", value: "granted" }, { name: "Removed", value: "removed" }] },
+        { type: ApplicationCommandOptionType.String, name: "permission", description: "Permission to watch", required: true, choices: Object.keys(ANTINUKE_WATCH_PERMISSIONS).map((value) => ({ name: value, value })) },
+      ] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "unwatch", description: "Stop watching a permission change", options: [
+        { type: ApplicationCommandOptionType.String, name: "direction", description: "Permission change direction", required: true, choices: [{ name: "Granted", value: "granted" }, { name: "Removed", value: "removed" }] },
+        { type: ApplicationCommandOptionType.String, name: "permission", description: "Permission to stop watching", required: true, choices: Object.keys(ANTINUKE_WATCH_PERMISSIONS).map((value) => ({ name: value, value })) },
+      ] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "list", description: "List watched permissions" },
+    ] },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
