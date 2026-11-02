@@ -91,10 +91,10 @@ export function buildCommandEmbed(
   // Usage code block — auto-generate example from usage placeholders
   function autoExample(u: string): string {
     return (prefix + u)
-      .replace(/\[user\]/gi,     "@user")
-      .replace(/\[member\]/gi,   "@user")
-      .replace(/<user>/gi,        "@user")
-      .replace(/<member>/gi,      "@user")
+      .replace(/\[user\]/gi,     "@mmoudder")
+      .replace(/\[member\]/gi,   "@mmoudder")
+      .replace(/<user>/gi,        "@mmoudder")
+      .replace(/<member>/gi,      "@mmoudder")
       .replace(/\[reason\]/gi,   "too awesome")
       .replace(/<reason>/gi,      "too awesome")
       .replace(/\[duration\]/gi, "7d")
