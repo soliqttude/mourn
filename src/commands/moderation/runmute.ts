@@ -19,11 +19,11 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
     if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
-    await ctx.guild.channels.cache
+    await Promise.all(ctx.guild.channels.cache
       .filter(c => c.isTextBased())
-      .forEach(async (ch) => {
+      .map(async (ch) => {
         await (ch as any).permissionOverwrites.edit(target.id, { AddReactions: null, UseExternalEmojis: null }, reason).catch(() => {});
-      });
+      }));
     return ctx.reply({ embeds: [successEmbed(`Removed reaction-mute from **${target.user.tag}** — ${reason}`)] });
   },
 };
