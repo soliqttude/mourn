@@ -21,7 +21,7 @@ export const command: HybridCommand = {
   permission: "manage_guild",
   guildOnly: true,
   options: [
-    { name: "subcommand", description: "add | remove | list | view | variables", type: ApplicationCommandOptionType.String, required: true,
+    { name: "subcommand", description: "add | remove | list | view | variables", type: ApplicationCommandOptionType.String, required: false,
       choices: [{ name: "add", value: "add" }, { name: "remove", value: "remove" }, { name: "list", value: "list" }, { name: "view", value: "view" }, { name: "variables", value: "variables" }] },
     { name: "channel", description: "Target channel", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "message", description: "Goodbye message", type: ApplicationCommandOptionType.String, required: false },
