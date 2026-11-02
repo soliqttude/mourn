@@ -26,7 +26,7 @@ export const command: HybridCommand = {
         await (ch as any).permissionOverwrites.edit(target.id, {
           AttachFiles: false,
           EmbedLinks: false,
-        }).catch(() => {});
+        }, reason).catch(() => {});
       });
     return ctx.reply({ embeds: [successEmbed(`Image-muted **${target.user.tag}** — ${reason}`)] });
   },
