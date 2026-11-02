@@ -2,7 +2,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 const WORDS = [
-  "discord","gaming","javascript","typescript","channel","moderation","economy",
+  "discord","gaming","javascript","typescript","channel","moderation",
   "leaderboard","gambling","multiplier","adventure","legendary","champion",
   "inventory","moderator","developer","community","reaction","achievement",
   "prestige","giveaway","tournament","reputation","broadcast","confession",
