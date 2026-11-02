@@ -92,6 +92,7 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("welcome requires the database to be enabled. Add DATABASE_URL to Render.")] });
     }
     const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
+    if (!sub) return ctx.reply({ embeds: [brandEmbed({ title: "Welcome Setup", description: "Set up welcome messages in one or multiple channels.\n\n`welcome add <channel> <message>`\n`welcome view <channel>`\n`welcome variables`\n`welcome remove <channel>`\n`welcome list`" })] });
     const selfDestructSeconds = ctx.getNumber("self_destruct") ?? null;
     if (selfDestructSeconds !== null && (selfDestructSeconds < 6 || selfDestructSeconds > 60)) {
       return ctx.reply({ embeds: [errorEmbed("The **--self_destruct** time must be between **6 and 60 seconds.")] });
