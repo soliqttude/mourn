@@ -60,7 +60,7 @@ const options: any[] = [
 function getSub(interaction: ChatInputCommandInteraction): string {
   const group = interaction.options.getSubcommandGroup(false);
   const sub = interaction.options.getSubcommand(false);
-  return group ? `${group} ${sub}` : sub;
+  return group ? `${group} ${sub ?? ""}` : (sub ?? "");
 }
 
 function hasPermission(ctx: Parameters<HybridCommand["execute"]>[0], permission: bigint): boolean {
@@ -125,7 +125,7 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [errorEmbed("Duration must be between 10 seconds and 365 days (examples: 30m, 24h, 7d).")] });
       }
       if (winners < 1 || winners > 100) return ctx.reply({ embeds: [errorEmbed("Winner count must be between 1 and 100.")] });
-      if (!channel.isTextBased() || !("send" in channel)) return ctx.reply({ embeds: [errorEmbed("Choose a text channel.")] });
+      if (!("send" in channel)) return ctx.reply({ embeds: [errorEmbed("Choose a text channel.")] });
       await ctx.defer();
       const id = await createGiveaway(ctx.client, ctx.guild.id, channel.id, ctx.user.id, prize, winners,
         new Date(Date.now() + durationMs));
