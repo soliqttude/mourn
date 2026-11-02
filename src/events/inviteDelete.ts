@@ -27,7 +27,7 @@ export const event = {
     const inviter   = invite.inviter;
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "channels"))
+      .setColor(getLogEmbedColor(settings, "invites"))
       .setAuthor({ name: "Invite Deleted", iconURL: guildIcon })
       .setDescription(
         `Invite \`${invite.code}\` for ${invite.channel ? `<#${invite.channel.id}>` : "unknown"} was deleted${executor ? ` by <@${executor}>` : ""}`
