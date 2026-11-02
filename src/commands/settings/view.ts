@@ -19,6 +19,8 @@ export const command: HybridCommand = {
       return kind === "channel" ? "<#" + id + ">" : "<@&" + id + ">";
     };
 
+    const autoroleDisplay = String(s.autoroleId ?? "").split(",").filter(Boolean).map((id) => mention(id, "role")).join(", ") || "Not set";
+
     return ctx.reply({
       embeds: [
         new EmbedBuilder()
@@ -33,7 +35,7 @@ export const command: HybridCommand = {
             { name: "Join logs", value: mention(s.joinLogChannel, "channel"), inline: true },
             { name: "Mute role", value: mention(s.muteRole, "role"), inline: true },
             { name: "Jail role", value: mention(s.jailRole, "role"), inline: true },
-            { name: "Auto role", value: mention(s.autoroleId, "role"), inline: true },
+            { name: "Auto roles", value: autoroleDisplay, inline: true },
             { name: "Antinuke", value: s.antinukeEnabled ? "Enabled · " + s.antinukeAction + " / " + s.antinukeThreshold : "Disabled", inline: true },
             { name: "Antiraid", value: s.antiraidEnabled ? "Enabled · " + s.antiraidAction + " / " + s.antiraidThreshold : "Disabled", inline: true },
             { name: "Levels", value: s.levelsEnabled ? "Enabled" : "Disabled", inline: true },
