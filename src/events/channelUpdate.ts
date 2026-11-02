@@ -1,6 +1,6 @@
 import type { Client, TextChannel } from "discord.js";
 import { EmbedBuilder, GuildChannel, AuditLogEvent } from "discord.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 
 export const event = {
   name: "channelUpdate",
@@ -8,6 +8,7 @@ export const event = {
     if (!newChannel.guild) return;
 
     const settings = await getGuildSettings(newChannel.guild.id);
+    if (await isLogTargetIgnored(newChannel.guild.id, newChannel.id)) return;
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = newChannel.guild.channels.cache.get(logChannelId);
