@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType, ChannelType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { errorEmbed, successEmbed } from "../../lib/embeds.js";
+import { errorEmbed, brandEmbed, EMOJIS } from "../../lib/embeds.js";
 import { distube, hasDjPermission } from "../../features/music.js";
 
 export const command: HybridCommand = {
@@ -27,7 +27,7 @@ export const command: HybridCommand = {
     try {
       await distube.play(vc, query, { member, textChannel: ctx.channel as any });
       const label = query.length > 80 ? query.slice(0, 80) + "…" : query;
-      await ctx.reply({ embeds: [successEmbed(`searching **${label}**…`)] });
+      await ctx.reply({ embeds: [brandEmbed({ description: `${EMOJIS.loading} searching **${label}**…` })] });
     } catch (err: any) {
       return ctx.reply({ embeds: [errorEmbed(err?.message ?? "failed to play that song.")] });
     }
