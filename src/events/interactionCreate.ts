@@ -440,7 +440,7 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction) 
     const commandInput = interaction.fields.getTextInputValue("command_detection").trim().toLowerCase();
     const validModules = ["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity", "permissions"];
     const validPunishments = ["ban", "kick", "timeout", "strip", "stripstaff", "jail"];
-    if (!validModules.includes(moduleName)) return interaction.reply({ content: "Invalid module. Use one of: " + validModules.join(", ") + ".", flags: MessageFlags.Ephemeral });
+    if (!moduleName || !validModules.includes(moduleName)) return interaction.reply({ content: "Invalid module. Use one of: " + validModules.join(", ") + ".", flags: MessageFlags.Ephemeral });
     if (setting !== "on" && setting !== "off") return interaction.reply({ content: "Setting must be on or off.", flags: MessageFlags.Ephemeral });
     if (punishmentInput && !validPunishments.includes(punishmentInput)) return interaction.reply({ content: "Invalid punishment. Use: " + validPunishments.join(", ") + ".", flags: MessageFlags.Ephemeral });
     const threshold = thresholdInput ? Number(thresholdInput) : null;
