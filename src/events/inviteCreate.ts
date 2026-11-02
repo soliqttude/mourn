@@ -21,7 +21,7 @@ export const event = {
     const maxUses   = invite.maxUses ? `${invite.maxUses}` : "unlimited";
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "channels"))
+      .setColor(getLogEmbedColor(settings, "invites"))
       .setAuthor({ name: "Invite Created", iconURL: avatarURL })
       .setDescription(
         inviter
