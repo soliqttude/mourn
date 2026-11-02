@@ -6,10 +6,10 @@ export const command: HybridCommand = {
   name: "imute",
   aliases: ["imagemute", "imgmute"],
   description: "Prevent a user from sending images/attachments.",
-  usage: "imute [user] [reason]",
-  examples: ["imute Rule violation"],
+  usage: "imute <member> [reason]",
+  examples: ["imute @mmoudder rule violation"],
   category: "moderation",
-  permission: "mute_members",
+  permission: "moderate_members",
   guildOnly: true,
   options: [
     { name: "user", description: "Member to image-mute", type: ApplicationCommandOptionType.User, required: true },
