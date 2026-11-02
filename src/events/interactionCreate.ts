@@ -372,7 +372,7 @@ async function handleSuggestionVote(interaction: ButtonInteraction) {
 
 async function handleSelect(client: Client, interaction: StringSelectMenuInteraction) {
   if (interaction.customId.startsWith("antinuke:config-select:")) {
-    const [, , guildId, requesterId] = interaction.customId.split(":");
+    const [, , guildId, requesterId, moduleName] = interaction.customId.split(":");
     if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
       return interaction.reply({ content: "This AntiNuke selector is not valid for this user or server.", flags: MessageFlags.Ephemeral });
     }
@@ -425,7 +425,7 @@ async function handleSelect(client: Client, interaction: StringSelectMenuInterac
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
-  if (interaction.customId.startsWith("antinuke:config:")) {
+  if (interaction.customId.startsWith("antinuke:config-submit:")) {
     const [, , guildId, requesterId] = interaction.customId.split(":");
     if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
       return interaction.reply({ content: "This AntiNuke configuration form is not valid for this user or server.", flags: MessageFlags.Ephemeral });
@@ -434,7 +434,6 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction) 
     if (!(await isAntinukeAdmin(guildId, interaction.user.id, interaction.guild.ownerId))) {
       return interaction.reply({ content: "You are not authorized to configure AntiNuke.", flags: MessageFlags.Ephemeral });
     }
-    const moduleName = interaction.fields.getTextInputValue("module").trim().toLowerCase();
     const setting = interaction.fields.getTextInputValue("setting").trim().toLowerCase();
     const punishmentInput = interaction.fields.getTextInputValue("punishment").trim().toLowerCase();
     const thresholdInput = interaction.fields.getTextInputValue("threshold").trim();
