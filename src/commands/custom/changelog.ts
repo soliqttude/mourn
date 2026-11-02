@@ -17,7 +17,6 @@ const entries = [
     changes: [
       "added full leveling system with role rewards",
       "added giveaway system (gcreate, gend, greroll)",
-      "added economy fishing, gambling, shop system",
     ],
   },
   {
