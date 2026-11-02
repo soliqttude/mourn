@@ -20,14 +20,14 @@ export const command: HybridCommand = {
     const target = await ctx.getMember("user", true);
     const reason = ctx.getString("reason") ?? "No reason provided";
     if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
-    await ctx.guild.channels.cache
+    await Promise.all(ctx.guild.channels.cache
       .filter(c => c.isTextBased())
-      .forEach(async (ch) => {
+      .map(async (ch) => {
         await (ch as any).permissionOverwrites.edit(target.id, {
           AttachFiles: false,
           EmbedLinks: false,
         }, reason).catch(() => {});
-      });
+      }));
     return ctx.reply({ embeds: [successEmbed(`Image-muted **${target.user.tag}** — ${reason}`)] });
   },
 };
