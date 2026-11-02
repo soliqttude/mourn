@@ -7,7 +7,7 @@ export const command: HybridCommand = {
   aliases: ["av", "pfp", "icon"],
   description: "Show a user's avatar.",
   usage: "avatar [user]",
-  examples: ["avatar", "avatar @user"],
+  examples: ["avatar", "avatar @mmoudder"],
   category: "utility",
   options: [
     { name: "user", description: "User", type: ApplicationCommandOptionType.User, required: false },
