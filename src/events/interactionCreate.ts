@@ -35,7 +35,7 @@ function applyMention(embeds: EmbedBuilder[], userId: string): EmbedBuilder[] {
     const desc = (eb.data as any).description ?? "";
     const emoji =
       style === "success" ? EMOJIS.check :
-      style === "error"   ? EMOJIS.warn  :
+      style === "error"   ? EMOJIS.deny  :
       style === "warn"    ? EMOJIS.warn  :
       style === "action"  ? EMOJIS.plus  : "";
     eb.setDescription(`${emoji} ${mention}: ${desc}`);
