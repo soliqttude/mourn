@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
@@ -24,6 +24,9 @@ export const command: HybridCommand = {
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
+    if (!ctx.member?.permissions.has(PermissionFlagsBits.ManageRoles)) {
+      return ctx.reply({ embeds: [errorEmbed("You need Manage Guild and Manage Roles to configure autoroles.")] });
+    }
     const action = (ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
     const selectedRole = ctx.getRole("role");
     const roleId = selectedRole?.id ?? roleIdFrom(ctx.args[1] ?? ctx.args[0]);
