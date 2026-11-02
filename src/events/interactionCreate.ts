@@ -372,7 +372,7 @@ async function handleSuggestionVote(interaction: ButtonInteraction) {
 
 async function handleSelect(client: Client, interaction: StringSelectMenuInteraction) {
   if (interaction.customId.startsWith("antinuke:config-select:")) {
-    const [, , guildId, requesterId, moduleName] = interaction.customId.split(":");
+    const [, , guildId, requesterId] = interaction.customId.split(":");
     if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
       return interaction.reply({ content: "This AntiNuke selector is not valid for this user or server.", flags: MessageFlags.Ephemeral });
     }
