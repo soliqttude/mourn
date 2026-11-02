@@ -139,7 +139,7 @@ export const command: HybridCommand = {
     }
 
     if (sub === "add") {
-      const msg = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
+      const msg = ctx.source === "prefix" ? ctx.args.slice(2).join(" ") : ctx.getString("message");
       if (!msg) {
         return ctx.reply({
           embeds: [errorEmbed("Please provide a welcome message. run `welcome variables` to see the embed scripting syntax.")],
