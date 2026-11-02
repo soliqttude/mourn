@@ -1,7 +1,7 @@
 import type { Client, TextChannel } from "discord.js";
 import { EmbedBuilder, GuildEmoji, AuditLogEvent } from "discord.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 
 export const event = {
   name: "emojiDelete",
@@ -26,7 +26,7 @@ export const event = {
     const guildIcon = emoji.guild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "channels"))
       .setAuthor({ name: "Emoji Deleted", iconURL: guildIcon })
       .setDescription(
         `Emoji \`:${emoji.name}:\` was deleted${executor ? ` by <@${executor}>` : ""}`
