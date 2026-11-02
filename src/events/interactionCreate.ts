@@ -72,17 +72,34 @@ export const event = {
 
 const SLOW_CATEGORIES = new Set(["moderation", "levels", "giveaway"]);
 
+async function replyToSlash(interaction: ChatInputCommandInteraction, payload: any) {
+  if (interaction.deferred || interaction.replied) return interaction.editReply(payload);
+  try {
+    return await interaction.reply(payload);
+  } catch (error) {
+    const code = (error as any)?.code ?? (error as any)?.rawError?.code;
+    if (code === 40060 || interaction.deferred || interaction.replied) {
+      return interaction.editReply(payload);
+    }
+    throw error;
+  }
+}
+
 async function handleSlashCommand(client: Client, interaction: ChatInputCommandInteraction) {
   const cmd = findCommand(interaction.commandName);
   if (!cmd) return;
+  // Giveaways perform database and Discord API work; acknowledge immediately.
+  if (cmd.name === "giveaways" && !interaction.deferred && !interaction.replied) {
+    await interaction.deferReply().catch(() => {});
+  }
   if (cmd.guildOnly !== false && !interaction.guild) {
-    return interaction.reply({
+    return replyToSlash(interaction, {
       embeds: [errorEmbed("this command must be used in a server.")],
       flags: MessageFlags.Ephemeral,
     });
   }
   if (cmd.ownerOnly && !isBotOwner(interaction.user.id)) {
-    return interaction.reply({
+    return replyToSlash(interaction, {
       embeds: [errorEmbed("this command is restricted to the bot owner.")],
       flags: MessageFlags.Ephemeral,
     });
@@ -91,7 +108,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   if (!isBotOwner(interaction.user.id)) {
     const { blacklisted, reason } = await isBlacklisted(interaction.user.id);
     if (blacklisted) {
-      return interaction.reply({
+      return replyToSlash(interaction, {
         embeds: [
           errorEmbed(
             reason
@@ -105,12 +122,12 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   }
 
   if (interaction.guild && ownerState.disabledGuilds.has(interaction.guild.id) && !isBotOwner(interaction.user.id)) {
-    return interaction.reply({ embeds: [errorEmbed("the bot is currently disabled in this server.")], flags: MessageFlags.Ephemeral });
+    return replyToSlash(interaction, { embeds: [errorEmbed("the bot is currently disabled in this server.")], flags: MessageFlags.Ephemeral });
   }
 
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
     if (!(await checkTierWithFake(interaction.member as any, cmd.permission))) {
-      return interaction.reply({
+      return replyToSlash(interaction, {
         embeds: [errorEmbed(`${EMOJIS.warn} <@${interaction.user.id}>: You're **missing** permission: \`${cmd.permission}\``)],
         flags: MessageFlags.Ephemeral,
       });
@@ -133,8 +150,8 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
       flags: MessageFlags.Ephemeral,
     };
     try {
-      if (interaction.deferred || interaction.replied) await interaction.followUp(payload);
-      else await interaction.reply(payload);
+      if (interaction.deferred || interaction.replied) await interaction.editReply(payload);
+      else await replyToSlash(interaction, payload);
     } catch (replyErr) {
       logger.warn({ replyErr }, "failed to send slash error reply");
     }
