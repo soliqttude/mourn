@@ -330,24 +330,32 @@ export async function handleBotAdd(client: Client, guild: Guild, botMember: Guil
   const whitelist = await getWhitelist(guild.id);
   if (whitelist.has(botMember.id)) return;
 
-  // Kick the unauthorized bot immediately
-  await botMember.kick("antinuke: unauthorized bot").catch(() => {});
-
-  // Punish whoever added it
+  // Identify the inviter before taking action so a whitelisted user is
+  // genuinely exempt from the bot-add restriction.
   const executorId = await fetchExecutor(guild, AuditLogEvent.BotAdd, { targetId: botMember.id });
-  if (!executorId || executorId === guild.ownerId || executorId === client.user?.id) return;
-  if (whitelist.has(executorId)) return;
+  if (executorId && (executorId === guild.ownerId || executorId === client.user?.id || whitelist.has(executorId))) return;
+
+  // No trusted inviter was found, or the inviter was not whitelisted.
+  const kicked = await botMember.kick("antinuke: unauthorized bot").then(() => true).catch(() => false);
+  if (!executorId) {
+    await sendAlert(guild, settings.antinukeLogChannel, "unknown", "bot_add", kicked ? "unauthorized bot removed; inviter unavailable" : "unauthorized bot could not be removed; inviter unavailable");
+    return;
+  }
   if (alreadyPunished(guild.id, executorId)) return;
 
   const executor = await guild.members.fetch(executorId).catch(() => null);
-  if (!executor) return;
+  if (!executor) {
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", kicked ? "unauthorized bot removed; inviter no longer in server" : "unauthorized bot could not be removed");
+    return;
+  }
 
   try {
     const actionTaken = await punish(guild, executor, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
-    logger.warn({ guild: guild.id, bot: botMember.id, executor: executorId, action: actionTaken }, "antinuke: botadd punishment executed");
-    await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", actionTaken);
+    logger.warn({ guild: guild.id, bot: botMember.id, executor: executorId, action: actionTaken, botRemoved: kicked }, "antinuke: botadd punishment executed");
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", actionTaken + (kicked ? "; unauthorized bot removed" : "; bot removal failed"));
   } catch (err) {
     logger.warn({ err }, "antinuke: botadd punishment failed");
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", kicked ? "unauthorized bot removed; inviter punishment failed" : "bot removal and inviter punishment failed");
   }
 }
 
