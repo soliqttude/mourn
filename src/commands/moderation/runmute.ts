@@ -6,12 +6,12 @@ export const command: HybridCommand = {
   name: "runmute",
   aliases: ["reactunmute", "unreactionmute"],
   description: "Re-allow reactions for a user.",
-  usage: "runmute [user]",
-  examples: ["runmute"],
+  usage: "runmute <member> [reason]",
+  examples: ["runmute @mmoudder"],
   category: "moderation",
-  permission: "mute_members",
+  permission: "moderate_members",
   guildOnly: true,
-  options: [{ name: "user", description: "Member to reaction-unmute", type: ApplicationCommandOptionType.User, required: true }],
+  options: [\n    { name: "user", description: "Member to reaction-unmute", type: ApplicationCommandOptionType.User, required: true },\n    { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false },\n  ],
   async execute(ctx) {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
@@ -21,6 +21,6 @@ export const command: HybridCommand = {
       .forEach(async (ch) => {
         await (ch as any).permissionOverwrites.edit(target.id, { AddReactions: null }).catch(() => {});
       });
-    return ctx.reply({ embeds: [successEmbed(`Removed reaction-mute from **${target.user.tag}**.`)] });
+    return ctx.reply({ embeds: [successEmbed(`Removed reaction-mute from **${target.user.tag}** — ${reason}`)] });
   },
 };
