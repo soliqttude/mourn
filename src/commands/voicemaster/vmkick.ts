@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   aliases: ["vkick"],
   description: "Kick a member from your voice channel.",
   usage: "vmkick [user]",
-  examples: ["vmkick @user"],
+  examples: ["vmkick @mmoudder"],
   category: "voicemaster",
   guildOnly: true,
   options: [{ name: "user", description: "User to kick", type: ApplicationCommandOptionType.User, required: true }],
