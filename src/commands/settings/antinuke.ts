@@ -103,7 +103,7 @@ export const command: HybridCommand = {
       description: `Configure ${name} protection`,
       options: [
         { type: ApplicationCommandOptionType.String, name: "setting", description: "On or Off", required: true, choices: [{ name: "On", value: "on" }, { name: "Off", value: "off" }] },
-        ...(name === "botadd" ? [] : [{ type: ApplicationCommandOptionType.String, name: "punishment", description: "Action to take", required: name !== "botadd", choices: ["ban", "kick", "timeout", "strip", "stripstaff", "jail"].map((value) => ({ name: value, value })) }]),
+        ...(name === "botadd" ? [] : [{ type: ApplicationCommandOptionType.String, name: "punishment", description: "Action to take", required: true, choices: ["ban", "kick", "timeout", "strip", "stripstaff", "jail"].map((value) => ({ name: value, value })) }]),
         ...(["ban", "kick", "role", "channel", "emoji", "webhook"].includes(name) ? [{ type: ApplicationCommandOptionType.Integer, name: "threshold", description: "Number of actions before punishment", required: true, min_value: 1, max_value: 100 }] : []),
         ...(["ban", "kick", "role"].includes(name) ? [{ type: ApplicationCommandOptionType.Boolean, name: "command_detection", description: "Count actions performed using Villain commands", required: true }] : []),
       ],
