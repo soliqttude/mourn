@@ -9,7 +9,7 @@ const KNOWN_MODULES = [
   "moderation", "automod", "logging", "welcome", "goodbye", "invites",
   "levels", "tags", "autoresponders", "tickets", "giveaways", "starboard",
   "voicemaster", "reaction-roles", "counting", "highlights", "social",
-  "music", "economy", "fun", "utility", "info",
+  "music", "fun", "utility", "info",
 ];
 
 export const command: HybridCommand = {
