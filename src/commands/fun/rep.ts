@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { giveRep, getRep } from "../../features/economy.js";
+import { giveRep, getRep } from "../../features/reputation.js";
 import { errorEmbed } from "../../lib/embeds.js";
 import { config } from "../../config.js";
 
