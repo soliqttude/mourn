@@ -33,6 +33,7 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("goodbye requires the database to be enabled. Add DATABASE_URL to Render.")] });
     }
     const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
+    if (!sub) return ctx.reply({ embeds: [brandEmbed({ title: "Goodbye Setup", description: "Set up goodbye messages in one or multiple channels.\n\n`goodbye add <channel> <message>`\n`goodbye view <channel>`\n`goodbye variables`\n`goodbye remove <channel>`\n`goodbye list`" })] });
     const selfDestructSeconds = ctx.getNumber("self_destruct") ?? null;
     if (selfDestructSeconds !== null && (selfDestructSeconds < 6 || selfDestructSeconds > 60)) {
       return ctx.reply({ embeds: [errorEmbed("The **--self_destruct** time must be between **6 and 60 seconds.")] });
