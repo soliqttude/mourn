@@ -155,12 +155,12 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   const prefix = settings?.prefix ?? config.defaultPrefix;
   const ctx = await buildSlashContext(client, interaction, prefix);
   try {
-    await cmd.execute(ctx);
     const antinukeModule = ["ban", "softban", "tempban", "hackban", "massban"].includes(cmd.name) ? "ban" : cmd.name === "kick" ? "kick" : cmd.name === "delrole" ? "role" : null;
     if (antinukeModule && interaction.guild) {
-      const { tickCommandUsage } = await import("../features/antinuke.js");
-      await tickCommandUsage(client, interaction.guild, interaction.user.id, antinukeModule).catch(() => {});
+      const { markAntinukeCommand } = await import("../features/antinuke.js");
+      markAntinukeCommand(interaction.guild.id, interaction.user.id, antinukeModule);
     }
+    await cmd.execute(ctx);
   } catch (err) {
     logger.error({ err, cmd: cmd.name }, "slash command error");
     const payload: any = {
