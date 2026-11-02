@@ -1,6 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { addBalance } from "../../features/economy.js";
 import { config } from "../../config.js";
 
 const NAMED_COLORS: [string, string][] = [
@@ -10,7 +9,6 @@ const NAMED_COLORS: [string, string][] = [
   ["#32CD32","LimeGreen"], ["#FF4500","OrangeRed"], ["#4169E1","RoyalBlue"], ["#9400D3","DarkViolet"],
   ["#20B2AA","LightSeaGreen"], ["#DC143C","Crimson"], ["#1E90FF","DodgerBlue"], ["#ADFF2F","GreenYellow"],
 ];
-const REWARD = 100;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -21,7 +19,7 @@ function shuffle<T>(arr: T[]): T[] {
 export const command: HybridCommand = {
   name: "colorquiz",
   aliases: ["colortest", "guesscolor", "cq"],
-  description: "Guess the color name from its hex code! +100 coins for correct answer.",
+  description: "Guess the color name from its hex code."
   usage: "colorquiz",
   examples: ["colorquiz"],
   category: "fun",
@@ -48,7 +46,7 @@ export const command: HybridCommand = {
         new EmbedBuilder()
           .setColor(colorInt)
           .setTitle("🎨 color quiz")
-          .setDescription(`what color is **\`${hex}\`**?\n\n+${REWARD} coins if correct!`)
+          .setDescription(`what color is **\`${hex}\`**?`)
           .setFooter({ text: `${config.embedFooter} • fun` })
           .setTimestamp(),
       ],
@@ -65,14 +63,13 @@ export const command: HybridCommand = {
 
     collector?.on("collect", async (i: any) => {
       const correct = i.customId.split("_")[1] === "correct";
-      if (correct && ctx.guild) await addBalance(ctx.guild.id, ctx.user.id, REWARD);
       await i.update({
         embeds: [
           new EmbedBuilder()
             .setColor(correct ? config.successColor : config.errorColor)
             .setTitle("🎨 color quiz")
             .setDescription(correct
-              ? `✅ correct! **${name}** (\`${hex}\`). +${REWARD} coins!`
+              ? `✅ correct! **${name}** (\`${hex}\`).`
               : `❌ wrong! the color was **${name}** (\`${hex}\`).`)
             .setFooter({ text: `${config.embedFooter} • fun` })
             .setTimestamp(),
