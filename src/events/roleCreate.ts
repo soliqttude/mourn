@@ -1,6 +1,6 @@
 import type { Client, Role, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 
 export const event = {
@@ -25,7 +25,7 @@ export const event = {
     const guildIcon = role.guild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "roles"))
       .setAuthor({ name: "Role Created", iconURL: guildIcon })
       .setDescription(
         `Role <@&${role.id}> was created${executor ? ` by <@${executor}>` : ""}`
