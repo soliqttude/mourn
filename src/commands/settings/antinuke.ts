@@ -330,6 +330,7 @@ export const command: HybridCommand = {
       const where = and(eq(antinukePermissionWatches.guildId, ctx.guild.id), eq(antinukePermissionWatches.direction, direction), eq(antinukePermissionWatches.permission, permission));
       if (arg1 === "watch") {
         await db.insert(antinukePermissionWatches).values({ guildId: ctx.guild.id, direction, permission }).onConflictDoNothing();
+        await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
         return ctx.reply({ embeds: [successEmbed("watching when " + permission + " is " + direction + " on a role. Changes will be reverted.")] });
       }
       const deleted = await db.delete(antinukePermissionWatches).where(where).returning();
