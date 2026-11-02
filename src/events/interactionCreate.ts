@@ -134,7 +134,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
     }
   }
 
-  if (SLOW_CATEGORIES.has(cmd.category)) {
+  if (SLOW_CATEGORIES.has(cmd.category) && !interaction.deferred && !interaction.replied) {
     await interaction.deferReply().catch(() => {});
   }
 
