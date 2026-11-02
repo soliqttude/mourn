@@ -1,7 +1,7 @@
 import type { Client, Invite, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
 import { upsertInvite } from "../features/invites.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 
 export const event = {
   name: "inviteCreate",
@@ -21,7 +21,7 @@ export const event = {
     const maxUses   = invite.maxUses ? `${invite.maxUses}` : "unlimited";
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "channels"))
       .setAuthor({ name: "Invite Created", iconURL: avatarURL })
       .setDescription(
         inviter
