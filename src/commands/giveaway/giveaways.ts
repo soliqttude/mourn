@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
+import { logger } from "../../lib/logger.js";
 import { parseDuration } from "../../lib/time.js";
 import { and, eq } from "drizzle-orm";
 import { db } from "../../db/index.js";
@@ -91,6 +92,7 @@ export const command: HybridCommand = {
   usage: "/giveaways start duration:24h prize:\"Concert Tickets\" channel:#giveaways winners:2",
   examples: ["/giveaways start duration:24h prize:\"Concert Tickets\" channel:#giveaways winners:2"],
   async execute(ctx) {
+    try {
     if (!ctx.guild || ctx.source !== "slash") {
       return ctx.reply({ embeds: [errorEmbed("Use the /giveaways slash command in a server.")] });
     }
@@ -228,5 +230,10 @@ export const command: HybridCommand = {
     }
 
     return ctx.reply({ embeds: [errorEmbed("Unknown giveaway action.")] });
+    } catch (error) {
+      logger.error({ err: error, guildId: ctx.guild?.id, userId: ctx.user.id }, "giveaway command failed");
+      const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+      return ctx.reply({ embeds: [errorEmbed(`Giveaway action failed: ${message}`)] });
+    }
   },
 };
