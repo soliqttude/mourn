@@ -1,6 +1,6 @@
 import type { Client, GuildMember, PartialGuildMember, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 import { renderTemplate } from "../lib/template.js";
 import { trackMemberLeave } from "../features/invites.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
@@ -35,6 +35,7 @@ export const event = {
       }
     }
 
+    if (await isLogTargetIgnored(member.guild.id, member.id)) return;
     if (!settings.joinLogChannel) return;
     const ch = member.guild.channels.cache.get(settings.joinLogChannel);
     if (!ch?.isTextBased()) return;
