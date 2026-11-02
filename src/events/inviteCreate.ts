@@ -1,7 +1,7 @@
 import type { Client, Invite, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
 import { upsertInvite } from "../features/invites.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 
 export const event = {
   name: "inviteCreate",
@@ -10,6 +10,7 @@ export const event = {
     await upsertInvite(invite.guild.id, invite.code, invite.uses ?? 0, invite.inviter?.id ?? null);
 
     const settings    = await getGuildSettings(invite.guild.id);
+    if (invite.channel?.id && await isLogTargetIgnored(invite.guild.id, invite.channel.id)) return;
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = (invite.guild as any).channels.cache.get(logChannelId);
