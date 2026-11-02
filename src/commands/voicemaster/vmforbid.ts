@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   aliases: ["vforbid", "vmdeny"],
   description: "Forbid a member from joining your voice channel.",
   usage: "vmforbid [user]",
-  examples: ["vmforbid @user"],
+  examples: ["vmforbid @mmoudder"],
   category: "voicemaster",
   guildOnly: true,
   options: [{ name: "user", description: "User to forbid", type: ApplicationCommandOptionType.User, required: true }],
