@@ -5,6 +5,7 @@ import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 import { db } from "../../db/index.js";
 import { antinukeWhitelist, antinukeAdmins, antinukeModules, antinukePermissionWatches } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
+import { resolveUser as resolveParsedUser } from "../../lib/parsing.js";
 import {
   invalidateWhitelistCache,
   invalidateAdminCache,
@@ -63,28 +64,13 @@ function parseFlags(args: string[]): Flags {
 }
 
 async function resolveUser(ctx: any, raw: string) {
-  // Slash commands provide a real User option; prefix commands provide a mention or ID.
   if (ctx.source === "slash") {
     try {
       const selected = await ctx.getUser?.("user");
       if (selected) return selected;
     } catch {}
   }
-
-  const input = String(raw ?? "").trim();
-  const mention = input.match(/^<@!?(\d{15,21})>$/);
-  const id = mention?.[1] ?? (/^\d{15,21}$/.test(input) ? input : null);
-  if (id) return ctx.guild!.client.users.fetch(id).catch(() => null);
-
-  // Username/display-name lookup is best-effort and only uses members already cached.
-  const needle = input.replace(/^@/, "").toLowerCase();
-  if (!needle) return null;
-  const member = ctx.guild!.members.cache.find((m: any) =>
-    m.user.username.toLowerCase() === needle ||
-    m.user.globalName?.toLowerCase() === needle ||
-    m.displayName.toLowerCase() === needle
-  );
-  return member?.user ?? null;
+  return resolveParsedUser(ctx.guild!.client, raw, ctx.guild);
 }
 
 export const command: HybridCommand = {
