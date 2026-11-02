@@ -73,7 +73,7 @@ export const command: HybridCommand = {
       name: "subcommand",
       description: "add | remove | list | view | variables",
       type: ApplicationCommandOptionType.String,
-      required: true,
+      required: false,
       choices: [
         { name: "add", value: "add" },
         { name: "remove", value: "remove" },
