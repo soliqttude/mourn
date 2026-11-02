@@ -82,6 +82,8 @@ export async function buildSlashContext(
     getMember: async (n) => (opts.getMember(n) as GuildMember) ?? null,
     getChannel: (n) => (opts.getChannel(n) as GuildTextBasedChannel) ?? null,
     getRole: (n) => opts.getRole(n) ?? null,
+    getSubcommand: (r) => { try { return opts.getSubcommand(r ?? false); } catch { return null; } },
+    getSubcommandGroup: (r) => { try { return opts.getSubcommandGroup(r ?? false); } catch { return null; } },
     reply: async (c) => {
       const payload = normalize(c, mention);
       const editOriginal = async () => {
