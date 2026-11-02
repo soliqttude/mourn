@@ -7,7 +7,14 @@ import {
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { logger } from "../../lib/logger.js";
-import { parseDuration } from "../../lib/time.js";
+import ms from "ms";
+
+const parseGiveawayDuration = (value: string): number | null => {
+  const parsed = (ms as unknown as (input: string) => number)(value.trim());
+  return Number.isFinite(parsed) && parsed >= 10_000 && parsed <= 365 * 86_400_000
+    ? parsed
+    : null;
+};
 import { and, eq } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { giveaways } from "../../db/schema.js";
@@ -121,7 +128,7 @@ export const command: HybridCommand = {
       const prize = interaction.options.getString("prize", true);
       const channel = interaction.options.getChannel("channel", true);
       const winners = interaction.options.getInteger("winners", true);
-      const durationMs = parseDuration(duration);
+      const durationMs = parseGiveawayDuration(duration);
       if (!durationMs || durationMs < 10_000 || durationMs > 365 * 86_400_000) {
         return ctx.reply({ embeds: [errorEmbed("Duration must be between 10 seconds and 365 days (examples: 30m, 24h, 7d).")] });
       }
@@ -193,11 +200,11 @@ export const command: HybridCommand = {
         if (field === "age") update.minAccountAgeDays = days || null;
         else update.minServerStayDays = days || null;
       } else if (field === "duration") {
-        const ms = parseDuration(str("duration")!);
-        if (!ms || ms < 10_000 || ms > 365 * 86_400_000) return ctx.reply({ embeds: [errorEmbed("Enter a valid duration such as 12h or 2d (maximum 365 days).")] });
-        update.endsAt = new Date(Date.now() + ms);
+        const durationMs = parseGiveawayDuration(str("duration")!);
+        if (!durationMs) return ctx.reply({ embeds: [errorEmbed("Enter a valid duration such as 12h or 2d (between 10 seconds and 365 days).")] });
+        update.endsAt = new Date(Date.now() + durationMs);
       } else if (field === "color") {
-        const color = str("color")!.replace(/^#/, "");
+        const color = str("color")!.trim().replace(/^#/, "");
         if (!/^[0-9a-fA-F]{6}$/.test(color)) return ctx.reply({ embeds: [errorEmbed("Use a six-digit hex color, such as #5865F2.")] });
         update.color = color;
       } else if (field === "host") {
@@ -223,9 +230,9 @@ export const command: HybridCommand = {
       if (update.prize !== undefined && !update.prize.trim()) {
         return ctx.reply({ embeds: [errorEmbed("Prize cannot be empty.")] });
       }
+      const refreshed = { ...giveaway, ...update } as typeof giveaway;
+      await refreshGiveawayMessage(ctx.client, refreshed);
       await db.update(giveaways).set(update).where(eq(giveaways.id, giveaway.id));
-      const refreshed = { ...giveaway, ...update };
-      await refreshGiveawayMessage(ctx.client, refreshed as typeof giveaway);
       return ctx.reply({ embeds: [successEmbed(`Giveaway ${field} updated.`, "giveaway")] });
     }
 
