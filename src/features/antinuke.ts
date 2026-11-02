@@ -175,7 +175,7 @@ async function sendAlert(guild: Guild, logChannelId: string | null | undefined, 
     .setAuthor({ name: "antinuke · threat neutralized" })
     .setDescription([
       `**threat** — ${ACTION_LABELS[type] ?? type}`,
-      `**by** — ${executorId === "unknown" ? "unknown (audit log unavailable)" : `<@${executorId}> (\\`${executorId}\\`)`}`,
+      `**by** — ${executorId === "unknown" ? "unknown (audit log unavailable)" : `<@${executorId}> (\`${executorId}\`)`}`,
       `**action** — ${actionTaken}`,
     ].join("\n"));
 
