@@ -472,12 +472,20 @@ export async function listAntinukePermissionWatches(guildId: string) {
  * permission edits made in the same update. Every rollback is logged; the
  * configured module threshold controls when the actor is punished.
  */
+const permissionRollbackGuard = new Map<string, number>();
+
 export async function handleWatchedRolePermissions(
   client: Client,
   oldRole: import("discord.js").Role,
   newRole: import("discord.js").Role,
 ): Promise<void> {
   const guild = newRole.guild;
+  const rollbackKey = guild.id + ":" + newRole.id;
+  const rollbackAt = permissionRollbackGuard.get(rollbackKey);
+  if (rollbackAt !== undefined) {
+    permissionRollbackGuard.delete(rollbackKey);
+    if (Date.now() - rollbackAt < 10_000) return;
+  }
   const settings = await getGuildSettings(guild.id);
   if (!settings.antinukeEnabled) return;
   const watches = await listAntinukePermissionWatches(guild.id);
@@ -531,8 +539,10 @@ export async function handleWatchedRolePermissions(
   // Restore only the changed watched bits; preserve every other permission.
   const restoredBits = (newBits & ~restoreMask) | (oldBits & restoreMask);
   let rollbackSucceeded = true;
+  permissionRollbackGuard.set(rollbackKey, Date.now());
   await newRole.setPermissions(restoredBits, "antinuke: revert watched role permission change").catch((err) => {
     rollbackSucceeded = false;
+    permissionRollbackGuard.delete(rollbackKey);
     logger.warn({ err, guild: guild.id, role: newRole.id }, "antinuke: failed to revert watched role permissions");
   });
 
