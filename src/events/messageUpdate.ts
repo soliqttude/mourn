@@ -24,7 +24,7 @@ export const event = {
       content: oldMsg.content ?? "", after: newMsg.content ?? "", at: Date.now(),
     });
     const settings = await getGuildSettings(newMsg.guild.id);
-    if (await isLogTargetIgnored(newMsg.guild.id, newMsg.author.id)) return;
+    if (newMsg.author && await isLogTargetIgnored(newMsg.guild.id, newMsg.author.id)) return;
     if (!settings.msgLogChannel) return;
     if (await isIgnored(newMsg.guild.id, [newMsg.author?.id ?? "", newMsg.channel.id])) return;
     const ch = newMsg.guild.channels.cache.get(settings.msgLogChannel);
