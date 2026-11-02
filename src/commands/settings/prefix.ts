@@ -3,86 +3,48 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { config } from "../../config.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
-import { db } from "../../db/index.js";
-import { userPrefixes } from "../../db/schema.js";
-import { eq } from "drizzle-orm";
+import { checkTier } from "../../lib/permissions.js";
 
 export const command: HybridCommand = {
   name: "prefix",
-  description: "View or change the server prefix. Use 'self' to set a personal prefix.",
-  usage: "prefix | prefix set <prefix> | prefix self <prefix> | prefix self reset | prefix remove",
-  examples: ["prefix", "prefix set !", "prefix self !", "prefix self reset", "prefix remove"],
+  description: "View or manage this server's command prefix.",
+  usage: "prefix | prefix set <prefix> | prefix remove",
+  examples: ["prefix", "prefix set !", "prefix remove"],
   category: "settings",
-  guildOnly: false,
+  guildOnly: true,
   options: [
-    { name: "action", description: "New prefix or 'self'", type: ApplicationCommandOptionType.String, required: false },
-    { name: "value", description: "Prefix value (when using 'self')", type: ApplicationCommandOptionType.String, required: false },
+    { name: "action", description: "set | remove", type: ApplicationCommandOptionType.String, required: false, choices: [
+      { name: "set", value: "set" }, { name: "remove", value: "remove" },
+    ] },
+    { name: "prefix", description: "New command prefix", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
-    const rawAction = ctx.getString("action") ?? ctx.args[0] ?? "";
-    const value = ctx.getString("value") ?? ctx.args[1] ?? "";
-    const action = rawAction.toLowerCase();
+    if (!ctx.guild) return ctx.reply({ embeds: [errorEmbed("Use this command in a server.")] });
+    const action = (ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
+    const value = ctx.getString("prefix") ?? ctx.args[1] ?? "";
+    const settings = await getGuildSettings(ctx.guild.id);
 
-    // ── self prefix ────────────────────────────────────────────────────────────
-    if (action === "self") {
-      if (!value || value === "view" || value === "") {
-        const [row] = await db.select().from(userPrefixes).where(eq(userPrefixes.userId, ctx.user.id));
-        return ctx.reply({ embeds: [brandEmbed({ title: "Your Prefix", description: row ? `\`${row.prefix}\`` : "not set — using server prefix" })] });
-      }
-      if (value === "reset" || value === "none" || value === "off") {
-        await db.delete(userPrefixes).where(eq(userPrefixes.userId, ctx.user.id));
-        return ctx.reply({ embeds: [successEmbed("Personal **prefix** reset.") ] });
-      }
-      if (value.length < 1 || value.length > 5) return ctx.reply({ embeds: [errorEmbed("**Prefix** must be 1-5 characters.")] });
-      await db.insert(userPrefixes).values({ userId: ctx.user.id, prefix: value })
-        .onConflictDoUpdate({ target: userPrefixes.userId, set: { prefix: value } });
-      return ctx.reply({ embeds: [successEmbed(`personal prefix set to \`${value}\`. this overrides the server prefix for you.`)] });
-    }
-
-    // ── view ───────────────────────────────────────────────────────────────────
     if (!action) {
-      if (ctx.guild) {
-        const s = await getGuildSettings(ctx.guild.id);
-        const [personal] = config.databaseEnabled
-          ? await db.select().from(userPrefixes).where(eq(userPrefixes.userId, ctx.user.id))
-          : [];
-        const fields = [{ name: "server prefix", value: `\`${s.prefix}\``, inline: true }];
-        if (personal) fields.push({ name: "your prefix", value: `\`${personal.prefix}\``, inline: true });
-        return ctx.reply({ embeds: [brandEmbed({ title: "Prefix", fields })] });
-      }
-      return ctx.reply({ embeds: [brandEmbed({ title: "Prefix", description: "Use `,prefix <new>` to change the server prefix." })] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Server Prefix", description: "Current prefix: " + (settings.prefix || config.defaultPrefix) })] });
     }
 
-    // ── explicit server subcommands ───────────────────────────────────────────
+    if (!ctx.member || !checkTier(ctx.member as any, "admin")) {
+      return ctx.reply({ embeds: [errorEmbed("You need Administrator to change the server prefix.")] });
+    }
+
     if (action === "remove") {
-      if (!ctx.guild) return ctx.reply({ embeds: [errorEmbed("Use this in a server.")] });
-      const { checkTier } = await import("../../lib/permissions.js");
-      if (!ctx.member || !checkTier(ctx.member as any, "admin")) {
-        return ctx.reply({ embeds: [errorEmbed("Only admins can change the server **prefix**.")] });
-      }
       await updateGuildSettings(ctx.guild.id, { prefix: config.defaultPrefix });
-      return ctx.reply({ embeds: [successEmbed("server prefix reset to `" + config.defaultPrefix + "`.")] });
+      return ctx.reply({ embeds: [successEmbed("Server prefix reset to " + config.defaultPrefix + ".")] });
     }
 
     if (action === "set") {
-      if (!ctx.guild) return ctx.reply({ embeds: [errorEmbed("Use this in a server.")] });
-      const { checkTier } = await import("../../lib/permissions.js");
-      if (!ctx.member || !checkTier(ctx.member as any, "admin")) {
-        return ctx.reply({ embeds: [errorEmbed("Only admins can change the server **prefix**.")] });
+      if (!value || value.length > 5 || /\\s/.test(value)) {
+        return ctx.reply({ embeds: [errorEmbed("Provide a prefix from 1–5 characters with no spaces.")] });
       }
-      if (!value || value.length < 1 || value.length > 5) return ctx.reply({ embeds: [errorEmbed("**Prefix** must be 1-5 characters.")] });
       await updateGuildSettings(ctx.guild.id, { prefix: value });
-      return ctx.reply({ embeds: [successEmbed("server prefix set to `" + value + "`.")] });
+      return ctx.reply({ embeds: [successEmbed("Server prefix set to " + value + ".")] });
     }
 
-    // ── set server prefix (legacy shorthand: ,prefix !) ───────────────────────
-    if (!ctx.guild) return ctx.reply({ embeds: [errorEmbed("Use this in a server.")] });
-    const { checkTier } = await import("../../lib/permissions.js");
-    if (!ctx.member || !checkTier(ctx.member as any, "admin")) {
-      return ctx.reply({ embeds: [errorEmbed("Only admins can change the server **prefix**.")] });
-    }
-    if (action.length < 1 || action.length > 5) return ctx.reply({ embeds: [errorEmbed("**Prefix** must be 1-5 characters.")] });
-    await updateGuildSettings(ctx.guild.id, { prefix: action });
-    return ctx.reply({ embeds: [successEmbed(`server prefix set to \`${action}\`.`)] });
+    return ctx.reply({ embeds: [errorEmbed("Use prefix, prefix set <prefix>, or prefix remove.")] });
   },
 };
