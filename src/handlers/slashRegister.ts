@@ -30,11 +30,11 @@ const CATEGORY_CAPS: Record<string, number> = {
   utility:     15,
   settings:    10,
   levels:       8,
-  giveaway:     3,
+  giveaway:     1,
   tags:         2,
   voicemaster:  3,
 };
-// Total: 21+20+15+10+8+3+2+3 = 82  (≤100 limit)
+// Total: 21+20+15+10+8+1+2+3 = 80  (≤100 limit)
 
 function hasUserOption(cmd: { options?: { type: number }[] }): boolean {
   return (cmd.options ?? []).some(
