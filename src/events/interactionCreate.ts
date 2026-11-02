@@ -445,14 +445,14 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction) 
     if (punishmentInput && !validPunishments.includes(punishmentInput)) return interaction.reply({ content: "Invalid punishment. Use: " + validPunishments.join(", ") + ".", flags: MessageFlags.Ephemeral });
     const threshold = thresholdInput ? Number(thresholdInput) : null;
     if (thresholdInput && (!Number.isInteger(threshold) || Number(threshold) < 1 || Number(threshold) > 100)) return interaction.reply({ content: "Threshold must be a whole number from 1 to 100.", flags: MessageFlags.Ephemeral });
-    if (commandInput && !["true", "false", "on", "off"].includes(commandInput)) return interaction.reply({ content: "Command detection must be true or false.", flags: MessageFlags.Ephemeral });
+    if (["ban", "kick", "role"].includes(moduleName) && commandInput && !["true", "false", "on", "off"].includes(commandInput)) return interaction.reply({ content: "Command detection must be true or false.", flags: MessageFlags.Ephemeral });
     const { db } = await import("../db/index.js");
     const { antinukeModules } = await import("../db/schema.js");
     const { getGuildSettings, updateGuildSettings } = await import("../db/settings.js");
     const current = (await getModuleConfigs(guildId)).get(moduleName);
     const guildSettings = await getGuildSettings(guildId);
     const enabled = setting === "on";
-    const countCommands = commandInput ? ["true", "on"].includes(commandInput) : (current?.countCommands ?? false);
+    const countCommands = ["ban", "kick", "role"].includes(moduleName) && commandInput ? ["true", "on"].includes(commandInput) : (current?.countCommands ?? false);
     const values = {
       guildId, module: moduleName, enabled,
       threshold: ["botadd", "vanity"].includes(moduleName) ? 1 : (threshold ?? current?.threshold ?? 3),
