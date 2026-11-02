@@ -19,7 +19,7 @@ function shuffle<T>(arr: T[]): T[] {
 export const command: HybridCommand = {
   name: "colorquiz",
   aliases: ["colortest", "guesscolor", "cq"],
-  description: "Guess the color name from its hex code."
+  description: "Guess the color name from its hex code.",
   usage: "colorquiz",
   examples: ["colorquiz"],
   category: "fun",
