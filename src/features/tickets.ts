@@ -8,6 +8,7 @@ import { tickets, ticketForms, ticketPanels, guildSettings } from "../db/schema.
 import { getGuildSettings } from "../db/settings.js";
 import { eq, and } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+import { EMOJIS } from "../lib/embeds.js";
 
 export interface TicketFormField {
   label: string;
@@ -24,11 +25,11 @@ export interface TicketTopic {
   description?: string;
 }
 
-// ── Swap these out for custom server emojis once you have them ─────────────────
+// Villain's shared custom emoji set.
 const E = {
-  bug:        "<:warn:1515113428749123674>",   // search: wrench / tool
-  suggestion: "<:idea:1515113444540682321>",   // search: sparkle / star
-  support:    "<:emoji_25:1515113714599067658>",   // search: mail / ticket / envelope
+  bug: EMOJIS.warn,
+  suggestion: EMOJIS.add,
+  support: EMOJIS.longlive50igot50,
 };
 
 const DEFAULT_TOPICS: TicketTopic[] = [
