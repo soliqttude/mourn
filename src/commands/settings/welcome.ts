@@ -126,8 +126,18 @@ export const command: HybridCommand = {
         .from(welcomeChannels)
         .where(and(eq(welcomeChannels.guildId, ctx.guild.id), eq(welcomeChannels.channelId, ch.id)));
       if (!row) return ctx.reply({ embeds: [errorEmbed("No welcome message for that **channel**.")] });
+      const member = ctx.guild.members.cache.get(ctx.user.id) ?? null;
+      const preview = parseScript(row.message, {
+        user: member ?? ctx.user,
+        guild: ctx.guild,
+        channel: ch,
+        client: ctx.client,
+      });
       return ctx.reply({
-        embeds: [brandEmbed({ title: `Welcome — #${ch.name}`, description: `\`\`\`\n${row.message}\n\`\`\`` })],
+        content: preview.content ?? undefined,
+        embeds: preview.embeds.length ? preview.embeds : undefined,
+        components: preview.components.length ? preview.components : undefined,
+        allowedMentions: { parse: [] },
       });
     }
 
