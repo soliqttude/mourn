@@ -23,7 +23,7 @@ export const command: HybridCommand = {
     if (!guild) return;
     const target = await ctx.getMember("user", true);
     const dur = ctx.getString("duration", true);
-    const reason = ctx.getString("reason") ?? REASON_DEFAULT;
+    const reason = (ctx.getString("reason") ?? ctx.args.slice(2).join(" ")) || REASON_DEFAULT;
     if (!target || !dur) return;
     const ms = parseDuration(dur);
     if (!ms || ms > 28 * 24 * 60 * 60 * 1000) return ctx.reply({ embeds: [errorEmbed("Invalid **duration** — max 28 days.")] });
