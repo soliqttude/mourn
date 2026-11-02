@@ -1,6 +1,6 @@
 import type { Client, GuildBan, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 
 export const event = {
@@ -28,7 +28,7 @@ export const event = {
     const avatarURL = ban.user.displayAvatarURL({ size: 256 });
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "moderation"))
       .setAuthor({ name: "Member Banned", iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .setDescription(
