@@ -109,7 +109,6 @@ export const command: HybridCommand = {
     }
 
     if (sub === "quick") {
-      await ctx.defer();
       const id = await createGiveaway(ctx.client, ctx.guild.id, ctx.channel!.id, ctx.user.id,
         "Mystery Prize", 1, new Date(Date.now() + 86_400_000));
       return ctx.reply({ embeds: [successEmbed(`24-hour giveaway #${id} started in this channel.`, "giveaway")] });
@@ -126,7 +125,6 @@ export const command: HybridCommand = {
       }
       if (winners < 1 || winners > 100) return ctx.reply({ embeds: [errorEmbed("Winner count must be between 1 and 100.")] });
       if (!("send" in channel)) return ctx.reply({ embeds: [errorEmbed("Choose a text channel.")] });
-      await ctx.defer();
       const id = await createGiveaway(ctx.client, ctx.guild.id, channel.id, ctx.user.id, prize, winners,
         new Date(Date.now() + durationMs));
       return ctx.reply({ embeds: [successEmbed(`Giveaway #${id} started in <#${channel.id}>.`, "giveaway")] });
@@ -154,7 +152,6 @@ export const command: HybridCommand = {
 
     if (sub === "end") {
       if (giveaway.ended) return ctx.reply({ embeds: [errorEmbed("That giveaway has already ended.")] });
-      await ctx.defer();
       const winners = await endGiveaway(ctx.client, giveaway.id);
       return ctx.reply({ embeds: [successEmbed(`Giveaway ended. ${winners.length} winner(s) selected.`, "giveaway")] });
     }
@@ -166,7 +163,6 @@ export const command: HybridCommand = {
     if (sub === "reroll") {
       const count = interaction.options.getInteger("winners") ?? 1;
       if (count < 1 || count > 100) return ctx.reply({ embeds: [errorEmbed("Winner count must be between 1 and 100.")] });
-      await ctx.defer();
       const winners = await rerollGiveaway(ctx.client, giveaway, count);
       return ctx.reply({ embeds: [successEmbed(`New winner(s): ${winners.map(id => `<@${id}>`).join(", ")}`, "giveaway")] });
     }
