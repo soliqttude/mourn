@@ -23,7 +23,7 @@ export const event = {
     if (!settings.voiceLogChannel) return;
     const member = newState.member ?? oldState.member;
     if (!member || member.user.bot) return;
-    if (await isIgnored(guild.id, [member.id])) return;
+    if (await isIgnored(guild.id, [member.id, oldState.channelId ?? "", newState.channelId ?? ""])) return;
     const ch = guild.channels.cache.get(settings.voiceLogChannel);
     if (!ch?.isTextBased()) return;
     const avatarURL = member.user.displayAvatarURL({ size: 64 }) ?? undefined;
