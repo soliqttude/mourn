@@ -13,8 +13,8 @@ const PLATFORM_ICONS: Record<string, string> = {
 export const command: HybridCommand = {
   name: "socials",
   description: "Manage your social links.",
-  usage: "socials [add <platform> <link>] [remove <platform>] [@user]",
-  examples: ["socials", "socials add twitter @myhandle", "socials remove twitter", "socials @user"],
+  usage: "socials [add <platform> <link>] [remove <platform>] [@mmoudder]",
+  examples: ["socials", "socials add twitter @myhandle", "socials remove twitter", "socials @mmoudder"],
   category: "social",
   options: [
     { name: "subcommand", description: "add | remove | list", type: ApplicationCommandOptionType.String, required: false },
@@ -77,6 +77,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`added **${plat}:** ${val}`)] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("Usage: `,socials add <platform> <link>` | `,socials remove <platform>` | `,socials @user`")] });
+    return ctx.reply({ embeds: [errorEmbed("Usage: `,socials add <platform> <link>` | `,socials remove <platform>` | `,socials @mmoudder`")] });
   },
 };
