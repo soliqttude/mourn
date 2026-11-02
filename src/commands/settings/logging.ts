@@ -112,15 +112,16 @@ export const command: HybridCommand = {
         const listChannel = channel;
         if (!listChannel) return ctx.reply({ embeds: [errorEmbed("Provide a channel.")] });
         const colors = (settings.logColors ?? {}) as Record<string, string>;
-        const lines = Object.entries(colors).map(([event, color]) => `**${event}:** ${color}`);
+        const lines = Object.entries(colors).filter(([key]) => key.startsWith(`${listChannel.id}:`)).map(([key, color]) => `**${key.slice(listChannel.id.length + 1)}:** ${color}`);
         return ctx.reply({ embeds: [brandEmbed({ title: `Log Colors — #${listChannel.name}`, description: lines.length ? lines.join("\n") : "No custom event colors set." })] });
       }
       if (!channelId || !eventName) return ctx.reply({ embeds: [errorEmbed("Provide a channel and event.")] });
       const color = (ctx.getString("color") ?? ctx.args[3] ?? "").trim();
       if (!validColor(color)) return ctx.reply({ embeds: [errorEmbed("Color must be a six-digit hex value, e.g. #5865f2.")] });
-      const colors = { ...((settings.logColors ?? {}) as Record<string, string>), [eventName]: color.startsWith("#") ? color : `#${color}` };
+      const colorKey = `${channelId}:${eventName}`;
+      const colors = { ...((settings.logColors ?? {}) as Record<string, string>), [colorKey]: color.startsWith("#") ? color : `#${color}` };
       await updateGuildSettings(ctx.guild.id, { logColors: colors });
-      return ctx.reply({ embeds: [successEmbed(`Custom color for **${eventName}** logs set to ${colors[eventName]}.`)] });
+      return ctx.reply({ embeds: [successEmbed(`Custom color for **${eventName}** logs set to ${colors[colorKey]}.`)] });
     }
 
     return ctx.reply({ embeds: [errorEmbed("Use log, log add, log remove, log ignore, or log color.")] });
