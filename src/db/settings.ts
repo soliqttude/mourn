@@ -67,9 +67,9 @@ export function invalidateGuildSettings(guildId: string) {
   cache.delete(guildId);
 }
 
-export function getLogEmbedColor(settings: typeof guildSettings.$inferSelect, event: string): number {
+export function getLogEmbedColor(settings: typeof guildSettings.$inferSelect, event: string, channelId?: string | null): number {
   const colors = (settings.logColors ?? {}) as Record<string, string>;
-  const raw = colors[event] ?? colors[event.replace(/s$/, "")] ?? "";
+  const raw = (channelId ? colors[`${channelId}:${event}`] : undefined) ?? colors[event] ?? colors[event.replace(/s$/, "")] ?? "";
   if (!/^#?[0-9a-f]{6}$/i.test(raw)) return 0x000000;
   return Number.parseInt(raw.replace(/^#/, ""), 16);
 }
