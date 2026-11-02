@@ -11,7 +11,10 @@ export const command: HybridCommand = {
   category: "moderation",
   permission: "moderate_members",
   guildOnly: true,
-  options: [\n    { name: "user", description: "Member to image-unmute", type: ApplicationCommandOptionType.User, required: true },\n    { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false },\n  ],
+  options: [
+    { name: "user", description: "Member to image-unmute", type: ApplicationCommandOptionType.User, required: true },
+    { name: "reason", description: "Reason", type: ApplicationCommandOptionType.String, required: false },
+  ],
   async execute(ctx) {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
