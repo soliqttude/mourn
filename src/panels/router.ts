@@ -109,7 +109,7 @@ export async function buildPanelEmbed(active: PanelTab, guildId: string) {
       { name: "Mod Log", value: channelOrDash(s.modLogChannel), inline: true },
       {
         name: "Commands",
-        value: "`/ban` · `/kick` · `/timeout` · `/warn` · `/purge` · `/lock` · `/slowmode`",
+        value: "`/ban` · `/kick` · `,mute` · `/warn` · `/purge` · `/lock` · `/slowmode`",
       }
     );
   } else if (active === "logs") {
@@ -118,14 +118,14 @@ export async function buildPanelEmbed(active: PanelTab, guildId: string) {
       { name: "Message Log", value: channelOrDash(s.msgLogChannel), inline: true },
       { name: "Join Log", value: channelOrDash(s.joinLogChannel), inline: true },
       { name: "Voice Log", value: channelOrDash(s.voiceLogChannel), inline: true },
-      { name: "Configure", value: "`/setlog <type> <channel>`" }
+      { name: "Configure", value: "`,log add #channel event`" }
     );
   } else if (active === "welcome") {
     eb.setDescription("*First and last impressions.*").addFields(
       { name: "Welcome", value: channelOrDash(s.welcomeChannel), inline: true },
       { name: "Goodbye", value: channelOrDash(s.goodbyeChannel), inline: true },
       { name: "Boost", value: channelOrDash(s.boostChannel), inline: true },
-      { name: "Configure", value: "`/setwelcome` · `/setgoodbye` · `/setboost`" }
+      { name: "Configure", value: "`,welcome add #channel message` · `,goodbye add #channel message` · `,setboost`" }
     );
   } else if (active === "economy") {
     eb.setDescription("*A currency system for your members.*").addFields({
