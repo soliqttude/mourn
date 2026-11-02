@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, type ChatInputCommandInteraction } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
@@ -163,12 +163,30 @@ export const command: HybridCommand = {
 
     // ── config / list / admins ───────────────────────────────────────────────
     if (sub === "config") {
-      return ctx.reply({ embeds: [brandEmbed({
-        authorName: ctx.user.globalName ?? ctx.user.username,
-        authorIcon: ctx.user.displayAvatarURL({ size: 64 }),
-        title: "antinuke",
-        description: `antinuke is **${settings.antinukeEnabled ? "enabled" : "disabled"}**\\nlog channel: ${settings.antinukeLogChannel ? `<#${settings.antinukeLogChannel}>` : "not set"}`,
-      })] });
+      if (ctx.source !== "slash" || !(ctx.raw as ChatInputCommandInteraction).isChatInputCommand()) {
+        return ctx.reply({ embeds: [brandEmbed({
+          title: "antinuke configuration",
+          description: "Use the /antinuke config slash command to open the configuration modal.",
+        })] });
+      }
+      const modules = await getModuleConfigs(ctx.guild.id);
+      const enabled = MODULES.filter((name) => modules.get(name)?.enabled).join(", ") || "none";
+      const modal = new ModalBuilder()
+        .setCustomId("antinuke:config:" + ctx.guild.id + ":" + ctx.user.id)
+        .setTitle("AntiNuke module configuration");
+      const field = (id: string, label: string, placeholder: string, required: boolean) =>
+        new ActionRowBuilder<TextInputBuilder>().addComponents(
+          new TextInputBuilder().setCustomId(id).setLabel(label).setPlaceholder(placeholder)
+            .setStyle(TextInputStyle.Short).setRequired(required),
+        );
+      modal.addComponents(
+        field("module", "Module", "ban, kick, role, channel, emoji, webhook, botadd, vanity, permissions", true),
+        field("setting", "Setting", "on or off (currently enabled: " + enabled + ")", true),
+        field("punishment", "Punishment", "ban, kick, timeout, strip, stripstaff, jail", false),
+        field("threshold", "Threshold", "1–100; defaults to current setting", false),
+        field("command_detection", "Command detection", "true or false; ban, kick, and role only", false),
+      );
+      return (ctx.raw as ChatInputCommandInteraction).showModal(modal);
     }
 
     if (sub === "admins") {
