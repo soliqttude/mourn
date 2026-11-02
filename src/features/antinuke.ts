@@ -170,19 +170,24 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 async function sendAlert(guild: Guild, logChannelId: string | null | undefined, executorId: string, type: string, actionTaken: string): Promise<void> {
-  const chId = logChannelId ?? guild.systemChannelId;
-  if (!chId) return;
-  const ch = guild.channels.cache.get(chId) as TextChannel | undefined;
-  if (!ch?.isTextBased()) return;
   const embed = new EmbedBuilder()
     .setColor(0x1a0000)
     .setAuthor({ name: "antinuke · threat neutralized" })
     .setDescription([
       `**threat** — ${ACTION_LABELS[type] ?? type}`,
-      `**by** — ${executorId === "unknown" ? "unknown (audit log unavailable)" : `<@${executorId}> (\`${executorId}\`)`}`,
+      `**by** — ${executorId === "unknown" ? "unknown (audit log unavailable)" : `<@${executorId}> (\\`${executorId}\\`)`}`,
       `**action** — ${actionTaken}`,
     ].join("\n"));
-  await ch.send({ embeds: [embed] }).catch(() => {});
+
+  const channelId = logChannelId ?? guild.systemChannelId;
+  if (channelId) {
+    const channel = guild.channels.cache.get(channelId) as TextChannel | undefined;
+    if (channel?.isTextBased()) await channel.send({ embeds: [embed] }).catch(() => {});
+  }
+
+  // The documentation requires the owner to be notified when AntiNuke acts.
+  const owner = await guild.fetchOwner().catch(() => null);
+  if (owner) await owner.send({ embeds: [embed] }).catch(() => {});
 }
 
 // ─── Punish ───────────────────────────────────────────────────────────────────
