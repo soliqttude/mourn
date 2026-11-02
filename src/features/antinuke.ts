@@ -187,7 +187,7 @@ async function sendAlert(guild: Guild, logChannelId: string | null | undefined, 
 
   // The documentation requires the owner to be notified when AntiNuke acts.
   const owner = await guild.fetchOwner().catch(() => null);
-  if (owner) await owner.send({ embeds: [embed] }).catch(() => {});
+  if (owner) await owner.user.send({ embeds: [embed] }).catch(() => {});
 }
 
 // ─── Punish ───────────────────────────────────────────────────────────────────
