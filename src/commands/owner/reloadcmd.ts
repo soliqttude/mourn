@@ -9,7 +9,7 @@ const OID = "177803210738630656";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const CATEGORY_DIRS = ["economy", "fun", "moderation", "utility", "settings", "owner", "giveaway", "levels", "tags", "custom"];
+const CATEGORY_DIRS = ["fun", "moderation", "utility", "settings", "owner", "giveaway", "levels", "tags", "custom"];
 
 export const command: HybridCommand = {
   name: "reloadcmd",
