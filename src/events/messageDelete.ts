@@ -26,7 +26,7 @@ export const event = {
       sentAt: message.createdTimestamp ?? undefined, channelName,
     });
     const settings = await getGuildSettings(message.guild.id);
-    if (await isLogTargetIgnored(message.guild.id, message.author.id)) return;
+    if (message.author && await isLogTargetIgnored(message.guild.id, message.author.id)) return;
     if (!settings.msgLogChannel) return;
     if (await isIgnored(message.guild.id, [message.author?.id ?? "", message.channel.id])) return;
     const ch = message.guild.channels.cache.get(settings.msgLogChannel);
