@@ -1,6 +1,6 @@
 import type { Client, GuildChannel, DMChannel, TextChannel } from "discord.js";
 import { EmbedBuilder, ChannelType, AuditLogEvent } from "discord.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 import { db } from "../db/index.js";
 import { eq } from "drizzle-orm";
@@ -20,6 +20,7 @@ export const event = {
     await db.delete(voicemasterChannels).where(eq(voicemasterChannels.channelId, channel.id)).catch(() => {});
 
     const settings = await getGuildSettings(channel.guild.id);
+    if (await isLogTargetIgnored(channel.guild.id, channel.id)) return;
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = channel.guild.channels.cache.get(logChannelId);
