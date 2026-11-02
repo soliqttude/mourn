@@ -4,7 +4,7 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "rmute",
-  aliases: ["reactionmute", "reactmute"],
+  aliases: [],
   description: "Prevent a user from adding reactions.",
   usage: "rmute <member> [reason]",
   examples: ["rmute @mmoudder rule violation"],
