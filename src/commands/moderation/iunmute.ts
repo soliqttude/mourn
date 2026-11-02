@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
@@ -19,15 +19,16 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
     if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
+    const botMember = ctx.guild.members.me;
+    if (!botMember?.permissions.has(PermissionFlagsBits.ManageRoles)) return ctx.reply({ embeds: [errorEmbed("I need **Manage Roles** to change channel permissions.")] });
     const reason = (ctx.getString("reason") ?? ctx.args.slice(1).join(" ")) || "No reason provided";
-    await Promise.all(ctx.guild.channels.cache
-      .filter(c => c.isTextBased())
-      .map(async (ch) => {
-        await (ch as any).permissionOverwrites.edit(target.id, {
-          AttachFiles: null,
-          EmbedLinks: null,
-        }, reason).catch(() => {});
-      }));
+    const results = await Promise.all(ctx.guild.channels.cache
+      .filter((channel) => channel.isTextBased())
+      .map((channel) => (channel as any).permissionOverwrites.edit(target.id, { AttachFiles: null, EmbedLinks: null }, reason)
+        .then(() => true)
+        .catch(() => false)));
+    const updated = results.filter(Boolean).length;
+    if (!updated) return ctx.reply({ embeds: [errorEmbed("I couldn't update any channel permissions. Check my **Manage Roles** permission and role hierarchy.")] });
     return ctx.reply({ embeds: [successEmbed(`Removed image-mute from **${target.user.tag}** — ${reason}`)] });
   },
 };
