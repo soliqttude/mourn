@@ -70,7 +70,7 @@ function hasPermission(ctx: Parameters<HybridCommand["execute"]>[0], permission:
 async function findGiveaway(ctx: Parameters<HybridCommand["execute"]>[0], messageLink: string) {
   const match = messageLink.match(/channels\/(\d+)\/(\d+)/);
   if (!match || !ctx.guild) return null;
-  const messageId = match[2]!;
+  if (match[1] !== ctx.guild.id) return null;\n  const messageId = match[3]!;
   const rows = await db.select().from(giveaways).where(and(
     eq(giveaways.guildId, ctx.guild.id), eq(giveaways.messageId, messageId),
   ));
