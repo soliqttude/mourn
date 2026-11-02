@@ -103,6 +103,17 @@ export const antinukeModules = pgTable(
 );
 
 
+
+export const antinukePermissionWatches = pgTable(
+  "antinuke_permission_watches",
+  {
+    guildId: text("guild_id").notNull(),
+    direction: text("direction").notNull(),
+    permission: text("permission").notNull(),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.direction, t.permission] }) }),
+);
+
 export const warnings = pgTable("warnings",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), reason: text("reason").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildUserIdx: index("warnings_guild_user_idx").on(t.guildId, t.userId) })

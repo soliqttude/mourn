@@ -8,7 +8,7 @@ import {
   PermissionFlagsBits,
 } from "discord.js";
 import { db } from "../db/index.js";
-import { antinukeWhitelist, antinukeAdmins, antinukeModules, guildSettings } from "../db/schema.js";
+import { antinukeWhitelist, antinukeAdmins, antinukeModules, antinukePermissionWatches, guildSettings } from "../db/schema.js";
 import { getGuildSettings } from "../db/settings.js";
 import { logger } from "../lib/logger.js";
 import { eq } from "drizzle-orm";
@@ -140,7 +140,7 @@ async function fetchExecutor(
     const cutoff = Date.now() - 6_000;
     for (const entry of logs.entries.values()) {
       if (entry.createdTimestamp < cutoff) break; // entries are newest-first; stop once too old
-      if (!entry.executor || entry.executor.bot) continue;
+      if (!entry.executor) continue;
       if (opts?.targetId && entry.target) {
         const target = entry.target as any;
         const targetId = target.id ?? entry.targetId;
@@ -166,23 +166,31 @@ const ACTION_LABELS: Record<string, string> = {
   webhook_create: "mass webhook creation",
   bot_add:        "unauthorized bot added",
   vanity_update:  "vanity URL changed",
-  perm_escalation:"admin permission escalation",
+  ban_cmd:        "bans performed with Villain commands",
+  kick_cmd:       "kicks performed with Villain commands",
+  role_cmd:       "role deletions performed with Villain commands",
+  role_permission_change:"watched role permission change",
 };
 
 async function sendAlert(guild: Guild, logChannelId: string | null | undefined, executorId: string, type: string, actionTaken: string): Promise<void> {
-  const chId = logChannelId ?? guild.systemChannelId;
-  if (!chId) return;
-  const ch = guild.channels.cache.get(chId) as TextChannel | undefined;
-  if (!ch?.isTextBased()) return;
   const embed = new EmbedBuilder()
     .setColor(0x1a0000)
     .setAuthor({ name: "antinuke · threat neutralized" })
     .setDescription([
       `**threat** — ${ACTION_LABELS[type] ?? type}`,
-      `**by** — <@${executorId}> (\`${executorId}\`)`,
+      `**by** — ${executorId === "unknown" ? "unknown (audit log unavailable)" : `<@${executorId}> (\`${executorId}\`)`}`,
       `**action** — ${actionTaken}`,
     ].join("\n"));
-  await ch.send({ embeds: [embed] }).catch(() => {});
+
+  const channelId = logChannelId ?? guild.systemChannelId;
+  if (channelId) {
+    const channel = guild.channels.cache.get(channelId) as TextChannel | undefined;
+    if (channel?.isTextBased()) await channel.send({ embeds: [embed] }).catch(() => {});
+  }
+
+  // The documentation requires the owner to be notified when AntiNuke acts.
+  const owner = await guild.fetchOwner().catch(() => null);
+  if (owner) await owner.user.send({ embeds: [embed] }).catch(() => {});
 }
 
 // ─── Punish ───────────────────────────────────────────────────────────────────
@@ -254,11 +262,9 @@ const TYPE_MODULE: Record<string, string> = {
   ban_add:        "ban",
   member_kick:    "kick",
   role_delete:    "role",
-  role_create:    "role",
   channel_delete: "channel",
   channel_create: "channel",
   emoji_delete:   "emoji",
-  emoji_create:   "emoji",
   webhook_create: "webhook",
   bot_add:        "botadd",
   vanity_update:  "vanity",
@@ -268,11 +274,9 @@ const AUDIT_MAP: Record<string, AuditLogEvent> = {
   ban_add:        AuditLogEvent.MemberBanAdd,
   member_kick:    AuditLogEvent.MemberKick,
   role_delete:    AuditLogEvent.RoleDelete,
-  role_create:    AuditLogEvent.RoleCreate,
   channel_delete: AuditLogEvent.ChannelDelete,
   channel_create: AuditLogEvent.ChannelCreate,
   emoji_delete:   AuditLogEvent.EmojiDelete,
-  emoji_create:   AuditLogEvent.EmojiCreate,
   webhook_create: AuditLogEvent.WebhookCreate,
   bot_add:        AuditLogEvent.BotAdd,
   vanity_update:  AuditLogEvent.GuildUpdate,
@@ -295,6 +299,11 @@ export async function handleAntinukeAction(client: Client, guild: Guild, type: s
 
   const executorId = await fetchExecutor(guild, auditType, { targetId: _targetId });
   if (!executorId) return;
+  const commandKey = guild.id + ":" + executorId + ":" + moduleName;
+  const commandTimestamp = antinukeCommandMarkers.get(commandKey);
+  const commandOrigin = commandTimestamp !== undefined && Date.now() - commandTimestamp < 15_000;
+  if (commandTimestamp !== undefined && !commandOrigin) antinukeCommandMarkers.delete(commandKey);
+  if (commandOrigin && !mod.countCommands) return;
   if (executorId === guild.ownerId || executorId === client.user?.id) return;
 
   const whitelist = await getWhitelist(guild.id);
@@ -329,24 +338,32 @@ export async function handleBotAdd(client: Client, guild: Guild, botMember: Guil
   const whitelist = await getWhitelist(guild.id);
   if (whitelist.has(botMember.id)) return;
 
-  // Kick the unauthorized bot immediately
-  await botMember.kick("antinuke: unauthorized bot").catch(() => {});
-
-  // Punish whoever added it
+  // Identify the inviter before taking action so a whitelisted user is
+  // genuinely exempt from the bot-add restriction.
   const executorId = await fetchExecutor(guild, AuditLogEvent.BotAdd, { targetId: botMember.id });
-  if (!executorId || executorId === guild.ownerId || executorId === client.user?.id) return;
-  if (whitelist.has(executorId)) return;
+  if (executorId && (executorId === guild.ownerId || executorId === client.user?.id || whitelist.has(executorId))) return;
+
+  // No trusted inviter was found, or the inviter was not whitelisted.
+  const kicked = await botMember.kick("antinuke: unauthorized bot").then(() => true).catch(() => false);
+  if (!executorId) {
+    await sendAlert(guild, settings.antinukeLogChannel, "unknown", "bot_add", kicked ? "unauthorized bot removed; inviter unavailable" : "unauthorized bot could not be removed; inviter unavailable");
+    return;
+  }
   if (alreadyPunished(guild.id, executorId)) return;
 
   const executor = await guild.members.fetch(executorId).catch(() => null);
-  if (!executor) return;
+  if (!executor) {
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", kicked ? "unauthorized bot removed; inviter no longer in server" : "unauthorized bot could not be removed");
+    return;
+  }
 
   try {
     const actionTaken = await punish(guild, executor, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
-    logger.warn({ guild: guild.id, bot: botMember.id, executor: executorId, action: actionTaken }, "antinuke: botadd punishment executed");
-    await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", actionTaken);
+    logger.warn({ guild: guild.id, bot: botMember.id, executor: executorId, action: actionTaken, botRemoved: kicked }, "antinuke: botadd punishment executed");
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", actionTaken + (kicked ? "; unauthorized bot removed" : "; bot removal failed"));
   } catch (err) {
     logger.warn({ err }, "antinuke: botadd punishment failed");
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "bot_add", kicked ? "unauthorized bot removed; inviter punishment failed" : "bot removal and inviter punishment failed");
   }
 }
 
@@ -370,7 +387,7 @@ export async function handleVanityChange(client: Client, guild: Guild): Promise<
     const cutoff = Date.now() - 6_000;
     for (const entry of logs.entries.values()) {
       if (entry.createdTimestamp < cutoff) break;
-      if (!entry.executor || entry.executor.bot) continue;
+      if (!entry.executor) continue;
       const changedVanity = entry.changes?.some(
         (c) => { const key = (c as any).key as string; return key === "vanityURLCode" || key === "vanity_url_code"; }
       );
@@ -400,64 +417,21 @@ export async function handleVanityChange(client: Client, guild: Guild): Promise<
   }
 }
 
-// ─── Permission escalation handler ───────────────────────────────────────────
-export async function handlePermissionEscalation(client: Client, guild: Guild, member: GuildMember, addedRoleIds: string[]): Promise<void> {
-  const settings = await getGuildSettings(guild.id);
-  if (!settings.antinukeEnabled) return;
-
-  const modules = await getModuleConfigs(guild.id);
-  const mod = modules.get("permissions");
-  if (!mod?.enabled) return;
-
-  const DANGER_PERMS = [
-    PermissionFlagsBits.Administrator,
-    PermissionFlagsBits.ManageGuild,
-    PermissionFlagsBits.BanMembers,
-    PermissionFlagsBits.KickMembers,
-    PermissionFlagsBits.ManageRoles,
-    PermissionFlagsBits.ManageChannels,
-    PermissionFlagsBits.ManageWebhooks,
-    PermissionFlagsBits.MentionEveryone,
-    PermissionFlagsBits.ManageNicknames,
-    PermissionFlagsBits.ViewAuditLog,
-    PermissionFlagsBits.ModerateMembers,
-  ];
-
-  const hasDangerPerm = addedRoleIds.some(roleId => {
-    const role = guild.roles.cache.get(roleId);
-    return role ? DANGER_PERMS.some(p => role.permissions.has(p)) : false;
-  });
-  if (!hasDangerPerm) return;
-
-  const executorId = await fetchExecutor(guild, AuditLogEvent.MemberRoleUpdate, { targetId: member.id });
-  if (!executorId || executorId === guild.ownerId || executorId === client.user?.id) return;
-
-  const whitelist = await getWhitelist(guild.id);
-  if (whitelist.has(executorId)) return;
-  if (alreadyPunished(guild.id, executorId)) return;
-
-  const executor = await guild.members.fetch(executorId).catch(() => null);
-  if (!executor) return;
-
-  for (const roleId of addedRoleIds) {
-    const role = guild.roles.cache.get(roleId);
-    if (role && !role.managed) {
-      await member.roles.remove(role, "antinuke: perm escalation").catch(() => {});
-    }
-  }
-
-  try {
-    const actionTaken = await punish(guild, executor, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
-    logger.warn({ guild: guild.id, executor: executorId, target: member.id, action: actionTaken }, "antinuke: permission escalation punishment executed");
-    await sendAlert(guild, settings.antinukeLogChannel, executorId, "perm_escalation", actionTaken);
-  } catch (err) {
-    logger.warn({ err }, "antinuke: perm escalation punishment failed");
-  }
-}
-
 // ─── Command-usage tick ─────────────────────────────────────────────────────────────
 // Called from messageCreate when a mod command (ban/kick/role) is used.
 // If countCommands is enabled for that module, counts towards threshold.
+const antinukeCommandMarkers = new Map<string, number>();
+
+/** Mark a Villain moderation command before it performs actions. */
+export function markAntinukeCommand(guildId: string, userId: string, moduleName: string): void {
+  const now = Date.now();
+  const key = guildId + ":" + userId + ":" + moduleName;
+  antinukeCommandMarkers.set(key, now);
+  for (const [markerKey, timestamp] of antinukeCommandMarkers) {
+    if (now - timestamp > 30_000) antinukeCommandMarkers.delete(markerKey);
+  }
+}
+
 export async function tickCommandUsage(client: Client, guild: Guild, userId: string, moduleName: string): Promise<void> {
   const settings = await getGuildSettings(guild.id);
   if (!settings.antinukeEnabled) return;
@@ -483,5 +457,142 @@ export async function tickCommandUsage(client: Client, guild: Guild, userId: str
     await sendAlert(guild, settings.antinukeLogChannel, userId, moduleName + "_cmd", actionTaken);
   } catch (err) {
     logger.warn({ err }, "antinuke: command-based punishment failed");
+  }
+}
+
+
+/** Permission names accepted by the documented /antinuke permissions commands. */
+export const ANTINUKE_WATCH_PERMISSIONS = {
+  administrator: PermissionFlagsBits.Administrator,
+  ban_members: PermissionFlagsBits.BanMembers,
+  mention_everyone: PermissionFlagsBits.MentionEveryone,
+  kick_members: PermissionFlagsBits.KickMembers,
+  moderate_members: PermissionFlagsBits.ModerateMembers,
+  manage_guild: PermissionFlagsBits.ManageGuild,
+  manage_channels: PermissionFlagsBits.ManageChannels,
+  manage_roles: PermissionFlagsBits.ManageRoles,
+  view_audit_log: PermissionFlagsBits.ViewAuditLog,
+  manage_webhooks: PermissionFlagsBits.ManageWebhooks,
+  manage_expressions: PermissionFlagsBits.ManageGuildExpressions,
+  manage_nicknames: PermissionFlagsBits.ManageNicknames,
+} as const;
+
+export type AntinukeWatchedPermission = keyof typeof ANTINUKE_WATCH_PERMISSIONS;
+export type AntinukePermissionDirection = "granted" | "removed";
+
+export async function listAntinukePermissionWatches(guildId: string) {
+  return db.select().from(antinukePermissionWatches).where(eq(antinukePermissionWatches.guildId, guildId));
+}
+
+/**
+ * Reverts only watched permission bits on a role, preserving all unrelated
+ * permission edits made in the same update. Every rollback is logged; the
+ * configured module threshold controls when the actor is punished.
+ */
+const permissionRollbackGuard = new Map<string, number>();
+
+export async function handleWatchedRolePermissions(
+  client: Client,
+  oldRole: import("discord.js").Role,
+  newRole: import("discord.js").Role,
+): Promise<void> {
+  const guild = newRole.guild;
+  const rollbackKey = guild.id + ":" + newRole.id;
+  const rollbackAt = permissionRollbackGuard.get(rollbackKey);
+  if (rollbackAt !== undefined) {
+    permissionRollbackGuard.delete(rollbackKey);
+    if (Date.now() - rollbackAt < 10_000) return;
+  }
+  const settings = await getGuildSettings(guild.id);
+  if (!settings.antinukeEnabled) return;
+  const watches = await listAntinukePermissionWatches(guild.id);
+  if (!watches.length) return;
+
+  const oldBits = oldRole.permissions.bitfield;
+  const newBits = newRole.permissions.bitfield;
+  let restoreMask = 0n;
+  const matched: string[] = [];
+
+  for (const watch of watches) {
+    const flag = ANTINUKE_WATCH_PERMISSIONS[watch.permission as AntinukeWatchedPermission];
+    if (flag === undefined) continue;
+    const wasSet = (oldBits & flag) === flag;
+    const isSet = (newBits & flag) === flag;
+    const direction = !wasSet && isSet ? "granted" : wasSet && !isSet ? "removed" : null;
+    if (direction === watch.direction) {
+      restoreMask |= flag;
+      matched.push(`${direction} ${watch.permission}`);
+    }
+  }
+
+  if (!matched.length) return;
+
+  // Resolve the original actor before our rollback creates its own audit-log entry.
+  let executorId: string | null = null;
+  try {
+    const logs = await guild.fetchAuditLogs({ limit: 8, type: AuditLogEvent.RoleUpdate });
+    const cutoff = Date.now() - 8_000;
+    for (const entry of logs.entries.values()) {
+      if (entry.createdTimestamp < cutoff) break;
+      if (entry.targetId !== newRole.id || !entry.executor) continue;
+      if (!entry.changes?.some((change) => (change as any).key === "permissions")) continue;
+      executorId = entry.executor.id;
+      break;
+    }
+  } catch (err) {
+    logger.warn({ err, guild: guild.id, role: newRole.id }, "antinuke: failed to inspect role update audit log");
+  }
+
+  // Ignore the RoleUpdate event generated by our own rollback. This also
+  // prevents loops when both grant and removal directions are being watched.
+  if (executorId === client.user?.id) return;
+
+  // Whitelisted users, the owner, and Villain itself are exempt entirely.
+  if (executorId) {
+    const exempt = await getWhitelist(guild.id);
+    if (executorId === guild.ownerId || executorId === client.user?.id || exempt.has(executorId)) return;
+  }
+
+  // Restore only the changed watched bits; preserve every other permission.
+  const restoredBits = (newBits & ~restoreMask) | (oldBits & restoreMask);
+  let rollbackSucceeded = true;
+  permissionRollbackGuard.set(rollbackKey, Date.now());
+  await newRole.setPermissions(restoredBits, "antinuke: revert watched role permission change").catch((err) => {
+    rollbackSucceeded = false;
+    permissionRollbackGuard.delete(rollbackKey);
+    logger.warn({ err, guild: guild.id, role: newRole.id }, "antinuke: failed to revert watched role permissions");
+  });
+
+  if (!rollbackSucceeded) {
+    await sendAlert(guild, settings.antinukeLogChannel, executorId ?? "unknown", "role_permission_change", "failed to revert watched permission change");
+    return;
+  }
+
+  if (!executorId) {
+    logger.warn({ guild: guild.id, role: newRole.id, permissions: matched }, "antinuke: watched permission reverted; audit-log executor unavailable");
+    await sendAlert(guild, settings.antinukeLogChannel, "unknown", "role_permission_change", "watched role permission reverted; executor unavailable");
+    return;
+  }
+
+  const revertedMessage = `reverted ${matched.join(", ")}`;
+  const modules = await getModuleConfigs(guild.id);
+  const mod = modules.get("permissions");
+  if (!mod?.enabled || !tick(`${guild.id}:${executorId}:permissions`, Math.max(1, mod.threshold)) || alreadyPunished(guild.id, executorId)) {
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", revertedMessage);
+    return;
+  }
+
+  const member = await guild.members.fetch(executorId).catch(() => null);
+  if (!member) {
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", revertedMessage + "; actor no longer in server");
+    return;
+  }
+  try {
+    const actionTaken = await punish(guild, member, mod.punishment ?? settings.antinukeAction ?? "ban", settings);
+    logger.warn({ guild: guild.id, executor: executorId, role: newRole.id, permissions: matched, action: actionTaken }, "antinuke: watched permission actor punished");
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", revertedMessage + "; punishment: " + actionTaken);
+  } catch (err) {
+    logger.warn({ err, guild: guild.id, executor: executorId }, "antinuke: watched permission punishment failed");
+    await sendAlert(guild, settings.antinukeLogChannel, executorId, "role_permission_change", revertedMessage + "; punishment failed");
   }
 }

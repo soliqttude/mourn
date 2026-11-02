@@ -1,9 +1,9 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, ActionRowBuilder, StringSelectMenuBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 import { db } from "../../db/index.js";
-import { antinukeWhitelist, antinukeAdmins, antinukeModules } from "../../db/schema.js";
+import { antinukeWhitelist, antinukeAdmins, antinukeModules, antinukePermissionWatches } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import {
   invalidateWhitelistCache,
@@ -11,6 +11,8 @@ import {
   invalidateModuleCache,
   isAntinukeAdmin,
   getModuleConfigs,
+  ANTINUKE_WATCH_PERMISSIONS,
+  listAntinukePermissionWatches,
 } from "../../features/antinuke.js";
 
 const MODULES = ["ban", "kick", "channel", "role", "emoji", "webhook", "botadd", "vanity", "permissions"] as const;
@@ -75,45 +77,73 @@ async function resolveUser(ctx: any, raw: string) {
 export const command: HybridCommand = {
   name: "antinuke",
   aliases: ["an"],
-  description: "Configure anti-nuke protection for your server.",
-  usage: "antinuke [module|config|list|whitelist|admin|admins|log|enable|disable]",
+  description: "Configure AntiNuke protection; use fake permissions to reduce mass-action bypass risk.",
+  usage: "/antinuke config | /antinuke <module> setting punishment threshold command_detection | /antinuke permissions watch|unwatch|list | /antinuke admin|whitelist add|remove",
   examples: [
-    "antinuke",
-    "antinuke enable",
-    "antinuke disable",
-    "antinuke ban on",
-    "antinuke ban on --threshold 3 --do ban --command on",
-    "antinuke ban off",
-    "antinuke ban threshold 3",
-    "antinuke ban punishment ban",
-    "antinuke config",
-    "antinuke list",
-    "antinuke admins",
-    "antinuke whitelist @user",
-    "antinuke whitelist remove @user",
-    "antinuke whitelist list",
-    "antinuke admin @user",
-    "antinuke admin remove @user",
-    "antinuke admin list",
-    "antinuke log #channel",
-    "antinuke log remove",
+    "/antinuke config",
+    "/antinuke ban setting:On punishment:ban threshold:3 command_detection:False",
+    "/antinuke kick setting:On punishment:timeout threshold:2 command_detection:True",
+    "/antinuke role setting:On punishment:strip threshold:3 command_detection:False",
+    "/antinuke channel setting:On punishment:ban threshold:3",
+    "/antinuke botadd setting:On",
+    "/antinuke vanity setting:On punishment:ban",
+    "/antinuke permissions watch direction:granted permission:manage_roles",
+    "/antinuke permissions unwatch direction:removed permission:administrator",
+    "/antinuke admin add user:@user",
+    "/antinuke whitelist add user:@bot",
   ],
   category: "settings",
-  permission: "administrator",
+  permission: "everyone",
   guildOnly: true,
   options: [
-    { name: "sub",   description: "subcommand", type: ApplicationCommandOptionType.String, required: false },
-    { name: "arg1",  description: "argument 1", type: ApplicationCommandOptionType.String, required: false },
-    { name: "arg2",  description: "argument 2", type: ApplicationCommandOptionType.String, required: false },
-    { name: "user",  description: "user",        type: ApplicationCommandOptionType.User,   required: false },
-  ],
+    { type: ApplicationCommandOptionType.Subcommand, name: "config", description: "Open AntiNuke configuration" },
+    ...(["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity"] as const).map((name) => ({
+      type: ApplicationCommandOptionType.Subcommand,
+      name,
+      description: `Configure ${name} protection`,
+      options: [
+        { type: ApplicationCommandOptionType.String, name: "setting", description: "On or Off", required: true, choices: [{ name: "On", value: "on" }, { name: "Off", value: "off" }] },
+        ...(name === "botadd" ? [] : [{ type: ApplicationCommandOptionType.String, name: "punishment", description: "Action to take", required: true, choices: ["ban", "kick", "timeout", "strip", "stripstaff", "jail"].map((value) => ({ name: value, value })) }]),
+        ...(["ban", "kick", "role", "channel", "emoji", "webhook"].includes(name) ? [{ type: ApplicationCommandOptionType.Integer, name: "threshold", description: "Number of actions before punishment", required: true, min_value: 1, max_value: 100 }] : []),
+        ...(["ban", "kick", "role"].includes(name) ? [{ type: ApplicationCommandOptionType.Boolean, name: "command_detection", description: "Count actions performed using Villain commands", required: true }] : []),
+      ],
+    })),
+    { type: ApplicationCommandOptionType.SubcommandGroup, name: "admin", description: "Manage AntiNuke admins", options: [
+      { type: ApplicationCommandOptionType.Subcommand, name: "add", description: "Grant configuration access", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User to grant access to", required: true }] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Revoke configuration access", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User to remove", required: true }] },
+    ] },
+    { type: ApplicationCommandOptionType.SubcommandGroup, name: "whitelist", description: "Manage trusted users and bots", options: [
+      { type: ApplicationCommandOptionType.Subcommand, name: "add", description: "Whitelist a user or bot", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User or bot to whitelist", required: true }] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Remove a whitelist entry", options: [{ type: ApplicationCommandOptionType.User, name: "user", description: "User or bot to remove", required: true }] },
+    ] },
+    { type: ApplicationCommandOptionType.SubcommandGroup, name: "permissions", description: "Watch role permission changes", options: [
+      { type: ApplicationCommandOptionType.Subcommand, name: "watch", description: "Revert a permission being granted or removed", options: [
+        { type: ApplicationCommandOptionType.String, name: "direction", description: "Permission change direction", required: true, choices: [{ name: "Granted", value: "granted" }, { name: "Removed", value: "removed" }] },
+        { type: ApplicationCommandOptionType.String, name: "permission", description: "Permission to watch", required: true, choices: Object.keys(ANTINUKE_WATCH_PERMISSIONS).map((value) => ({ name: value, value })) },
+      ] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "unwatch", description: "Stop watching a permission change", options: [
+        { type: ApplicationCommandOptionType.String, name: "direction", description: "Permission change direction", required: true, choices: [{ name: "Granted", value: "granted" }, { name: "Removed", value: "removed" }] },
+        { type: ApplicationCommandOptionType.String, name: "permission", description: "Permission to stop watching", required: true, choices: Object.keys(ANTINUKE_WATCH_PERMISSIONS).map((value) => ({ name: value, value })) },
+      ] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "list", description: "List watched permissions" },
+    ] },
+  ] as any,
   async execute(ctx) {
     if (!ctx.guild) return;
 
     const args = ctx.args;
-    const sub  = (ctx.getString?.("sub")  ?? args[0] ?? "").toLowerCase();
-    const arg1 = (ctx.getString?.("arg1") ?? args[1] ?? "").toLowerCase();
-    const arg2 = (ctx.getString?.("arg2") ?? args[2] ?? "").toLowerCase();
+    const slashGroup = ctx.source === "slash" ? ctx.getSubcommandGroup(false) : null;
+    const slashSub = ctx.source === "slash" ? ctx.getSubcommand(false) : null;
+    const sub = (ctx.source === "slash" ? (slashGroup ?? slashSub ?? "") : (args[0] ?? "")).toLowerCase();
+    const arg1 = (ctx.source === "slash"
+      ? (slashGroup ? (slashSub ?? "") : (ctx.getString("setting") ?? ""))
+      : (args[1] ?? "")).toLowerCase();
+    const arg2 = (ctx.source === "slash"
+      ? (slashGroup === "permissions" ? (ctx.getString("direction") ?? "") : (ctx.getString("punishment") ?? ""))
+      : (args[2] ?? "")).toLowerCase();
+    const arg3 = (ctx.source === "slash"
+      ? (slashGroup === "permissions" ? (ctx.getString("permission") ?? "") : String(ctx.getNumber("threshold") ?? ""))
+      : (args[3] ?? "")).toLowerCase();
 
     const settings = await getGuildSettings(ctx.guild.id);
     const isOwner  = ctx.user.id === ctx.guild.ownerId;
@@ -125,12 +155,35 @@ export const command: HybridCommand = {
 
     // ── config / list / admins ───────────────────────────────────────────────
     if (sub === "config") {
-      return ctx.reply({ embeds: [brandEmbed({
-        authorName: ctx.user.globalName ?? ctx.user.username,
-        authorIcon: ctx.user.displayAvatarURL({ size: 64 }),
-        title: "antinuke",
-        description: `antinuke is **${settings.antinukeEnabled ? "enabled" : "disabled"}**\\nlog channel: ${settings.antinukeLogChannel ? `<#${settings.antinukeLogChannel}>` : "not set"}`,
-      })] });
+      const modules = await getModuleConfigs(ctx.guild.id);
+      const enabled = MODULES.filter((name) => modules.get(name)?.enabled);
+      const lines = MODULES.map((name) => {
+        const active = modules.get(name)?.enabled ? "enabled" : "disabled";
+        return "**" + MODULE_LABELS[name] + "** — " + active;
+      });
+      const select = new StringSelectMenuBuilder()
+        .setCustomId("antinuke:config-select:" + ctx.guild.id + ":" + ctx.user.id)
+        .setPlaceholder("Select an AntiNuke module")
+        .addOptions(MODULES.map((name) => ({
+          label: MODULE_LABELS[name],
+          value: name,
+          description: modules.get(name)?.enabled ? "Currently enabled" : "Currently disabled",
+        })));
+      return ctx.reply({
+        embeds: [brandEmbed({
+          title: "AntiNuke configuration",
+          description: [
+            "**AntiNuke system** — " + (settings.antinukeEnabled ? "enabled" : "disabled"),
+            "**Enabled modules** — " + (enabled.map((name) => MODULE_LABELS[name]).join(", ") || "none"),
+            "",
+            ...lines,
+            "",
+            "Select a module below to open its settings. Fake permissions are recommended for staff roles to reduce mass-ban bypass risk.",
+          ].join("\n"),
+        })],
+        components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)],
+        ephemeral: true,
+      });
     }
 
     if (sub === "admins") {
@@ -261,45 +314,94 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`<@${user.id}> can now manage antinuke settings.`)], allowedMentions: { parse: [] } });
     }
 
+    if (sub === "permissions" && ["watch", "unwatch", "list"].includes(arg1)) {
+      if (arg1 === "list") {
+        const rows = await listAntinukePermissionWatches(ctx.guild.id);
+        const lines = rows.map((r) => r.direction + " — " + r.permission);
+        return ctx.reply({ embeds: [brandEmbed({ title: "antinuke — permission watches", description: lines.length ? lines.join("; ") : "no permission changes are being watched." })] });
+      }
+      const direction = arg2;
+      const permission = arg3.replace(/-/g, "_");
+      if (direction !== "granted" && direction !== "removed") return ctx.reply({ embeds: [errorEmbed("usage: antinuke permissions watch|unwatch granted|removed permission")] });
+      if (!Object.hasOwn(ANTINUKE_WATCH_PERMISSIONS, permission)) return ctx.reply({ embeds: [errorEmbed("invalid permission. supported: administrator, ban_members, mention_everyone, kick_members, moderate_members, manage_guild, manage_channels, manage_roles, view_audit_log, manage_webhooks, manage_expressions, manage_nicknames.")] });
+      const where = and(eq(antinukePermissionWatches.guildId, ctx.guild.id), eq(antinukePermissionWatches.direction, direction), eq(antinukePermissionWatches.permission, permission));
+      if (arg1 === "watch") {
+        await db.insert(antinukePermissionWatches).values({ guildId: ctx.guild.id, direction, permission }).onConflictDoNothing();
+        await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
+        return ctx.reply({ embeds: [successEmbed("watching when " + permission + " is " + direction + " on a role. Changes will be reverted.")] });
+      }
+      const deleted = await db.delete(antinukePermissionWatches).where(where).returning();
+      return ctx.reply({ embeds: [deleted.length ? successEmbed("stopped watching " + permission + " being " + direction + ".") : errorEmbed("that permission watch was not configured.")] });
+    }
     // ── dangerous permission protection ──────────────────────────────────────
     if (sub === "permissions") {
       const modules = await getModuleConfigs(ctx.guild.id);
       const cfg = modules.get("permissions");
 
-      if (!arg1) {
+      if (arg1 === "list" || !arg1) {
+        const watches = await listAntinukePermissionWatches(ctx.guild.id);
+        const description = watches.length
+          ? watches.map((watch) => "`" + watch.direction + "` — `" + watch.permission + "`").join("\n")
+          : "No permission changes are being watched."; 
         return ctx.reply({ embeds: [brandEmbed({
-          title: "antinuke — permissions",
-          description: [
-            `**status** — ${cfg?.enabled ? "**enabled**" : "**disabled**"}`,
-            `**punishment** — \`${cfg?.punishment ?? settings.antinukeAction ?? "ban"}\``,
-            "",
-            "This module watches dangerous permissions being granted through role updates.",
-          ].join("\\n"),
+          title: "AntiNuke — watched permissions",
+          description: description + "\n\nPermission-change punishment: " + (cfg?.enabled ? "enabled" : "disabled; watched changes are still reverted"),
         })] });
       }
 
-      if (arg1 !== "on" && arg1 !== "off") {
-        return ctx.reply({ embeds: [errorEmbed("usage: `antinuke permissions on|off`")] });
+      if (arg1 === "watch" || arg1 === "unwatch") {
+        const direction = arg2;
+        const permission = arg3;
+        if (direction !== "granted" && direction !== "removed") {
+          return ctx.reply({ embeds: [errorEmbed("direction must be granted or removed.")] });
+        }
+        if (!Object.prototype.hasOwnProperty.call(ANTINUKE_WATCH_PERMISSIONS, permission)) {
+          return ctx.reply({ embeds: [errorEmbed("invalid permission. Choose one of the documented permissions.")] });
+        }
+
+        if (arg1 === "watch") {
+          await db.insert(antinukePermissionWatches)
+            .values({ guildId: ctx.guild.id, direction, permission })
+            .onConflictDoNothing();
+          await db.insert(antinukeModules).values({
+            guildId: ctx.guild.id, module: "permissions", enabled: true,
+            threshold: cfg?.threshold ?? 3,
+            punishment: cfg?.punishment ?? settings.antinukeAction ?? "ban",
+            countCommands: false,
+          }).onConflictDoUpdate({
+            target: [antinukeModules.guildId, antinukeModules.module],
+            set: { enabled: true },
+          });
+          await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
+          invalidateModuleCache(ctx.guild.id);
+          return ctx.reply({ embeds: [successEmbed("watching when " + permission + " is " + direction + " on a role. Changes will be reverted.")] });
+        }
+
+        await db.delete(antinukePermissionWatches).where(and(
+          eq(antinukePermissionWatches.guildId, ctx.guild.id),
+          eq(antinukePermissionWatches.direction, direction),
+          eq(antinukePermissionWatches.permission, permission),
+        ));
+        return ctx.reply({ embeds: [successEmbed("stopped watching when " + permission + " is " + direction + ".")] });
       }
 
-      const enabled = arg1 === "on";
-      await db
-        .insert(antinukeModules)
-        .values({
-          guildId: ctx.guild.id,
-          module: "permissions",
-          enabled,
-          threshold: cfg?.threshold ?? 1,
+      if (arg1 === "on" || arg1 === "off") {
+        const enabled = arg1 === "on";
+        await db.insert(antinukeModules).values({
+          guildId: ctx.guild.id, module: "permissions", enabled,
+          threshold: cfg?.threshold ?? 3,
           punishment: cfg?.punishment ?? settings.antinukeAction ?? "ban",
           countCommands: false,
-        })
-        .onConflictDoUpdate({
+        }).onConflictDoUpdate({
           target: [antinukeModules.guildId, antinukeModules.module],
           set: { enabled },
         });
-      invalidateModuleCache(ctx.guild.id);
+        invalidateModuleCache(ctx.guild.id);
+        if (enabled) await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
+        return ctx.reply({ embeds: [successEmbed("permission-change punishment is now " + arg1 + ". Watched changes are reverted independently.")] });
+      }
 
-      return ctx.reply({ embeds: [successEmbed(`antinuke permission protection is now **${arg1}**.`)] });
+      return ctx.reply({ embeds: [errorEmbed("use permissions watch, unwatch, or list.")] });
     }
 
     // ── module subcommands ───────────────────────────────────────────────────
@@ -325,10 +427,12 @@ export const command: HybridCommand = {
         const enabled = arg1 === "on";
         // flags start at args[2] (everything after "ban on")
         const flags = parseFlags(args.slice(2));
+        const slashThreshold = ctx.source === "slash" ? ctx.getNumber("threshold") : null;
+        const slashCommandDetection = ctx.source === "slash" ? ctx.getBoolean("command_detection") : null;
 
-        const newThreshold    = flags.threshold                 ?? cfg?.threshold     ?? 3;
-        const newPunishment   = flags.do                        ?? cfg?.punishment    ?? "ban";
-        const newCountCmds    = flags.command !== undefined      ? flags.command       : (cfg?.countCommands ?? false);
+        const newThreshold    = slashThreshold ?? flags.threshold ?? cfg?.threshold ?? 3;
+        const newPunishment   = (ctx.source === "slash" ? (ctx.getString("punishment") ?? undefined) : undefined) ?? flags.do ?? cfg?.punishment ?? "ban";
+        const newCountCmds    = slashCommandDetection ?? (flags.command !== undefined ? flags.command : (cfg?.countCommands ?? false));
 
         await db
           .insert(antinukeModules)
@@ -338,6 +442,7 @@ export const command: HybridCommand = {
             set: { enabled, threshold: newThreshold, punishment: newPunishment, countCommands: newCountCmds },
           });
         invalidateModuleCache(ctx.guild.id);
+        if (enabled) await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
 
         const lines = [
           `**${MODULE_LABELS[module]}** protection is now **${arg1}**`,

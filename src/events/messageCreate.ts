@@ -84,9 +84,13 @@ async function isModuleDisabled(guildId: string, channelId: string, moduleName: 
 }
 
 const ANTINUKE_CMD_MAP: Record<string, string> = {
-  ban: "ban", softban: "ban", tempban: "ban", hackban: "ban", forceban: "ban",
-  kick: "kick",
-  delrole: "role",
+  ban: "ban", b: "ban",
+  softban: "ban", sb: "ban", sban: "ban",
+  tempban: "ban", tban: "ban",
+  hackban: "ban", forceban: "ban", hb: "ban", idban: "ban",
+  massban: "ban", bulkban: "ban", multiban: "ban",
+  kick: "kick", k: "kick", remove: "kick",
+  delrole: "role", deleterole: "role",
 };
 
 export const event = {
@@ -341,14 +345,12 @@ export const event = {
     if ("sendTyping" in message.channel) message.channel.sendTyping().catch(() => {});
 
     try {
-      await cmd.execute(ctx);
-      // antinuke: command detection (--command flag)
       const anModule = ANTINUKE_CMD_MAP[resolvedName.toLowerCase()];
       if (anModule && message.guild) {
-        import("../features/antinuke.js").then(({ tickCommandUsage }) =>
-          tickCommandUsage(client, message.guild!, message.author.id, anModule).catch(() => {})
-        ).catch(() => {});
+        const { markAntinukeCommand } = await import("../features/antinuke.js");
+        markAntinukeCommand(message.guild.id, message.author.id, anModule);
       }
+      await cmd.execute(ctx);
     } catch (err) {
       logger.error({ err, cmd: cmd.name }, "prefix command error");
       if (await isEventEnabled(guildId, "commandfailure")) {

@@ -50,6 +50,8 @@ export interface CommandContext {
   getBoolean: (name: string, required?: boolean) => boolean | null;
   getChannel: (name: string, required?: boolean) => GuildTextBasedChannel | null;
   getRole: (name: string, required?: boolean) => any;
+  getSubcommand: (required?: boolean) => string | null;
+  getSubcommandGroup: (required?: boolean) => string | null;
 
   reply: (content: ReplyContent) => Promise<unknown>;
   followUp: (content: ReplyContent) => Promise<unknown>;

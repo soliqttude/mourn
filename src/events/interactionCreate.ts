@@ -7,6 +7,9 @@ import {
   type ModalSubmitInteraction,
   ActionRowBuilder,
   ButtonBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
   ButtonStyle,
   MessageFlags,
 } from "discord.js";
@@ -152,6 +155,11 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   const prefix = settings?.prefix ?? config.defaultPrefix;
   const ctx = await buildSlashContext(client, interaction, prefix);
   try {
+    const antinukeModule = ["ban", "softban", "tempban", "hackban", "massban"].includes(cmd.name) ? "ban" : cmd.name === "kick" ? "kick" : cmd.name === "delrole" ? "role" : null;
+    if (antinukeModule && interaction.guild) {
+      const { markAntinukeCommand } = await import("../features/antinuke.js");
+      markAntinukeCommand(interaction.guild.id, interaction.user.id, antinukeModule);
+    }
     await cmd.execute(ctx);
   } catch (err) {
     logger.error({ err, cmd: cmd.name }, "slash command error");
@@ -363,6 +371,44 @@ async function handleSuggestionVote(interaction: ButtonInteraction) {
 }
 
 async function handleSelect(client: Client, interaction: StringSelectMenuInteraction) {
+  if (interaction.customId.startsWith("antinuke:config-select:")) {
+    const [, , guildId, requesterId] = interaction.customId.split(":");
+    if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
+      return interaction.reply({ content: "This AntiNuke selector is not valid for this user or server.", flags: MessageFlags.Ephemeral });
+    }
+    const { isAntinukeAdmin, getModuleConfigs } = await import("../features/antinuke.js");
+    if (!(await isAntinukeAdmin(guildId, interaction.user.id, interaction.guild.ownerId))) {
+      return interaction.reply({ content: "You are not authorized to configure AntiNuke.", flags: MessageFlags.Ephemeral });
+    }
+    const moduleName = interaction.values[0]?.toLowerCase();
+    const validModules = ["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity", "permissions"];
+    if (!moduleName || !validModules.includes(moduleName)) {
+      return interaction.reply({ content: "Invalid AntiNuke module selection.", flags: MessageFlags.Ephemeral });
+    }
+    const current = (await getModuleConfigs(guildId)).get(moduleName);
+    const { getGuildSettings } = await import("../db/settings.js");
+    const settings = await getGuildSettings(guildId);
+    const modal = new ModalBuilder()
+      .setCustomId("antinuke:config-submit:" + guildId + ":" + requesterId + ":" + moduleName)
+      .setTitle("Configure " + moduleName);
+    const field = (id: string, label: string, placeholder: string, required: boolean, value?: string) => {
+      const input = new TextInputBuilder()
+        .setCustomId(id)
+        .setLabel(label)
+        .setPlaceholder(placeholder)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(required);
+      if (value !== undefined) input.setValue(value);
+      return new ActionRowBuilder<TextInputBuilder>().addComponents(input);
+    };
+    modal.addComponents(
+      field("setting", "Setting", "on or off", true, current?.enabled ? "on" : "off"),
+      field("punishment", "Punishment", "ban, kick, timeout, strip, stripstaff, jail", false, current?.punishment ?? settings.antinukeAction ?? "ban"),
+      field("threshold", "Threshold", "1–6 recommended; whole number 1–100", false, String(current?.threshold ?? 3)),
+      field("command_detection", "Command detection", "true or false; ban, kick, and role only", false, current?.countCommands ? "true" : "false"),
+    );
+    return interaction.showModal(modal);
+  }
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction as any);
   if (interaction.customId === "help:select") {
     try {
@@ -379,6 +425,48 @@ async function handleSelect(client: Client, interaction: StringSelectMenuInterac
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
+  if (interaction.customId.startsWith("antinuke:config-submit:")) {
+    const [, , guildId, requesterId, moduleName] = interaction.customId.split(":");
+    if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
+      return interaction.reply({ content: "This AntiNuke configuration form is not valid for this user or server.", flags: MessageFlags.Ephemeral });
+    }
+    const { isAntinukeAdmin, getModuleConfigs, invalidateModuleCache } = await import("../features/antinuke.js");
+    if (!(await isAntinukeAdmin(guildId, interaction.user.id, interaction.guild.ownerId))) {
+      return interaction.reply({ content: "You are not authorized to configure AntiNuke.", flags: MessageFlags.Ephemeral });
+    }
+    const setting = interaction.fields.getTextInputValue("setting").trim().toLowerCase();
+    const punishmentInput = interaction.fields.getTextInputValue("punishment").trim().toLowerCase();
+    const thresholdInput = interaction.fields.getTextInputValue("threshold").trim();
+    const commandInput = interaction.fields.getTextInputValue("command_detection").trim().toLowerCase();
+    const validModules = ["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity", "permissions"];
+    const validPunishments = ["ban", "kick", "timeout", "strip", "stripstaff", "jail"];
+    if (!moduleName || !validModules.includes(moduleName)) return interaction.reply({ content: "Invalid module. Use one of: " + validModules.join(", ") + ".", flags: MessageFlags.Ephemeral });
+    if (setting !== "on" && setting !== "off") return interaction.reply({ content: "Setting must be on or off.", flags: MessageFlags.Ephemeral });
+    if (punishmentInput && !validPunishments.includes(punishmentInput)) return interaction.reply({ content: "Invalid punishment. Use: " + validPunishments.join(", ") + ".", flags: MessageFlags.Ephemeral });
+    const threshold = thresholdInput ? Number(thresholdInput) : null;
+    if (thresholdInput && (!Number.isInteger(threshold) || Number(threshold) < 1 || Number(threshold) > 100)) return interaction.reply({ content: "Threshold must be a whole number from 1 to 100.", flags: MessageFlags.Ephemeral });
+    if (["ban", "kick", "role"].includes(moduleName) && commandInput && !["true", "false", "on", "off"].includes(commandInput)) return interaction.reply({ content: "Command detection must be true or false.", flags: MessageFlags.Ephemeral });
+    const { db } = await import("../db/index.js");
+    const { antinukeModules } = await import("../db/schema.js");
+    const { getGuildSettings, updateGuildSettings } = await import("../db/settings.js");
+    const current = (await getModuleConfigs(guildId)).get(moduleName);
+    const guildSettings = await getGuildSettings(guildId);
+    const enabled = setting === "on";
+    const countCommands = ["ban", "kick", "role"].includes(moduleName) && commandInput ? ["true", "on"].includes(commandInput) : (current?.countCommands ?? false);
+    const values = {
+      guildId, module: moduleName, enabled,
+      threshold: ["botadd", "vanity"].includes(moduleName) ? 1 : (threshold ?? current?.threshold ?? 3),
+      punishment: punishmentInput || current?.punishment || guildSettings.antinukeAction || "ban",
+      countCommands: ["ban", "kick", "role"].includes(moduleName) ? countCommands : false,
+    };
+    await db.insert(antinukeModules).values(values).onConflictDoUpdate({
+      target: [antinukeModules.guildId, antinukeModules.module],
+      set: { enabled: values.enabled, threshold: values.threshold, punishment: values.punishment, countCommands: values.countCommands },
+    });
+    invalidateModuleCache(guildId);
+    if (enabled) await updateGuildSettings(guildId, { antinukeEnabled: true });
+    return interaction.reply({ content: "AntiNuke " + moduleName + " protection is now " + setting + ".", flags: MessageFlags.Ephemeral });
+  }
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction as any);
   const { handleTicketModal } = await import("../features/tickets.js");
   if (interaction.customId.startsWith("ticket_close_modal_")) return handleTicketModal(interaction as any);

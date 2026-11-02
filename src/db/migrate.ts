@@ -491,6 +491,13 @@ const STATEMENTS: string[] = [
     PRIMARY KEY (guild_id, module)
   )`,
 
+  `CREATE TABLE IF NOT EXISTS antinuke_permission_watches (
+    guild_id TEXT NOT NULL,
+    direction TEXT NOT NULL CHECK (direction IN ('granted', 'removed')),
+    permission TEXT NOT NULL,
+    PRIMARY KEY (guild_id, direction, permission)
+  )`,
+
   // ── user_rep — reputation system ────────────────────────────────────────────
   `CREATE TABLE IF NOT EXISTS user_rep (
     guild_id TEXT NOT NULL,
