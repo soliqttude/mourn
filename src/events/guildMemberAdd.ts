@@ -90,16 +90,26 @@ export const event = {
     if (welcomeRows.length === 0 && settings.welcomeChannel) {
       const ch = member.guild.channels.cache.get(settings.welcomeChannel);
       if (ch?.isTextBased()) {
-        const welcome = (settings as any).welcomeMessage
-          ? (settings as any).welcomeMessage.replace("{user}", `<@${member.id}>`).replace("{server}", member.guild.name)
-          : null;
-        const embed = brandEmbed({
-          description:  welcome ?? `welcome to **${member.guild.name}**, <@${member.id}>`,
-          thumbnail:    member.user.displayAvatarURL({ size: 256 }),
-          authorName:   member.user.globalName ?? member.user.username,
-          authorIcon:   member.user.displayAvatarURL({ size: 64 }),
+        // Keep the legacy single-channel setting on the same renderer as the
+        // multi-channel welcome system so variables and embeds behave identically.
+        const rawMessage = (settings as any).welcomeMessage
+          ?? "welcome to **{guild.name}**, {user.mention}";
+        const parsed = parseScript(rawMessage, {
+          user: member,
+          guild: member.guild,
+          channel: ch as TextChannel,
+          client,
+          extra: {
+            "{inviter}": inviter?.inviterId ? `<@${inviter.inviterId}>` : "unknown",
+            "{invite_code}": inviter?.code ?? "unknown",
+          },
         });
-        await (ch as TextChannel).send({ embeds: [embed], allowedMentions: { users: [member.id] } }).catch(() => {});
+        await (ch as TextChannel).send({
+          content: parsed.content ?? undefined,
+          embeds: parsed.embeds.length ? parsed.embeds : undefined,
+          components: parsed.components.length ? parsed.components : undefined,
+          allowedMentions: { users: [member.id, ...(inviter?.inviterId ? [inviter.inviterId] : [])] },
+        }).catch(() => {});
       }
     }
 
