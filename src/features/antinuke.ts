@@ -299,6 +299,12 @@ export async function handleAntinukeAction(client: Client, guild: Guild, type: s
 
   const executorId = await fetchExecutor(guild, auditType, { targetId: _targetId });
   if (!executorId) return;
+  const commandKey = guild.id + ":" + executorId + ":" + moduleName;
+  const commandTimestamp = antinukeCommandMarkers.get(commandKey);
+  const commandOrigin = commandTimestamp !== undefined && Date.now() - commandTimestamp < 30_000;
+  if (commandTimestamp !== undefined && !commandOrigin) antinukeCommandMarkers.delete(commandKey);
+  if (commandOrigin && !mod.countCommands) return;
+  if (!executorId) return;
   if (executorId === guild.ownerId || executorId === client.user?.id) return;
 
   const whitelist = await getWhitelist(guild.id);
@@ -415,6 +421,18 @@ export async function handleVanityChange(client: Client, guild: Guild): Promise<
 // ─── Command-usage tick ─────────────────────────────────────────────────────────────
 // Called from messageCreate when a mod command (ban/kick/role) is used.
 // If countCommands is enabled for that module, counts towards threshold.
+const antinukeCommandMarkers = new Map<string, number>();
+
+/** Mark a Villain moderation command before it performs actions. */
+export function markAntinukeCommand(guildId: string, userId: string, moduleName: string): void {
+  const now = Date.now();
+  const key = guildId + ":" + userId + ":" + moduleName;
+  antinukeCommandMarkers.set(key, now);
+  for (const [markerKey, timestamp] of antinukeCommandMarkers) {
+    if (now - timestamp > 30_000) antinukeCommandMarkers.delete(markerKey);
+  }
+}
+
 export async function tickCommandUsage(client: Client, guild: Guild, userId: string, moduleName: string): Promise<void> {
   const settings = await getGuildSettings(guild.id);
   if (!settings.antinukeEnabled) return;
