@@ -34,7 +34,7 @@ function validColor(value: string): boolean {
 
 export const command: HybridCommand = {
   name: "log",
-  aliases: ["logs", "logging"],
+  aliases: [],
   description: "Set up and manage server event logging.",
   usage: "log | log add <channel> <event> | log remove <channel> <event> | log ignore <member or channel> | log ignore list | log color <channel> <event> <color> | log color list <channel>",
   examples: [
