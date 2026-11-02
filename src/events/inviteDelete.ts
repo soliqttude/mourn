@@ -1,7 +1,7 @@
 import type { Client, Invite, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { removeInvite } from "../features/invites.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 
 export const event = {
   name: "inviteDelete",
@@ -27,7 +27,7 @@ export const event = {
     const inviter   = invite.inviter;
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "channels"))
       .setAuthor({ name: "Invite Deleted", iconURL: guildIcon })
       .setDescription(
         `Invite \`${invite.code}\` for ${invite.channel ? `<#${invite.channel.id}>` : "unknown"} was deleted${executor ? ` by <@${executor}>` : ""}`
