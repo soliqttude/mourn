@@ -3,8 +3,8 @@ import { brandEmbed, successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 const WORDS = [
   "discord","gaming","javascript","typescript","channel","moderation",
-  "leaderboard","gambling","multiplier","adventure","legendary","champion",
-  "inventory","moderator","developer","community","reaction","achievement",
+  "adventure","legendary","champion",
+  "moderator","developer","community","reaction","achievement",
   "prestige","giveaway","tournament","reputation","broadcast","confession",
   "minesweeper","trivia","scramble","treasure","starboard","voicemaster",
 ];
