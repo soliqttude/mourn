@@ -53,14 +53,11 @@ export const command: HybridCommand = {
       }
     }
 
-    // Save the warning
-    let caseId: number | string | undefined;
+    // Save the warning (same insert as the original file)
     try {
-      const [row] = await db
+      await db
         .insert(warnings)
-        .values({ guildId: guild.id, userId: target.id, moderatorId: ctx.user.id, reason })
-        .returning({ id: warnings.id });
-      caseId = row?.id;
+        .values({ guildId: guild.id, userId: target.id, moderatorId: ctx.user.id, reason });
     } catch (err) {
       console.error("[warn] DB insert failed:", err);
       return ctx.reply({ embeds: [errorEmbed("Failed to save the warning. Try again later.")] });
@@ -70,11 +67,10 @@ export const command: HybridCommand = {
     const dmEmbed = buildModDmEmbed({ action: "warned", guild, moderator: ctx.user, reason });
     const dmSent = await target.send({ embeds: [dmEmbed] }).then(() => true).catch(() => false);
 
-    const caseText = caseId !== undefined ? ` (case #${caseId})` : "";
     return ctx.reply({
       content: dmSent
-        ? `👍 Warned **${target.tag ?? target.username}**${caseText}`
-        : `👍 Warned **${target.tag ?? target.username}**${caseText} — couldn't DM member`,
+        ? `👍 Warned **${target.username}**`
+        : `👍 Warned **${target.username}** — couldn't DM member`,
     });
   },
 };
