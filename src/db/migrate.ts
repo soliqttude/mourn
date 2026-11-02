@@ -412,11 +412,11 @@ const STATEMENTS: string[] = [
   )`,
   `ALTER TABLE welcome_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER`,
   `ALTER TABLE goodbye_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER`,
-  `ALTER TABLE boost_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER`,
   `CREATE TABLE IF NOT EXISTS boost_channels (
     guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, message TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (guild_id, channel_id)
   )`,
+  `ALTER TABLE boost_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER`,
   `CREATE TABLE IF NOT EXISTS suggest_extended (
     guild_id TEXT PRIMARY KEY, threads_enabled BOOLEAN NOT NULL DEFAULT false,
     upvote_emoji TEXT NOT NULL DEFAULT '👍', downvote_emoji TEXT NOT NULL DEFAULT '👎',
