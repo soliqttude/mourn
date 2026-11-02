@@ -1,6 +1,6 @@
 import type { Client, Message, PartialMessage, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 import { storeSnipe } from "../features/snipes.js";
 import { db } from "../db/index.js";
 import { logIgnores } from "../db/schema.js";
@@ -26,6 +26,7 @@ export const event = {
       sentAt: message.createdTimestamp ?? undefined, channelName,
     });
     const settings = await getGuildSettings(message.guild.id);
+    if (await isLogTargetIgnored(message.guild.id, message.author.id)) return;
     if (!settings.msgLogChannel) return;
     if (await isIgnored(message.guild.id, [message.author?.id ?? "", message.channel.id])) return;
     const ch = message.guild.channels.cache.get(settings.msgLogChannel);
