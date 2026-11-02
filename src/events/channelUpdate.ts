@@ -1,6 +1,6 @@
 import type { Client, TextChannel } from "discord.js";
 import { EmbedBuilder, GuildChannel, AuditLogEvent } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 
 export const event = {
   name: "channelUpdate",
@@ -37,7 +37,7 @@ export const event = {
     const guildIcon = newChannel.guild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(0x000000)
+      .setColor(getLogEmbedColor(settings, "channels"))
       .setAuthor({ name: "Channel Updated", iconURL: guildIcon })
       .setDescription(
         `Channel <#${newChannel.id}> was updated${executor ? ` by <@${executor}>` : ""}`
