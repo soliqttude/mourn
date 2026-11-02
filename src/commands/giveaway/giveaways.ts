@@ -140,10 +140,12 @@ export const command: HybridCommand = {
           `• **${g.prize}** — ${g.ended ? "Ended" : "Active"} · ${g.winnersCount} winner(s) · <#${g.channelId}> · [message](https://discord.com/channels/${g.guildId}/${g.channelId}/${g.messageId ?? ""})`
         ));
       }
-      return ctx.reply({ embeds: pages.map((lines, i) => brandEmbed({
+      const embeds = pages.slice(0, 10).map((lines, i) => brandEmbed({
         description: `**Giveaways (${rows.length}) — ${i + 1}/${pages.length}**\n\n${lines.join("\n")}`,
         page: "giveaway",
-      })) });
+      }));
+      if (pages.length > 10) embeds[9]!.setFooter({ text: "Showing the first 200 giveaways; older entries are not shown." });
+      return ctx.reply({ embeds });
     }
 
     const targetLink = interaction.options.getString("giveaway", true);
