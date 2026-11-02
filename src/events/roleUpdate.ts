@@ -1,10 +1,12 @@
 import type { Client, Role, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { handleWatchedRolePermissions } from "../features/antinuke.js";
 
 export const event = {
   name: "roleUpdate",
   async execute(client: Client, oldRole: Role, newRole: Role) {
+    await handleWatchedRolePermissions(client, oldRole, newRole).catch(() => {});
     const settings    = await getGuildSettings(newRole.guild.id);
     const logChannelId = (settings as any).roleLogChannel as string | null;
     if (!logChannelId) return;
