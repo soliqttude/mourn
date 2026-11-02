@@ -60,19 +60,29 @@ export async function createGiveaway(
     await db.delete(giveaways).where(eq(giveaways.id, id));
     throw new Error("The selected channel is not a text channel I can post in.");
   }
-  const row = (await db.select().from(giveaways).where(eq(giveaways.id, id)))[0]!;
-  const message = await (channel as TextChannel).send({ embeds: [buildGiveawayEmbed(row)] });
-  await message.react("🎉");
-  await db.update(giveaways).set({ messageId: message.id }).where(eq(giveaways.id, id));
-  return id;
+  try {
+    const row = (await db.select().from(giveaways).where(eq(giveaways.id, id)))[0]!;
+    const message = await (channel as TextChannel).send({ embeds: [buildGiveawayEmbed(row)] });
+    try {
+      await message.react("🎉");
+    } catch {
+      await message.delete().catch(() => {});
+      throw new Error("I posted the giveaway but could not add the entry reaction. Check my Add Reactions permission and try again.");
+    }
+    await db.update(giveaways).set({ messageId: message.id }).where(eq(giveaways.id, id));
+    return id;
+  } catch (error) {
+    await db.delete(giveaways).where(eq(giveaways.id, id)).catch(() => {});
+    throw error;
+  }
 }
 
 async function fetchAllEntrants(reaction: any): Promise<string[]> {
   const ids: string[] = [];
   let after: string | undefined;
   while (true) {
-    const batch = await reaction.users.fetch({ limit: 100, after }).catch(() => null);
-    if (!batch?.size) break;
+    const batch = await reaction.users.fetch({ limit: 100, ...(after ? { after } : {}) });
+    if (!batch.size) break;
     for (const user of batch.values()) if (!user.bot) ids.push(user.id);
     if (batch.size < 100) break;
     after = batch.last()?.id;
@@ -115,42 +125,56 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<s
   const claimed = await db.update(giveaways).set({ ended: true })
     .where(and(eq(giveaways.id, giveawayId), eq(giveaways.ended, false)))
     .returning({ id: giveaways.id });
-  if (!claimed.length) return [];
-  const giveaway = (await db.select().from(giveaways).where(eq(giveaways.id, giveawayId)))[0];
-  if (!giveaway?.messageId) return [];
-  const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
-  if (!channel?.isTextBased() || !("messages" in channel)) return [];
-  const textChannel = channel as TextChannel;
-  const message = await textChannel.messages.fetch(giveaway.messageId).catch(() => null);
-  if (!message) return [];
-  const reaction = message.reactions.cache.get("🎉");
-  const entrants = reaction ? await fetchAllEntrants(reaction) : [];
-  const eligible = await eligibleEntrants(message.guild, giveaway, entrants);
-  const winners = choose(eligible, giveaway.winnersCount);
-  await db.update(giveaways).set({ winners }).where(eq(giveaways.id, giveawayId));
-  const mentions = winners.length ? winners.map(id => `<@${id}>`).join(", ") : "No eligible entrants";
-  const ended = new EmbedBuilder().setColor(winners.length ? 0x57f287 : 0xed4245)
-    .setTitle("🎉 GIVEAWAY ENDED 🎉")
-    .setDescription(`**Prize:** ${giveaway.prize}\n**Winner(s):** ${mentions}\n**Hosted by:** <@${giveaway.hostId}>`)
-    .setFooter({ text: `ID: ${giveawayId} • ${config.embedFooter}` }).setTimestamp(new Date());
-  await message.edit({ embeds: [ended] }).catch(() => {});
-  if (winners.length) {
-    await textChannel.send({ content: `🎉 Congratulations ${mentions}! You won **${giveaway.prize}**!`,
-      allowedMentions: { users: winners } }).catch(() => {});
-    if (giveaway.awardRoleIds?.length) {
-      for (const winnerId of winners) {
-        const member = await message.guild.members.fetch(winnerId).catch(() => null);
-        if (member) await member.roles.add(giveaway.awardRoleIds).catch(err => logger.warn({ err, winnerId }, "giveaway winner role grant failed"));
-      }
-    }
-  } else {
-    await textChannel.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` }).catch(() => {});
+  if (!claimed.length) {
+    const existing = (await db.select().from(giveaways).where(eq(giveaways.id, giveawayId)))[0];
+    if (!existing) throw new Error("Giveaway not found.");
+    throw new Error("That giveaway has already ended or is currently being processed.");
   }
-  return winners;
+
+  try {
+    const giveaway = (await db.select().from(giveaways).where(eq(giveaways.id, giveawayId)))[0];
+    if (!giveaway?.messageId) throw new Error("The giveaway message is not saved. The giveaway cannot be ended.");
+    const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+    if (!channel?.isTextBased() || !("messages" in channel)) throw new Error("Giveaway channel not found or is not accessible.");
+    const textChannel = channel as TextChannel;
+    const message = await textChannel.messages.fetch(giveaway.messageId).catch(() => null);
+    if (!message) throw new Error("Giveaway message not found. Check that it still exists and that I can view its channel.");
+
+    const reaction = message.reactions.cache.get("🎉") ?? (await message.reactions.fetch()).get("🎉");
+    const entrants = reaction ? await fetchAllEntrants(reaction) : [];
+    const eligible = await eligibleEntrants(message.guild, giveaway, entrants);
+    const winners = choose(eligible, giveaway.winnersCount);
+    const mentions = winners.length ? winners.map(id => `<@${id}>`).join(", ") : "No eligible entrants";
+    const ended = new EmbedBuilder().setColor(winners.length ? 0x57f287 : 0xed4245)
+      .setTitle("🎉 GIVEAWAY ENDED 🎉")
+      .setDescription(`**Prize:** ${giveaway.prize}\n**Winner(s):** ${mentions}\n**Hosted by:** <@${giveaway.hostId}>`)
+      .setFooter({ text: `ID: ${giveawayId} • ${config.embedFooter}` }).setTimestamp(new Date());
+
+    await message.edit({ embeds: [ended] });
+    await db.update(giveaways).set({ winners }).where(eq(giveaways.id, giveawayId));
+    if (winners.length) {
+      await textChannel.send({ content: `🎉 Congratulations ${mentions}! You won **${giveaway.prize}**!`,
+        allowedMentions: { users: winners } });
+      if (giveaway.awardRoleIds?.length) {
+        for (const winnerId of winners) {
+          const member = await message.guild.members.fetch(winnerId).catch(() => null);
+          if (member) await member.roles.add(giveaway.awardRoleIds).catch(err =>
+            logger.warn({ err, winnerId }, "giveaway winner role grant failed"));
+        }
+      }
+    } else {
+      await textChannel.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` });
+    }
+    return winners;
+  } catch (error) {
+    await db.update(giveaways).set({ ended: false }).where(eq(giveaways.id, giveawayId)).catch(() => {});
+    throw error;
+  }
 }
 
 export async function rerollGiveaway(client: Client, giveaway: GiveawayRow, winnerCount: number): Promise<string[]> {
   if (!giveaway.ended || !giveaway.messageId) throw new Error("That giveaway has not ended or its message is unavailable.");
+  if (!Number.isInteger(winnerCount) || winnerCount < 1 || winnerCount > 100) throw new Error("Winner count must be between 1 and 100.");
   const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
   if (!channel?.isTextBased() || !("messages" in channel)) throw new Error("Giveaway channel not found.");
   const textChannel = channel as TextChannel;
