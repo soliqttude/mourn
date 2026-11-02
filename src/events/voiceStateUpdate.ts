@@ -1,6 +1,6 @@
 import type { Client, VoiceState, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { handleVoiceStateUpdate as vmHandle } from "../features/voicemaster.js";
 import { db } from "../db/index.js";
 import { logIgnores } from "../db/schema.js";
@@ -53,7 +53,7 @@ export const event = {
     }
     if (!title) return;
     const embed = new EmbedBuilder()
-      .setColor(0x000000).setAuthor({ name: title, iconURL: avatarURL })
+      .setColor(getLogEmbedColor(settings, "voice")).setAuthor({ name: title, iconURL: avatarURL })
       .setDescription(description).setTimestamp().setFooter({ text: `User ID: ${member.id}` });
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
