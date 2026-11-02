@@ -1,6 +1,6 @@
 import type { Client, Message, PartialMessage, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { storeSnipe } from "../features/snipes.js";
 import { db } from "../db/index.js";
 import { logIgnores } from "../db/schema.js";
@@ -31,7 +31,7 @@ export const event = {
     const author = newMsg.author;
     const avatarURL = author?.displayAvatarURL({ size: 256 }) ?? undefined;
     const embed = new EmbedBuilder()
-      .setColor(0x000000).setAuthor({ name: "Message Edited", iconURL: avatarURL })
+      .setColor(getLogEmbedColor(settings, "messages")).setAuthor({ name: "Message Edited", iconURL: avatarURL })
       .setDescription(`Message from <@${author?.id}> edited in <#${newMsg.channel.id}> — [jump](${newMsg.url})`)
       .addFields(
         { name: "Before", value: (oldMsg.content || "*no content*").slice(0, 1024), inline: false },
