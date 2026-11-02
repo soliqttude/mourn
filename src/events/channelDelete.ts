@@ -40,7 +40,7 @@ export const event = {
     const name      = "name" in channel ? channel.name : "unknown";
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "channels"))
+      .setColor(getLogEmbedColor(settings, "channels", settings.serverLogChannel))
       .setAuthor({ name: "Channel Deleted", iconURL: guildIcon })
       .setDescription(
         `Channel \`${name}\` was deleted${executor ? ` by <@${executor}>` : ""}`
