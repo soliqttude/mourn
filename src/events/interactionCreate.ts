@@ -7,6 +7,9 @@ import {
   type ModalSubmitInteraction,
   ActionRowBuilder,
   ButtonBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
   ButtonStyle,
   MessageFlags,
 } from "discord.js";
@@ -368,6 +371,44 @@ async function handleSuggestionVote(interaction: ButtonInteraction) {
 }
 
 async function handleSelect(client: Client, interaction: StringSelectMenuInteraction) {
+  if (interaction.customId.startsWith("antinuke:config-select:")) {
+    const [, , guildId, requesterId] = interaction.customId.split(":");
+    if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
+      return interaction.reply({ content: "This AntiNuke selector is not valid for this user or server.", flags: MessageFlags.Ephemeral });
+    }
+    const { isAntinukeAdmin, getModuleConfigs } = await import("../features/antinuke.js");
+    if (!(await isAntinukeAdmin(guildId, interaction.user.id, interaction.guild.ownerId))) {
+      return interaction.reply({ content: "You are not authorized to configure AntiNuke.", flags: MessageFlags.Ephemeral });
+    }
+    const moduleName = interaction.values[0]?.toLowerCase();
+    const validModules = ["ban", "kick", "role", "channel", "emoji", "webhook", "botadd", "vanity", "permissions"];
+    if (!moduleName || !validModules.includes(moduleName)) {
+      return interaction.reply({ content: "Invalid AntiNuke module selection.", flags: MessageFlags.Ephemeral });
+    }
+    const current = (await getModuleConfigs(guildId)).get(moduleName);
+    const { getGuildSettings } = await import("../db/settings.js");
+    const settings = await getGuildSettings(guildId);
+    const modal = new ModalBuilder()
+      .setCustomId("antinuke:config-submit:" + guildId + ":" + requesterId + ":" + moduleName)
+      .setTitle("Configure " + moduleName);
+    const field = (id: string, label: string, placeholder: string, required: boolean, value?: string) => {
+      const input = new TextInputBuilder()
+        .setCustomId(id)
+        .setLabel(label)
+        .setPlaceholder(placeholder)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(required);
+      if (value !== undefined) input.setValue(value);
+      return new ActionRowBuilder<TextInputBuilder>().addComponents(input);
+    };
+    modal.addComponents(
+      field("setting", "Setting", "on or off", true, current?.enabled ? "on" : "off"),
+      field("punishment", "Punishment", "ban, kick, timeout, strip, stripstaff, jail", false, current?.punishment ?? settings.antinukeAction ?? "ban"),
+      field("threshold", "Threshold", "1–6 recommended; whole number 1–100", false, String(current?.threshold ?? 3)),
+      field("command_detection", "Command detection", "true or false; ban, kick, and role only", false, current?.countCommands ? "true" : "false"),
+    );
+    return interaction.showModal(modal);
+  }
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction as any);
   if (interaction.customId === "help:select") {
     try {
