@@ -135,7 +135,7 @@ export const command: HybridCommand = {
       ] },
       { type: ApplicationCommandOptionType.Subcommand, name: "list", description: "List watched permissions" },
     ] },
-  ],
+  ] as any,
   async execute(ctx) {
     if (!ctx.guild) return;
 
