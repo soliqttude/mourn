@@ -1,17 +1,7 @@
 import type { Client, VoiceState, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 import { handleVoiceStateUpdate as vmHandle } from "../features/voicemaster.js";
-import { db } from "../db/index.js";
-import { logIgnores } from "../db/schema.js";
-import { and, eq, inArray } from "drizzle-orm";
-
-async function isIgnored(guildId: string, ids: string[]): Promise<boolean> {
-  const clean = ids.filter(Boolean);
-  if (!clean.length) return false;
-  const rows = await db.select().from(logIgnores).where(and(eq(logIgnores.guildId, guildId), inArray(logIgnores.targetId, clean)));
-  return rows.length > 0;
-}
 
 export const event = {
   name: "voiceStateUpdate",
@@ -23,7 +13,7 @@ export const event = {
     if (!settings.voiceLogChannel) return;
     const member = newState.member ?? oldState.member;
     if (!member || member.user.bot) return;
-    if (await isIgnored(guild.id, [member.id, oldState.channelId ?? "", newState.channelId ?? ""])) return;
+    if (await isLogTargetIgnored(guild.id, member.id) || await isLogTargetIgnored(guild.id, oldState.channelId ?? "") || await isLogTargetIgnored(guild.id, newState.channelId ?? "")) return;
     const ch = guild.channels.cache.get(settings.voiceLogChannel);
     if (!ch?.isTextBased()) return;
     const avatarURL = member.user.displayAvatarURL({ size: 64 }) ?? undefined;
