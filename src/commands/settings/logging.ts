@@ -100,7 +100,7 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [successEmbed(`Logging for **${meta.label}** is now sent to <#${channelId}>.`)] });
       }
       if ((settings as any)[meta.key] !== channelId) {
-        return ctx.reply({ embeds: [errorEmbed(`< #${channelId} > is not the configured channel for ${meta.label} logs.`)] });
+        return ctx.reply({ embeds: [errorEmbed(`<#${channelId}> is not the configured channel for ${meta.label} logs.`)] });
       }
       await updateGuildSettings(ctx.guild.id, { [meta.key]: null } as any);
       return ctx.reply({ embeds: [successEmbed(`Removed **${meta.label}** logging from <#${channelId}>.`)] });
