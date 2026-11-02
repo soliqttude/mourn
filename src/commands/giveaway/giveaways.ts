@@ -68,9 +68,9 @@ function hasPermission(ctx: Parameters<HybridCommand["execute"]>[0], permission:
 }
 
 async function findGiveaway(ctx: Parameters<HybridCommand["execute"]>[0], messageLink: string) {
-  const match = messageLink.match(/channels\/(\d+)\/(\d+)/);
-  if (!match || !ctx.guild) return null;
-  if (match[1] !== ctx.guild.id) return null;\n  const messageId = match[3]!;
+  const match = messageLink.match(/channels\/(\d+)\/(\d+)\/(\d+)/);
+  if (!match || !ctx.guild || match[1] !== ctx.guild.id) return null;
+  const messageId = match[3]!;
   const rows = await db.select().from(giveaways).where(and(
     eq(giveaways.guildId, ctx.guild.id), eq(giveaways.messageId, messageId),
   ));
@@ -135,9 +135,17 @@ export const command: HybridCommand = {
     if (sub === "list") {
       const rows = await db.select().from(giveaways).where(eq(giveaways.guildId, ctx.guild.id));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed("There are no giveaways in this server yet.")] });
-      const sorted = rows.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 25);
-      const lines = sorted.map(g => `• **${g.prize}** — ${g.ended ? "Ended" : "Active"} · ${g.winnersCount} winner(s) · <#${g.channelId}> · [message](https://discord.com/channels/${g.guildId}/${g.channelId}/${g.messageId ?? ""})`);
-      return ctx.reply({ embeds: [brandEmbed({ description: `**Giveaways (${rows.length})**\n\n${lines.join("\n")}`, page: "giveaway" })] });
+      const sorted = rows.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime());
+      const pages: string[][] = [];
+      for (let i = 0; i < sorted.length; i += 20) {
+        pages.push(sorted.slice(i, i + 20).map(g =>
+          `• **${g.prize}** — ${g.ended ? "Ended" : "Active"} · ${g.winnersCount} winner(s) · <#${g.channelId}> · [message](https://discord.com/channels/${g.guildId}/${g.channelId}/${g.messageId ?? ""})`
+        ));
+      }
+      return ctx.reply({ embeds: pages.map((lines, i) => brandEmbed({
+        description: `**Giveaways (${rows.length}) — ${i + 1}/${pages.length}**\n\n${lines.join("\n")}`,
+        page: "giveaway",
+      })) });
     }
 
     const targetLink = interaction.options.getString("giveaway", true);
