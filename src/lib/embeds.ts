@@ -138,12 +138,12 @@ export function helpEmbed(
 
   const fill = (s: string) =>
     s
-      .replace(/\(member\)/gi, "@user")
-      .replace(/\[member\]/gi, "@user")
-      .replace(/\(user\)/gi,   "@user")
-      .replace(/\[user\]/gi,   "@user")
-      .replace(/\(target\)/gi, "@user")
-      .replace(/\[target\]/gi, "@user")
+      .replace(/\(member\)/gi, "@mmoudder")
+      .replace(/\[member\]/gi, "@mmoudder")
+      .replace(/\(user\)/gi,   "@mmoudder")
+      .replace(/\[user\]/gi,   "@mmoudder")
+      .replace(/\(target\)/gi, "@mmoudder")
+      .replace(/\[target\]/gi, "@mmoudder")
       .replace(/\(duration\)/gi, "30m")
       .replace(/\[duration\]/gi, "30m")
       .replace(/\(time\)/gi,     "30m")
