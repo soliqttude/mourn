@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 import { db } from "../../db/index.js";
-import { antinukeWhitelist, antinukeAdmins, antinukeModules } from "../../db/schema.js";
+import { antinukeWhitelist, antinukeAdmins, antinukeModules, antinukePermissionWatches } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import {
   invalidateWhitelistCache,
@@ -11,6 +11,8 @@ import {
   invalidateModuleCache,
   isAntinukeAdmin,
   getModuleConfigs,
+  ANTINUKE_WATCH_PERMISSIONS,
+  listAntinukePermissionWatches,
 } from "../../features/antinuke.js";
 
 const MODULES = ["ban", "kick", "channel", "role", "emoji", "webhook", "botadd", "vanity", "permissions"] as const;
@@ -106,6 +108,7 @@ export const command: HybridCommand = {
     { name: "arg1",  description: "argument 1", type: ApplicationCommandOptionType.String, required: false },
     { name: "arg2",  description: "argument 2", type: ApplicationCommandOptionType.String, required: false },
     { name: "user",  description: "user",        type: ApplicationCommandOptionType.User,   required: false },
+    { name: "arg3", description: "argument 3", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
@@ -114,6 +117,7 @@ export const command: HybridCommand = {
     const sub  = (ctx.getString?.("sub")  ?? args[0] ?? "").toLowerCase();
     const arg1 = (ctx.getString?.("arg1") ?? args[1] ?? "").toLowerCase();
     const arg2 = (ctx.getString?.("arg2") ?? args[2] ?? "").toLowerCase();
+    const arg3 = (ctx.getString?.("arg3") ?? args[3] ?? "").toLowerCase();
 
     const settings = await getGuildSettings(ctx.guild.id);
     const isOwner  = ctx.user.id === ctx.guild.ownerId;
@@ -261,6 +265,24 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`<@${user.id}> can now manage antinuke settings.`)], allowedMentions: { parse: [] } });
     }
 
+    if (sub === "permissions" && ["watch", "unwatch", "list"].includes(arg1)) {
+      if (arg1 === "list") {
+        const rows = await listAntinukePermissionWatches(ctx.guild.id);
+        const lines = rows.map((r) => r.direction + " — " + r.permission);
+        return ctx.reply({ embeds: [brandEmbed({ title: "antinuke — permission watches", description: lines.length ? lines.join("; ") : "no permission changes are being watched." })] });
+      }
+      const direction = arg2;
+      const permission = arg3.replace(/-/g, "_");
+      if (direction !== "granted" && direction !== "removed") return ctx.reply({ embeds: [errorEmbed("usage: antinuke permissions watch|unwatch granted|removed permission")] });
+      if (!(permission in ANTINUKE_WATCH_PERMISSIONS)) return ctx.reply({ embeds: [errorEmbed("invalid permission. supported: administrator, ban_members, mention_everyone, kick_members, moderate_members, manage_guild, manage_channels, manage_roles, view_audit_log, manage_webhooks, manage_expressions, manage_nicknames.")] });
+      const where = and(eq(antinukePermissionWatches.guildId, ctx.guild.id), eq(antinukePermissionWatches.direction, direction), eq(antinukePermissionWatches.permission, permission));
+      if (arg1 === "watch") {
+        await db.insert(antinukePermissionWatches).values({ guildId: ctx.guild.id, direction, permission }).onConflictDoNothing();
+        return ctx.reply({ embeds: [successEmbed("watching when " + permission + " is " + direction + " on a role. Changes will be reverted.")] });
+      }
+      const deleted = await db.delete(antinukePermissionWatches).where(where).returning();
+      return ctx.reply({ embeds: [deleted.length ? successEmbed("stopped watching " + permission + " being " + direction + ".") : errorEmbed("that permission watch was not configured.")] });
+    }
     // ── dangerous permission protection ──────────────────────────────────────
     if (sub === "permissions") {
       const modules = await getModuleConfigs(ctx.guild.id);
