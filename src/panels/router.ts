@@ -20,7 +20,6 @@ export type PanelTab =
   | "moderation"
   | "logs"
   | "welcome"
-  | "economy"
   | "levels"
   | "tickets"
   | "owner";
@@ -40,7 +39,6 @@ const TAB_META: Record<PanelTab, { label: string; blurb: string }> = {
   moderation: { label: "Moderation", blurb: "Mute, jail, mod log" },
   logs: { label: "Logs", blurb: "Audit & event logging" },
   welcome: { label: "Welcome", blurb: "Welcome, goodbye, boost" },
-  economy: { label: "Economy", blurb: "Currency & economy commands" },
   levels: { label: "Levels", blurb: "XP & leveling system" },
   tickets: { label: "Tickets", blurb: "Support ticket system" },
   owner: { label: "Owner", blurb: "Bot owner utilities" },
@@ -52,7 +50,6 @@ const TABS: PanelTab[] = [
   "moderation",
   "logs",
   "welcome",
-  "economy",
   "levels",
   "tickets",
   "owner",
@@ -127,19 +124,6 @@ export async function buildPanelEmbed(active: PanelTab, guildId: string) {
       { name: "Boost", value: channelOrDash(s.boostChannel), inline: true },
       { name: "Configure", value: "`,welcome add #channel message` · `,goodbye add #channel message` · `,setboost`" }
     );
-  } else if (active === "economy") {
-    eb.setDescription("*A currency system for your members.*").addFields({
-      name: "Commands",
-      value: [
-        `\`${s.prefix}balance\``,
-        `\`${s.prefix}daily\``,
-        `\`${s.prefix}work\``,
-        `\`${s.prefix}deposit\``,
-        `\`${s.prefix}withdraw\``,
-        `\`${s.prefix}give\``,
-        `\`${s.prefix}richest\``,
-      ].join(" · "),
-    });
   } else if (active === "levels") {
     eb.setDescription("*Reward activity with experience and rank.*").addFields({
       name: "Levels",
