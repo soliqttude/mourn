@@ -66,7 +66,7 @@ export const event = {
     ].filter(Boolean);
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "members"))
+      .setColor(getLogEmbedColor(settings, "members", settings.joinLogChannel))
       .setAuthor({ name: kicker ? "Member Kicked" : "Member Left", iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .setDescription(descLines.join("\n"))
