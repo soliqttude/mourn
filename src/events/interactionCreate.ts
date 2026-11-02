@@ -73,14 +73,24 @@ export const event = {
 const SLOW_CATEGORIES = new Set(["moderation", "levels", "giveaway"]);
 
 async function replyToSlash(interaction: ChatInputCommandInteraction, payload: any) {
-  if (interaction.deferred || interaction.replied) return interaction.editReply(payload);
+  const editOriginal = async () => {
+    try {
+      if (interaction.deferred || interaction.replied) {
+        return await interaction.editReply(payload);
+      }
+    } catch {
+      // Another process/handler may have acknowledged it while local state is stale.
+    }
+    const editable = { ...payload };
+    delete editable.flags;
+    return interaction.webhook.editMessage("@original", editable);
+  };
+  if (interaction.deferred || interaction.replied) return editOriginal();
   try {
     return await interaction.reply(payload);
   } catch (error) {
     const code = (error as any)?.code ?? (error as any)?.rawError?.code;
-    if (code === 40060 || interaction.deferred || interaction.replied) {
-      return interaction.editReply(payload);
-    }
+    if (code === 40060 || interaction.deferred || interaction.replied) return editOriginal();
     throw error;
   }
 }
@@ -150,8 +160,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
       flags: MessageFlags.Ephemeral,
     };
     try {
-      if (interaction.deferred || interaction.replied) await interaction.editReply(payload);
-      else await replyToSlash(interaction, payload);
+      await replyToSlash(interaction, payload);
     } catch (replyErr) {
       logger.warn({ replyErr }, "failed to send slash error reply");
     }
