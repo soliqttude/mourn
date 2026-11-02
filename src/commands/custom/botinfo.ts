@@ -41,7 +41,7 @@ export const command: HybridCommand = {
             { name: "🕐  Uptime",    value: uptime,                   inline: true },
             { name: "💾  Memory",    value: `${mem} MB`,              inline: true },
             { name: "🛠️  Commands",  value: cmdCount.toLocaleString(), inline: true },
-            { name: "👤  Developer", value: "geico (@udrs)",          inline: true },
+            { name: "👤  Developer", value: "geico (@tr5cks)",          inline: true },
             { name: "⚙️  Runtime",   value: `Node.js ${process.version}`, inline: true },
           ],
           page: "Bot Info",
