@@ -300,13 +300,8 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [buildCommandEmbed(c, ctx.prefix, clientUser)] });
     }
 
-    const visibleCmds = [...commands.values()].filter((c) => !c.ownerOnly);
-    const categories  = [...new Set(visibleCmds.map((c) => c.category))].sort();
-    const { embed, rows } = buildHelpHome(visibleCmds.length, categories, ctx.prefix, clientUser);
     return ctx.reply({
-      content: `<@${ctx.user.id}>\n<https://villain.best/commands>\nJoin the Discord server: <https://discord.gg/villainbot>`,
-      embeds: [embed],
-      components: rows as any[],
+      content: `<@${ctx.user.id}>: <https://villain.best/commands>, join the discord server @ <https://discord.gg/villainbot>`,
       allowedMentions: { users: [ctx.user.id] },
     });
   },
