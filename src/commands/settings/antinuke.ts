@@ -181,7 +181,7 @@ export const command: HybridCommand = {
         );
       modal.addComponents(
         field("module", "Module", "ban, kick, role, channel, emoji, webhook, botadd, vanity, permissions", true),
-        field("setting", "Setting", "on or off (currently enabled: " + enabled + ")", true),
+        field("setting", "Setting", "on/off; fake permissions recommended for staff roles. Enabled: " + enabled, true),
         field("punishment", "Punishment", "ban, kick, timeout, strip, stripstaff, jail", false),
         field("threshold", "Threshold", "1–100; defaults to current setting", false),
         field("command_detection", "Command detection", "true or false; ban, kick, and role only", false),
