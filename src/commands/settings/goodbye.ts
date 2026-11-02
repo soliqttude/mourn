@@ -13,7 +13,7 @@ const VARIABLES = [
 
 export const command: HybridCommand = {
   name: "goodbye",
-  aliases: ["setgoodbye"],
+  aliases: [],
   description: "Manage goodbye messages. Supports multiple channels.",
   usage: "goodbye <add|remove|list|view|variables> [channel] [message]",
   examples: ["goodbye add #bye Goodbye {user}!", "goodbye remove #bye", "goodbye list"],
