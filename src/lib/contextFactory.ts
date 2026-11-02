@@ -84,20 +84,26 @@ export async function buildSlashContext(
     getRole: (n) => opts.getRole(n) ?? null,
     reply: async (c) => {
       const payload = normalize(c, mention);
-      // A command may be auto-deferred by the interaction handler. Prefer
-      // editing that acknowledgement, and recover if another handler won
-      // the acknowledgement race.
-      if (interaction.deferred || interaction.replied) {
-        return interaction.editReply(payload);
-      }
+      const editOriginal = async () => {
+        try {
+          if (interaction.deferred || interaction.replied) {
+            return await interaction.editReply(payload);
+          }
+        } catch {
+          // Local interaction state can be stale when another handler already
+          // acknowledged the same interaction.
+        }
+        const editable = { ...payload };
+        delete editable.flags;
+        return interaction.webhook.editMessage("@original", editable);
+      };
+      if (interaction.deferred || interaction.replied) return editOriginal();
       try {
         return await interaction.reply(payload);
       } catch (err) {
         const code = (err as any)?.code ?? (err as any)?.rawError?.code;
-        // REST may report an acknowledgement made by another handler/worker
-        // before this Interaction instance reflects the local state.
-        if (interaction.deferred || interaction.replied || code === 40060) {
-          return interaction.editReply(payload);
+        if (code === 40060 || interaction.deferred || interaction.replied) {
+          return editOriginal();
         }
         throw err;
       }
