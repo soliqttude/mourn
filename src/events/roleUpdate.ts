@@ -35,7 +35,7 @@ export const event = {
     const guildIcon = newRole.guild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "roles"))
+      .setColor(getLogEmbedColor(settings, "roles", settings.roleLogChannel))
       .setAuthor({ name: "Role Updated", iconURL: guildIcon })
       .setDescription(
         `Role <@&${newRole.id}> was updated${executor ? ` by <@${executor}>` : ""}`
