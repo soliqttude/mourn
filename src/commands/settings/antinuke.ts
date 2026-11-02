@@ -274,7 +274,7 @@ export const command: HybridCommand = {
       const direction = arg2;
       const permission = arg3.replace(/-/g, "_");
       if (direction !== "granted" && direction !== "removed") return ctx.reply({ embeds: [errorEmbed("usage: antinuke permissions watch|unwatch granted|removed permission")] });
-      if (!(permission in ANTINUKE_WATCH_PERMISSIONS)) return ctx.reply({ embeds: [errorEmbed("invalid permission. supported: administrator, ban_members, mention_everyone, kick_members, moderate_members, manage_guild, manage_channels, manage_roles, view_audit_log, manage_webhooks, manage_expressions, manage_nicknames.")] });
+      if (!Object.hasOwn(ANTINUKE_WATCH_PERMISSIONS, permission)) return ctx.reply({ embeds: [errorEmbed("invalid permission. supported: administrator, ban_members, mention_everyone, kick_members, moderate_members, manage_guild, manage_channels, manage_roles, view_audit_log, manage_webhooks, manage_expressions, manage_nicknames.")] });
       const where = and(eq(antinukePermissionWatches.guildId, ctx.guild.id), eq(antinukePermissionWatches.direction, direction), eq(antinukePermissionWatches.permission, permission));
       if (arg1 === "watch") {
         await db.insert(antinukePermissionWatches).values({ guildId: ctx.guild.id, direction, permission }).onConflictDoNothing();
