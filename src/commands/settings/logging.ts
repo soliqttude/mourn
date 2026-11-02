@@ -84,11 +84,12 @@ export const command: HybridCommand = {
       const rawTarget = ctx.getString("target") ?? ctx.args[1] ?? "";
       const targetId = cleanId(rawTarget);
       if (!targetId) return ctx.reply({ embeds: [errorEmbed("Provide a member or channel to ignore.")] });
-      const isChannel = ctx.guild.channels.cache.has(targetId);
-      const isMember = ctx.guild.members.cache.has(targetId);
-      if (!isChannel && !isMember) return ctx.reply({ embeds: [errorEmbed("That member or channel was not found in this server.")] });
+      const targetChannel = ctx.guild.channels.cache.get(targetId);
+      const targetMember = targetChannel ? null : await ctx.guild.members.fetch(targetId).catch(() => null);
+      if (!targetChannel && !targetMember) return ctx.reply({ embeds: [errorEmbed("That member or channel was not found in this server.")] });
       await db.insert(logIgnores).values({ guildId: ctx.guild.id, targetId }).onConflictDoNothing();
-      return ctx.reply({ embeds: [successEmbed(`${isChannel ? `<#${targetId}>` : `<@${targetId}>`} will be ignored by logging.`)] });
+      const mention = targetChannel ? `<#${targetId}>` : `<@${targetId}>`;
+      return ctx.reply({ embeds: [successEmbed(`${mention} will be ignored by logging.`)] });
     }
 
     if (action === "add" || action === "remove") {
