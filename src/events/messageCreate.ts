@@ -1,7 +1,7 @@
 import { type Client, type Message } from "discord.js";
 import { findCommand } from "../handlers/registry.js";
 import { buildPrefixContext } from "../lib/contextFactory.js";
-import { errorEmbed, helpEmbed } from "../lib/embeds.js";
+import { errorEmbed, helpEmbed, EMOJIS } from "../lib/embeds.js";
 import { logger } from "../lib/logger.js";
 import { getGuildSettings } from "../db/settings.js";
 import { config } from "../config.js";
@@ -271,7 +271,7 @@ export const event = {
         ? await message.guild!.members.fetch(message.author.id).catch(() => null)
         : message.member;
       if (!member || !(await checkTierWithFake(member, cmd.permission))) {
-        const permEmbed = errorEmbed(`<:warn:1508824473992696049> ${message.author}: You're **missing** permission: \`${cmd.permission}\``);
+        const permEmbed = errorEmbed(`${EMOJIS.warn} ${message.author}: You're **missing** permission: \`${cmd.permission}\``);
         await message.reply({ embeds: [permEmbed] }).catch(() =>
           (message.channel as any).send({ embeds: [permEmbed] }).catch(() => {})
         );
