@@ -186,7 +186,7 @@ export async function rerollGiveaway(client: Client, giveaway: GiveawayRow, winn
   const entrants = reaction ? await fetchAllEntrants(reaction) : [];
   const eligible = await eligibleEntrants(message.guild, giveaway, entrants);
   const winners = choose(eligible, winnerCount, giveaway.winners ?? []);
-  if (!winners.length) throw new Error("No new eligible entrants are available to reroll.");
+  if (!winners.length) throw new Error("There are no other eligible entrants to reroll. A reroll needs at least one eligible participant who has not already won.");
   await db.update(giveaways).set({ winners: [...(giveaway.winners ?? []), ...winners] }).where(eq(giveaways.id, giveaway.id));
   const mentions = winners.map(id => `<@${id}>`).join(", ");
   await textChannel.send({ content: `🎉 Rerolled winner(s) for **${giveaway.prize}**: ${mentions}!`,
@@ -195,11 +195,15 @@ export async function rerollGiveaway(client: Client, giveaway: GiveawayRow, winn
 }
 
 export async function refreshGiveawayMessage(client: Client, giveaway: GiveawayRow): Promise<void> {
-  if (!giveaway.messageId || giveaway.ended) return;
+  if (!giveaway.messageId) throw new Error("The giveaway message ID is missing.");
+  if (giveaway.ended) throw new Error("You can only refresh an active giveaway.");
   const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
-  if (!channel?.isTextBased() || !("messages" in channel)) return;
+  if (!channel?.isTextBased() || !("messages" in channel)) {
+    throw new Error("I cannot access the giveaway channel. Check my View Channel and Read Message History permissions.");
+  }
   const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
-  if (message) await message.edit({ embeds: [buildGiveawayEmbed(giveaway)] });
+  if (!message) throw new Error("I cannot find the original giveaway message. It may have been deleted.");
+  await message.edit({ embeds: [buildGiveawayEmbed(giveaway)] });
 }
 
 export async function cancelGiveaway(client: Client, giveaway: GiveawayRow): Promise<void> {
@@ -209,8 +213,16 @@ export async function cancelGiveaway(client: Client, giveaway: GiveawayRow): Pro
   if (!channel?.isTextBased() || !("messages" in channel)) throw new Error("Giveaway channel not found or is not accessible.");
   const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
   if (!message) throw new Error("Giveaway message not found. I cannot delete a message I cannot access.");
-  await message.delete();
-  await db.update(giveaways).set({ ended: true }).where(and(eq(giveaways.id, giveaway.id), eq(giveaways.ended, false)));
+  const claimed = await db.update(giveaways).set({ ended: true })
+    .where(and(eq(giveaways.id, giveaway.id), eq(giveaways.ended, false)))
+    .returning({ id: giveaways.id });
+  if (!claimed.length) throw new Error("That giveaway has already ended or another action is processing it.");
+  try {
+    await message.delete();
+  } catch (error) {
+    await db.update(giveaways).set({ ended: false }).where(eq(giveaways.id, giveaway.id)).catch(() => {});
+    throw new Error("I could not delete the giveaway message. Check that I can view the channel and manage my own messages.");
+  }
 }
 
 export function startGiveawayLoop(client: Client): void {
