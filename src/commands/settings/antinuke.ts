@@ -63,15 +63,28 @@ function parseFlags(args: string[]): Flags {
 }
 
 async function resolveUser(ctx: any, raw: string) {
-  try {
-    const u = await ctx.getUser?.("user");
-    if (u) return u;
-  } catch {}
-  const id = raw?.replace(/[<@!>]/g, "").trim();
-  if (/^\d{15,20}$/.test(id)) {
-    return ctx.guild!.client.users.fetch(id).catch(() => null);
+  // Slash commands provide a real User option; prefix commands provide a mention or ID.
+  if (ctx.source === "slash") {
+    try {
+      const selected = await ctx.getUser?.("user");
+      if (selected) return selected;
+    } catch {}
   }
-  return null;
+
+  const input = String(raw ?? "").trim();
+  const mention = input.match(/^<@!?(\d{15,21})>$/);
+  const id = mention?.[1] ?? (/^\d{15,21}$/.test(input) ? input : null);
+  if (id) return ctx.guild!.client.users.fetch(id).catch(() => null);
+
+  // Username/display-name lookup is best-effort and only uses members already cached.
+  const needle = input.replace(/^@/, "").toLowerCase();
+  if (!needle) return null;
+  const member = ctx.guild!.members.cache.find((m: any) =>
+    m.user.username.toLowerCase() === needle ||
+    m.user.globalName?.toLowerCase() === needle ||
+    m.displayName.toLowerCase() === needle
+  );
+  return member?.user ?? null;
 }
 
 export const command: HybridCommand = {
@@ -146,8 +159,11 @@ export const command: HybridCommand = {
       : (args[3] ?? "")).toLowerCase();
 
     const settings = await getGuildSettings(ctx.guild.id);
-    const isOwner  = ctx.user.id === ctx.guild.ownerId;
-    const isAdmin  = await isAntinukeAdmin(ctx.guild.id, ctx.user.id, ctx.guild.ownerId);
+    // Resolve the current owner from Discord instead of trusting a possibly stale
+    // cached ownerId. Fall back to the cached value if the API request fails.
+    const ownerId = await ctx.guild.fetchOwner().then((owner: any) => owner.id).catch(() => ctx.guild!.ownerId);
+    const isOwner = ctx.user.id === ownerId;
+    const isAdmin = isOwner || await isAntinukeAdmin(ctx.guild.id, ctx.user.id, ownerId);
 
     if (!isAdmin) {
       return ctx.reply({ embeds: [errorEmbed("you must be the server **owner** or an **antinuke admin**.")] });
@@ -314,25 +330,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`<@${user.id}> can now manage antinuke settings.`)], allowedMentions: { parse: [] } });
     }
 
-    if (sub === "permissions" && ["watch", "unwatch", "list"].includes(arg1)) {
-      if (arg1 === "list") {
-        const rows = await listAntinukePermissionWatches(ctx.guild.id);
-        const lines = rows.map((r) => r.direction + " — " + r.permission);
-        return ctx.reply({ embeds: [brandEmbed({ title: "antinuke — permission watches", description: lines.length ? lines.join("; ") : "no permission changes are being watched." })] });
-      }
-      const direction = arg2;
-      const permission = arg3.replace(/-/g, "_");
-      if (direction !== "granted" && direction !== "removed") return ctx.reply({ embeds: [errorEmbed("usage: antinuke permissions watch|unwatch granted|removed permission")] });
-      if (!Object.hasOwn(ANTINUKE_WATCH_PERMISSIONS, permission)) return ctx.reply({ embeds: [errorEmbed("invalid permission. supported: administrator, ban_members, mention_everyone, kick_members, moderate_members, manage_guild, manage_channels, manage_roles, view_audit_log, manage_webhooks, manage_expressions, manage_nicknames.")] });
-      const where = and(eq(antinukePermissionWatches.guildId, ctx.guild.id), eq(antinukePermissionWatches.direction, direction), eq(antinukePermissionWatches.permission, permission));
-      if (arg1 === "watch") {
-        await db.insert(antinukePermissionWatches).values({ guildId: ctx.guild.id, direction, permission }).onConflictDoNothing();
-        await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
-        return ctx.reply({ embeds: [successEmbed("watching when " + permission + " is " + direction + " on a role. Changes will be reverted.")] });
-      }
-      const deleted = await db.delete(antinukePermissionWatches).where(where).returning();
-      return ctx.reply({ embeds: [deleted.length ? successEmbed("stopped watching " + permission + " being " + direction + ".") : errorEmbed("that permission watch was not configured.")] });
-    }
     // ── dangerous permission protection ──────────────────────────────────────
     if (sub === "permissions") {
       const modules = await getModuleConfigs(ctx.guild.id);
