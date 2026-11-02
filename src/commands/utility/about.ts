@@ -29,7 +29,7 @@ The bot is actively maintained and continuously updated with new features, impro
 
 If you have any questions, feedback, or bug reports, feel free to reach out:
 
-@udrs • @remandment`,
+@tr5cks`,
           fields: [
             { name: "servers", value: `${guilds}`,                   inline: true },
             { name: "users",   value: `${users.toLocaleString()}`,   inline: true },
