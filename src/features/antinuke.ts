@@ -467,8 +467,6 @@ export async function handleWatchedRolePermissions(
 ): Promise<void> {
   const guild = newRole.guild;
   const settings = await getGuildSettings(guild.id);
-  if (!settings.antinukeEnabled) return;
-
   const watches = await listAntinukePermissionWatches(guild.id);
   if (!watches.length) return;
 
