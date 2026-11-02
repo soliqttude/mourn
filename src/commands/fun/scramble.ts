@@ -1,6 +1,5 @@
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, successEmbed, errorEmbed } from "../../lib/embeds.js";
-import { addBalance } from "../../features/economy.js";
 
 const WORDS = [
   "discord","gaming","javascript","typescript","channel","moderation","economy",
@@ -9,7 +8,6 @@ const WORDS = [
   "prestige","giveaway","tournament","reputation","broadcast","confession",
   "minesweeper","trivia","scramble","treasure","starboard","voicemaster",
 ];
-const COIN_REWARD = 75;
 
 function shuffle(w: string): string {
   const a = w.split("");
@@ -23,7 +21,7 @@ function shuffle(w: string): string {
 export const command: HybridCommand = {
   name: "scramble",
   aliases: ["wordscramble", "unscramble"],
-  description: "Unscramble the word before time runs out! First correct answer wins coins.",
+  description: "Unscramble the word before time runs out!"
   usage: "scramble",
   examples: ["scramble"],
   category: "fun",
@@ -37,7 +35,7 @@ export const command: HybridCommand = {
     await ctx.reply({
       embeds: [brandEmbed({
         title: "🔀 word scramble",
-        description: `unscramble this:\n\n# \`${sc}\`\n\nfirst one to type the correct word wins **${COIN_REWARD} coins**! ⏱ 30 seconds.`,
+        description: `unscramble this:\n\n# \`${sc}\`\n\nfirst one to type the correct word wins! ⏱ 30 seconds.`,
         page: "Fun",
       })],
     });
@@ -49,9 +47,8 @@ export const command: HybridCommand = {
     });
 
     col?.on("collect", async (m: any) => {
-      if (ctx.guild) await addBalance(ctx.guild.id, m.author.id, COIN_REWARD);
       await m.reply({
-        embeds: [successEmbed(`✅ **${m.author.username}** got it! the word was **${word}**. +${COIN_REWARD} coins 🪙`)],
+        embeds: [successEmbed(`✅ **${m.author.username}** got it! the word was **${word}**.`)],
       });
     });
 
