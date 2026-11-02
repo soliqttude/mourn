@@ -45,7 +45,7 @@ export const event = {
     const guildIcon = newGuild.iconURL({ size: 64 }) ?? undefined;
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "channels"))
+      .setColor(getLogEmbedColor(settings, "channels", settings.serverLogChannel))
       .setAuthor({ name: "Server Updated", iconURL: guildIcon })
       .setDescription(
         `Server settings were updated${executor ? ` by <@${executor}>` : ""}`
