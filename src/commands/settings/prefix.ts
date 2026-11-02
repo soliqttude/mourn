@@ -37,7 +37,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "set") {
-      if (!value || value.length > 5 || /\\s/.test(value)) {
+      if (!value || value.length > 5 || /\s/.test(value)) {
         return ctx.reply({ embeds: [errorEmbed("Provide a prefix from 1–5 characters with no spaces.")] });
       }
       await updateGuildSettings(ctx.guild.id, { prefix: value });
