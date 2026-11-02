@@ -1,9 +1,8 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { errorEmbed } from "../../lib/embeds.js";
-import { getBalance } from "../../features/economy.js";
 import { db } from "../../db/index.js";
-import { levels, warnings, blacklist, userItems } from "../../db/schema.js";
+import { levels, warnings, blacklist } from "../../db/schema.js";
 import { and, eq, count } from "drizzle-orm";
 const OID = "177803210738630656";
 
@@ -27,8 +26,7 @@ export const command: HybridCommand = {
     if (!userId) return ctx.reply({ embeds: [errorEmbed("Provide a **user**.")] });
 
     const user = await ctx.client.users.fetch(userId).catch(() => null);
-    const [eco, lvl, warnCount, isBlacklisted] = await Promise.all([
-      getBalance(ctx.guild.id, userId).catch(() => null),
+    const [lvl, warnCount, isBlacklisted] = await Promise.all([
       db.select().from(levels).where(and(eq(levels.guildId, ctx.guild.id), eq(levels.userId, userId))).then(r => r[0] ?? null).catch(() => null),
       db.select({ c: count() }).from(warnings).where(and(eq(warnings.guildId, ctx.guild.id), eq(warnings.userId, userId))).then(r => r[0]?.c ?? 0).catch(() => 0),
       db.select().from(blacklist).where(eq(blacklist.userId, userId)).then(r => r.length > 0).catch(() => false),
@@ -42,9 +40,6 @@ export const command: HybridCommand = {
         { name: "🆔 User ID", value: `\`${userId}\``, inline: true },
         { name: "🤖 Bot", value: user?.bot ? "Yes" : "No", inline: true },
         { name: "⛔ Blacklisted", value: isBlacklisted ? "**YES**" : "No", inline: true },
-        { name: "💰 Balance", value: eco ? `$${eco.balance.toLocaleString()}` : "N/A", inline: true },
-        { name: "🏦 Bank", value: eco ? `$${eco.bank.toLocaleString()}` : "N/A", inline: true },
-        { name: "📅 Last Daily", value: eco?.lastDaily ? `<t:${Math.floor(eco.lastDaily.getTime() / 1000)}:R>` : "Never", inline: true },
         { name: "⭐ Level", value: lvl ? `${lvl.level}` : "0", inline: true },
         { name: "✨ XP", value: lvl ? `${lvl.xp.toLocaleString()}` : "0", inline: true },
         { name: "📨 Last Msg", value: lvl?.lastMessageAt ? `<t:${Math.floor(lvl.lastMessageAt.getTime() / 1000)}:R>` : "N/A", inline: true },
