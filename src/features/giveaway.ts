@@ -154,7 +154,8 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<s
     await db.update(giveaways).set({ winners }).where(eq(giveaways.id, giveawayId));
     if (winners.length) {
       await textChannel.send({ content: `🎉 Congratulations ${mentions}! You won **${giveaway.prize}**!`,
-        allowedMentions: { users: winners } });
+        allowedMentions: { users: winners } }).catch(err =>
+          logger.warn({ err, giveawayId }, "giveaway winner announcement failed"));
       if (giveaway.awardRoleIds?.length) {
         for (const winnerId of winners) {
           const member = await message.guild.members.fetch(winnerId).catch(() => null);
@@ -163,7 +164,8 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<s
         }
       }
     } else {
-      await textChannel.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` });
+      await textChannel.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` }).catch(err =>
+        logger.warn({ err, giveawayId }, "empty giveaway announcement failed"));
     }
     return winners;
   } catch (error) {
@@ -180,7 +182,7 @@ export async function rerollGiveaway(client: Client, giveaway: GiveawayRow, winn
   const textChannel = channel as TextChannel;
   const message = await textChannel.messages.fetch(giveaway.messageId).catch(() => null);
   if (!message) throw new Error("Giveaway message not found.");
-  const reaction = message.reactions.cache.get("🎉");
+  const reaction = message.reactions.cache.get("🎉") ?? (await message.reactions.fetch()).get("🎉");
   const entrants = reaction ? await fetchAllEntrants(reaction) : [];
   const eligible = await eligibleEntrants(message.guild, giveaway, entrants);
   const winners = choose(eligible, winnerCount, giveaway.winners ?? []);
@@ -201,13 +203,14 @@ export async function refreshGiveawayMessage(client: Client, giveaway: GiveawayR
 }
 
 export async function cancelGiveaway(client: Client, giveaway: GiveawayRow): Promise<void> {
-  await db.update(giveaways).set({ ended: true }).where(and(eq(giveaways.id, giveaway.id), eq(giveaways.ended, false)));
-  if (!giveaway.messageId) return;
+  if (giveaway.ended) throw new Error("That giveaway has already ended or been cancelled.");
+  if (!giveaway.messageId) throw new Error("The giveaway message is unavailable.");
   const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
-  if (channel?.isTextBased() && "messages" in channel) {
-    const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
-    await message?.delete().catch(() => {});
-  }
+  if (!channel?.isTextBased() || !("messages" in channel)) throw new Error("Giveaway channel not found or is not accessible.");
+  const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
+  if (!message) throw new Error("Giveaway message not found. I cannot delete a message I cannot access.");
+  await message.delete();
+  await db.update(giveaways).set({ ended: true }).where(and(eq(giveaways.id, giveaway.id), eq(giveaways.ended, false)));
 }
 
 export function startGiveawayLoop(client: Client): void {
