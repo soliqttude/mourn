@@ -1,11 +1,12 @@
 import type { Client, GuildBan, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 
 export const event = {
   name: "guildBanRemove",
   async execute(_client: Client, ban: GuildBan) {
     const settings = await getGuildSettings(ban.guild.id);
+    if (await isLogTargetIgnored(ban.guild.id, ban.user.id)) return;
     if (!settings.modLogChannel) return;
     const ch = ban.guild.channels.cache.get(settings.modLogChannel);
     if (!ch?.isTextBased()) return;
