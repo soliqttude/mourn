@@ -3,11 +3,11 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
-  name: "untimeout",
-  aliases: ["unmute"],
-  description: "Remove a timeout from a member.",
-  usage: "untimeout [user]",
-  examples: ["untimeout"],
+  name: "unmute",
+  aliases: [],
+  description: "Unmute a member.",
+  usage: "unmute <member> [reason]",
+  examples: ["unmute @mmoudder"],
   category: "moderation",
   permission: "moderate_members",
   guildOnly: true,
