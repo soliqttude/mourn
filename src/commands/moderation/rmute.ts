@@ -6,10 +6,10 @@ export const command: HybridCommand = {
   name: "rmute",
   aliases: ["reactionmute", "reactmute"],
   description: "Prevent a user from adding reactions.",
-  usage: "rmute [user] [reason]",
-  examples: ["rmute Rule violation"],
+  usage: "rmute <member> [reason]",
+  examples: ["rmute @mmoudder rule violation"],
   category: "moderation",
-  permission: "mute_members",
+  permission: "moderate_members",
   guildOnly: true,
   options: [
     { name: "user", description: "Member to reaction-mute", type: ApplicationCommandOptionType.User, required: true },
