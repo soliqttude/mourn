@@ -7,7 +7,7 @@ export const command: HybridCommand = {
   aliases: ["userbanner", "ub"],
   description: "Show a user's banner.",
   usage: "banner [user]",
-  examples: ["banner", "banner @user"],
+  examples: ["banner", "banner @mmoudder"],
   category: "utility",
   options: [
     { name: "user", description: "User", type: ApplicationCommandOptionType.User, required: false },
