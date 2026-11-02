@@ -7,12 +7,11 @@ import { antinukeWhitelist } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { invalidateWhitelistCache } from "../../features/antinuke.js";
 import { setAntiraidRaidState } from "../../features/antiraid.js";
+import { resolveUser as resolveParsedUser } from "../../lib/parsing.js";
 
 async function resolveUser(ctx: any, raw: string) {
-  try { const u = await ctx.getUser("user"); if (u) return u; } catch {}
-  const id = raw?.replace(/[<@!>]/g, "");
-  if (id && /^\d+$/.test(id)) return ctx.guild!.client.users.fetch(id).catch(() => null);
-  return null;
+  try { const selected = await ctx.getUser("user"); if (selected) return selected; } catch {}
+  return resolveParsedUser(ctx.guild!.client, raw, ctx.guild);
 }
 
 export const command: HybridCommand = {
