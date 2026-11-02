@@ -173,6 +173,8 @@ export async function buildPrefixContext(
       if (!v || !message.guild) return null;
       return resolveRole(message.guild, v);
     },
+    getSubcommand: () => argMap["sub"] ?? null,
+    getSubcommandGroup: () => null,
     reply: async (c) => {
       const payload = normalize(c, mention);
       delete payload.flags;
