@@ -55,7 +55,7 @@ const VARIABLES = [
 
 export const command: HybridCommand = {
   name: "welcome",
-  aliases: ["setwelcome"],
+  aliases: [],
   description: "Manage welcome messages with full embed scripting support.",
   usage: "welcome <add|remove|list|view> [channel] [message] [--self_destruct 6-60]",
   examples: [
