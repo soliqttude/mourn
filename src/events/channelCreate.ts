@@ -1,6 +1,6 @@
 import type { Client, GuildChannel, TextChannel } from "discord.js";
 import { EmbedBuilder, ChannelType, AuditLogEvent } from "discord.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 import { handleAntinukeAction } from "../features/antinuke.js";
 
 const CHANNEL_TYPE_NAMES: Partial<Record<ChannelType, string>> = {
@@ -16,6 +16,7 @@ export const event = {
     await handleAntinukeAction(client, channel.guild, "channel_create", channel.id);
 
     const settings = await getGuildSettings(channel.guild.id);
+    if (await isLogTargetIgnored(channel.guild.id, channel.id)) return;
     const logChannelId = (settings as any).serverLogChannel as string | null;
     if (!logChannelId) return;
     const logCh = channel.guild.channels.cache.get(logChannelId);
