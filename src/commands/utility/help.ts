@@ -7,7 +7,7 @@ import {
   StringSelectMenuBuilder,
 } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { errorEmbed } from "../../lib/embeds.js";
+import { errorEmbed, EMOJIS } from "../../lib/embeds.js";
 import { commands, findCommand } from "../../handlers/registry.js";
 import { config } from "../../config.js";
 
@@ -49,8 +49,8 @@ function catCommandCount(cat: string): number {
 
 // ── Single command embed ──────────────────────────────────────────────────────
 
-const E_WARN    = "<:warn:1508824473992696049>";
-const E_APPROVE = "<:approve:1508824442422431876>";
+const E_WARN = EMOJIS.warn;
+const E_APPROVE = EMOJIS.approve;
 
 export function buildCommandEmbed(
   c: HybridCommand,
