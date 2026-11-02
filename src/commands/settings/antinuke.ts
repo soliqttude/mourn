@@ -77,7 +77,7 @@ async function resolveUser(ctx: any, raw: string) {
 export const command: HybridCommand = {
   name: "antinuke",
   aliases: ["an"],
-  description: "Configure anti-nuke protection for your server.",
+  description: "Configure AntiNuke protections. Fake permissions are recommended for staff roles to reduce mass-action bypass risk.",
   usage: "antinuke [module|config|list|whitelist|admin|admins|log|enable|disable]",
   examples: [
     "antinuke",
