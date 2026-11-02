@@ -19,13 +19,14 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const s = await getGuildSettings(ctx.guild.id);
+    const autoroleDisplay = String(s.autoroleId ?? "").split(",").filter(Boolean).map(role).join(", ") || "none";
     const fields = [
       { name: "prefix", value: `\`${s.prefix ?? config.defaultPrefix}\``, inline: true },
       { name: "database", value: config.databaseEnabled ? "enabled" : "disabled", inline: true },
       { name: "levels", value: yn(s.levelsEnabled), inline: true },
       { name: "welcome", value: ch(s.welcomeChannel), inline: true },
       { name: "goodbye", value: ch(s.goodbyeChannel), inline: true },
-      { name: "autorole", value: role(s.autoroleId), inline: true },
+      { name: "autoroles", value: autoroleDisplay, inline: true },
       { name: "mod log", value: ch(s.modLogChannel), inline: true },
       { name: "message log", value: ch(s.msgLogChannel), inline: true },
       { name: "join log", value: ch(s.joinLogChannel), inline: true },
