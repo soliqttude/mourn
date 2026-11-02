@@ -317,7 +317,7 @@ export const command: HybridCommand = {
         const rawId = args[2] ?? ctx.getString?.("arg2") ?? "";
         const user  = await resolveUser(ctx, rawId);
         if (!user) return ctx.reply({ embeds: [errorEmbed("user not found. provide a mention or user ID.")] });
-        if (user.id === ctx.guild.ownerId) return ctx.reply({ embeds: [errorEmbed("the server owner is always an antinuke admin.")] });
+        if (user.id === ownerId) return ctx.reply({ embeds: [errorEmbed("that user is the server owner and already has AntiNuke admin access.")] });
         const exists = await db.select().from(antinukeAdmins).where(
           and(eq(antinukeAdmins.guildId, ctx.guild.id), eq(antinukeAdmins.userId, user.id))
         );
