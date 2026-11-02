@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "./index.js";
-import { guildSettings } from "./schema.js";
+import { guildSettings, logIgnores } from "./schema.js";
 import { config } from "../config.js";
 
 const cache = new Map<string, typeof guildSettings.$inferSelect>();
@@ -72,4 +72,12 @@ export function getLogEmbedColor(settings: typeof guildSettings.$inferSelect, ev
   const raw = colors[event] ?? colors[event.replace(/s$/, "")] ?? "";
   if (!/^#?[0-9a-f]{6}$/i.test(raw)) return 0x000000;
   return Number.parseInt(raw.replace(/^#/, ""), 16);
+}
+
+export async function isLogTargetIgnored(guildId: string, targetId: string): Promise<boolean> {
+  if (!config.databaseEnabled || !targetId) return false;
+  const rows = await db.select().from(logIgnores).where(
+    and(eq(logIgnores.guildId, guildId), eq(logIgnores.targetId, targetId))
+  ).limit(1);
+  return rows.length > 0;
 }
