@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { config } from "../../config.js";
 
