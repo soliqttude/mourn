@@ -156,7 +156,7 @@ export async function buildPrefixContext(
     getUser: async (n, _r) => {
       const v = argMap[n];
       if (!v) return null;
-      return resolveUser(client, v);
+      return resolveUser(client, v, message.guild);
     },
     getMember: async (n, _r) => {
       const v = argMap[n];
