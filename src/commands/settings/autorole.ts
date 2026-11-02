@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
+import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
