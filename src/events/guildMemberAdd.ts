@@ -1,6 +1,6 @@
 import type { Client, GuildMember, TextChannel } from "discord.js";
 import { EmbedBuilder } from "discord.js";
-import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor, isLogTargetIgnored } from "../db/settings.js";
 import { trackInviteUse } from "../features/invites.js";
 import { handleAntiraidJoin } from "../features/antiraid.js";
 import { handleBotAdd } from "../features/antinuke.js";
@@ -103,6 +103,7 @@ export const event = {
       }
     }
 
+    if (await isLogTargetIgnored(member.guild.id, member.id)) return;
     if (!settings.joinLogChannel) return;
     const logCh = member.guild.channels.cache.get(settings.joinLogChannel);
     if (!logCh?.isTextBased()) return;
