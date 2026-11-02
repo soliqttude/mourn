@@ -84,10 +84,20 @@ export async function buildSlashContext(
     getRole: (n) => opts.getRole(n) ?? null,
     reply: async (c) => {
       const payload = normalize(c, mention);
+      // A command may be auto-deferred by the interaction handler. Prefer
+      // editing that acknowledgement, and recover if another handler won
+      // the acknowledgement race.
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);
       }
-      return interaction.reply(payload);
+      try {
+        return await interaction.reply(payload);
+      } catch (err) {
+        if (interaction.deferred || interaction.replied) {
+          return interaction.editReply(payload);
+        }
+        throw err;
+      }
     },
     followUp: async (c) => interaction.followUp(normalize(c, mention)),
     defer: async (eph) =>
