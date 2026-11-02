@@ -140,7 +140,7 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<s
     const message = await textChannel.messages.fetch(giveaway.messageId).catch(() => null);
     if (!message) throw new Error("Giveaway message not found. Check that it still exists and that I can view its channel.");
 
-    const reaction = message.reactions.cache.get("🎉") ?? (await message.reactions.fetch()).get("🎉");
+    const reaction = message.reactions.cache.get("🎉");
     const entrants = reaction ? await fetchAllEntrants(reaction) : [];
     const eligible = await eligibleEntrants(message.guild, giveaway, entrants);
     const winners = choose(eligible, giveaway.winnersCount);
@@ -182,7 +182,7 @@ export async function rerollGiveaway(client: Client, giveaway: GiveawayRow, winn
   const textChannel = channel as TextChannel;
   const message = await textChannel.messages.fetch(giveaway.messageId).catch(() => null);
   if (!message) throw new Error("Giveaway message not found.");
-  const reaction = message.reactions.cache.get("🎉") ?? (await message.reactions.fetch()).get("🎉");
+  const reaction = message.reactions.cache.get("🎉");
   const entrants = reaction ? await fetchAllEntrants(reaction) : [];
   const eligible = await eligibleEntrants(message.guild, giveaway, entrants);
   const winners = choose(eligible, winnerCount, giveaway.winners ?? []);
