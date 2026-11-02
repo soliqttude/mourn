@@ -515,7 +515,11 @@ const THREADS: ThreadDef[] = [
       "**Testing your welcome message**",
       "`,welcome view #channel` (or run it in the channel it's set to).",
       "",
+      "`,welcome variables` — view all available welcome variables.",
+      "`,welcome list` — view every configured welcome channel.",
+      "",
       "∙ The same commands apply for goodbye messages using `,goodbye`.",
+      "∙ Use `,goodbye add #channel <message>`, `,goodbye variables`, and `,goodbye list` for goodbye settings.",
     ].join("\n"),
   },
   {
