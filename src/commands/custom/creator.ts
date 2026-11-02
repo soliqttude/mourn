@@ -15,7 +15,7 @@ export const command: HybridCommand = {
           title: "Creator",
           description: "> bot still in development, hit me up if something's broken or u got ideas.",
           fields: [
-            { name: "Discord", value: "@tr5cks", inline: true },
+            { name: "Discord", value: "@mmoudder", inline: true },
           ],
           page: "Creator",
         }),
