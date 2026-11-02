@@ -10,7 +10,7 @@ export const command: HybridCommand = {
   aliases: ["botignore"],
   description: "Make the bot ignore a member or channel entirely.",
   usage: "ignore <add|remove|list> [member or channel]",
-  examples: ["ignore add @user", "ignore add #channel", "ignore remove @user", "ignore list"],
+  examples: ["ignore add @mmoudder", "ignore add #channel", "ignore remove @mmoudder", "ignore list"],
   category: "settings",
   permission: "manage_guild",
   guildOnly: true,
