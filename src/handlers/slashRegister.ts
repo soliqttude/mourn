@@ -21,6 +21,7 @@ const PINNED_COMMANDS = new Set([
   "userinfo",
   "membercount",
   "avatar",
+  "antinuke",
 ]);
 
 // Per-category slash command caps — total must stay at or below 100
