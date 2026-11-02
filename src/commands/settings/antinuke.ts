@@ -338,41 +338,70 @@ export const command: HybridCommand = {
       const modules = await getModuleConfigs(ctx.guild.id);
       const cfg = modules.get("permissions");
 
-      if (!arg1) {
+      if (arg1 === "list" || !arg1) {
+        const watches = await listAntinukePermissionWatches(ctx.guild.id);
+        const description = watches.length
+          ? watches.map((watch) => "`" + watch.direction + "` — `" + watch.permission + "`").join("\n")
+          : "No permission changes are being watched."; 
         return ctx.reply({ embeds: [brandEmbed({
-          title: "antinuke — permissions",
-          description: [
-            `**status** — ${cfg?.enabled ? "**enabled**" : "**disabled**"}`,
-            `**punishment** — \`${cfg?.punishment ?? settings.antinukeAction ?? "ban"}\``,
-            "",
-            "This module watches dangerous permissions being granted through role updates.",
-          ].join("\\n"),
+          title: "AntiNuke — watched permissions",
+          description: description + "\n\nPermission-change punishment: " + (cfg?.enabled ? "enabled" : "disabled; watched changes are still reverted"),
         })] });
       }
 
-      if (arg1 !== "on" && arg1 !== "off") {
-        return ctx.reply({ embeds: [errorEmbed("usage: `antinuke permissions on|off`")] });
+      if (arg1 === "watch" || arg1 === "unwatch") {
+        const direction = arg2;
+        const permission = arg3;
+        if (direction !== "granted" && direction !== "removed") {
+          return ctx.reply({ embeds: [errorEmbed("direction must be granted or removed.")] });
+        }
+        if (!Object.prototype.hasOwnProperty.call(ANTINUKE_WATCH_PERMISSIONS, permission)) {
+          return ctx.reply({ embeds: [errorEmbed("invalid permission. Choose one of the documented permissions.")] });
+        }
+
+        if (arg1 === "watch") {
+          await db.insert(antinukePermissionWatches)
+            .values({ guildId: ctx.guild.id, direction, permission })
+            .onConflictDoNothing();
+          await db.insert(antinukeModules).values({
+            guildId: ctx.guild.id, module: "permissions", enabled: true,
+            threshold: cfg?.threshold ?? 3,
+            punishment: cfg?.punishment ?? settings.antinukeAction ?? "ban",
+            countCommands: false,
+          }).onConflictDoUpdate({
+            target: [antinukeModules.guildId, antinukeModules.module],
+            set: { enabled: true },
+          });
+          await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
+          invalidateModuleCache(ctx.guild.id);
+          return ctx.reply({ embeds: [successEmbed("watching when " + permission + " is " + direction + " on a role. Changes will be reverted.")] });
+        }
+
+        await db.delete(antinukePermissionWatches).where(and(
+          eq(antinukePermissionWatches.guildId, ctx.guild.id),
+          eq(antinukePermissionWatches.direction, direction),
+          eq(antinukePermissionWatches.permission, permission),
+        ));
+        return ctx.reply({ embeds: [successEmbed("stopped watching when " + permission + " is " + direction + ".")] });
       }
 
-      const enabled = arg1 === "on";
-      await db
-        .insert(antinukeModules)
-        .values({
-          guildId: ctx.guild.id,
-          module: "permissions",
-          enabled,
-          threshold: cfg?.threshold ?? 1,
+      if (arg1 === "on" || arg1 === "off") {
+        const enabled = arg1 === "on";
+        await db.insert(antinukeModules).values({
+          guildId: ctx.guild.id, module: "permissions", enabled,
+          threshold: cfg?.threshold ?? 3,
           punishment: cfg?.punishment ?? settings.antinukeAction ?? "ban",
           countCommands: false,
-        })
-        .onConflictDoUpdate({
+        }).onConflictDoUpdate({
           target: [antinukeModules.guildId, antinukeModules.module],
           set: { enabled },
         });
-      invalidateModuleCache(ctx.guild.id);
-      if (enabled) await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
+        invalidateModuleCache(ctx.guild.id);
+        if (enabled) await updateGuildSettings(ctx.guild.id, { antinukeEnabled: true });
+        return ctx.reply({ embeds: [successEmbed("permission-change punishment is now " + arg1 + ". Watched changes are reverted independently.")] });
+      }
 
-      return ctx.reply({ embeds: [successEmbed(`antinuke permission protection is now **${arg1}**.`)] });
+      return ctx.reply({ embeds: [errorEmbed("use permissions watch, unwatch, or list.")] });
     }
 
     // ── module subcommands ───────────────────────────────────────────────────
