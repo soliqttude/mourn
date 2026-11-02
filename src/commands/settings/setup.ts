@@ -9,7 +9,7 @@ import { brandEmbed, errorEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 import { config } from "../../config.js";
 
-type SetupType = "gambling" | "community" | "gaming" | "anime";
+type SetupType = "community" | "gaming" | "anime";
 interface RoleCfg { name: string; color: number; hoist: boolean; permissions: bigint; }
 interface CatCfg { name: string; channels: string[]; }
 interface ServerCfg { emoji: string; categories: CatCfg[]; roles: RoleCfg[]; }
@@ -27,22 +27,6 @@ const MUTED = PermissionFlagsBits.ViewChannel | PermissionFlagsBits.ReadMessageH
 function hex(h: string): number { return parseInt(h.replace("#", ""), 16) || 0x5865f2; }
 
 const PRESETS: Record<SetupType, ServerCfg> = {
-  gambling: {
-    emoji: "🎰",
-    categories: [
-      { name: "📋 INFORMATION", channels: ["rules", "announcements", "server-info"] },
-      { name: "💬 GENERAL", channels: ["general", "introductions", "memes", "media"] },
-      { name: "💰 ECONOMY", channels: ["bot-commands", "gambling", "heist", "leaderboard", "shop"] },
-    ],
-    roles: [
-      { name: "👑 Admin", color: 0xe74c3c, hoist: true, permissions: PermissionFlagsBits.Administrator },
-      { name: "⚔️ Moderator", color: 0xe67e22, hoist: true, permissions: MOD },
-      { name: "💎 VIP", color: 0xffd700, hoist: true, permissions: MEMBER },
-      { name: "💰 High Roller", color: 0xff6b35, hoist: true, permissions: MEMBER },
-      { name: "🎰 Member", color: 0x8b0000, hoist: false, permissions: MEMBER },
-      { name: "🔇 Muted", color: 0x555555, hoist: false, permissions: MUTED },
-    ],
-  },
   community: {
     emoji: "👥",
     categories: [
@@ -144,7 +128,7 @@ export const command: HybridCommand = {
   category: "settings",
   permission: "manage_guild",
   guildOnly: true,
-  usage: "setup <gambling|community|gaming|anime|custom|roles> [description]",
+  usage: "setup <community|gaming|anime|custom|roles> [description]",
   examples: ["📋 INFORMATION"],
   options: [
     {
@@ -153,7 +137,6 @@ export const command: HybridCommand = {
       type: ApplicationCommandOptionType.String,
       required: true,
       choices: [
-        { name: "🎰 Gambling / Economy", value: "gambling" },
         { name: "👥 Community", value: "community" },
         { name: "🎮 Gaming", value: "gaming" },
         { name: "🌸 Anime", value: "anime" },
@@ -180,7 +163,6 @@ export const command: HybridCommand = {
           title: "⚙️ Server Setup",
           description: [
             "**Step 1 — pick a server type:**",
-            "  🎰 `,setup gambling`  — Economy server",
             "  👥 `,setup community` — Community server",
             "  🎮 `,setup gaming`    — Gaming server",
             "  🌸 `,setup anime`     — Anime server",
@@ -202,7 +184,7 @@ export const command: HybridCommand = {
       const settings = await getGuildSettings(ctx.guild.id);
       const serverType = (settings as any).serverType as SetupType | null;
       if (!serverType || !PRESETS[serverType]) {
-        return ctx.reply({ embeds: [errorEmbed("No server type saved. Run `,setup gambling` (or another type) first.")] });
+        return ctx.reply({ embeds: [errorEmbed("No server type saved. Run `,setup community`, `,setup gaming`, or `,setup anime` first.")] });
       }
       await ctx.defer();
       return doRoles(ctx, PRESETS[serverType].roles, serverType);
