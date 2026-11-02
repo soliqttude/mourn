@@ -301,10 +301,9 @@ export async function handleAntinukeAction(client: Client, guild: Guild, type: s
   if (!executorId) return;
   const commandKey = guild.id + ":" + executorId + ":" + moduleName;
   const commandTimestamp = antinukeCommandMarkers.get(commandKey);
-  const commandOrigin = commandTimestamp !== undefined && Date.now() - commandTimestamp < 30_000;
+  const commandOrigin = commandTimestamp !== undefined && Date.now() - commandTimestamp < 15_000;
   if (commandTimestamp !== undefined && !commandOrigin) antinukeCommandMarkers.delete(commandKey);
   if (commandOrigin && !mod.countCommands) return;
-  if (!executorId) return;
   if (executorId === guild.ownerId || executorId === client.user?.id) return;
 
   const whitelist = await getWhitelist(guild.id);
