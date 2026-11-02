@@ -8,8 +8,8 @@ import { eq } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "bio",
   description: "Set or view a profile bio.",
-  usage: "bio [set <text>] [clear] [@user]",
-  examples: ["bio", "bio set I love this server!", "bio clear", "bio @user"],
+  usage: "bio [set <text>] [clear] [@mmoudder]",
+  examples: ["bio", "bio set I love this server!", "bio clear", "bio @mmoudder"],
   category: "social",
   options: [
     { name: "subcommand", description: "set | clear", type: ApplicationCommandOptionType.String, required: false },
@@ -57,13 +57,13 @@ export const command: HybridCommand = {
 
     if (ctx.source === "prefix") {
       const bioText = ctx.rawArgs.trim();
-      if (!bioText) return ctx.reply({ embeds: [errorEmbed("Usage: `,bio set <text>` | `,bio clear` | `,bio @user`")] });
+      if (!bioText) return ctx.reply({ embeds: [errorEmbed("Usage: `,bio set <text>` | `,bio clear` | `,bio @mmoudder`")] });
       if (bioText.length > 150) return ctx.reply({ embeds: [errorEmbed(`bio too long (${bioText.length}/150 chars).`)] });
       await db.insert(userProfiles).values({ userId: ctx.user.id, bio: bioText })
         .onConflictDoUpdate({ target: userProfiles.userId, set: { bio: bioText, updatedAt: new Date() } });
       return ctx.reply({ embeds: [successEmbed("Bio saved.")] });
     }
 
-    return ctx.reply({ embeds: [errorEmbed("Usage: `,bio set <text>` | `,bio clear` | `,bio @user`")] });
+    return ctx.reply({ embeds: [errorEmbed("Usage: `,bio set <text>` | `,bio clear` | `,bio @mmoudder`")] });
   },
 };
