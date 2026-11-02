@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import type { HybridCommand } from "../../lib/command.js";
 import { config } from "../../config.js";
 import { db } from "../../db/index.js";
-import { economy, levels, warnings, blacklist } from "../../db/schema.js";
+import { levels, warnings, blacklist } from "../../db/schema.js";
 import { ownerState } from "../../lib/ownerState.js";
 
 export const command: HybridCommand = {
@@ -23,13 +23,11 @@ export const command: HybridCommand = {
     await ctx.defer(true);
     const user = await ctx.client.users.fetch(userId).catch(() => null);
     const guilds = ctx.client.guilds.cache.filter(g => g.members.cache.has(userId));
-    let totalBalance = 0, totalBank = 0, totalXp = 0, totalWarnings = 0, totalCases = 0;
+    let totalXp = 0, totalWarnings = 0, totalCases = 0;
     for (const [guildId] of guilds) {
-      const eco = await db.query.economy.findFirst({ where: and(eq(economy.guildId, guildId), eq(economy.userId, userId)) });
       const lvl = await db.query.levels.findFirst({ where: and(eq(levels.guildId, guildId), eq(levels.userId, userId)) });
       const warns = await db.select().from(warnings).where(and(eq(warnings.guildId, guildId), eq(warnings.userId, userId)));
       const cases = warns;
-      if (eco) { totalBalance += eco.balance; totalBank += eco.bank; }
       if (lvl) totalXp += lvl.xp;
       totalWarnings += warns.length;
       totalCases += cases.length;
@@ -44,8 +42,6 @@ export const command: HybridCommand = {
         { name: "User ID", value: userId, inline: true },
         { name: "Created", value: user ? `<t:${Math.floor(user.createdTimestamp / 1000)}:R>` : "Unknown", inline: true },
         { name: "Shared Servers", value: `${guilds.size}`, inline: true },
-        { name: "Total Balance", value: `$${totalBalance.toLocaleString()}`, inline: true },
-        { name: "Total Bank", value: `$${totalBank.toLocaleString()}`, inline: true },
         { name: "Total XP", value: totalXp.toLocaleString(), inline: true },
         { name: "Warnings", value: `${totalWarnings}`, inline: true },
         { name: "Mod Cases", value: `${totalCases}`, inline: true },
