@@ -42,10 +42,8 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_action TEXT NOT NULL DEFAULT 'kick'`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_log_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS antiraid_lock_on_raid BOOLEAN NOT NULL DEFAULT false`,
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS drop_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS clownboard_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS clownboard_threshold INTEGER NOT NULL DEFAULT 5`,
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS economy_frozen BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS welcome_mode TEXT NOT NULL DEFAULT 'default'`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_threshold INTEGER NOT NULL DEFAULT 5`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS spam_window INTEGER NOT NULL DEFAULT 5`,
@@ -116,16 +114,9 @@ const STATEMENTS: string[] = [
     guild_id TEXT, message TEXT NOT NULL, remind_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
-  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS economy_frozen BOOLEAN NOT NULL DEFAULT FALSE`,
   `CREATE TABLE IF NOT EXISTS user_mood (guild_id TEXT NOT NULL, user_id TEXT NOT NULL, mood TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (guild_id, user_id))`,
   `CREATE TABLE IF NOT EXISTS reputation (guild_id TEXT NOT NULL, user_id TEXT NOT NULL, rep_count INTEGER NOT NULL DEFAULT 0, last_given_at TIMESTAMPTZ, PRIMARY KEY (guild_id, user_id))`,
   `CREATE TABLE IF NOT EXISTS ignored_xp_channels (guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, PRIMARY KEY (guild_id, channel_id))`,
-  `CREATE TABLE IF NOT EXISTS economy (
-    guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
-    balance BIGINT NOT NULL DEFAULT 0, bank BIGINT NOT NULL DEFAULT 0,
-    last_daily TIMESTAMPTZ, PRIMARY KEY (guild_id, user_id)
-  )`,
-  `ALTER TABLE economy ADD COLUMN IF NOT EXISTS last_rob TIMESTAMPTZ`,
   `CREATE TABLE IF NOT EXISTS levels (
     guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
     xp INTEGER NOT NULL DEFAULT 0, level INTEGER NOT NULL DEFAULT 0,
@@ -181,17 +172,6 @@ const STATEMENTS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS temp_bans_guild_idx ON temp_bans (guild_id)`,
-  `CREATE TABLE IF NOT EXISTS shop_items (
-    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, name TEXT NOT NULL,
-    description TEXT NOT NULL DEFAULT '', price BIGINT NOT NULL DEFAULT 100,
-    role_id TEXT, stock INTEGER NOT NULL DEFAULT -1,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-  )`,
-  `CREATE INDEX IF NOT EXISTS shop_items_guild_idx ON shop_items (guild_id)`,
-  `CREATE TABLE IF NOT EXISTS user_items (
-    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, item_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (guild_id, user_id, item_id)
-  )`,
   `CREATE TABLE IF NOT EXISTS reports (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, reporter_id TEXT NOT NULL,
     target_id TEXT NOT NULL, reason TEXT NOT NULL,
