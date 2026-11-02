@@ -84,9 +84,9 @@ async function isModuleDisabled(guildId: string, channelId: string, moduleName: 
 }
 
 const ANTINUKE_CMD_MAP: Record<string, string> = {
-  ban: "ban", softban: "ban", tempban: "ban", hackban: "ban", forceban: "ban",
-  kick: "kick",
-  delrole: "role",
+  ban: "ban", b: "ban", softban: "ban", tempban: "ban", hackban: "ban", forceban: "ban",
+  kick: "kick", k: "kick", remove: "kick",
+  delrole: "role", deleterole: "role",
 };
 
 export const event = {
