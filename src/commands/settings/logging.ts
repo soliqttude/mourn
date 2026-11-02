@@ -5,6 +5,7 @@ import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 import { db } from "../../db/index.js";
 import { logIgnores } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
+import { config } from "../../config.js";
 
 const EVENTS: Record<string, { key: string; label: string }> = {
   message: { key: "msgLogChannel", label: "Messages" },
@@ -76,6 +77,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "ignore") {
+      if (!config.databaseEnabled) return ctx.reply({ embeds: [errorEmbed("Log ignores require the database to be enabled.")] });
       const sub = (ctx.args[1] ?? (ctx.getString("target") === "list" ? "list" : "")).toLowerCase();
       if (sub === "list") {
         const rows = await db.select().from(logIgnores).where(eq(logIgnores.guildId, ctx.guild.id));
