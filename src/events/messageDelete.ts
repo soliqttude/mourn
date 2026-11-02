@@ -49,7 +49,7 @@ export const event = {
       sentAt ? `It was sent at <t:${sentAt}:f>` : "",
     ].filter(Boolean);
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "messages")).setAuthor({ name: "Message Deleted", iconURL: avatarURL })
+      .setColor(getLogEmbedColor(settings, "messages", settings.msgLogChannel)).setAuthor({ name: "Message Deleted", iconURL: avatarURL })
       .setDescription(descLines.join("\n"))
       .addFields({ name: "Message Content", value: content, inline: false })
       .setTimestamp().setFooter({ text: `User ID: ${author?.id ?? "unknown"}` });
