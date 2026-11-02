@@ -23,7 +23,7 @@ export const event = {
     const avatarURL = ban.user.displayAvatarURL({ size: 256 });
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "moderation"))
+      .setColor(getLogEmbedColor(settings, "moderation", settings.modLogChannel))
       .setAuthor({ name: "Member Unbanned", iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .setDescription(
