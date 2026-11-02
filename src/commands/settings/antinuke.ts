@@ -155,7 +155,6 @@ export const command: HybridCommand = {
 
     // ── config / list / admins ───────────────────────────────────────────────
     if (sub === "config") {
-      const masterSettings = await getGuildSettings(ctx.guild.id);
       const modules = await getModuleConfigs(ctx.guild.id);
       const enabled = MODULES.filter((name) => modules.get(name)?.enabled);
       const lines = MODULES.map((name) => {
@@ -174,7 +173,7 @@ export const command: HybridCommand = {
         embeds: [brandEmbed({
           title: "AntiNuke configuration",
           description: [
-            "**AntiNuke system** — " + (masterSettings.antinukeEnabled ? "enabled" : "disabled"),
+            "**AntiNuke system** — " + (settings.antinukeEnabled ? "enabled" : "disabled"),
             "**Enabled modules** — " + (enabled.map((name) => MODULE_LABELS[name]).join(", ") || "none"),
             "",
             ...lines,
