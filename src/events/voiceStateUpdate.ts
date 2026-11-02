@@ -53,7 +53,7 @@ export const event = {
     }
     if (!title) return;
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "voice")).setAuthor({ name: title, iconURL: avatarURL })
+      .setColor(getLogEmbedColor(settings, "voice", settings.voiceLogChannel)).setAuthor({ name: title, iconURL: avatarURL })
       .setDescription(description).setTimestamp().setFooter({ text: `User ID: ${member.id}` });
     await (ch as TextChannel).send({ embeds: [embed] }).catch(() => {});
   },
