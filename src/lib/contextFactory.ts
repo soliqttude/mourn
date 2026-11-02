@@ -93,7 +93,10 @@ export async function buildSlashContext(
       try {
         return await interaction.reply(payload);
       } catch (err) {
-        if (interaction.deferred || interaction.replied) {
+        const code = (err as any)?.code ?? (err as any)?.rawError?.code;
+        // REST may report an acknowledgement made by another handler/worker
+        // before this Interaction instance reflects the local state.
+        if (interaction.deferred || interaction.replied || code === 40060) {
           return interaction.editReply(payload);
         }
         throw err;
