@@ -35,7 +35,7 @@ export const event = {
     const parent    = (channel as any).parent;
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "channels"))
+      .setColor(getLogEmbedColor(settings, "channels", settings.serverLogChannel))
       .setAuthor({ name: "Channel Created", iconURL: guildIcon })
       .setDescription(
         `Channel <#${channel.id}> was created${executor ? ` by <@${executor}>` : ""}`
