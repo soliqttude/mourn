@@ -10,11 +10,20 @@ const C = {
 
 // ── Custom emoji config ────────────────────────────────────────────────────────
 export const EMOJIS = {
-  check: process.env.EMOJI_CHECK ?? "✅",
-  warn:  process.env.EMOJI_WARN  ?? "<:warn:1508824473992696049>",
-  plus:  process.env.EMOJI_PLUS  ?? "➕",
-  cross: process.env.EMOJI_CROSS ?? "❌",
-  info:  process.env.EMOJI_INFO  ?? "ℹ️",
+  check: process.env.EMOJI_CHECK ?? "<:approve:1566647518337437777>",
+  approve: "<:approve:1566647518337437777>",
+  warn: process.env.EMOJI_WARN ?? "<:warn:1566647521231503420>",
+  plus: process.env.EMOJI_PLUS ?? "<:add:1566647523366404166>",
+  add: "<:add:1566647523366404166>",
+  remove: "<:remove:1566647525501305024>",
+  cross: process.env.EMOJI_CROSS ?? "<:deny:1566647515443363970>",
+  deny: "<:deny:1566647515443363970>",
+  cooldown: "<:cooldown:1566647516747800668>",
+  loading: "<:loading:1566648015866044476>",
+  shazam: "<:shazam:1566648337736671282>",
+  spotify: "<:spotify:1566648335677399150>",
+  longlive50igot50: "<:longlive50igot50:1566648339532095520>",
+  info: process.env.EMOJI_INFO ?? "ℹ️",
 } as const;
 
 // ── Embed style tracking ───────────────────────────────────────────────────────
