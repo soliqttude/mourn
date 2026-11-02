@@ -78,17 +78,21 @@ function resolveVars(text: string, ctx: ScriptingContext): string {
 
   const map: Record<string, string> = {
     // User
-    "{user}": user?.displayName ?? user?.username ?? "Unknown",
     "{user.mention}": user ? `<@${user.id}>` : "Unknown",
+    "{user.name}": user?.username ?? "Unknown",
+    "{user}": user?.displayName ?? user?.username ?? "Unknown",
     "{user.id}": user?.id ?? "0",
     "{user.tag}": user?.tag ?? "Unknown",
     "{user.username}": user?.username ?? "Unknown",
     "{user.displayname}": member?.displayName ?? user?.displayName ?? user?.username ?? "Unknown",
     "{user.avatar}": user?.displayAvatarURL() ?? "",
     "{user.banner}": (user as any)?.bannerURL?.() ?? "",
+    "{user.created_at}": user ? `<t:${Math.floor(user.createdTimestamp / 1000)}:R>` : "Unknown",
     "{user.created}": user ? `<t:${Math.floor(user.createdTimestamp / 1000)}:R>` : "Unknown",
+    "{member.joined_at}": member?.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : "Unknown",
     "{user.joined}": member?.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : "Unknown",
     "{user.booster}": member?.premiumSince ? "true" : "false",
+    "{member.nickname}": member?.nickname ?? user?.username ?? "Unknown",
     "{user.nickname}": member?.nickname ?? user?.username ?? "Unknown",
     "{user.roles}": member?.roles.cache.filter(r => r.id !== guild?.id).map(r => `<@&${r.id}>`).join(", ") ?? "none",
     "{user.highest_role}": member?.roles.highest.id !== guild?.id ? `<@&${member?.roles.highest.id}>` : "none",
@@ -97,10 +101,12 @@ function resolveVars(text: string, ctx: ScriptingContext): string {
     "{guild.name}": guild?.name ?? "Unknown",
     "{guild.id}": guild?.id ?? "0",
     "{guild.icon}": guild?.iconURL() ?? "",
+    "{guild.member_count}": String(guild?.memberCount ?? 0),
     "{guild.count}": String(guild?.memberCount ?? 0),
     "{guild.members}": String(guild?.memberCount ?? 0),
     "{guild.owner}": guild?.ownerId ? `<@${guild.ownerId}>` : "Unknown",
     "{guild.boost_count}": String(boost.count ?? 0),
+    "{guild.boost_level}": String(boost.tier ?? 0),
     "{guild.boost_tier}": String(boost.tier ?? 0),
     "{guild.vanity}": guild?.vanityURLCode ?? "none",
     "{guild.created}": guild ? `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>` : "Unknown",
@@ -133,9 +139,12 @@ function resolveVars(text: string, ctx: ScriptingContext): string {
   // Apply extra vars first (they override)
   const allVars = { ...map, ...(ctx.extra ?? {}) };
 
+  // Replace longer tokens first so "{user}" cannot consume the prefix of
+  // "{user.mention}", "{user.created_at}", and other dotted variables.
   let result = text;
-  for (const [k, v] of Object.entries(allVars)) {
-    result = result.split(k).join(v);
+  const keys = Object.keys(allVars).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    result = result.split(key).join(allVars[key]!);
   }
   return result;
 }
@@ -218,13 +227,28 @@ function parseEmbedBlock(seg: string, ctx: ScriptingContext): {
   let msgContent: string | undefined;
   let currentRow: ButtonBuilder[] = [];
 
-  const params = seg.split(/\$v\{/).slice(1);
+  // Extract each $v{...} block with balanced braces. Splitting on the
+  // marker and taking lastIndexOf("}") merged every property into one value.
+  const params: string[] = [];
+  let cursor = 0;
+  while (cursor < seg.length) {
+    const start = seg.indexOf("$v{", cursor);
+    if (start === -1) break;
+    let depth = 1;
+    let end = start + 3;
+    for (; end < seg.length; end++) {
+      if (seg[end] === "{") depth++;
+      else if (seg[end] === "}") {
+        depth--;
+        if (depth === 0) break;
+      }
+    }
+    if (depth !== 0) break;
+    params.push(seg.slice(start + 3, end));
+    cursor = end + 1;
+  }
 
-  for (const raw of params) {
-    const trimmed = raw.trimEnd();
-    const closing = trimmed.lastIndexOf("}");
-    if (closing === -1) continue;
-    const inner = trimmed.slice(0, closing);
+  for (const inner of params) {
     const colonIdx = inner.indexOf(":");
     if (colonIdx === -1) continue;
     const key = inner.slice(0, colonIdx).trim().toLowerCase();
@@ -237,11 +261,19 @@ function parseEmbedBlock(seg: string, ctx: ScriptingContext): {
       case "url": eb.setURL(val); break;
       case "thumbnail": eb.setThumbnail(val); break;
       case "image": eb.setImage(val); break;
-      case "footer": eb.setFooter({ text: val.slice(0, 2048) }); break;
-      case "author": eb.setAuthor({ name: val.slice(0, 256) }); break;
+      case "footer": {
+        const parts = val.split(/\s*(?:\||&&)\s*/).map(s => s.trim());
+        eb.setFooter({ text: (parts[0] ?? "").slice(0, 2048), ...(parts[1] ? { iconURL: parts[1] } : {}) });
+        break;
+      }
+      case "author": {
+        const parts = val.split(/\s*(?:\||&&)\s*/).map(s => s.trim());
+        eb.setAuthor({ name: (parts[0] ?? "").slice(0, 256), ...(parts[1] ? { iconURL: parts[1] } : {}) });
+        break;
+      }
       case "timestamp": eb.setTimestamp(val === "now" || val === "" ? Date.now() : parseInt(val) || Date.now()); break;
       case "field": {
-        const parts = val.split("|").map(s => s.trim());
+        const parts = val.split(/\s*(?:\||&&)\s*/).map(s => s.trim());
         if (parts.length >= 2) eb.addFields({ name: parts[0]!.slice(0, 256), value: parts[1]!.slice(0, 1024), inline: parts[2] === "true" });
         break;
       }
