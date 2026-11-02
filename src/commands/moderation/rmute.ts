@@ -23,7 +23,7 @@ export const command: HybridCommand = {
     await ctx.guild.channels.cache
       .filter(c => c.isTextBased())
       .forEach(async (ch) => {
-        await (ch as any).permissionOverwrites.edit(target.id, { AddReactions: false }).catch(() => {});
+        await (ch as any).permissionOverwrites.edit(target.id, { AddReactions: false }, reason).catch(() => {});
       });
     return ctx.reply({ embeds: [successEmbed(`Reaction-muted **${target.user.tag}** — ${reason}`)] });
   },
