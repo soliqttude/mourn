@@ -5,10 +5,10 @@ import { config } from "../../config.js";
 import { db } from "../../db/index.js";
 
 const TABLES = [
-  "guild_settings","economy","levels","warnings","mod_cases",
+  "guild_settings","levels","warnings","mod_cases",
   "reminders","tickets","giveaways","tags","autoresponders",
   "blacklist","marriages","birthdays","word_filter","mod_notes",
-  "shop_items","user_items","reports","custom_commands","counters",
+  "reports","custom_commands","counters",
 ];
 
 export const command: HybridCommand = {
