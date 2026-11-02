@@ -58,7 +58,10 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const action = (ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
-    const channel = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(cleanId(ctx.args[1]));
+    const colorListMode = action === "color" && (ctx.args[1] ?? "").toLowerCase() === "list";
+    const channel = colorListMode
+      ? ctx.guild.channels.cache.get(cleanId(ctx.args[2]))
+      : (ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(cleanId(ctx.args[1])));
     const channelId = channel?.id ?? null;
     const eventName = (ctx.getString("event") ?? ctx.args[2] ?? "").toLowerCase();
     const settings = await getGuildSettings(ctx.guild.id);
@@ -105,7 +108,7 @@ export const command: HybridCommand = {
 
     if (action === "color") {
       if ((ctx.args[1] ?? "").toLowerCase() === "list") {
-        const listChannel = ctx.guild.channels.cache.get(cleanId(ctx.args[2]));
+        const listChannel = channel;
         if (!listChannel) return ctx.reply({ embeds: [errorEmbed("Provide a channel.")] });
         const colors = (settings.logColors ?? {}) as Record<string, string>;
         const lines = Object.entries(colors).map(([event, color]) => `**${event}:** ${color}`);
