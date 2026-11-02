@@ -3,58 +3,61 @@ import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 
+function roleIdFrom(raw?: string): string | null {
+  return raw?.replace(/[<@&>]/g, "").trim() || null;
+}
+
 export const command: HybridCommand = {
   name: "autorole",
-  description: "Set/clear the autorole. ,autorole @role | ,autorole clear | ,autorole give/remove @mmoudder",
-  usage: "autorole [role] [action] [user]",
-  examples: ["autorole"],
+  description: "Configure roles that are automatically assigned to new members.",
+  usage: "autorole | autorole add <role> | autorole remove <role> | autorole reset | autorole list",
+  examples: ["autorole add @role", "autorole remove @role", "autorole list"],
   category: "settings",
-  permission: "manage_roles",
+  permission: "manage_guild",
   guildOnly: true,
+  userPermissions: ["ManageGuild", "ManageRoles"],
   options: [
-    { name: "role", description: "Role to set as autorole (skip to view/clear)", type: ApplicationCommandOptionType.Role, required: false },
-    { name: "action", description: "give | remove | clear", type: ApplicationCommandOptionType.String, required: false },
-    { name: "user", description: "Member for give/remove", type: ApplicationCommandOptionType.User, required: false },
+    { name: "action", description: "add | remove | reset | list", type: ApplicationCommandOptionType.String, required: false, choices: [
+      { name: "add", value: "add" }, { name: "remove", value: "remove" }, { name: "reset", value: "reset" }, { name: "list", value: "list" },
+    ] },
+    { name: "role", description: "Role to add or remove", type: ApplicationCommandOptionType.Role, required: false },
   ],
   async execute(ctx) {
-    const guild = ctx.guild;
-    if (!guild) return;
+    if (!ctx.guild) return;
+    const action = (ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
+    const selectedRole = ctx.getRole("role");
+    const roleId = selectedRole?.id ?? roleIdFrom(ctx.args[1] ?? ctx.args[0]);
+    const settings = await getGuildSettings(ctx.guild.id);
+    const ids = String(settings.autoroleId ?? "").split(",").map(x => x.trim()).filter(Boolean);
 
-    const actionArg = (ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
-    const role = ctx.getRole("role");
-    const settings = await getGuildSettings(guild.id);
-
-    // ,autorole clear
-    if (actionArg === "clear") {
-      await updateGuildSettings(guild.id, { autoroleId: null });
-      return ctx.reply({ embeds: [successEmbed("Autorole cleared.")] });
+    if (!action) {
+      return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: "Automatically assign configured roles when a member joins.\n\nUse `,autorole add @role` to add a role, or `,autorole list` to view them." })] });
     }
-
-    // ,autorole give/remove @mmoudder
-    if (actionArg === "give" || actionArg === "remove") {
-      if (!settings.autoroleId) return ctx.reply({ embeds: [errorEmbed("No autorole configured. Use `,autorole @role` first.")] });
-      const target = await ctx.getMember("user");
-      if (!target) return ctx.reply({ embeds: [errorEmbed("Please mention a **member**.")] });
-      const ar = guild.roles.cache.get(settings.autoroleId);
-      if (!ar) return ctx.reply({ embeds: [errorEmbed("Configured autorole no longer exists. Reset it with `,autorole @role`.")] });
-      if (actionArg === "give") {
-        await target.roles.add(ar);
-        return ctx.reply({ embeds: [successEmbed(`Gave <@&${ar.id}> to **${target.user.tag}**.`)] });
-      }
-      await target.roles.remove(ar);
-      return ctx.reply({ embeds: [successEmbed(`Removed <@&${ar.id}> from **${target.user.tag}**.`)] });
+    if (action === "list") {
+      const valid = ids.filter(id => ctx.guild!.roles.cache.has(id));
+      return ctx.reply({ embeds: [brandEmbed({ title: "Automatic Roles", description: valid.length ? valid.map(id => `<@&${id}>`).join("\n") : "No autoroles configured." })] });
     }
-
-    // ,autorole @role — set it
-    if (role) {
-      await updateGuildSettings(guild.id, { autoroleId: role.id });
-      return ctx.reply({ embeds: [successEmbed(`Autorole set to <@&${role.id}>. New members will automatically receive this role.`)] });
+    if (action === "reset") {
+      await updateGuildSettings(ctx.guild.id, { autoroleId: null });
+      return ctx.reply({ embeds: [successEmbed("All autoroles have been cleared.")] });
     }
-
-    // ,autorole — view current
-    if (settings.autoroleId) {
-      return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: `Current autorole: <@&${settings.autoroleId}>\nRun \`,autorole @role\` to change or \`,autorole clear\` to remove it.`, page: "Settings" })] });
+    if (action !== "add" && action !== "remove") {
+      return ctx.reply({ embeds: [errorEmbed("Use `,autorole add @role`, `,autorole remove @role`, `,autorole reset`, or `,autorole list`.")] });
     }
-    return ctx.reply({ embeds: [brandEmbed({ title: "Autorole", description: "No autorole set. Run `,autorole @role` to configure one.", page: "Settings" })] });
+    if (!roleId) return ctx.reply({ embeds: [errorEmbed("Please provide a role.")] });
+    const role = ctx.guild.roles.cache.get(roleId);
+    if (!role) return ctx.reply({ embeds: [errorEmbed("That role was not found in this server.")] });
+    if (role.managed || role.id === ctx.guild.id) return ctx.reply({ embeds: [errorEmbed("That role cannot be assigned automatically.")] });
+    if (action === "add") {
+      if (ids.includes(roleId)) return ctx.reply({ embeds: [errorEmbed("That role is already an autorole.")] });
+      ids.push(roleId);
+    } else {
+      if (!ids.includes(roleId)) return ctx.reply({ embeds: [errorEmbed("That role is not in the autorole list.")] });
+      const next = ids.filter(id => id !== roleId);
+      await updateGuildSettings(ctx.guild.id, { autoroleId: next.length ? next.join(",") : null });
+      return ctx.reply({ embeds: [successEmbed(`Removed <@&${roleId}> from autoroles.`)] });
+    }
+    await updateGuildSettings(ctx.guild.id, { autoroleId: ids.join(",") });
+    return ctx.reply({ embeds: [successEmbed(`Added <@&${roleId}> to autoroles. New members will receive it when they join.`)] });
   },
 };
