@@ -405,7 +405,6 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction) 
     const { db } = await import("../db/index.js");
     const { antinukeModules } = await import("../db/schema.js");
     const { getGuildSettings } = await import("../db/settings.js");
-    const { eq } = await import("drizzle-orm");
     const current = (await getModuleConfigs(guildId)).get(moduleName);
     const guildSettings = await getGuildSettings(guildId);
     const enabled = setting === "on";
@@ -421,6 +420,7 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction) 
       set: { enabled: values.enabled, threshold: values.threshold, punishment: values.punishment, countCommands: values.countCommands },
     });
     invalidateModuleCache(guildId);
+    if (enabled) await getGuildSettings(guildId).then(() => import("../db/settings.js")).then(({ updateGuildSettings }) => updateGuildSettings(guildId, { antinukeEnabled: true }));
     return interaction.reply({ content: "AntiNuke " + moduleName + " protection is now " + setting + ".", flags: MessageFlags.Ephemeral });
   }
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction as any);
