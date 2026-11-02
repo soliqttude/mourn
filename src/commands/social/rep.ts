@@ -1,6 +1,7 @@
 import { EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { config } from "../../config.js";
+import { EMOJIS } from "../../lib/embeds.js";
 
 const repMap = new Map<string, number>();
 const cooldowns = new Map<string, number>();
@@ -21,7 +22,7 @@ export const command: HybridCommand = {
     const remaining = 86400000 - (Date.now() - last);
     if (remaining > 0) {
       const h = Math.floor(remaining/3600000), m = Math.floor((remaining%3600000)/60000);
-      return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xff4444).setDescription(`⏳ You can rep again in **${h}h ${m}m**.`).setFooter({ text: config.embedFooter }).setTimestamp()] });
+      return ctx.reply({ embeds: [new EmbedBuilder().setColor(0xff4444).setDescription(`${EMOJIS.cooldown} You can rep again in **${h}h ${m}m**.`).setFooter({ text: config.embedFooter }).setTimestamp()] });
     }
     cooldowns.set(cdKey, Date.now());
     const repKey = `${ctx.guild.id}:${target.id}`;
