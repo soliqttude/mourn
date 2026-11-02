@@ -120,7 +120,8 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<s
   if (!giveaway?.messageId) return [];
   const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
   if (!channel?.isTextBased() || !("messages" in channel)) return [];
-  const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
+  const textChannel = channel as TextChannel;
+  const message = await textChannel.messages.fetch(giveaway.messageId).catch(() => null);
   if (!message) return [];
   const reaction = message.reactions.cache.get("🎉");
   const entrants = reaction ? await fetchAllEntrants(reaction) : [];
@@ -134,7 +135,7 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<s
     .setFooter({ text: `ID: ${giveawayId} • ${config.embedFooter}` }).setTimestamp(new Date());
   await message.edit({ embeds: [ended] }).catch(() => {});
   if (winners.length) {
-    await channel.send({ content: `🎉 Congratulations ${mentions}! You won **${giveaway.prize}**!`,
+    await textChannel.send({ content: `🎉 Congratulations ${mentions}! You won **${giveaway.prize}**!`,
       allowedMentions: { users: winners } }).catch(() => {});
     if (giveaway.awardRoleIds?.length) {
       for (const winnerId of winners) {
@@ -143,7 +144,7 @@ export async function endGiveaway(client: Client, giveawayId: number): Promise<s
       }
     }
   } else {
-    await channel.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` }).catch(() => {});
+    await textChannel.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` }).catch(() => {});
   }
   return winners;
 }
@@ -152,7 +153,8 @@ export async function rerollGiveaway(client: Client, giveaway: GiveawayRow, winn
   if (!giveaway.ended || !giveaway.messageId) throw new Error("That giveaway has not ended or its message is unavailable.");
   const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
   if (!channel?.isTextBased() || !("messages" in channel)) throw new Error("Giveaway channel not found.");
-  const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
+  const textChannel = channel as TextChannel;
+  const message = await textChannel.messages.fetch(giveaway.messageId).catch(() => null);
   if (!message) throw new Error("Giveaway message not found.");
   const reaction = message.reactions.cache.get("🎉");
   const entrants = reaction ? await fetchAllEntrants(reaction) : [];
@@ -161,7 +163,7 @@ export async function rerollGiveaway(client: Client, giveaway: GiveawayRow, winn
   if (!winners.length) throw new Error("No new eligible entrants are available to reroll.");
   await db.update(giveaways).set({ winners: [...(giveaway.winners ?? []), ...winners] }).where(eq(giveaways.id, giveaway.id));
   const mentions = winners.map(id => `<@${id}>`).join(", ");
-  await channel.send({ content: `🎉 Rerolled winner(s) for **${giveaway.prize}**: ${mentions}!`,
+  await textChannel.send({ content: `🎉 Rerolled winner(s) for **${giveaway.prize}**: ${mentions}!`,
     allowedMentions: { users: winners } });
   return winners;
 }
