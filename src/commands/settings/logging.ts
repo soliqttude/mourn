@@ -94,6 +94,7 @@ export const command: HybridCommand = {
 
     if (action === "add" || action === "remove") {
       if (!channelId) return ctx.reply({ embeds: [errorEmbed("Provide a logging channel.")] });
+      if (action === "add" && !channel?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Logging must be sent to a text channel.")] });
       const meta = EVENTS[eventName];
       if (!meta) return ctx.reply({ embeds: [errorEmbed("Unknown event. Use messages, members, voice, roles, channels, or moderation.")] });
       if (action === "add") {
@@ -116,12 +117,15 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [brandEmbed({ title: `Log Colors — #${listChannel.name}`, description: lines.length ? lines.join("\n") : "No custom event colors set." })] });
       }
       if (!channelId || !eventName) return ctx.reply({ embeds: [errorEmbed("Provide a channel and event.")] });
+      if (!channel?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Choose a text channel.")] });
+      const colorEvent = EVENTS[eventName]?.label.toLowerCase();
+      if (!colorEvent) return ctx.reply({ embeds: [errorEmbed("Unknown event. Use messages, members, voice, roles, channels, or moderation.")] });
       const color = (ctx.getString("color") ?? ctx.args[3] ?? "").trim();
       if (!validColor(color)) return ctx.reply({ embeds: [errorEmbed("Color must be a six-digit hex value, e.g. #5865f2.")] });
-      const colorKey = `${channelId}:${eventName}`;
+      const colorKey = `${channelId}:${colorEvent}`;
       const colors = { ...((settings.logColors ?? {}) as Record<string, string>), [colorKey]: color.startsWith("#") ? color : `#${color}` };
       await updateGuildSettings(ctx.guild.id, { logColors: colors });
-      return ctx.reply({ embeds: [successEmbed(`Custom color for **${eventName}** logs set to ${colors[colorKey]}.`)] });
+      return ctx.reply({ embeds: [successEmbed(`Custom color for **${colorEvent}** logs set to ${colors[colorKey]}.`)] });
     }
 
     return ctx.reply({ embeds: [errorEmbed("Use log, log add, log remove, log ignore, or log color.")] });
