@@ -21,6 +21,18 @@ export const event = {
 
     const settings = await getGuildSettings(member.guild.id);
 
+    // Apply every configured autorole before the member's welcome message.
+    const autoroleIds = String(settings.autoroleId ?? "").split(",").map((id) => id.trim()).filter(Boolean);
+    if (autoroleIds.length) {
+      const assignable = autoroleIds.filter((id) => {
+        const role = member.guild.roles.cache.get(id);
+        return Boolean(role && !role.managed && role.position < member.guild.members.me!.roles.highest.position);
+      });
+      if (assignable.length) {
+        await member.roles.add(assignable, "Automatic role assignment on member join").catch(() => {});
+      }
+    }
+
     await handleAntiraidJoin(member);
 
     const avatarCheck = (settings as any).antiraidAvatarCheck ?? false;
