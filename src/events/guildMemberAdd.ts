@@ -121,7 +121,7 @@ export const event = {
     if (isNew)   descLines.push(`⚠️ Account is only ${accountAgeDays} day${accountAgeDays === 1 ? "" : "s"} old`);
 
     const embed = new EmbedBuilder()
-      .setColor(getLogEmbedColor(settings, "members"))
+      .setColor(getLogEmbedColor(settings, "members", settings.joinLogChannel))
       .setAuthor({ name: "Member Joined", iconURL: avatarURL })
       .setThumbnail(avatarURL)
       .setDescription(descLines.join("\n"))
