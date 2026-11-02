@@ -9,7 +9,7 @@ export const command: HybridCommand = {
   aliases: ["mute"],
   description: "Timeout a member.",
   usage: "timeout [user] [duration] [reason]",
-  examples: ["timeout @user 10m Rule violation"],
+  examples: ["timeout @mmoudder 10m Rule violation"],
   category: "moderation",
   permission: "moderate_members",
   guildOnly: true,
