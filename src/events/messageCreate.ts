@@ -345,14 +345,12 @@ export const event = {
     if ("sendTyping" in message.channel) message.channel.sendTyping().catch(() => {});
 
     try {
-      await cmd.execute(ctx);
-      // antinuke: command detection (--command flag)
       const anModule = ANTINUKE_CMD_MAP[resolvedName.toLowerCase()];
       if (anModule && message.guild) {
-        import("../features/antinuke.js").then(({ tickCommandUsage }) =>
-          tickCommandUsage(client, message.guild!, message.author.id, anModule).catch(() => {})
-        ).catch(() => {});
+        const { markAntinukeCommand } = await import("../features/antinuke.js");
+        markAntinukeCommand(message.guild.id, message.author.id, anModule);
       }
+      await cmd.execute(ctx);
     } catch (err) {
       logger.error({ err, cmd: cmd.name }, "prefix command error");
       if (await isEventEnabled(guildId, "commandfailure")) {
