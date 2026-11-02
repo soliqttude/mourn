@@ -5,7 +5,7 @@ import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
 
 export const command: HybridCommand = {
   name: "autorole",
-  description: "Set/clear the autorole. ,autorole @role | ,autorole clear | ,autorole give/remove @user",
+  description: "Set/clear the autorole. ,autorole @role | ,autorole clear | ,autorole give/remove @mmoudder",
   usage: "autorole [role] [action] [user]",
   examples: ["autorole"],
   category: "settings",
@@ -30,7 +30,7 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed("Autorole cleared.")] });
     }
 
-    // ,autorole give/remove @user
+    // ,autorole give/remove @mmoudder
     if (actionArg === "give" || actionArg === "remove") {
       if (!settings.autoroleId) return ctx.reply({ embeds: [errorEmbed("No autorole configured. Use `,autorole @role` first.")] });
       const target = await ctx.getMember("user");
