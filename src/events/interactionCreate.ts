@@ -111,7 +111,7 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
   if (interaction.member && cmd.permission && cmd.permission !== "everyone") {
     if (!(await checkTierWithFake(interaction.member as any, cmd.permission))) {
       return interaction.reply({
-        embeds: [errorEmbed(`<:warn:1508824473992696049> <@${interaction.user.id}>: You're **missing** permission: \`${cmd.permission}\``)],
+        embeds: [errorEmbed(`${EMOJIS.warn} <@${interaction.user.id}>: You're **missing** permission: \`${cmd.permission}\``)],
         flags: MessageFlags.Ephemeral,
       });
     }
