@@ -1,4 +1,4 @@
-import { type Client, type TextChannel, EmbedBuilder } from "discord.js";
+import { EmbedBuilder, type Client, type TextChannel, type Guild } from "discord.js";
 import { eq, and, lte } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { giveaways } from "../db/schema.js";
@@ -6,109 +6,74 @@ import { config } from "../config.js";
 import { logger } from "../lib/logger.js";
 import { getLevel } from "./leveling.js";
 
-function buildGiveawayEmbed(gw: {
-  id: number;
-  prize: string;
-  description?: string | null;
-  thumbnail?: string | null;
-  imageUrl?: string | null;
-  winnersCount: number;
-  hostId: string;
-  endsAt: Date;
-  requiredRoleIds?: string[] | null;
-  minLevel?: number | null;
-  maxLevel?: number | null;
-}): EmbedBuilder {
-  const lines: string[] = [];
-  lines.push(`**Prize:** ${gw.prize}`);
-  if (gw.description) lines.push(gw.description);
-  lines.push(`**Winners:** ${gw.winnersCount}`);
-  lines.push(`**Hosted by:** <@${gw.hostId}>`);
-  lines.push(`**Ends:** <t:${Math.floor(gw.endsAt.getTime() / 1000)}:R>`);
+type GiveawayRow = typeof giveaways.$inferSelect;
 
-  const reqs: string[] = [];
-  if (gw.requiredRoleIds?.length) reqs.push(`roles: ${gw.requiredRoleIds.map((r) => `<@&${r}>`).join(", ")}`);
-  if (gw.minLevel != null) reqs.push(`min level: ${gw.minLevel}`);
-  if (gw.maxLevel != null) reqs.push(`max level: ${gw.maxLevel}`);
-  if (reqs.length) lines.push(`\n**Requirements:** ${reqs.join(" | ")}`);
-
-  lines.push("\nReact with 🎉 to enter!");
-
-  const eb = new EmbedBuilder()
-    .setColor(config.brandColor)
+export function buildGiveawayEmbed(gw: GiveawayRow): EmbedBuilder {
+  const lines = [
+    `**Prize:** ${gw.prize}`,
+    gw.description || "",
+    `**Winners:** ${gw.winnersCount}`,
+    `**Hosted by:** ${(gw.hostIds?.length ? gw.hostIds : [gw.hostId]).map(id => `<@${id}>`).join(", ")}`,
+    `**Ends:** <t:${Math.floor(gw.endsAt.getTime() / 1000)}:R>`,
+  ].filter(Boolean);
+  const requirements: string[] = [];
+  if (gw.requiredRoleIds?.length) requirements.push(`Required roles: ${gw.requiredRoleIds.map(id => `<@&${id}>`).join(", ")}`);
+  if (gw.minLevel != null) requirements.push(`Minimum level: ${gw.minLevel}`);
+  if (gw.maxLevel != null) requirements.push(`Maximum level: ${gw.maxLevel}`);
+  if (gw.minAccountAgeDays != null) requirements.push(`Account age: ${gw.minAccountAgeDays}+ days`);
+  if (gw.minServerStayDays != null) requirements.push(`Server membership: ${gw.minServerStayDays}+ days`);
+  if (requirements.length) lines.push("", "**Entry requirements**", ...requirements);
+  lines.push("", "React with 🎉 to enter!");
+  const embed = new EmbedBuilder()
+    .setColor(gw.color ? Number.parseInt(gw.color.replace(/^#/, ""), 16) : config.brandColor)
     .setTitle("🎉 GIVEAWAY 🎉")
     .setDescription(lines.join("\n"))
     .setFooter({ text: `ID: ${gw.id} • ${config.embedFooter}` })
     .setTimestamp(gw.endsAt);
-
-  if (gw.thumbnail) eb.setThumbnail(gw.thumbnail);
-  if (gw.imageUrl) eb.setImage(gw.imageUrl);
-
-  return eb;
+  if (gw.thumbnail) embed.setThumbnail(gw.thumbnail);
+  if (gw.imageUrl) embed.setImage(gw.imageUrl);
+  return embed;
 }
 
 export async function createGiveaway(
-  client: Client,
-  guildId: string,
-  channelId: string,
-  hostId: string,
-  prize: string,
-  winnersCount: number,
-  endsAt: Date,
-  opts?: {
-    description?: string;
-    thumbnail?: string;
-    imageUrl?: string;
-    requiredRoleIds?: string[];
-    minLevel?: number;
-    maxLevel?: number;
-  }
+  client: Client, guildId: string, channelId: string, hostId: string,
+  prize: string, winnersCount: number, endsAt: Date,
+  opts: Partial<typeof giveaways.$inferInsert> = {},
 ): Promise<number> {
-  const result = await db.insert(giveaways).values({
+  const inserted = await db.insert(giveaways).values({
     guildId, channelId, hostId, prize, winnersCount, endsAt, ended: false, winners: [],
-    description: opts?.description,
-    thumbnail: opts?.thumbnail,
-    imageUrl: opts?.imageUrl,
-    requiredRoleIds: opts?.requiredRoleIds ?? [],
-    minLevel: opts?.minLevel,
-    maxLevel: opts?.maxLevel,
+    description: opts.description ?? null,
+    thumbnail: opts.thumbnail ?? null,
+    imageUrl: opts.imageUrl ?? null,
+    requiredRoleIds: opts.requiredRoleIds ?? [],
+    minLevel: opts.minLevel ?? null,
+    maxLevel: opts.maxLevel ?? null,
+    color: opts.color ?? null,
+    hostIds: opts.hostIds ?? [hostId],
+    awardRoleIds: opts.awardRoleIds ?? [],
+    minAccountAgeDays: opts.minAccountAgeDays ?? null,
+    minServerStayDays: opts.minServerStayDays ?? null,
   }).returning({ id: giveaways.id });
-  const id = result[0].id;
-
-  const ch = client.channels.cache.get(channelId) as TextChannel | undefined;
-  // FIX: previously cast to TextChannel and called .send() without checking
-  // isTextBased() — a bad/non-text channelId would throw and leave a DB row
-  // with no message ever attached to it.
-  if (!ch || !ch.isTextBased()) return id;
-
-  const embed = buildGiveawayEmbed({
-    id, prize, winnersCount, hostId, endsAt,
-    description: opts?.description,
-    thumbnail: opts?.thumbnail,
-    imageUrl: opts?.imageUrl,
-    requiredRoleIds: opts?.requiredRoleIds,
-    minLevel: opts?.minLevel,
-    maxLevel: opts?.maxLevel,
-  });
-
-  const msg = await ch.send({ embeds: [embed] });
-  await msg.react("🎉").catch(() => {});
-  await db.update(giveaways).set({ messageId: msg.id }).where(eq(giveaways.id, id));
+  const id = inserted[0]!.id;
+  const channel = await client.channels.fetch(channelId).catch(() => null);
+  if (!channel?.isTextBased() || !("send" in channel)) {
+    await db.delete(giveaways).where(eq(giveaways.id, id));
+    throw new Error("The selected channel is not a text channel I can post in.");
+  }
+  const row = (await db.select().from(giveaways).where(eq(giveaways.id, id)))[0]!;
+  const message = await (channel as TextChannel).send({ embeds: [buildGiveawayEmbed(row)] });
+  await message.react("🎉");
+  await db.update(giveaways).set({ messageId: message.id }).where(eq(giveaways.id, id));
   return id;
 }
 
-// FIX: previously fetched only the first page (100 users) of reactors with no
-// pagination — giveaways with 100+ entrants silently dropped everyone past
-// that point. Now pages through with `after` cursors until exhausted.
-async function fetchAllReactors(reaction: any): Promise<string[]> {
+async function fetchAllEntrants(reaction: any): Promise<string[]> {
   const ids: string[] = [];
   let after: string | undefined;
-  for (;;) {
+  while (true) {
     const batch = await reaction.users.fetch({ limit: 100, after }).catch(() => null);
-    if (!batch || batch.size === 0) break;
-    for (const u of batch.values()) {
-      if (!u.bot) ids.push(u.id);
-    }
+    if (!batch?.size) break;
+    for (const user of batch.values()) if (!user.bot) ids.push(user.id);
     if (batch.size < 100) break;
     after = batch.last()?.id;
     if (!after) break;
@@ -116,108 +81,114 @@ async function fetchAllReactors(reaction: any): Promise<string[]> {
   return ids;
 }
 
-// FIX: requiredRoleIds/minLevel/maxLevel were stored and shown in the embed
-// but never actually enforced — anyone who reacted could win regardless of
-// requirements. This now filters entrants against them before picking winners.
-async function filterEligible(
-  guildId: string,
-  entrantIds: string[],
-  guild: Client["guilds"]["cache"] extends Map<string, infer G> ? G : never,
-  requiredRoleIds: string[] | null | undefined,
-  minLevel: number | null | undefined,
-  maxLevel: number | null | undefined,
-): Promise<string[]> {
+async function eligibleEntrants(guild: Guild, giveaway: GiveawayRow, ids: string[]): Promise<string[]> {
   const eligible: string[] = [];
-  for (const userId of entrantIds) {
-    if (requiredRoleIds?.length) {
-      const member = await (guild as any).members.fetch(userId).catch(() => null);
-      if (!member) continue;
-      const hasAllRoles = requiredRoleIds.every((r) => member.roles.cache.has(r));
-      if (!hasAllRoles) continue;
+  for (const id of ids) {
+    const member = await guild.members.fetch(id).catch(() => null);
+    if (!member) continue;
+    if (giveaway.requiredRoleIds?.length && !giveaway.requiredRoleIds.every(roleId => member.roles.cache.has(roleId))) continue;
+    if (giveaway.minLevel != null || giveaway.maxLevel != null) {
+      const level = (await getLevel(giveaway.guildId, id))?.level ?? 0;
+      if (giveaway.minLevel != null && level < giveaway.minLevel) continue;
+      if (giveaway.maxLevel != null && level > giveaway.maxLevel) continue;
     }
-    if (minLevel != null || maxLevel != null) {
-      const levelRow = await getLevel(guildId, userId);
-      const level = levelRow?.level ?? 0;
-      if (minLevel != null && level < minLevel) continue;
-      if (maxLevel != null && level > maxLevel) continue;
-    }
-    eligible.push(userId);
+    if (giveaway.minAccountAgeDays != null &&
+      Date.now() - member.user.createdAt.getTime() < giveaway.minAccountAgeDays * 86_400_000) continue;
+    if (giveaway.minServerStayDays != null &&
+      (!member.joinedAt || Date.now() - member.joinedAt.getTime() < giveaway.minServerStayDays * 86_400_000)) continue;
+    eligible.push(id);
   }
   return eligible;
 }
 
-// FIX: previously SELECT -> check `ended` -> UPDATE were three separate
-// steps, so two concurrent calls (e.g. manual /end racing the 15s loop)
-// could both pass the ended check before either wrote, picking winners
-// twice. Now the UPDATE itself is the guard: it only flips ended=true if it
-// was still false, and we check rowCount to know if we "won" the race.
-export async function endGiveaway(client: Client, giveawayId: number): Promise<void> {
-  const claimed = await db
-    .update(giveaways)
-    .set({ ended: true })
+function choose(ids: string[], count: number, exclude: string[] = []): string[] {
+  const pool = ids.filter(id => !exclude.includes(id));
+  const result: string[] = [];
+  while (result.length < count && pool.length) {
+    const index = Math.floor(Math.random() * pool.length);
+    result.push(pool.splice(index, 1)[0]!);
+  }
+  return result;
+}
+
+export async function endGiveaway(client: Client, giveawayId: number): Promise<string[]> {
+  const claimed = await db.update(giveaways).set({ ended: true })
     .where(and(eq(giveaways.id, giveawayId), eq(giveaways.ended, false)))
     .returning({ id: giveaways.id });
-
-  if (claimed.length === 0) return; // already ended by another caller, or doesn't exist
-
-  const rows = await db.select().from(giveaways).where(eq(giveaways.id, giveawayId));
-  const giveaway = rows[0];
-  if (!giveaway) return;
-
-  const ch = client.channels.cache.get(giveaway.channelId) as TextChannel | undefined;
-  if (!ch || !giveaway.messageId) return;
-
-  const msg = await ch.messages.fetch(giveaway.messageId).catch(() => null);
-  if (!msg) return;
-
-  const reaction = msg.reactions.cache.get("🎉");
-  const allEntrants = reaction ? await fetchAllReactors(reaction) : [];
-
-  const eligible = await filterEligible(
-    giveaway.guildId,
-    allEntrants,
-    msg.guild as any,
-    giveaway.requiredRoleIds,
-    giveaway.minLevel,
-    giveaway.maxLevel,
-  );
-
-  const winners: string[] = [];
-  const pool = [...eligible];
-  for (let i = 0; i < giveaway.winnersCount && pool.length > 0; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
-    winners.push(pool[idx]);
-    pool.splice(idx, 1);
-  }
-
+  if (!claimed.length) return [];
+  const giveaway = (await db.select().from(giveaways).where(eq(giveaways.id, giveawayId)))[0];
+  if (!giveaway?.messageId) return [];
+  const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+  if (!channel?.isTextBased() || !("messages" in channel)) return [];
+  const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
+  if (!message) return [];
+  const reaction = message.reactions.cache.get("🎉");
+  const entrants = reaction ? await fetchAllEntrants(reaction) : [];
+  const eligible = await eligibleEntrants(message.guild, giveaway, entrants);
+  const winners = choose(eligible, giveaway.winnersCount);
   await db.update(giveaways).set({ winners }).where(eq(giveaways.id, giveawayId));
-
-  const winText = winners.length > 0 ? winners.map((w) => `<@${w}>`).join(", ") : "No valid entrants";
-  const endEmbed = new EmbedBuilder()
-    .setColor(winners.length > 0 ? 0x57f287 : 0xed4245)
+  const mentions = winners.length ? winners.map(id => `<@${id}>`).join(", ") : "No eligible entrants";
+  const ended = new EmbedBuilder().setColor(winners.length ? 0x57f287 : 0xed4245)
     .setTitle("🎉 GIVEAWAY ENDED 🎉")
-    .setDescription(`**Prize:** ${giveaway.prize}\n**Winner(s):** ${winText}\n**Hosted by:** <@${giveaway.hostId}>`)
-    .setFooter({ text: `ID: ${giveawayId} • ${config.embedFooter}` })
-    .setTimestamp(new Date());
-
-  await msg.edit({ embeds: [endEmbed] }).catch(() => {});
-  if (winners.length > 0) {
-    await ch.send({
-      content: `🎉 Congratulations ${winText}! You won **${giveaway.prize}**!`,
-      allowedMentions: { users: winners },
-    }).catch(() => {});
+    .setDescription(`**Prize:** ${giveaway.prize}\n**Winner(s):** ${mentions}\n**Hosted by:** <@${giveaway.hostId}>`)
+    .setFooter({ text: `ID: ${giveawayId} • ${config.embedFooter}` }).setTimestamp(new Date());
+  await message.edit({ embeds: [ended] }).catch(() => {});
+  if (winners.length) {
+    await channel.send({ content: `🎉 Congratulations ${mentions}! You won **${giveaway.prize}**!`,
+      allowedMentions: { users: winners } }).catch(() => {});
+    if (giveaway.awardRoleIds?.length) {
+      for (const winnerId of winners) {
+        const member = await message.guild.members.fetch(winnerId).catch(() => null);
+        if (member) await member.roles.add(giveaway.awardRoleIds).catch(err => logger.warn({ err, winnerId }, "giveaway winner role grant failed"));
+      }
+    }
   } else {
-    await ch.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` }).catch(() => {});
+    await channel.send({ content: `No one eligible entered the giveaway for **${giveaway.prize}**.` }).catch(() => {});
+  }
+  return winners;
+}
+
+export async function rerollGiveaway(client: Client, giveaway: GiveawayRow, winnerCount: number): Promise<string[]> {
+  if (!giveaway.ended || !giveaway.messageId) throw new Error("That giveaway has not ended or its message is unavailable.");
+  const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+  if (!channel?.isTextBased() || !("messages" in channel)) throw new Error("Giveaway channel not found.");
+  const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
+  if (!message) throw new Error("Giveaway message not found.");
+  const reaction = message.reactions.cache.get("🎉");
+  const entrants = reaction ? await fetchAllEntrants(reaction) : [];
+  const eligible = await eligibleEntrants(message.guild, giveaway, entrants);
+  const winners = choose(eligible, winnerCount, giveaway.winners ?? []);
+  if (!winners.length) throw new Error("No new eligible entrants are available to reroll.");
+  await db.update(giveaways).set({ winners: [...(giveaway.winners ?? []), ...winners] }).where(eq(giveaways.id, giveaway.id));
+  const mentions = winners.map(id => `<@${id}>`).join(", ");
+  await channel.send({ content: `🎉 Rerolled winner(s) for **${giveaway.prize}**: ${mentions}!`,
+    allowedMentions: { users: winners } });
+  return winners;
+}
+
+export async function refreshGiveawayMessage(client: Client, giveaway: GiveawayRow): Promise<void> {
+  if (!giveaway.messageId || giveaway.ended) return;
+  const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+  if (!channel?.isTextBased() || !("messages" in channel)) return;
+  const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
+  if (message) await message.edit({ embeds: [buildGiveawayEmbed(giveaway)] });
+}
+
+export async function cancelGiveaway(client: Client, giveaway: GiveawayRow): Promise<void> {
+  await db.update(giveaways).set({ ended: true }).where(and(eq(giveaways.id, giveaway.id), eq(giveaways.ended, false)));
+  if (!giveaway.messageId) return;
+  const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+  if (channel?.isTextBased() && "messages" in channel) {
+    const message = await (channel as TextChannel).messages.fetch(giveaway.messageId).catch(() => null);
+    await message?.delete().catch(() => {});
   }
 }
 
 export function startGiveawayLoop(client: Client): void {
   setInterval(async () => {
     try {
-      const due = await db.select().from(giveaways).where(
-        and(eq(giveaways.ended, false), lte(giveaways.endsAt, new Date()))
-      );
-      for (const g of due) await endGiveaway(client, g.id);
+      const due = await db.select().from(giveaways).where(and(eq(giveaways.ended, false), lte(giveaways.endsAt, new Date())));
+      for (const giveaway of due) await endGiveaway(client, giveaway.id);
     } catch (err) {
       logger.warn({ err }, "Giveaway loop error");
     }
