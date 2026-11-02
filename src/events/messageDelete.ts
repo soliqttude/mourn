@@ -1,6 +1,6 @@
 import type { Client, Message, PartialMessage, TextChannel } from "discord.js";
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
-import { getGuildSettings } from "../db/settings.js";
+import { getGuildSettings, getLogEmbedColor } from "../db/settings.js";
 import { storeSnipe } from "../features/snipes.js";
 import { db } from "../db/index.js";
 import { logIgnores } from "../db/schema.js";
@@ -48,7 +48,7 @@ export const event = {
       sentAt ? `It was sent at <t:${sentAt}:f>` : "",
     ].filter(Boolean);
     const embed = new EmbedBuilder()
-      .setColor(0x000000).setAuthor({ name: "Message Deleted", iconURL: avatarURL })
+      .setColor(getLogEmbedColor(settings, "messages")).setAuthor({ name: "Message Deleted", iconURL: avatarURL })
       .setDescription(descLines.join("\n"))
       .addFields({ name: "Message Content", value: content, inline: false })
       .setTimestamp().setFooter({ text: `User ID: ${author?.id ?? "unknown"}` });
