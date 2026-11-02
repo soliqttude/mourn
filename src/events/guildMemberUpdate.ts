@@ -2,7 +2,6 @@ import type { Client, GuildMember, PartialGuildMember, TextChannel } from "disco
 import { EmbedBuilder, AuditLogEvent } from "discord.js";
 import { getGuildSettings } from "../db/settings.js";
 import { handleBoostEnd } from "../features/boosterRoles.js";
-import { handlePermissionEscalation } from "../features/antinuke.js";
 import { db } from "../db/index.js";
 import { boostAutoRole, boostChannels } from "../db/schema.js";
 import { parseScript } from "../lib/scripting.js";
@@ -46,10 +45,6 @@ export const event = {
     }
 
     const oldRoles = (oldMember as GuildMember).roles?.cache;
-    if (oldRoles) {
-      const addedRoleIds = newMember.roles.cache.filter(r => !oldRoles.has(r.id)).map(r => r.id);
-      if (addedRoleIds.length > 0) await handlePermissionEscalation(client, newMember.guild, newMember, addedRoleIds).catch(() => {});
-    }
 
     const settings    = await getGuildSettings(newMember.guild.id);
     const logChannelId = (settings as any).roleLogChannel as string | null;
