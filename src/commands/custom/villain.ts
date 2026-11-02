@@ -19,7 +19,7 @@ export const command: HybridCommand = {
             { name: "💰 Economy", value: "Coins, shop, gambling, fishing, heists, leaderboards", inline: false },
             { name: "📈 Levels", value: "XP system, rank cards, role rewards", inline: true },
             { name: "🎉 Fun", value: "8ball, trivia, rps, ship, and more", inline: true },
-            { name: "👤 Developer", value: "geico (@udrs)", inline: false },
+            { name: "👤 Developer", value: "geico (@tr5cks)", inline: false },
           ],
           page: "Villain",
         }),
