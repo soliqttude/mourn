@@ -426,7 +426,7 @@ async function handleSelect(client: Client, interaction: StringSelectMenuInterac
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
   if (interaction.customId.startsWith("antinuke:config-submit:")) {
-    const [, , guildId, requesterId] = interaction.customId.split(":");
+    const [, , guildId, requesterId, moduleName] = interaction.customId.split(":");
     if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
       return interaction.reply({ content: "This AntiNuke configuration form is not valid for this user or server.", flags: MessageFlags.Ephemeral });
     }
