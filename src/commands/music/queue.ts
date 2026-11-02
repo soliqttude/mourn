@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
-import { errorEmbed, successEmbed, brandEmbed } from "../../lib/embeds.js";
+import { errorEmbed, successEmbed, brandEmbed, EMOJIS } from "../../lib/embeds.js";
 import { distube, formatTime } from "../../features/music.js";
 import { config } from "../../config.js";
 
@@ -38,7 +38,7 @@ export const command: HybridCommand = {
     if (sub === "empty") {
       const removed = Math.max(0, queue.songs.length - 1);
       queue.songs.splice(1);
-      return ctx.reply({ embeds: [successEmbed(`removed **${removed}** queued track${removed === 1 ? "" : "s"}.`)] });
+      return ctx.reply({ embeds: [successEmbed(`${EMOJIS.remove} removed **${removed}** queued track${removed === 1 ? "" : "s"}.`)] });
     }
 
     if (sub === "remove") {
@@ -47,7 +47,7 @@ export const command: HybridCommand = {
       if (pos >= queue.songs.length) return ctx.reply({ embeds: [errorEmbed(`position out of range. queue has ${queue.songs.length} songs.`)] });
       const removed = queue.songs[pos];
       queue.songs.splice(pos, 1);
-      return ctx.reply({ embeds: [successEmbed(`removed **${removed?.name ?? "track"}** from the queue.`)] });
+      return ctx.reply({ embeds: [successEmbed(`${EMOJIS.remove} removed **${removed?.name ?? "track"}** from the queue.`)] });
     }
 
     if (sub === "move") {
