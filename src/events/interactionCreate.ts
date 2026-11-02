@@ -404,7 +404,7 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction) 
     if (commandInput && !["ban", "kick", "role"].includes(moduleName)) return interaction.reply({ content: "Command detection is supported only for ban, kick, and role modules.", flags: MessageFlags.Ephemeral });
     const { db } = await import("../db/index.js");
     const { antinukeModules } = await import("../db/schema.js");
-    const { getGuildSettings } = await import("../db/settings.js");
+    const { getGuildSettings, updateGuildSettings } = await import("../db/settings.js");
     const current = (await getModuleConfigs(guildId)).get(moduleName);
     const guildSettings = await getGuildSettings(guildId);
     const enabled = setting === "on";
@@ -420,7 +420,7 @@ async function handleModal(client: Client, interaction: ModalSubmitInteraction) 
       set: { enabled: values.enabled, threshold: values.threshold, punishment: values.punishment, countCommands: values.countCommands },
     });
     invalidateModuleCache(guildId);
-    if (enabled) await getGuildSettings(guildId).then(() => import("../db/settings.js")).then(({ updateGuildSettings }) => updateGuildSettings(guildId, { antinukeEnabled: true }));
+    if (enabled) await updateGuildSettings(guildId, { antinukeEnabled: true });
     return interaction.reply({ content: "AntiNuke " + moduleName + " protection is now " + setting + ".", flags: MessageFlags.Ephemeral });
   }
   if (interaction.customId.startsWith("panel:")) return handlePanelInteraction(client, interaction as any);
