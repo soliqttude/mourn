@@ -163,7 +163,7 @@ export const command: HybridCommand = {
 
     // ── config / list / admins ───────────────────────────────────────────────
     if (sub === "config") {
-      if (ctx.source !== "slash" || !(ctx.raw as ChatInputCommandInteraction).isChatInputCommand()) {
+      if (ctx.source !== "slash") {
         return ctx.reply({ embeds: [brandEmbed({
           title: "antinuke configuration",
           description: "Use the /antinuke config slash command to open the configuration modal.",
