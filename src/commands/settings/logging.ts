@@ -6,195 +6,119 @@ import { db } from "../../db/index.js";
 import { logIgnores } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 
-const EVENT_MAP: Record<string, { key: string; label: string; emoji: string }> = {
-  messages: { key: "msgLogChannel",    label: "Messages",    emoji: "💬" },
-  message:  { key: "msgLogChannel",    label: "Messages",    emoji: "💬" },
-  msg:      { key: "msgLogChannel",    label: "Messages",    emoji: "💬" },
-  members:  { key: "joinLogChannel",   label: "Members",     emoji: "🚪" },
-  member:   { key: "joinLogChannel",   label: "Members",     emoji: "🚪" },
-  joins:    { key: "joinLogChannel",   label: "Members",     emoji: "🚪" },
-  voice:    { key: "voiceLogChannel",  label: "Voice",       emoji: "🔊" },
-  roles:    { key: "roleLogChannel",   label: "Roles",       emoji: "🎭" },
-  role:     { key: "roleLogChannel",   label: "Roles",       emoji: "🎭" },
-  channels: { key: "serverLogChannel", label: "Channels",    emoji: "📁" },
-  channel:  { key: "serverLogChannel", label: "Channels",    emoji: "📁" },
-  invites:  { key: "serverLogChannel", label: "Channels",    emoji: "📨" },
-  invite:   { key: "serverLogChannel", label: "Channels",    emoji: "📨" },
-  emojis:   { key: "serverLogChannel", label: "Emojis",      emoji: "😀" },
-  emoji:    { key: "serverLogChannel", label: "Emojis",      emoji: "😀" },
-  moderation: { key: "modLogChannel",  label: "Moderation",  emoji: "🔨" },
-  mod:      { key: "modLogChannel",    label: "Moderation",  emoji: "🔨" },
-  server:   { key: "serverLogChannel", label: "Server",      emoji: "🏠" },
+const EVENTS: Record<string, { key: string; label: string }> = {
+  message: { key: "msgLogChannel", label: "Messages" },
+  messages: { key: "msgLogChannel", label: "Messages" },
+  member: { key: "joinLogChannel", label: "Members" },
+  members: { key: "joinLogChannel", label: "Members" },
+  joins: { key: "joinLogChannel", label: "Members" },
+  voice: { key: "voiceLogChannel", label: "Voice" },
+  role: { key: "roleLogChannel", label: "Roles" },
+  roles: { key: "roleLogChannel", label: "Roles" },
+  channel: { key: "serverLogChannel", label: "Channels" },
+  channels: { key: "serverLogChannel", label: "Channels" },
+  invites: { key: "serverLogChannel", label: "Invites" },
+  emojis: { key: "serverLogChannel", label: "Emojis" },
+  moderation: { key: "modLogChannel", label: "Moderation" },
 };
 
-const ALL_KEYS = [
-  { key: "msgLogChannel",    label: "Messages",   emoji: "💬" },
-  { key: "joinLogChannel",   label: "Members",    emoji: "🚪" },
-  { key: "modLogChannel",    label: "Moderation", emoji: "🔨" },
-  { key: "voiceLogChannel",  label: "Voice",      emoji: "🔊" },
-  { key: "roleLogChannel",   label: "Roles",      emoji: "🎭" },
-  { key: "serverLogChannel", label: "Server",     emoji: "🏠" },
-];
+const DISPLAY_EVENTS = ["messages", "members", "voice", "roles", "channels", "moderation"];
+
+function cleanId(value?: string): string {
+  return (value ?? "").replace(/[<#@!>]/g, "").trim();
+}
+
+function validColor(value: string): boolean {
+  return /^#?[0-9a-f]{6}$/i.test(value);
+}
 
 export const command: HybridCommand = {
-  name: "logging",
-  description: "Manage logging events for your server.",
-  usage: "log <add|remove|list|reset|ignore> [channel] [event]",
+  name: "log",
+  aliases: ["logs", "logging"],
+  description: "Set up and manage server event logging.",
+  usage: "log | log add <channel> <event> | log remove <channel> <event> | log ignore <member or channel> | log ignore list | log color <channel> <event> <color> | log color list <channel>",
   examples: [
     "log add #logs messages",
-    "log add #logs members",
-    "log add #logs voice",
-    "log add #logs roles",
-    "log add #logs channels",
-    "log add #logs invites",
-    "log add #logs emojis",
     "log remove #logs messages",
-    "log list",
-    "log reset",
-    "log ignore add #bot-spam",
-    "log ignore add @bot",
+    "log ignore @mmoudder",
     "log ignore list",
+    "log color #logs messages #5865f2",
+    "log color list #logs",
   ],
-  aliases: ["logs", "log"],
   category: "settings",
   permission: "manage_guild",
   guildOnly: true,
   options: [
-    {
-      name: "subcommand",
-      description: "add | remove | list | reset | ignore",
-      type: ApplicationCommandOptionType.String,
-      required: true,
-      choices: [
-        { name: "add",    value: "add"    },
-        { name: "remove", value: "remove" },
-        { name: "list",   value: "list"   },
-        { name: "reset",  value: "reset"  },
-        { name: "ignore", value: "ignore" },
-      ],
-    },
-    { name: "channel", description: "Log channel",                                       type: ApplicationCommandOptionType.Channel, required: false },
-    { name: "event",   description: "messages | members | voice | roles | channels | invites | emojis | moderation", type: ApplicationCommandOptionType.String,  required: false },
+    { name: "action", description: "add | remove | ignore | color", type: ApplicationCommandOptionType.String, required: false },
+    { name: "channel", description: "Logging channel", type: ApplicationCommandOptionType.Channel, required: false },
+    { name: "event", description: "Event type", type: ApplicationCommandOptionType.String, required: false },
+    { name: "color", description: "Hex embed color, e.g. #5865f2", type: ApplicationCommandOptionType.String, required: false },
+    { name: "target", description: "Member or channel to ignore", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
+    const action = (ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
+    const channel = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(cleanId(ctx.args[1]));
+    const channelId = channel?.id ?? null;
+    const eventName = (ctx.getString("event") ?? ctx.args[2] ?? "").toLowerCase();
+    const settings = await getGuildSettings(ctx.guild.id);
 
-    const sub = (ctx.getString("subcommand") ?? ctx.args[0] ?? "").toLowerCase();
+    if (!action) {
+      const lines = DISPLAY_EVENTS.map((event) => {
+        const meta = EVENTS[event]!;
+        const id = (settings as any)[meta.key];
+        return `**${meta.label}:** ${id ? `<#${id}>` : "not configured"}`;
+      });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Logging Setup", description: lines.join("\n") + "\n\nUse log add to configure an event." })] });
+    }
 
-    // resolve channel and event — support both orders:
-    // prefix:  log add #channel event  (args[1]=channel, args[2]=event)
-    // slash:   channel option + event option
-    const rawArg1 = ctx.args[1] ?? "";
-    const rawArg2 = ctx.args[2] ?? "";
-
-    const chanIdFromArg = rawArg1.replace(/[<#>]/g, "");
-    const channelFromGuild = ctx.guild.channels.cache.get(chanIdFromArg);
-    const channelArg = ctx.getChannel("channel") ?? channelFromGuild ?? null;
-    const channelId  = (channelArg as any)?.id ?? null;
-
-    const eventArg = (ctx.getString("event") ?? rawArg2 ?? rawArg1 ?? "").toLowerCase();
-
-    // ── ignore ────────────────────────────────────────────────────────────────
-    if (sub === "ignore") {
-      const ignoreSub = eventArg || rawArg1;
-      const rawTarget = ctx.args[2] ?? ctx.args[1] ?? channelId ?? "";
-      const targetId  = rawTarget.replace(/[<#@!>]/g, "");
-
-      if (ignoreSub === "list") {
+    if (action === "ignore") {
+      const sub = (ctx.args[1] ?? "").toLowerCase();
+      if (sub === "list") {
         const rows = await db.select().from(logIgnores).where(eq(logIgnores.guildId, ctx.guild.id));
-        if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No ignored channels or members.")] });
-        const lines = rows.map(r =>
-          ctx.guild!.channels.cache.has(r.targetId)
-            ? `<#${r.targetId}>`
-            : `<@${r.targetId}>`
-        );
-        return ctx.reply({ embeds: [brandEmbed({ title: "Log Ignores", description: lines.join("\n") })] });
+        return ctx.reply({ embeds: [brandEmbed({ title: "Ignored Log Targets", description: rows.length ? rows.map(row => ctx.guild!.channels.cache.has(row.targetId) ? `<#${row.targetId}>` : `<@${row.targetId}>`).join("\n") : "No ignored members or channels." })] });
       }
-
-      if (!targetId) return ctx.reply({ embeds: [errorEmbed("Mention a **channel** or **member** to ignore.")] });
-
-      if (ignoreSub === "add" || (!ignoreSub && targetId)) {
-        await db.insert(logIgnores).values({ guildId: ctx.guild.id, targetId }).onConflictDoNothing();
-        const mention = ctx.guild.channels.cache.has(targetId) ? `<#${targetId}>` : `<@${targetId}>`;
-        return ctx.reply({ embeds: [successEmbed(`${mention} will be ignored from logs.`)] });
-      }
-
-      if (ignoreSub === "remove") {
-        await db.delete(logIgnores).where(and(eq(logIgnores.guildId, ctx.guild.id), eq(logIgnores.targetId, targetId)));
-        return ctx.reply({ embeds: [successEmbed(`removed from the log ignore list.`)] });
-      }
-
-      return ctx.reply({ embeds: [errorEmbed("Usage: `log ignore add/remove/list`")] });
+      const rawTarget = ctx.getString("target") ?? ctx.args[1] ?? "";
+      const targetId = cleanId(rawTarget);
+      if (!targetId) return ctx.reply({ embeds: [errorEmbed("Provide a member or channel to ignore.")] });
+      const isChannel = ctx.guild.channels.cache.has(targetId);
+      const isMember = ctx.guild.members.cache.has(targetId);
+      if (!isChannel && !isMember) return ctx.reply({ embeds: [errorEmbed("That member or channel was not found in this server.")] });
+      await db.insert(logIgnores).values({ guildId: ctx.guild.id, targetId }).onConflictDoNothing();
+      return ctx.reply({ embeds: [successEmbed(`${isChannel ? `<#${targetId}>` : `<@${targetId}>`} will be ignored by logging.`)] });
     }
 
-    // ── list ──────────────────────────────────────────────────────────────────
-    if (sub === "list") {
-      const s      = await getGuildSettings(ctx.guild.id);
-      const fields = ALL_KEYS.map(({ key, label, emoji }) => ({
-        name:   `${emoji} ${label}`,
-        value:  (s as any)[key] ? `<#${(s as any)[key]}>` : "not set",
-        inline: true,
-      }));
-      const ignores = await db.select().from(logIgnores).where(eq(logIgnores.guildId, ctx.guild.id));
-      const ignoreList = ignores.length
-        ? ignores.map(r => ctx.guild!.channels.cache.has(r.targetId) ? `<#${r.targetId}>` : `<@${r.targetId}>`).join(", ")
-        : "none";
-      fields.push({ name: "🚫 Ignored", value: ignoreList, inline: false });
-      return ctx.reply({ embeds: [brandEmbed({ title: "Logging Configuration", fields })] });
+    if (action === "add" || action === "remove") {
+      if (!channelId) return ctx.reply({ embeds: [errorEmbed("Provide a logging channel.")] });
+      const meta = EVENTS[eventName];
+      if (!meta) return ctx.reply({ embeds: [errorEmbed("Unknown event. Use messages, members, voice, roles, channels, or moderation.")] });
+      if (action === "add") {
+        await updateGuildSettings(ctx.guild.id, { [meta.key]: channelId } as any);
+        return ctx.reply({ embeds: [successEmbed(`Logging for **${meta.label}** is now sent to <#${channelId}>.`)] });
+      }
+      if ((settings as any)[meta.key] !== channelId) {
+        return ctx.reply({ embeds: [errorEmbed(`< #${channelId} > is not the configured channel for ${meta.label} logs.`)] });
+      }
+      await updateGuildSettings(ctx.guild.id, { [meta.key]: null } as any);
+      return ctx.reply({ embeds: [successEmbed(`Removed **${meta.label}** logging from <#${channelId}>.`)] });
     }
 
-    // ── reset ─────────────────────────────────────────────────────────────────
-    if (sub === "reset") {
-      await updateGuildSettings(ctx.guild.id, Object.fromEntries(ALL_KEYS.map(k => [k.key, null])) as any);
-      return ctx.reply({ embeds: [successEmbed("All log channels have been cleared.")] });
+    if (action === "color") {
+      if ((ctx.args[1] ?? "").toLowerCase() === "list") {
+        const listChannel = ctx.guild.channels.cache.get(cleanId(ctx.args[2]));
+        if (!listChannel) return ctx.reply({ embeds: [errorEmbed("Provide a channel.")] });
+        const colors = (settings.logColors ?? {}) as Record<string, string>;
+        const lines = Object.entries(colors).map(([event, color]) => `**${event}:** ${color}`);
+        return ctx.reply({ embeds: [brandEmbed({ title: `Log Colors — #${listChannel.name}`, description: lines.length ? lines.join("\n") : "No custom event colors set." })] });
+      }
+      if (!channelId || !eventName) return ctx.reply({ embeds: [errorEmbed("Provide a channel and event.")] });
+      const color = (ctx.getString("color") ?? ctx.args[3] ?? "").trim();
+      if (!validColor(color)) return ctx.reply({ embeds: [errorEmbed("Color must be a six-digit hex value, e.g. #5865f2.")] });
+      const colors = { ...((settings.logColors ?? {}) as Record<string, string>), [eventName]: color.startsWith("#") ? color : `#${color}` };
+      await updateGuildSettings(ctx.guild.id, { logColors: colors });
+      return ctx.reply({ embeds: [successEmbed(`Custom color for **${eventName}** logs set to ${colors[eventName]}.`)] });
     }
 
-    // ── add | remove ──────────────────────────────────────────────────────────
-    if (sub === "add" || sub === "remove") {
-      const event = eventArg;
-
-      if (!event && sub === "remove") {
-        // remove all
-        if (!channelId) {
-          await updateGuildSettings(ctx.guild.id, Object.fromEntries(ALL_KEYS.map(k => [k.key, null])) as any);
-          return ctx.reply({ embeds: [successEmbed("All log channels removed.")] });
-        }
-        // remove all events for specific channel
-        const patch = Object.fromEntries(
-          ALL_KEYS
-            .filter(k => true) // remove channel if it matches
-            .map(k => [k.key, null])
-        );
-        await updateGuildSettings(ctx.guild.id, patch as any);
-        return ctx.reply({ embeds: [successEmbed(`All log events removed from <#${channelId}>.`)] });
-      }
-
-      if (event === "all") {
-        if (sub === "remove") {
-          await updateGuildSettings(ctx.guild.id, Object.fromEntries(ALL_KEYS.map(k => [k.key, null])) as any);
-          return ctx.reply({ embeds: [successEmbed("All log channels removed.")] });
-        }
-        if (!channelId) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
-        await updateGuildSettings(ctx.guild.id, Object.fromEntries(ALL_KEYS.map(k => [k.key, channelId])) as any);
-        return ctx.reply({ embeds: [successEmbed(`All log events → <#${channelId}>.`)] });
-      }
-
-      const meta = event ? EVENT_MAP[event] : null;
-      if (!meta) {
-        const available = "messages, members, voice, roles, channels, invites, emojis, moderation, all";
-        return ctx.reply({ embeds: [errorEmbed(`Unknown event. Available: ${available}`)] });
-      }
-
-      if (sub === "remove") {
-        await updateGuildSettings(ctx.guild.id, { [meta.key]: null } as any);
-        return ctx.reply({ embeds: [successEmbed(`${meta.emoji} **${meta.label}** logging disabled.`)] });
-      }
-
-      if (!channelId) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
-      await updateGuildSettings(ctx.guild.id, { [meta.key]: channelId } as any);
-      return ctx.reply({ embeds: [successEmbed(`${meta.emoji} **${meta.label}** events → <#${channelId}>.`)] });
-    }
-
-    return ctx.reply({ embeds: [errorEmbed("Usage: `log add (channel) (event)` or `log remove (channel) (event)`")] });
+    return ctx.reply({ embeds: [errorEmbed("Use log, log add, log remove, log ignore, or log color.")] });
   },
 };
