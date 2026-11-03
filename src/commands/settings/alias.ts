@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   category: "settings",
   permission: "manage_guild",
   guildOnly: true,
-  usage: "alias (add|remove|list|view) [alias] [command]",
+  usage: "alias (add|remove|list|view|reset|removeall) [alias] [command]",
   examples: [
     "alias add pb purge",
     "alias add cls purge",
@@ -24,7 +24,7 @@ export const command: HybridCommand = {
   options: [
     {
       name: "action",
-      description: "add, remove, list, or view",
+      description: "add, remove, list, view, or clear aliases",
       type: ApplicationCommandOptionType.String,
       required: true,
       choices: [
@@ -32,6 +32,8 @@ export const command: HybridCommand = {
         { name: "remove", value: "remove" },
         { name: "list", value: "list" },
         { name: "view", value: "view" },
+        { name: "reset", value: "reset" },
+        { name: "removeall", value: "removeall" },
       ],
     },
     { name: "alias", description: "The alias name", type: ApplicationCommandOptionType.String, required: false },
@@ -42,6 +44,12 @@ export const command: HybridCommand = {
     if (!guild) return;
 
     const action = ctx.getString("action");
+
+    if (action === "reset" || action === "removeall") {
+      const rows = await db.select().from(commandAliases).where(eq(commandAliases.guildId, guild.id));
+      await db.delete(commandAliases).where(eq(commandAliases.guildId, guild.id));
+      return ctx.reply({ embeds: [successEmbed(`removed ${rows.length} command alias(es) from this server.`, "settings")] });
+    }
 
     if (action === "list") {
       const rows = await db.select().from(commandAliases).where(eq(commandAliases.guildId, guild.id));
