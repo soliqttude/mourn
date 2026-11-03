@@ -4,6 +4,7 @@ import { SoundCloudPlugin } from "@distube/soundcloud";
 import { SpotifyPlugin } from "@distube/spotify";
 import { type Client, type TextChannel, EmbedBuilder } from "discord.js";
 import { eq } from "drizzle-orm";
+import { existsSync } from "node:fs";
 import { db } from "../db/index.js";
 import { musicSettings } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -12,6 +13,7 @@ import { EMOJIS } from "../lib/embeds.js";
 import ffmpegPath from "ffmpeg-static";
 
 export let distube: DisTube;
+let musicInitialized = false;
 
 export async function getMusicSettings(guildId: string) {
   const rows = await db.select().from(musicSettings).where(eq(musicSettings.guildId, guildId));
@@ -65,25 +67,43 @@ export function formatTime(seconds: number): string {
 }
 
 export function setupMusic(client: Client): void {
-  distube = new DisTube(client, {
+  if (musicInitialized) {
+    logger.warn("DisTube setup was requested more than once; keeping the existing music engine.");
+    return;
+  }
+
+  const resolvedFfmpegPath = (ffmpegPath as unknown as string | undefined) ?? "ffmpeg";
+  logger.info({
+    ffmpegPath: resolvedFfmpegPath,
+    bundledFfmpegExists: Boolean(ffmpegPath && existsSync(resolvedFfmpegPath)),
+  }, "Initializing DisTube music engine");
+
+  const engine = new DisTube(client, {
     emitNewSongOnly: true,
-    plugins: [new SpotifyPlugin() as any, new YouTubePlugin(), new SoundCloudPlugin()],
+    plugins: [new YouTubePlugin(), new SoundCloudPlugin(), new SpotifyPlugin() as any],
     joinNewVoiceChannel: true,
     nsfw: true,
     savePreviousSongs: true,
     ffmpeg: {
-      path: (ffmpegPath as unknown as string | undefined) ?? "ffmpeg",
+      path: resolvedFfmpegPath,
       args: { global: {}, input: {}, output: {} },
     },
   });
 
-  (distube as any)
+  distube = engine;
+  musicInitialized = true;
+
+  engine
     .on("playSong", (queue: Queue, song: Song) => {
+      logger.info({ guildId: queue.id, song: song.name, url: song.url }, "DisTube playback started");
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
-      ch.send({ embeds: [nowPlayingEmbed(song, queue)] }).catch(() => {});
+      ch.send({ embeds: [nowPlayingEmbed(song, queue)] }).catch((err) => {
+        logger.warn({ err, guildId: queue.id }, "Failed to send now-playing message");
+      });
     })
     .on("addSong", (queue: Queue, song: Song) => {
+      logger.info({ guildId: queue.id, song: song.name, url: song.url }, "DisTube song added to queue");
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
       ch.send({
@@ -102,6 +122,7 @@ export function setupMusic(client: Client): void {
       }).catch(() => {});
     })
     .on("finish", (queue: Queue) => {
+      logger.info({ guildId: queue.id }, "DisTube queue finished");
       const ch = queue.textChannel as TextChannel | undefined;
       if (!ch) return;
       ch.send({
@@ -109,13 +130,18 @@ export function setupMusic(client: Client): void {
       }).catch(() => {});
     })
     .on("disconnect", (queue: Queue) => {
-      logger.debug({ guildId: queue.id }, "distube disconnected");
+      logger.debug({ guildId: queue.id }, "DisTube disconnected");
     })
-     .on("error", (error: Error, queue: Queue) => {
-      logger.warn({ err: error, guildId: queue?.id }, "distube error");
+    .on("error", (error: Error, queue: Queue) => {
+      logger.error({
+        err: error,
+        cause: (error as any)?.cause,
+        guildId: queue?.id,
+        message: error?.message,
+      }, "DisTube playback/search error");
       const ch = queue?.textChannel as TextChannel | undefined;
       const msg = error?.message ?? String(error);
-      const isYtBlock = /sign in|403|blocked|unavailable|age.restrict|confirm.*human/i.test(msg);
+      const isYtBlock = /sign in|403|blocked|unavailable|age.restrict|confirm.*human|bot.check/i.test(msg);
       const description = isYtBlock
         ? `YouTube is blocking this request. Try a **SoundCloud** or ${EMOJIS.spotify} **Spotify** URL directly, or use a supported source URL.`
         : `Music error: ${msg}`;
@@ -125,4 +151,6 @@ export function setupMusic(client: Client): void {
         }).catch(() => {});
       }
     });
+
+  logger.info("DisTube music engine initialized.");
 }
