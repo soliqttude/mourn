@@ -1,6 +1,6 @@
 <div align="center">
 
-# VILLAIN
+# VILLAIN best
 
 **One bot. Your entire server.**
 
