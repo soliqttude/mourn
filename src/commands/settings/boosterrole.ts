@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   description: "Manage your personal booster role — create, rename, color, or delete your custom role.",
   category: "settings",
   guildOnly: true,
-  usage: "boosterrole (create|delete|rename|color|icon|setbase) [value]",
+  usage: "boosterrole (create|delete|remove|rename|color|random|icon|setbase|base|list|cleanup) [value]",
   examples: [
     "boosterrole create",
     "boosterrole rename My Awesome Role",
@@ -24,7 +24,7 @@ export const command: HybridCommand = {
   options: [
     {
       name: "action",
-      description: "create, delete, rename, color, icon, or setbase",
+      description: "create, delete, remove, rename, color, random, icon, setbase, base, list, or cleanup",
       type: ApplicationCommandOptionType.String,
       required: true,
       choices: [
@@ -34,6 +34,11 @@ export const command: HybridCommand = {
         { name: "color", value: "color" },
         { name: "icon", value: "icon" },
         { name: "setbase", value: "setbase" },
+        { name: "base", value: "base" },
+        { name: "remove", value: "remove" },
+        { name: "random", value: "random" },
+        { name: "list", value: "list" },
+        { name: "cleanup", value: "cleanup" },
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
@@ -46,7 +51,7 @@ export const command: HybridCommand = {
 
     const action = ctx.getString("action");
 
-    if (action === "setbase") {
+    if (action === "setbase" || action === "base") {
       if (!member.permissions.has("Administrator" as any))
         return ctx.reply({ embeds: [errorEmbed("Only admins can set the base **role**.")] });
       const role = ctx.getRole("role");
@@ -54,6 +59,27 @@ export const command: HybridCommand = {
       await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: role.id })
         .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { baseRoleId: role.id } });
       return ctx.reply({ embeds: [successEmbed(`base role set to <@&${role.id}>. booster roles will be placed above it.`, "settings")] });
+    }
+
+    if (action === "list") {
+      if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to list booster roles.")] });
+      const rows = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
+      const live = rows.filter((row) => guild.roles.cache.has(row.roleId));
+      const body = live.length ? live.map((row) => `<@${row.userId}> — <@&${row.roleId}>`).join("\\n") : "No active booster roles found.";
+      return ctx.reply({ embeds: [brandEmbed(`**Booster roles (${live.length})**\\n${body}`)] });
+    }
+
+    if (action === "cleanup") {
+      if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to clean up booster roles.")] });
+      const rows = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
+      let removed = 0;
+      for (const row of rows) {
+        if (!guild.roles.cache.has(row.roleId) || !guild.members.cache.has(row.userId)) {
+          await db.delete(boosterRoles).where(and(eq(boosterRoles.guildId, guild.id), eq(boosterRoles.userId, row.userId)));
+          removed++;
+        }
+      }
+      return ctx.reply({ embeds: [successEmbed(`Cleaned ${removed} stale booster role record(s).`, "settings")] });
     }
 
     const isBoosting = member.premiumSince !== null;
@@ -79,7 +105,7 @@ export const command: HybridCommand = {
     if (!role)
       return ctx.reply({ embeds: [errorEmbed("Your **booster** **role** no longer exists.")] });
 
-    if (action === "delete") {
+    if (action === "delete" || action === "remove") {
       await deleteBoosterRole(guild, ctx.user.id);
       return ctx.reply({ embeds: [successEmbed("Your **booster** **role** has been deleted.", "settings")] });
     }
@@ -90,6 +116,12 @@ export const command: HybridCommand = {
       if (name.length > 100) return ctx.reply({ embeds: [errorEmbed("**Role** name must be 100 characters or less.")] });
       await role.setName(name).catch(() => null);
       return ctx.reply({ embeds: [successEmbed(`renamed your booster role to **${name}**.`, "settings")] });
+    }
+
+    if (action === "random") {
+      const color = Math.floor(Math.random() * 0xffffff);
+      await role.setColor(color);
+      return ctx.reply({ embeds: [successEmbed(`randomized your booster role color to `#${color.toString(16).padStart(6, "0")}`.`, "settings")] });
     }
 
     if (action === "color") {
