@@ -65,8 +65,8 @@ export const command: HybridCommand = {
       if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to list booster roles.")] });
       const rows = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
       const live = rows.filter((row) => guild.roles.cache.has(row.roleId));
-      const body = live.length ? live.map((row) => `<@${row.userId}> — <@&${row.roleId}>`).join("\\n") : "No active booster roles found.";
-      return ctx.reply({ embeds: [brandEmbed(`**Booster roles (${live.length})**\\n${body}`)] });
+      const body = live.length ? live.map((row) => `<@${row.userId}> — <@&${row.roleId}>`).join("\n") : "No active booster roles found.";
+      return ctx.reply({ embeds: [brandEmbed(`**Booster roles (${live.length})**\n${body}`)] });
     }
 
     if (action === "cleanup") {
@@ -121,7 +121,7 @@ export const command: HybridCommand = {
     if (action === "random") {
       const color = Math.floor(Math.random() * 0xffffff);
       await role.setColor(color);
-      return ctx.reply({ embeds: [successEmbed(`randomized your booster role color to `#${color.toString(16).padStart(6, "0")}`.`, "settings")] });
+      return ctx.reply({ embeds: [successEmbed("randomized your booster role color to #" + color.toString(16).padStart(6, "0") + ".", "settings")] });
     }
 
     if (action === "color") {
