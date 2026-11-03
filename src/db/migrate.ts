@@ -515,6 +515,12 @@ const STATEMENTS: string[] = [
     last_user_id TEXT,
     PRIMARY KEY (guild_id, channel_id)
   )`,
+  // Upgrade the legacy counters table to the shape used by src/db/schema.ts.
+  // Existing installations created counters with count/last_user_id but without
+  // the type/template columns queried by the current counter feature.
+  `ALTER TABLE counters ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'members'`,
+  `ALTER TABLE counters ADD COLUMN IF NOT EXISTS template TEXT NOT NULL DEFAULT '{count}'`,
+
 
   // ── lastfm_accounts — last.fm user links ────────────────────────────────────
   `CREATE TABLE IF NOT EXISTS lastfm_accounts (
