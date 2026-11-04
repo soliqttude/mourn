@@ -47,7 +47,7 @@ export const command: HybridCommand = {
     const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(idOf(args[args[1] === "exempt" ? 2 : 1] ?? ""));
 
     if (sub === "add" || sub === "remove") {
-      const phrase = (ctx.getString("value") ?? args.slice(1).join(" ")).trim().toLowerCase();
+      const phrase = (ctx.source === "prefix" ? args.slice(1).join(" ") : ctx.getString("value") ?? "").trim().toLowerCase();
       if (!phrase) return ctx.reply({ embeds: [errorEmbed("Provide a word or phrase.")] });
       if (sub === "add") await db.insert(wordFilter).values({ guildId: ctx.guild.id, word: phrase }).onConflictDoNothing();
       else await db.delete(wordFilter).where(and(eq(wordFilter.guildId, ctx.guild.id), eq(wordFilter.word, phrase)));
@@ -81,7 +81,7 @@ export const command: HybridCommand = {
 
     if (sub === "links" && args[1]?.toLowerCase() === "whitelist") {
       const target = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get(idOf(args[2] ?? ""));
-      const url = (ctx.getString("value") ?? args.slice(3).join(" ")).trim().toLowerCase().replace(/^https?:\\/\\//, "").replace(/\\/$/, "");
+      const url = (ctx.source === "prefix" ? args.slice(3).join(" ") : ctx.getString("value") ?? "").trim().toLowerCase().replace(/^https?:\\/\\//, "").replace(/\\/$/, "");
       if (!target || !url) return ctx.reply({ embeds: [errorEmbed("Usage: filter links whitelist #channel domain-or-url")] });
       const where = and(eq(filterLinkWhitelist.guildId, ctx.guild.id), eq(filterLinkWhitelist.channelId, target.id), eq(filterLinkWhitelist.url, url));
       const existing = await db.select().from(filterLinkWhitelist).where(where);
