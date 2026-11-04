@@ -44,7 +44,7 @@ export const command: HybridCommand = {
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
     { name: "role", description: "Role for base or awards", type: ApplicationCommandOptionType.Role, required: false },
-    { name: "member", description: "Member to share the role with", type: ApplicationCommandOptionType.User, required: false },
+    { name: "member", description: "Member to link or share the role with", type: ApplicationCommandOptionType.User, required: false },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
@@ -126,6 +126,18 @@ export const command: HybridCommand = {
         }
       }
       return ctx.reply({ embeds: [successEmbed(`Cleaned ${removed} stale booster role record(s).`, "settings")] });
+    }
+
+    if (action === "link") {
+      if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to link an existing booster role.")] });
+      const target = (await ctx.getMember("member")) ?? (ctx.args[1] ? await guild.members.fetch(ctx.args[1].replace(/[<@!>]/g, "")).catch(() => null) : null);
+      const linkedRole = ctx.getRole("role") ?? (ctx.args[2] ? guild.roles.cache.get(ctx.args[2].replace(/[<@&>]/g, "")) : null);
+      if (!target || !linkedRole) return ctx.reply({ embeds: [errorEmbed("Provide both a member and an existing role.")] });
+      const duplicate = await db.select().from(boosterRoles).where(and(eq(boosterRoles.guildId, guild.id), eq(boosterRoles.roleId, linkedRole.id)));
+      if (duplicate.some(row => row.userId !== target.id)) return ctx.reply({ embeds: [errorEmbed("That role is already linked to another booster.")] });
+      await db.insert(boosterRoles).values({ guildId: guild.id, userId: target.id, roleId: linkedRole.id })
+        .onConflictDoUpdate({ target: [boosterRoles.guildId, boosterRoles.userId], set: { roleId: linkedRole.id } });
+      return ctx.reply({ embeds: [successEmbed(`linked <@&${linkedRole.id}> to <@${target.id}>.`, "settings")] });
     }
 
     if (action === "share") {
