@@ -17,14 +17,15 @@ export const command: HybridCommand = {
     "disablecommand reset ban #general",
   ],
   category: "settings",
-  permission: "manage_guild",
+  permission: "manage_channels",
   guildOnly: true,
-  userPermissions: ["ManageGuild"],
+
   options: [
     { name: "command", description: "Command name, list, or reset", type: ApplicationCommandOptionType.String, required: true },
     { name: "target", description: "Channel or role to restrict in", type: ApplicationCommandOptionType.String, required: false },
     { name: "channel", description: "Channel to restrict in", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "role", description: "Role to restrict for", type: ApplicationCommandOptionType.Role, required: false },
+    { name: "member", description: "Member to restrict for", type: ApplicationCommandOptionType.User, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
@@ -43,7 +44,7 @@ export const command: HybridCommand = {
     if (cmdArg === "list") {
       const rows = await db.select().from(disabledCommands).where(eq(disabledCommands.guildId, ctx.guild.id));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No disabled **commands**.")] });
-      const lines = rows.map(r => `**${r.command}** → ${r.targetType === "channel" ? `<#${r.targetId}>` : `<@&${r.targetId}>`}`);
+      const lines = rows.map(r => `**${r.command}** → ${r.targetType === "channel" ? `<#${r.targetId}>` : r.targetType === "member" ? `<@${r.targetId}>` : `<@&${r.targetId}>`}`);
       return ctx.reply({ embeds: [brandEmbed({ title: "disabled commands", description: lines.join("\n") })] });
     }
 
@@ -68,9 +69,11 @@ export const command: HybridCommand = {
 
     const ch = ctx.getChannel("channel") ?? (rawId ? ctx.guild.channels.cache.get(rawId) : null);
     const role = ctx.getRole("role") ?? (rawId ? ctx.guild.roles.cache.get(rawId) : null);
+    const member = await ctx.getMember("member").catch(() => null) ?? (rawId ? await ctx.guild.members.fetch(rawId).catch(() => null) : null);
 
     if (ch) { targetId = ch.id; targetType = "channel"; }
     else if (role) { targetId = role.id; targetType = "role"; }
+    else if (member) { targetId = member.id; targetType = "member"; }
     else if (rawId) {
       // try channel first, then role
       const foundCh = ctx.guild.channels.cache.get(rawId);
