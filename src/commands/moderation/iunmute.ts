@@ -20,6 +20,7 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
     if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
+    const reason = (ctx.getString("reason") ?? ctx.args.slice(1).join(" ")) || "No reason provided";
     const settings = await getGuildSettings(ctx.guild.id);
     const configuredRoleId = settings.imageMuteRole;
     if (configuredRoleId) {
@@ -34,7 +35,6 @@ export const command: HybridCommand = {
     }
     const botMember = ctx.guild.members.me;
     if (!botMember?.permissions.has(PermissionFlagsBits.ManageRoles)) return ctx.reply({ embeds: [errorEmbed("I need **Manage Roles** to change channel permissions.")] });
-    const reason = (ctx.getString("reason") ?? ctx.args.slice(1).join(" ")) || "No reason provided";
     const results = await Promise.all(ctx.guild.channels.cache
       .filter((channel) => channel.isTextBased())
       .map((channel) => (channel as any).permissionOverwrites.edit(target.id, { AttachFiles: null, EmbedLinks: null }, reason)
