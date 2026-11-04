@@ -451,6 +451,11 @@ const STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS user_prefixes (
     user_id TEXT PRIMARY KEY, prefix TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS filter_channel_settings (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, filter_type TEXT NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT true, threshold INTEGER NOT NULL,
+    PRIMARY KEY (guild_id, channel_id, filter_type)
+  )`,
   `CREATE TABLE IF NOT EXISTS filter_exempts (
     guild_id TEXT NOT NULL, filter_type TEXT NOT NULL, role_id TEXT NOT NULL,
     PRIMARY KEY (guild_id, filter_type, role_id)
