@@ -10,9 +10,9 @@
 
 | Status | Entries |
 |---|---:|
-| Implemented in source (not runtime-verified) | 284 |
+| Implemented in source (not runtime-verified) | 285 |
 | Partial / invocation or behavior caveat | 18 |
-| Missing | 3 |
+| Missing | 2 |
 | Unsupported safely | 1 |
 | **Total** | **306** |
 
@@ -20,7 +20,7 @@
 
 | Source entry | Finding |
 |---|---|
-| `settings premiumrole` | No premium-role setting or supporting feature. |
+| `settings premiumrole` | Implemented as a persisted server-subscription role setting, including reset and config display. Discord itself assigns subscription members to the selected role; Villain records the role for its own features. |
 | `settings googlesafetylevel` | No Google Safe Browsing level setting or integration. |
 | `settings disablecustomfms` | No matching custom-FM disable setting or feature. |
 
@@ -62,7 +62,7 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 |---|---:|---:|---:|---:|---:|
 | prefix | 4 | 4 | 0 | 0 | 0 |
 | boosterrole | 22 | 22 | 0 | 0 | 0 |
-| settings | 22 | 17 | 1 | 3 | 1 |
+| settings | 22 | 18 | 1 | 2 | 1 |
 | boosts | 6 | 5 | 1 | 0 | 0 |
 | alias | 7 | 6 | 1 | 0 | 0 |
 | stickymessage | 5 | 4 | 1 | 0 | 0 |
@@ -103,4 +103,4 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 1. This audit uses the 306 entries in the supplied reference. It does not infer undocumented Bleed behavior.
 2. “Implemented” is source-level evidence only. Command registration, permission correctness, prefix/slash parity, persistence, migrations, and Discord API behavior still require build and runtime tests.
 3. Parent/root rows marked partial are distinguished from their separately audited child actions.
-4. Three entries remain blocked by missing product subsystems: server-subscription premium-role support, Google Safe Browsing integration for Google commands, and custom Last.fm/Now Playing command controls. The repository currently has no Google-command subsystem, and its Last.fm/Now Playing commands are fixed built-ins rather than a custom Now Playing command framework. These require implementing their underlying features, not adding no-op settings. The CI build passed on the previous branch head; rerun it after the migration commit. Discord runtime and production database migration tests are still required. Do not merge to `main` based on this audit alone.
+4. Two entries remain blocked by missing product subsystems: Google Safe Browsing integration for Google commands, and custom Last.fm/Now Playing command controls. The premium-role configuration is now implemented. The repository currently has no Google-command subsystem, and its Last.fm/Now Playing commands are fixed built-ins rather than a custom Now Playing command framework. These require implementing their underlying features, not adding no-op settings. The CI build must be rerun after the latest premium-role schema, startup migration, and settings changes. Discord runtime and production database migration tests are still required. Do not merge to `main` based on this audit alone.
