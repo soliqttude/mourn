@@ -51,12 +51,12 @@ export const command: HybridCommand = {
       if (!phrase) return ctx.reply({ embeds: [errorEmbed("Provide a word or phrase.")] });
       if (sub === "add") await db.insert(wordFilter).values({ guildId: ctx.guild.id, word: phrase }).onConflictDoNothing();
       else await db.delete(wordFilter).where(and(eq(wordFilter.guildId, ctx.guild.id), eq(wordFilter.word, phrase)));
-      return ctx.reply({ embeds: [successEmbed(sub === "add" ? `\`\${phrase}\` added to the word filter.` : `\`\${phrase}\` removed from the word filter.`)] });
+      return ctx.reply({ embeds: [successEmbed(sub === "add" ? `\`${phrase}\` added to the word filter.` : `\`${phrase}\` removed from the word filter.`)] });
     }
 
     if (sub === "list") {
       const rows = await db.select().from(wordFilter).where(eq(wordFilter.guildId, ctx.guild.id));
-      return ctx.reply({ embeds: [brandEmbed({ title: "Filtered Words", description: rows.length ? rows.map(row => `\`\${row.word}\``).join("\\n") : "No filtered words configured." })] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Filtered Words", description: rows.length ? rows.map(row => `\`${row.word}\``).join("\\n") : "No filtered words configured." })] });
     }
     if (sub === "reset") {
       await db.delete(wordFilter).where(eq(wordFilter.guildId, ctx.guild.id));
@@ -87,10 +87,10 @@ export const command: HybridCommand = {
       const existing = await db.select().from(filterLinkWhitelist).where(where);
       if (existing.length) {
         await db.delete(filterLinkWhitelist).where(where);
-        return ctx.reply({ embeds: [successEmbed(`\`\${url}\` removed from the link whitelist for <#${target.id}>.`)] });
+        return ctx.reply({ embeds: [successEmbed(`\`${url}\` removed from the link whitelist for <#${target.id}>.`)] });
       }
       await db.insert(filterLinkWhitelist).values({ guildId: ctx.guild.id, channelId: target.id, url }).onConflictDoNothing();
-      return ctx.reply({ embeds: [successEmbed(`\`\${url}\` whitelisted in <#${target.id}>.`)] });
+      return ctx.reply({ embeds: [successEmbed(`\`${url}\` whitelisted in <#${target.id}>.`)] });
     }
 
     if (sub === "whitelist") {
@@ -108,7 +108,7 @@ export const command: HybridCommand = {
       const where = and(eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, filterType), eq(filterWhitelist.value, normalized));
       if (operation === "remove") await db.delete(filterWhitelist).where(where);
       else await db.insert(filterWhitelist).values({ guildId: ctx.guild.id, filterType, value: normalized }).onConflictDoNothing();
-      return ctx.reply({ embeds: [successEmbed(`${operation === "remove" ? "Removed" : "Added"} \`\${normalized}\` ${operation === "remove" ? "from" : "to"} the ${filterType} whitelist.`)] });
+      return ctx.reply({ embeds: [successEmbed(`${operation === "remove" ? "Removed" : "Added"} \`${normalized}\` ${operation === "remove" ? "from" : "to"} the ${filterType} whitelist.`)] });
     }
 
     if (sub === "regex") {
