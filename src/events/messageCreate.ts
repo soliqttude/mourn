@@ -183,10 +183,12 @@ export const event = {
         if (sticky.lastMessageId) {
           await message.channel.messages.delete(sticky.lastMessageId).catch(() => null);
         }
-        const posted = await message.channel.send({ content: sticky.message });
-        await db.update(stickyMessages).set({ lastMessageId: posted.id }).where(
-          and(eq(stickyMessages.guildId, message.guild.id), eq(stickyMessages.channelId, message.channelId))
-        );
+        if ("send" in message.channel && typeof message.channel.send === "function") {
+          const posted = await message.channel.send({ content: sticky.message });
+          await db.update(stickyMessages).set({ lastMessageId: posted.id }).where(
+            and(eq(stickyMessages.guildId, message.guild.id), eq(stickyMessages.channelId, message.channelId))
+          );
+        }
       }
     } catch (err) {
       logger.warn({ err, guildId: message.guild.id, channelId: message.channelId }, "sticky message repost failed");
