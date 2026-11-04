@@ -11,7 +11,7 @@ export const command: HybridCommand = {
   examples: ["extractemojis"],
   category: "utility",
   guildOnly: true,
-  aliases: ["stealemojis", "masssteal", "bulksteal"],
+  aliases: ["extractemotes", "stealemojis", "masssteal", "bulksteal"],
 
   async execute(ctx) {
     if (!ctx.guild) return;

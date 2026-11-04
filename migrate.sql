@@ -113,3 +113,11 @@ CREATE TABLE IF NOT EXISTS goodbye_channels (
 );
 ALTER TABLE welcome_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER;
 ALTER TABLE goodbye_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER;
+
+
+-- Managed webhook lock state; locking revokes the old webhook token.
+ALTER TABLE managed_webhooks ADD COLUMN IF NOT EXISTS locked BOOLEAN NOT NULL DEFAULT FALSE;
+-- Google SafeSearch and custom Last.fm Now Playing controls.
+ALTER TABLE guild_settings
+  ADD COLUMN IF NOT EXISTS google_safe_search BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS disable_custom_fms BOOLEAN NOT NULL DEFAULT FALSE;

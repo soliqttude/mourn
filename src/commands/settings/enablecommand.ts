@@ -24,6 +24,12 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const cmdArg = (ctx.getString("command") ?? ctx.args[0] ?? "").toLowerCase();
+    if (cmdArg === "all") {
+      const commandName = (ctx.args[1] ?? ctx.getString("target") ?? "").toLowerCase();
+      if (!commandName) return ctx.reply({ embeds: [errorEmbed("Usage: enablecommand all <command>")] });
+      await db.delete(disabledCommands).where(and(eq(disabledCommands.guildId, ctx.guild.id), eq(disabledCommands.command, commandName)));
+      return ctx.reply({ embeds: [successEmbed(`re-enabled \`${commandName}\` in every channel.`)] });
+    }
     const targetStr = ctx.getString("target") ?? ctx.args[1] ?? "";
     const rawId = targetStr.replace(/[<#@&!>]/g, "");
     const ch = ctx.getChannel("channel") ?? (rawId ? ctx.guild.channels.cache.get(rawId) : null);

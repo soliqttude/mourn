@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/antinuke-docs-alignment
+      - feature/bleed-306-moderation-commands
   pull_request:
     branches:
       - main

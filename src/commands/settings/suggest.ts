@@ -50,7 +50,7 @@ export const command: HybridCommand = {
     const val2 = ctx.getString("value2") ?? ctx.args[2] ?? "";
 
     const STAFF_ACTIONS = ["approve", "deny", "consider", "progress", "reply", "reset"];
-    const ADMIN_ACTIONS = ["set", "config", "threads", "reactions", "ignore", "review"];
+    const ADMIN_ACTIONS = ["set", "config", "threads", "reactions", "ignore", "review", "lock", "unlock"];
 
     const isStaffAction = STAFF_ACTIONS.includes(action);
     const isAdminAction = ADMIN_ACTIONS.includes(action);
@@ -149,6 +149,17 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`suggestion #${id} marked as **${newStatus}**.`)] });
     }
 
+    if (action === "lock" || action === "unlock") {
+      const ext = await getExtended(ctx.guild.id);
+      const sentinel = "__suggestions_locked__";
+      const ids = (ext.ignoreIds as string[]).filter(id => id !== sentinel);
+      const locked = action === "lock";
+      const nextIds = locked ? [...ids, sentinel] : ids;
+      await db.insert(suggestExtended).values({ guildId: ctx.guild.id, threadsEnabled: ext.threadsEnabled, upvoteEmoji: ext.upvoteEmoji, downvoteEmoji: ext.downvoteEmoji, reviewChannel: ext.reviewChannel, reviewEnabled: ext.reviewEnabled, ignoreIds: nextIds })
+        .onConflictDoUpdate({ target: suggestExtended.guildId, set: { ignoreIds: nextIds } });
+      return ctx.reply({ embeds: [successEmbed(`suggestions system ${locked ? "locked" : "unlocked"}.`)] });
+    }
+
     // ── Admin config subcommands ───────────────────────────────────────────────
     if (action === "set") {
       const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(val.replace(/[<#>]/g, ""));
@@ -201,9 +212,13 @@ export const command: HybridCommand = {
     }
 
     if (action === "ignore") {
+      const ext = await getExtended(ctx.guild.id);
+      if (val.toLowerCase() === "list") {
+        const ids = (ext.ignoreIds as string[]).filter(id => id !== "__suggestions_locked__");
+        return ctx.reply({ embeds: [brandEmbed({ title: "Ignored suggestion submitters", description: ids.length ? ids.map(id => `<@${id}>`).join("\n") : "No ignored members or roles." })] });
+      }
       const targetId = val.replace(/[<@!&>]/g, "");
       if (!targetId) return ctx.reply({ embeds: [errorEmbed("Mention a **member** or **role** to ignore.")] });
-      const ext = await getExtended(ctx.guild.id);
       const current = ext.ignoreIds as string[];
       const updated = current.includes(targetId) ? current.filter(i => i !== targetId) : [...current, targetId];
       await db.insert(suggestExtended).values({ guildId: ctx.guild.id, threadsEnabled: false, upvoteEmoji: "👍", downvoteEmoji: "👎", reviewChannel: null, reviewEnabled: false, ignoreIds: updated })
@@ -213,6 +228,8 @@ export const command: HybridCommand = {
     }
 
     // ── Submit a suggestion ────────────────────────────────────────────────────
+    const extState = await getExtended(ctx.guild.id);
+    if ((extState.ignoreIds as string[]).includes("__suggestions_locked__")) return ctx.reply({ embeds: [errorEmbed("The suggestions system is currently locked.")] });
     const text = ctx.rawArgs || ctx.getString("action") || "";
     if (!text || text.length < 5) return ctx.reply({ embeds: [errorEmbed("Please provide a longer suggestion (at least 5 characters).")] });
     const settings = await getGuildSettings(ctx.guild.id);

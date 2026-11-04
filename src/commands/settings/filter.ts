@@ -87,17 +87,86 @@ export const command: HybridCommand = {
     if (sub === "regex") {
       if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a regex pattern.")] });
       try { new RegExp(val); } catch { return ctx.reply({ embeds: [errorEmbed("Invalid regex pattern.")] }); }
+      const existing = await db.select().from(filterWhitelist).where(and(
+        eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, "regex"), eq(filterWhitelist.value, val)
+      ));
+      if (existing.length) {
+        await db.delete(filterWhitelist).where(and(eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, "regex"), eq(filterWhitelist.value, val)));
+        return ctx.reply({ embeds: [successEmbed(`regex pattern removed: \`${val}\`.`)] });
+      }
       await db.insert(filterWhitelist).values({ guildId: ctx.guild.id, filterType: "regex", value: val }).onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`regex pattern added: \`${val}\`.`)] });
     }
 
-    if (sub === "whitelist") {
-      // filter whitelist links example.com
-      const filterType = val.toLowerCase();
-      const whitelistVal = args[2] ?? ctx.getString("setting") ?? "";
-      if (!filterType || !whitelistVal) return ctx.reply({ embeds: [errorEmbed("Usage: **filter** whitelist <links|**invites**> <value>")] });
-      await db.insert(filterWhitelist).values({ guildId: ctx.guild.id, filterType, value: whitelistVal }).onConflictDoNothing();
-      return ctx.reply({ embeds: [successEmbed(`\`${whitelistVal}\` whitelisted from the **${filterType}** filter.`)] });
+    // Whitelist management: filter whitelist <type> [add|remove|list] <value>.
+    // The shorthand "filter whitelist <type> <value>" adds the entry.
+    if (sub === "whitelist" || (sub === "links" && args[1]?.toLowerCase() === "whitelist")) {
+      const parts = sub === "whitelist" ? (args.length > 1 ? args.slice(1) : val.trim().split(/\\s+/).filter(Boolean)) : args.slice(2);
+      const optionValue = ctx.getString("setting") ?? "";
+      const knownTypes = new Set(["word", "links", "invites", "domains", "regex"]);
+      let filterType = "word";
+      let operation = "toggle";
+      let entry = "";
+
+      if (sub === "links") {
+        filterType = "links";
+        operation = (parts[0] ?? "").toLowerCase();
+        entry = parts.slice(1).join(" ");
+      } else {
+        if (knownTypes.has((parts[0] ?? "").toLowerCase())) {
+          filterType = parts.shift()!.toLowerCase();
+        }
+        if (["add", "remove", "list"].includes((parts[0] ?? "").toLowerCase())) {
+          operation = parts.shift()!.toLowerCase();
+        }
+        entry = parts.join(" ");
+      }
+      if (!entry && optionValue && operation !== "list") entry = optionValue;
+      if (operation === "list") {
+        const rows = await db.select().from(filterWhitelist).where(and(
+          eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, filterType)
+        ));
+        return ctx.reply({ embeds: [brandEmbed({
+          title: `${filterType} whitelist`,
+          description: rows.length ? rows.map(row => `\`${row.value}\``).join("\n") : "No whitelist entries configured."
+        })] });
+      }
+      if (!entry.trim()) {
+        return ctx.reply({ embeds: [errorEmbed(`Usage: filter whitelist [word|links|invites|domains] [add|remove] <value>`)] });
+      }
+      const value = entry.trim().toLowerCase();
+      const where = and(
+        eq(filterWhitelist.guildId, ctx.guild.id),
+        eq(filterWhitelist.filterType, filterType),
+        eq(filterWhitelist.value, value)
+      );
+      if (operation === "remove") {
+        await db.delete(filterWhitelist).where(where);
+        return ctx.reply({ embeds: [successEmbed(`\`${value}\` removed from the ${filterType} whitelist.`)] });
+      }
+      const existing = await db.select().from(filterWhitelist).where(where);
+      if (operation === "toggle" && existing.length) {
+        await db.delete(filterWhitelist).where(where);
+        return ctx.reply({ embeds: [successEmbed(`\`${value}\` removed from the ${filterType} whitelist.`)] });
+      }
+      await db.insert(filterWhitelist).values({ guildId: ctx.guild.id, filterType, value }).onConflictDoNothing();
+      return ctx.reply({ embeds: [successEmbed(`\`${value}\` added to the ${filterType} whitelist.`)] });
+    }
+
+    if (sub === "exempt" && ["list", "remove"].includes((args[1] ?? "").toLowerCase())) {
+      const operation = args[1].toLowerCase();
+      const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((args[2] ?? "").replace(/[<@&>]/g, ""));
+      if (operation === "remove" && role) {
+        await db.delete(filterExempts).where(and(
+          eq(filterExempts.guildId, ctx.guild.id), eq(filterExempts.filterType, "word"), eq(filterExempts.roleId, role.id)
+        ));
+        return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> removed from word-filter exemptions.`)] });
+      }
+      if (operation === "remove" && !role) return ctx.reply({ embeds: [errorEmbed("Provide a role to remove from exemptions.")] });
+      const exempts = await db.select().from(filterExempts).where(and(
+        eq(filterExempts.guildId, ctx.guild.id), eq(filterExempts.filterType, "word")
+      ));
+      return ctx.reply({ embeds: [brandEmbed({ title: "Word filter exemptions", description: exempts.length ? exempts.map(e => `<@&${e.roleId}>`).join("\n") : "No exempt roles configured." })] });
     }
 
     if (sub === "snipe") {
@@ -132,17 +201,20 @@ export const command: HybridCommand = {
       const nextArg = args[1]?.toLowerCase();
 
       if (nextArg === "exempt") {
-        const isListSub = args[2]?.toLowerCase() === "list";
-        if (isListSub) {
+        const operation = (args[2] ?? "").toLowerCase();
+        if (operation === "list") {
           const exempts = await db.select().from(filterExempts).where(and(eq(filterExempts.guildId, ctx.guild.id), eq(filterExempts.filterType, sub)));
-          if (!exempts.length) return ctx.reply({ embeds: [errorEmbed(`no roles exempted from ${sub} filter.`)] });
-          return ctx.reply({ embeds: [brandEmbed({ title: `${sub} filter exempts`, description: exempts.map(e => `<@&${e.roleId}>`).join("\n") })] });
+          return ctx.reply({ embeds: [brandEmbed({ title: `${sub} filter exemptions`, description: exempts.length ? exempts.map(e => `<@&${e.roleId}>`).join("\n") : "No exempt roles configured." })] });
         }
-        const roleRaw = args[2] ?? "";
-        const roleId = roleRaw.replace(/[<@&>]/g, "");
-        if (!roleId) return ctx.reply({ embeds: [errorEmbed("Please provide a **role** to exempt.")] });
-        await db.insert(filterExempts).values({ guildId: ctx.guild.id, filterType: sub, roleId }).onConflictDoNothing();
-        return ctx.reply({ embeds: [successEmbed(`<@&${roleId}> exempted from **${sub}** filter.`)] });
+        const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((args[operation === "remove" ? 3 : 2] ?? "").replace(/[<@&>]/g, ""));
+        if (!role) return ctx.reply({ embeds: [errorEmbed("Please provide a role to exempt or remove.")] });
+        const where = and(eq(filterExempts.guildId, ctx.guild.id), eq(filterExempts.filterType, sub), eq(filterExempts.roleId, role.id));
+        if (operation === "remove") {
+          await db.delete(filterExempts).where(where);
+          return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> removed from **${sub}** filter exemptions.`)] });
+        }
+        await db.insert(filterExempts).values({ guildId: ctx.guild.id, filterType: sub, roleId: role.id }).onConflictDoNothing();
+        return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> exempted from **${sub}** filter.`)] });
       }
 
       const on = setting === "on" || nextArg === "on";

@@ -1,7 +1,7 @@
 import { type Guild, type GuildMember, DiscordAPIError } from "discord.js";
 import { and, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { boosterRoles, boosterRoleConfig } from "../db/schema.js";
+import { boosterRoles, boosterRoleConfig, boosterRoleShares } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 
 export async function getBoosterRole(guildId: string, userId: string): Promise<string | null> {
@@ -36,6 +36,13 @@ export async function createBoosterRole(guild: Guild, member: GuildMember): Prom
   }
 
   const cfg = await getBoosterRoleConfig(guild.id);
+  if (cfg?.roleLimit && cfg.roleLimit > 0) {
+    const activeRoles = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
+    if (activeRoles.filter(row => guild.roles.cache.has(row.roleId)).length >= cfg.roleLimit) {
+      logger.info({ guild: guild.id, limit: cfg.roleLimit }, "boosterrole: server role cap reached");
+      return null;
+    }
+  }
   const role = await guild.roles.create({
     name: `${member.user.username}'s role`,
     color: 0x2f3136,
@@ -105,6 +112,8 @@ export async function deleteBoosterRole(guild: Guild, userId: string): Promise<b
     }
   }
 
+  await db.delete(boosterRoleShares)
+    .where(and(eq(boosterRoleShares.guildId, guild.id), eq(boosterRoleShares.ownerUserId, userId)));
   await db.delete(boosterRoles)
     .where(and(eq(boosterRoles.guildId, guild.id), eq(boosterRoles.userId, userId)));
   return true;

@@ -30,6 +30,16 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const cmdArg = (ctx.getString("command") ?? ctx.args[0] ?? "").toLowerCase();
 
+    if (cmdArg === "all") {
+      const commandName = (ctx.getString("target") ?? ctx.args[1] ?? "").toLowerCase();
+      if (!commandName) return ctx.reply({ embeds: [errorEmbed("Usage: disablecommand all <command>")] });
+      const channels = ctx.guild.channels.cache.filter(ch => ch.isTextBased());
+      for (const channel of channels.values()) {
+        await db.insert(disabledCommands).values({ guildId: ctx.guild.id, command: commandName, targetId: channel.id, targetType: "channel" }).onConflictDoNothing();
+      }
+      return ctx.reply({ embeds: [successEmbed(`disabled \`${commandName}\` in ${channels.size} text channels.`)] });
+    }
+
     if (cmdArg === "list") {
       const rows = await db.select().from(disabledCommands).where(eq(disabledCommands.guildId, ctx.guild.id));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No disabled **commands**.")] });

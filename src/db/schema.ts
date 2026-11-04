@@ -14,6 +14,7 @@ export const guildSettings = pgTable("guild_settings", {
   serverLogChannel: text("server_log_channel"),
   welcomeChannel: text("welcome_channel"),
   welcomeMessage: text("welcome_message"),
+  autoNick: text("auto_nick"),
   goodbyeChannel: text("goodbye_channel"),
   goodbyeMessage: text("goodbye_message"),
   boostChannel: text("boost_channel"),
@@ -57,6 +58,9 @@ export const guildSettings = pgTable("guild_settings", {
   levelsEnabled: boolean("levels_enabled").default(true).notNull(),
   levelUpChannel: text("level_up_channel"),
   jailRole: text("jail_role"),
+  jailChannel: text("jail_channel"),
+  jailMessage: text("jail_message"),
+  jailRemoveRoles: boolean("jail_remove_roles").default(false).notNull(),
   muteRole: text("mute_role"),
   autoroleId: text("autorole_id"),
   logColors: jsonb("log_colors").$type<Record<string, string>>().default({}).notNull(),
@@ -76,6 +80,9 @@ export const guildSettings = pgTable("guild_settings", {
   customizeAvatar: text("customize_avatar"),
   customizeBanner: text("customize_banner"),
   customizeBio: text("customize_bio"),
+  premiumRole: text("premium_role"),
+  googleSafeSearch: boolean("google_safe_search").default(false).notNull(),
+  disableCustomFms: boolean("disable_custom_fms").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -114,6 +121,11 @@ export const antinukePermissionWatches = pgTable(
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.direction, t.permission] }) }),
 );
 
+export const jailedMemberRoles = pgTable("jailed_member_roles", {
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  roleIds: jsonb("role_ids").$type<string[]>().default([]).notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));
 export const warnings = pgTable("warnings",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), reason: text("reason").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildUserIdx: index("warnings_guild_user_idx").on(t.guildId, t.userId) })
@@ -386,7 +398,17 @@ export const boosterRoles = pgTable("booster_roles",
 export const boosterRoleConfig = pgTable("booster_role_config", {
   guildId: text("guild_id").primaryKey(),
   baseRoleId: text("base_role_id"),
+  roleLimit: integer("role_limit").default(0).notNull(),
+  maxSharedMembers: integer("max_shared_members").default(0).notNull(),
+  maxRolesPerMember: integer("max_roles_per_member").default(0).notNull(),
 });
+
+export const boosterRoleShares = pgTable("booster_role_shares", {
+  guildId: text("guild_id").notNull(),
+  ownerUserId: text("owner_user_id").notNull(),
+  sharedUserId: text("shared_user_id").notNull(),
+  roleId: text("role_id").notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.ownerUserId, t.sharedUserId] }) }));
 
 export const invokeMessages = pgTable("invoke_messages",
   {
@@ -469,6 +491,7 @@ export const managedWebhooks = pgTable("managed_webhooks",
     identifier: text("identifier").notNull(),
     webhookId: text("webhook_id").notNull(),
     webhookToken: text("webhook_token").notNull(),
+    locked: boolean("locked").default(false).notNull(),
     channelId: text("channel_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -516,11 +539,6 @@ export const disabledCommands = pgTable("disabled_commands",
 export const disabledModules = pgTable("disabled_modules",
   { guildId: text("guild_id").notNull(), channelId: text("channel_id").notNull(), module: text("module").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId, t.module] }) })
-);
-
-export const boosterRoleShares = pgTable("booster_role_shares",
-  { guildId: text("guild_id").notNull(), ownerId: text("owner_id").notNull(), sharedWithId: text("shared_with_id").notNull() },
-  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.ownerId, t.sharedWithId] }) })
 );
 
 export const boosterRoleFilter = pgTable("booster_role_filter",

@@ -2,6 +2,9 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { brandEmbed, errorEmbed, successEmbed } from "../../lib/embeds.js";
 import { config } from "../../config.js";
+import { db } from "../../db/index.js";
+import { tickets } from "../../db/schema.js";
+import { eq } from "drizzle-orm";
 import {
   addAutoresponder, listAutoresponders, removeAutoresponderByTrigger,
   resetAutoresponders, updateAutoresponder, updateAutoresponderExclusive,
@@ -40,13 +43,13 @@ function parseInput(args: string[]) {
 export const command: HybridCommand = {
   name:"autoresponder", aliases:["ar"],
   description:"Set up automatic replies to messages matching a trigger.",
-  usage:"autoresponder <add|remove|update|exclusive|role|reset|list> [args]",
+  usage:"autoresponder <add|remove|update|exclusive|role|reset|list [tickets]> [args]",
   examples:[
     "autoresponder add hello, hi there!",
     "autoresponder add hello, hi there! --not_strict --reply",
     "autoresponder update hello, updated response",
     "autoresponder remove hello",
-    "autoresponder reset", "autoresponder list",
+    "autoresponder reset", "autoresponder list", "autoresponder list tickets",
     "autoresponder exclusive channel #general hello",
     "autoresponder role add @Member hello",
   ],
@@ -68,6 +71,15 @@ export const command: HybridCommand = {
 
     if(action==="list"){
       const list=await listAutoresponders(ctx.guild.id);
+      const listScope=(ctx.args[1]??ctx.getString("value")??"").toLowerCase();
+      if(listScope==="tickets"){
+        const ticketRows=await db.select({channelId:tickets.channelId}).from(tickets).where(eq(tickets.guildId,ctx.guild.id));
+        const ticketChannelIds=new Set(ticketRows.map(ticket=>ticket.channelId));
+        const ticketResponders=list.filter(item=>item.exclusiveChannelId&&ticketChannelIds.has(item.exclusiveChannelId));
+        if(!ticketResponders.length) return ctx.reply({embeds:[errorEmbed("No ticket autoresponder triggers are configured. Set an autoresponder exclusive channel to a ticket channel first.")]});
+        const description=ticketResponders.map(item=>"**"+item.trigger+"** → "+item.response.slice(0,80)+"\n<#"+item.exclusiveChannelId+">").join("\n");
+        return ctx.reply({embeds:[brandEmbed({title:"ticket autoresponder triggers",description})]});
+      }
       if(!list.length) return ctx.reply({embeds:[errorEmbed("No autoresponders.")]});
       return ctx.reply({embeds:[brandEmbed({title:"autoresponders",description:list.map(a=>{
         const flags=[a.notStrict?"--not_strict":"",a.selfDestructSeconds?"--self_destruct "+a.selfDestructSeconds:"",a.deleteTrigger?"--delete":"",a.reply?"--reply":"",a.ignoreCommandCheck?"--ignore_command_check":""].filter(Boolean).join(" ");

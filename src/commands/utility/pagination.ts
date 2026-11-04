@@ -54,7 +54,7 @@ export const command: HybridCommand = {
     if (sub === "list") {
       const rows = await db.select().from(paginatedEmbeds).where(eq(paginatedEmbeds.guildId, guildId));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No paginated embeds in this server.")] });
-      const lines = rows.map(r => `\`undefined\` → <#${r.channelId}> (${r.pages.length} pages)`);
+      const lines = rows.map(r => `\`${r.messageId}\` → <#${r.channelId}> (${r.pages.length} pages)`);
       return ctx.reply({ embeds: [brandEmbed({ title: "Paginated Embeds", description: lines.join("\n") })] });
     }
 

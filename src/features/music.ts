@@ -93,7 +93,7 @@ export function setupMusic(client: Client): void {
   distube = engine;
   musicInitialized = true;
 
-  engine
+  (engine as any)
     .on("playSong", (queue: Queue, song: Song) => {
       logger.info({ guildId: queue.id, song: song.name, url: song.url }, "DisTube playback started");
       const ch = queue.textChannel as TextChannel | undefined;

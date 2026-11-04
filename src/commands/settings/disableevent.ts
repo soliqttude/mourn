@@ -29,6 +29,12 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const evtArg = ctx.getString("event") ?? ctx.args[0] ?? "";
 
+    if (evtArg.toLowerCase() === "all") {
+      await db.insert(eventsSettings).values(KNOWN_EVENTS.map(event => ({ guildId: ctx.guild!.id, event, enabled: false })))
+        .onConflictDoUpdate({ target: [eventsSettings.guildId, eventsSettings.event], set: { enabled: false } });
+      return ctx.reply({ embeds: [successEmbed(`disabled all ${KNOWN_EVENTS.length} supported events.`)] });
+    }
+
     if (evtArg.toLowerCase() === "events") {
       return ctx.reply({ embeds: [brandEmbed({ title: "toggleable events", description: KNOWN_EVENTS.map(e => `\`${e}\``).join(", ") })] });
     }

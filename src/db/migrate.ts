@@ -56,6 +56,9 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_avatar TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_banner TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_bio TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS premium_role TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS google_safe_search BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS disable_custom_fms BOOLEAN NOT NULL DEFAULT false`,
 
   `CREATE TABLE IF NOT EXISTS antinuke_whitelist (
     guild_id TEXT NOT NULL, user_id TEXT NOT NULL, PRIMARY KEY (guild_id, user_id)
@@ -290,14 +293,38 @@ const STATEMENTS: string[] = [
   )`,
   `CREATE TABLE IF NOT EXISTS booster_role_config (
     guild_id TEXT PRIMARY KEY,
-    base_role_id TEXT
+    base_role_id TEXT,
+    role_limit INTEGER NOT NULL DEFAULT 0,
+    max_shared_members INTEGER NOT NULL DEFAULT 0,
+    max_roles_per_member INTEGER NOT NULL DEFAULT 0
   )`,
+  `ALTER TABLE booster_role_config ADD COLUMN IF NOT EXISTS role_limit INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE booster_role_config ADD COLUMN IF NOT EXISTS max_shared_members INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE booster_role_config ADD COLUMN IF NOT EXISTS max_roles_per_member INTEGER NOT NULL DEFAULT 0`,
+  `CREATE TABLE IF NOT EXISTS booster_role_shares (
+    guild_id TEXT NOT NULL,
+    owner_user_id TEXT NOT NULL,
+    shared_user_id TEXT NOT NULL,
+    role_id TEXT NOT NULL,
+    PRIMARY KEY (guild_id, owner_user_id, shared_user_id)
+  )`,
+
   `CREATE TABLE IF NOT EXISTS invoke_messages (
     guild_id TEXT NOT NULL,
     command TEXT NOT NULL,
     type TEXT NOT NULL,
     content TEXT NOT NULL,
     PRIMARY KEY (guild_id, command, type)
+  )`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS auto_nick TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_message TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_channel TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_remove_roles BOOLEAN NOT NULL DEFAULT false`,
+  `CREATE TABLE IF NOT EXISTS jailed_member_roles (
+    guild_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    role_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+    PRIMARY KEY (guild_id, user_id)
   )`,
   `ALTER TABLE invite_uses ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ`,
   `ALTER TABLE invite_uses ADD COLUMN IF NOT EXISTS is_fake BOOLEAN NOT NULL DEFAULT false`,
@@ -341,6 +368,7 @@ const STATEMENTS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS webhook_guild_ident_idx ON managed_webhooks (guild_id, identifier)`,
+  `ALTER TABLE managed_webhooks ADD COLUMN IF NOT EXISTS locked BOOLEAN NOT NULL DEFAULT false`,
   `CREATE TABLE IF NOT EXISTS music_settings (
     guild_id TEXT PRIMARY KEY, dj_role_id TEXT, autoplay BOOLEAN NOT NULL DEFAULT false
   )`,
