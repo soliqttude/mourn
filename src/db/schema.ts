@@ -387,7 +387,16 @@ export const boosterRoleConfig = pgTable("booster_role_config", {
   guildId: text("guild_id").primaryKey(),
   baseRoleId: text("base_role_id"),
   roleLimit: integer("role_limit").default(0).notNull(),
+  maxSharedMembers: integer("max_shared_members").default(0).notNull(),
+  maxRolesPerMember: integer("max_roles_per_member").default(0).notNull(),
 });
+
+export const boosterRoleShares = pgTable("booster_role_shares", {
+  guildId: text("guild_id").notNull(),
+  ownerUserId: text("owner_user_id").notNull(),
+  sharedUserId: text("shared_user_id").notNull(),
+  roleId: text("role_id").notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.ownerUserId, t.sharedUserId] }) }));
 
 export const invokeMessages = pgTable("invoke_messages",
   {
