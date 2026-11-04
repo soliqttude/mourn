@@ -615,6 +615,12 @@ export const filterChannelSettings = pgTable("filter_channel_settings", {
   threshold: integer("threshold").notNull(),
 }, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId, t.filterType] }) }));
 
+export const filterLinkWhitelist = pgTable("filter_link_whitelist", {
+  guildId: text("guild_id").notNull(),
+  channelId: text("channel_id").notNull(),
+  url: text("url").notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId, t.url] }) }));
+
 export const filterExempts = pgTable("filter_exempts",
   { guildId: text("guild_id").notNull(), filterType: text("filter_type").notNull(), roleId: text("role_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.filterType, t.roleId] }) })
