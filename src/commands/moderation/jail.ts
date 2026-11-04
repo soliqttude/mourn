@@ -39,15 +39,19 @@ export const command: HybridCommand = {
         const roleIds = target.roles.cache.filter(role => role.id !== guild.id && !role.managed && role.position < botHighest && role.id !== jailRole.id).map(role => role.id);
         await db.insert(jailedMemberRoles).values({ guildId: guild.id, userId: target.id, roleIds })
           .onConflictDoUpdate({ target: [jailedMemberRoles.guildId, jailedMemberRoles.userId], set: { roleIds } });
-        if (roleIds.length) await target.roles.remove(roleIds, reason);
       }
       await target.roles.add(jailRole, reason);
+      if (settings.jailRemoveRoles) {
+        const [saved] = await db.select().from(jailedMemberRoles).where(and(eq(jailedMemberRoles.guildId, guild.id), eq(jailedMemberRoles.userId, target.id)));
+        if (saved?.roleIds?.length) await target.roles.remove(saved.roleIds, reason);
+      }
       if (settings.jailMessage) {
         const message = renderTemplate(settings.jailMessage, { member: target });
         await target.send({ content: message, allowedMentions: { parse: [] } }).catch(() => {});
       }
       return ctx.reply({ embeds: [successEmbed(`Jailed **${target.user.tag}**.`)] });
     } catch {
+      await db.delete(jailedMemberRoles).where(and(eq(jailedMemberRoles.guildId, guild.id), eq(jailedMemberRoles.userId, target.id))).catch(() => {});
       return ctx.reply({ embeds: [errorEmbed("Failed to jail. Check my **role** hierarchy.")] });
     }
   },
