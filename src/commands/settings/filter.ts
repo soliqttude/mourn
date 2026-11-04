@@ -101,7 +101,7 @@ export const command: HybridCommand = {
     // Whitelist management: filter whitelist <type> [add|remove|list] <value>.
     // The shorthand "filter whitelist <type> <value>" adds the entry.
     if (sub === "whitelist" || (sub === "links" && args[1]?.toLowerCase() === "whitelist")) {
-      const parts = sub === "whitelist" ? args.slice(1) : args.slice(2);
+      const parts = sub === "whitelist" ? (args.length > 1 ? args.slice(1) : val.trim().split(/\\s+/).filter(Boolean)) : args.slice(2);
       const optionValue = ctx.getString("setting") ?? "";
       const knownTypes = new Set(["word", "links", "invites", "domains", "regex"]);
       let filterType = "word";
