@@ -124,9 +124,9 @@ export async function handleAutoresponders(client: Client, message: Message) {
       channel: channel as unknown as ScriptingContext["channel"],
       client,
     };
-    const { embeds, content, components } = parseScript(ar.response, scriptingContext);
+    const { embeds, content, components: scriptComponents } = parseScript(ar.response, scriptingContext);
 
-    const components = [...(components ?? [])];
+    const components = [...(scriptComponents ?? [])];
     if (ar.ticketForm) {
       components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
