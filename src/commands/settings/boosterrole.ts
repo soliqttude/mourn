@@ -15,12 +15,15 @@ export const command: HybridCommand = {
   guildOnly: true,
   usage: "boosterrole base <role> | color <color> [second_color] [name] | rename <name> | icon <url> | remove | award <set|view|remove> | list | cleanup",
   examples: [
-    "boosterrole create",
-    "boosterrole rename My Awesome Role",
-    "boosterrole color #ff0099",
-    "boosterrole icon 🌙",
-    "boosterrole delete",
-    "boosterrole setbase @Nitro Booster",
+    "boosterrole base @Nitro Booster",
+    "boosterrole color #3498db #e74c3c My Booster Role",
+    "boosterrole rename Villain Booster",
+    "boosterrole icon https://example.com/icon.png",
+    "boosterrole award set @Booster",
+    "boosterrole award view",
+    "boosterrole award remove",
+    "boosterrole list",
+    "boosterrole cleanup",
   ],
   options: [
     { type: ApplicationCommandOptionType.Subcommand, name: "base", description: "Set the role booster roles are placed below", options: [
@@ -105,7 +108,7 @@ export const command: HybridCommand = {
       if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify the base **role**.")] });
       await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: role.id })
         .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { baseRoleId: role.id } });
-      return ctx.reply({ embeds: [successEmbed(`base role set to <@&${role.id}>. booster roles will be placed above it.`, "settings")] });
+      return ctx.reply({ embeds: [successEmbed(`base role set to <@&${role.id}>. booster roles will be placed directly below it.`, "settings")] });
     }
 
     if (action === "list") {
@@ -289,8 +292,9 @@ export const command: HybridCommand = {
       const blocked = await db.select().from(filterWhitelist).where(and(eq(filterWhitelist.guildId, guild.id), eq(filterWhitelist.filterType, "boosterrole-name")));
       const blockedWord = blocked.find(row => name.toLowerCase().includes(row.value));
       if (blockedWord) return ctx.reply({ embeds: [errorEmbed(`Your role name contains a blocked word: \`${blockedWord.value}\`.`)] });
-      await role.setName(name).catch(() => null);
-      return ctx.reply({ embeds: [successEmbed(`renamed your booster role to **${name}**.`, "settings")] });
+      const renamed = await role.setName(name).then(() => true).catch(() => false);
+      if (!renamed) return ctx.reply({ embeds: [errorEmbed("I could not rename your booster role. Check my Manage Roles permission and hierarchy.")] });
+      return ctx.reply({ embeds: [successEmbed("Your booster role name was successfully renamed.", "settings")] });
     }
 
     if (action === "dominant") {
