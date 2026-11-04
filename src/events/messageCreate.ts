@@ -153,6 +153,25 @@ export const event = {
       }
     }
 
+    // Repost the configured sticky after each human message in its channel.
+    try {
+      const { stickyMessages } = await import("../db/schema.js");
+      const [sticky] = await db.select().from(stickyMessages).where(
+        and(eq(stickyMessages.guildId, message.guild.id), eq(stickyMessages.channelId, message.channelId))
+      );
+      if (sticky) {
+        if (sticky.lastMessageId) {
+          await message.channel.messages.delete(sticky.lastMessageId).catch(() => null);
+        }
+        const posted = await message.channel.send({ content: sticky.message });
+        await db.update(stickyMessages).set({ lastMessageId: posted.id }).where(
+          and(eq(stickyMessages.guildId, message.guild.id), eq(stickyMessages.channelId, message.channelId))
+        );
+      }
+    } catch (err) {
+      logger.warn({ err, guildId: message.guild.id, channelId: message.channelId }, "sticky message repost failed");
+    }
+
     const channelId = message.channelId;
     const guildId = message.guild.id;
     const memberRoleIds = message.member?.roles.cache.map(r => r.id) ?? [];
