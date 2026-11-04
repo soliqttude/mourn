@@ -42,6 +42,20 @@ export const command: HybridCommand = {
       const [cfg] = await db.select().from(badgeConfig).where(eq(badgeConfig.guildId, ctx.guild.id));
       return ctx.reply({ embeds: [brandEmbed({ title: "Badge Message", description: cfg?.message ?? "*(not set)*" })] });
     }
+    if (sub === "view") {
+      const [cfg] = await db.select().from(badgeConfig).where(eq(badgeConfig.guildId, ctx.guild.id));
+      const roles = await db.select().from(badgeRoles).where(eq(badgeRoles.guildId, ctx.guild.id));
+      return ctx.reply({ embeds: [brandEmbed({
+        title: "Badge Configuration",
+        description: [
+          `**Announcement channel:** ${cfg?.channelId ? `<#${cfg.channelId}>` : "Not set"}`,
+          `**Announcement message:** ${cfg?.message ?? "Default message"}`,
+          `**Enabled:** ${cfg?.enabled ? "Yes" : "No"}`,
+          `**Badge roles:** ${roles.length ? roles.map(row => `<@&${row.roleId}>`).join(", ") : "None configured"}`,
+        ].join("\n"),
+        page: "settings",
+      })] });
+    }
 
     if (sub === "message") {
       const msg = ctx.getString("value") ?? ctx.args.slice(1).join(" ");
