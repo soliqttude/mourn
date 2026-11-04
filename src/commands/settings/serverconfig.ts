@@ -5,6 +5,8 @@ import { updateGuildSettings, getGuildSettings } from "../../db/settings.js";
 import { brandEmbed } from "../../lib/embeds.js";
 import { getMusicSettings, setMusicSettings } from "../../features/music.js";
 import { config } from "../../config.js";
+import { db } from "../../db/index.js";
+import { boosterRoleConfig } from "../../db/schema.js";
 
 function ch(id: string | null | undefined): string { return id ? `<#${id}>` : "none"; }
 function role(id: string | null | undefined): string { return id ? `<@&${id}>` : "none"; }
@@ -14,7 +16,7 @@ export const command: HybridCommand = {
   name: "settings",
   aliases: ["serverconfig", "config", "guildconfig"],
   description: "View all configured settings for this server.",
-  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jail|jailmsg|jailroles|jailrole|muted|rmuted|imuted|resetcases|reset]",
+  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|autonick|baserole|jail|jailmsg|jailroles|jailrole|muted|rmuted|imuted|resetcases|reset]",
   examples: ["settings config", "settings modlog #mod-log", "settings joinlogs #joins", "settings jailrole @Jailed", "settings resetcases"],
   category: "settings",
   permission: "manage_guild",
@@ -31,6 +33,24 @@ export const command: HybridCommand = {
     const member = ctx.member as any;
     if (action !== "config" && action !== "resetcases" && action !== "reset" && !member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
       return ctx.reply({ embeds: [errorEmbed("You need Manage Server to change settings.")] });
+    }
+    if (action === "autonick") {
+      const nickname = ctx.getString("value") ?? ctx.args.slice(1).join(" ");
+      if (!nickname) return ctx.reply({ embeds: [errorEmbed("Provide a nickname template, or use settings autonick off to clear it.")] });
+      if (["off", "none", "reset"].includes(nickname.toLowerCase())) {
+        await updateGuildSettings(ctx.guild.id, { autoNick: null } as any);
+        return ctx.reply({ embeds: [successEmbed("Automatic join nickname disabled.")] });
+      }
+      if (nickname.length > 32) return ctx.reply({ embeds: [errorEmbed("Discord nicknames cannot exceed 32 characters.")] });
+      await updateGuildSettings(ctx.guild.id, { autoNick: nickname } as any);
+      return ctx.reply({ embeds: [successEmbed("Automatic join nickname set. Use {username} or {displayname} as placeholders.")] });
+    }
+    if (action === "baserole") {
+      const baseRole = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
+      if (!baseRole) return ctx.reply({ embeds: [errorEmbed("Provide the base role for booster roles.")] });
+      await db.insert(boosterRoleConfig).values({ guildId: ctx.guild.id, baseRoleId: baseRole.id })
+        .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { baseRoleId: baseRole.id } });
+      return ctx.reply({ embeds: [successEmbed(`Booster role base position set to <@&${baseRole.id}>.`)] });
     }
     if (action === "jail") {
       const channel = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, ""));
