@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
+import { updateGuildSettings } from "../../db/settings.js";
 import { wordFilter, filterExempts, filterWhitelist, filterChannelSettings, filterLinkWhitelist } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 
