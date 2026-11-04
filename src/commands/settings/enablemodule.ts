@@ -23,6 +23,12 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const mod = (ctx.getString("module") ?? ctx.args[0] ?? "").toLowerCase();
     const ch = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, "")) ?? null;
+    if (mod === "all") {
+      const conditions: any[] = [eq(disabledModules.guildId, ctx.guild.id)];
+      if (ch) conditions.push(eq(disabledModules.channelId, ch.id));
+      await db.delete(disabledModules).where(and(...conditions));
+      return ctx.reply({ embeds: [successEmbed(`re-enabled all disabled modules${ch ? ` in <#${ch.id}>` : " in every channel"}.`)] });
+    }
     const conditions: any[] = [eq(disabledModules.guildId, ctx.guild.id), eq(disabledModules.module, mod)];
     if (ch) conditions.push(eq(disabledModules.channelId, ch.id));
     await db.delete(disabledModules).where(and(...conditions));
