@@ -162,7 +162,7 @@ export const command: HybridCommand = {
 
     // ── Admin config subcommands ───────────────────────────────────────────────
     if (action === "set") {
-      const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(reviewTarget.replace(/[<#>]/g, ""));
+      const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(val.replace(/[<#>]/g, ""));
       if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { suggestionsChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`suggestions channel set to <#${ch.id}>.`)] });
