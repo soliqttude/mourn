@@ -17,7 +17,7 @@ export const command: HybridCommand = {
     "stickymessage view #general",
   ],
   category: "settings",
-  permission: "manage_messages",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "add | remove | list | view", type: ApplicationCommandOptionType.String, required: true,
@@ -47,6 +47,8 @@ export const command: HybridCommand = {
     }
 
     if (sub === "remove") {
+      const [existing] = await db.select().from(stickyMessages).where(and(eq(stickyMessages.guildId, ctx.guild.id), eq(stickyMessages.channelId, channelId)));
+      if (existing?.lastMessageId) await (ctx.guild.channels.cache.get(channelId) as any)?.messages?.delete(existing.lastMessageId).catch(() => {});
       await db.delete(stickyMessages).where(and(eq(stickyMessages.guildId, ctx.guild.id), eq(stickyMessages.channelId, channelId)));
       return ctx.reply({ embeds: [successEmbed(`sticky message removed from <#${channelId}>.`)] });
     }
