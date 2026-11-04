@@ -28,6 +28,9 @@ import { buildHelpHome, buildPagedCategoryEmbed, buildCategoryEmbed } from "../c
 import { buildLeaderboardMessage } from "../commands/utility/invites.js";
 import { EmbedBuilder } from "discord.js";
 import { handlePageButton } from "../features/pagination.js";
+import { db } from "../db/index.js";
+import { disabledCommands } from "../db/schema.js";
+import { and, eq } from "drizzle-orm";
 
 // Inject "emoji @user: " into styled embeds — used in button handlers that bypass contextFactory
 function applyMention(embeds: EmbedBuilder[], userId: string): EmbedBuilder[] {
@@ -142,6 +145,25 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
     if (!(await checkTierWithFake(interaction.member as any, cmd.permission))) {
       return replyToSlash(interaction, {
         embeds: [errorEmbed(`${EMOJIS.warn} <@${interaction.user.id}>: You're **missing** permission: \`${cmd.permission}\``)],
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+  }
+
+  if (interaction.guild && !isBotOwner(interaction.user.id)) {
+    const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+    const restrictions = await db.select().from(disabledCommands).where(and(
+      eq(disabledCommands.guildId, interaction.guild.id),
+      eq(disabledCommands.command, cmd.name),
+    )).catch(() => []);
+    const blocked = restrictions.some(row =>
+      (row.targetType === "channel" && row.targetId === interaction.channelId) ||
+      (row.targetType === "member" && row.targetId === interaction.user.id) ||
+      (row.targetType === "role" && Boolean(member?.roles.cache.has(row.targetId)))
+    );
+    if (blocked) {
+      return replyToSlash(interaction, {
+        embeds: [errorEmbed(`\`${cmd.name}\` is disabled for you in this channel.`)],
         flags: MessageFlags.Ephemeral,
       });
     }
