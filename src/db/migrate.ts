@@ -291,7 +291,19 @@ const STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS booster_role_config (
     guild_id TEXT PRIMARY KEY,
     base_role_id TEXT,
-    role_limit INTEGER NOT NULL DEFAULT 0
+    role_limit INTEGER NOT NULL DEFAULT 0,
+    max_shared_members INTEGER NOT NULL DEFAULT 0,
+    max_roles_per_member INTEGER NOT NULL DEFAULT 0
+  )`,
+  `ALTER TABLE booster_role_config ADD COLUMN IF NOT EXISTS role_limit INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE booster_role_config ADD COLUMN IF NOT EXISTS max_shared_members INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE booster_role_config ADD COLUMN IF NOT EXISTS max_roles_per_member INTEGER NOT NULL DEFAULT 0`,
+  `CREATE TABLE IF NOT EXISTS booster_role_shares (
+    guild_id TEXT NOT NULL,
+    owner_user_id TEXT NOT NULL,
+    shared_user_id TEXT NOT NULL,
+    role_id TEXT NOT NULL,
+    PRIMARY KEY (guild_id, owner_user_id, shared_user_id)
   )`,
   `ALTER TABLE booster_role_config ADD COLUMN IF NOT EXISTS role_limit INTEGER NOT NULL DEFAULT 0`,
   `CREATE TABLE IF NOT EXISTS invoke_messages (
