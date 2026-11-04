@@ -1,7 +1,7 @@
 import { type Guild, type GuildMember, DiscordAPIError } from "discord.js";
 import { and, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { boosterRoles, boosterRoleConfig } from "../db/schema.js";
+import { boosterRoles, boosterRoleConfig, boosterRoleShares } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 
 export async function getBoosterRole(guildId: string, userId: string): Promise<string | null> {
@@ -112,6 +112,8 @@ export async function deleteBoosterRole(guild: Guild, userId: string): Promise<b
     }
   }
 
+  await db.delete(boosterRoleShares)
+    .where(and(eq(boosterRoleShares.guildId, guild.id), eq(boosterRoleShares.ownerUserId, userId)));
   await db.delete(boosterRoles)
     .where(and(eq(boosterRoles.guildId, guild.id), eq(boosterRoles.userId, userId)));
   return true;
