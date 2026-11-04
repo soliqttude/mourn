@@ -4,15 +4,15 @@
 - **Repository:** `soliqttude/mourn`
 - **Branch:** `feature/bleed-306-moderation-commands`
 - **Audited HEAD:** `30985e381a087876a8ce6a0d31f8290827ff81b1` (the next audit-doc commit follows this source audit)
-- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the audited source head. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock; the database migration is required before deployment. Booster-role share listing is now scoped to the caller's own booster role.
+- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the audited source head. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock; the database migration is required before deployment. Booster-role share listing is now scoped to the caller's own booster role. `autoresponder list tickets` now lists autoresponders whose exclusive channel is a recorded ticket channel.
 
 ## Result
 
 | Status | Entries |
 |---|---:|
-| Implemented in source (not runtime-verified) | 283 |
+| Implemented in source (not runtime-verified) | 284 |
 | Partial / invocation or behavior caveat | 18 |
-| Missing | 4 |
+| Missing | 3 |
 | Unsupported safely | 1 |
 | **Total** | **306** |
 
@@ -23,7 +23,6 @@
 | `settings premiumrole` | No premium-role setting or supporting feature. |
 | `settings googlesafetylevel` | No Google Safe Browsing level setting or integration. |
 | `settings disablecustomfms` | No matching custom-FM disable setting or feature. |
-| `autoresponder list tickets` | No `list tickets` branch. |
 
 
 ## Unsupported safely
@@ -72,7 +71,7 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 | imgonly | 4 | 3 | 1 | 0 | 0 |
 | invoke | 76 | 75 | 1 | 0 | 0 |
 | filter | 36 | 35 | 1 | 0 | 0 |
-| autoresponder | 15 | 13 | 1 | 1 | 0 |
+| autoresponder | 15 | 14 | 1 | 0 | 0 |
 | pagination | 9 | 8 | 1 | 0 | 0 |
 | enablecommand | 2 | 2 | 0 | 0 | 0 |
 | copydisabled | 1 | 1 | 0 | 0 | 0 |
@@ -104,4 +103,4 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 1. This audit uses the 306 entries in the supplied reference. It does not infer undocumented Bleed behavior.
 2. “Implemented” is source-level evidence only. Command registration, permission correctness, prefix/slash parity, persistence, migrations, and Discord API behavior still require build and runtime tests.
 3. Parent/root rows marked partial are distinguished from their separately audited child actions.
-4. The next implementation pass should close the four missing entries and resolve the partial behavior caveats, then run typecheck/build and Discord runtime tests. Do not merge to `main` based on this audit alone.
+4. The next implementation pass should close the three remaining missing entries and resolve the partial behavior caveats, then run typecheck/build and Discord runtime tests. Do not merge to `main` based on this audit alone.
