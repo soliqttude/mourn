@@ -106,28 +106,6 @@ export const command: HybridCommand = {
       });
     }
 
-    // Bleed-compatible shorthand: invoke <command> <message|dm> [view|content].
-    // The original VILLAIN form (invoke set|remove <command> <type> ...) remains supported.
-    const directCommand = !["set", "remove", "list", "variables"].includes(action.toLowerCase());
-    if (directCommand) {
-      const cmdName = action.toLowerCase();
-      if (!SUPPORTED_COMMANDS.includes(cmdName)) return ctx.reply({ embeds: [errorEmbed(`unsupported command.\\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
-      const type = (ctx.args[1] ?? "").toLowerCase();
-      if (!["message", "dm"].includes(type)) return ctx.reply({ embeds: [errorEmbed("Specify `message` or `dm`.")] });
-      const tail = ctx.args.slice(2);
-      if (tail[0]?.toLowerCase() === "view") {
-        const rows = await db.select().from(invokeMessages).where(and(eq(invokeMessages.guildId, guild.id), eq(invokeMessages.command, cmdName), eq(invokeMessages.type, type)));
-        if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`No invoke ${type} configured for \`${cmdName}\`.`)] });
-        return ctx.reply({ embeds: [brandEmbed({ title: `invoke ${cmdName} ${type}`, description: rows[0]!.content.slice(0, 4000) })] });
-      }
-      const content = tail.join(" ");
-      if (!content) return ctx.reply({ embeds: [errorEmbed("Provide content, or use `view` to inspect the current response.")] });
-      await db.insert(invokeMessages).values({ guildId: guild.id, command: cmdName, type, content })
-        .onConflictDoUpdate({ target: [invokeMessages.guildId, invokeMessages.command, invokeMessages.type], set: { content } });
-      invalidateInvokeCache(guild.id);
-      return ctx.reply({ embeds: [successEmbed(`invoke ${type} for \`${cmdName}\` set.`)] });
-    }
-
     const cmdName = (ctx.getString("command") ?? ctx.args[1] ?? "").toLowerCase();
     if (!cmdName) return ctx.reply({ embeds: [errorEmbed(`specify a command.\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
     if (!SUPPORTED_COMMANDS.includes(cmdName)) return ctx.reply({ embeds: [errorEmbed(`unsupported command.\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
