@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { config } from "../../config.js";
@@ -48,6 +48,18 @@ export const command: HybridCommand = {
 
     await db.insert(honeypots).values({ guildId: guild.id, channelId: target.id, punishment })
       .onConflictDoUpdate({ target: [honeypots.guildId, honeypots.channelId], set: { punishment } });
-    return ctx.reply({ embeds: [successEmbed(`<#${target.id}> is now a honeypot with **${punishment}** punishment.`, "settings")] });
+    const warning = new EmbedBuilder()
+      .setColor(0x8b1e2d)
+      .setAuthor({ name: "VILLAIN SECURITY", iconURL: ctx.client.user?.displayAvatarURL() })
+      .setTitle("Honeypot channel — do not send messages")
+      .setDescription("This channel is a security honeypot.\n\nDo not type or send messages here. Messages sent in this channel automatically trigger the server’s configured security action.")
+      .addFields(
+        { name: "Enforcement", value: punishment, inline: true },
+        { name: "Security notice", value: "This channel is monitored by server security.", inline: true },
+      )
+      .setFooter({ text: guild.name + " • Villain Security" })
+      .setTimestamp();
+    await (target as any).send({ embeds: [warning], allowedMentions: { parse: [] } }).catch(() => null);
+    return ctx.reply({ embeds: [successEmbed(`<#${target.id}> is now a honeypot with **${punishment}** punishment. A warning embed was posted in the channel.`, "settings")] });
   },
 };
