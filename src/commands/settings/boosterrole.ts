@@ -113,7 +113,7 @@ export const command: HybridCommand = {
       const rows = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
       const live = rows.filter((row) => guild.roles.cache.has(row.roleId));
       const body = live.length ? live.map((row) => `<@${row.userId}> — <@&${row.roleId}>`).join("\n") : "No active booster roles found.";
-      return ctx.reply({ embeds: [brandEmbed(`**Booster roles (${live.length})**\n${body}`)] });
+      return ctx.reply({ embeds: [brandEmbed({ description: `**Booster roles (${live.length})**\n${body}` })] });
     }
 
     if (action === "cleanup") {
