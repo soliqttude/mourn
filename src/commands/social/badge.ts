@@ -3,7 +3,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { config } from "../../config.js";
 
 export const command: HybridCommand = {
-  name: "badge",
+  name: "profilebadge",
   description: "View Discord badges for a user.",
   category: "social",
   aliases: ["flags", "badges"],
