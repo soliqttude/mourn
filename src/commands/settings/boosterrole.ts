@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType, type GuildMember } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
-import { boosterRoles, boosterRoleConfig, boostAutoRole, filterWhitelist } from "../../db/schema.js";
+import { boosterRoles, boosterRoleConfig, boosterRoleShares, boostAutoRole, filterWhitelist } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { createBoosterRole, deleteBoosterRole, getBoosterRole } from "../../features/boosterRoles.js";
 
@@ -43,7 +43,8 @@ export const command: HybridCommand = {
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
-    { name: "role", description: "Role for base, linking, or awards", type: ApplicationCommandOptionType.Role, required: false },
+    { name: "role", description: "Role for base or awards", type: ApplicationCommandOptionType.Role, required: false },
+    { name: "member", description: "Member to share the role with", type: ApplicationCommandOptionType.User, required: false },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
@@ -125,6 +126,49 @@ export const command: HybridCommand = {
         }
       }
       return ctx.reply({ embeds: [successEmbed(`Cleaned ${removed} stale booster role record(s).`, "settings")] });
+    }
+
+    if (action === "share") {
+      const sub = (ctx.args[1] ?? "").toLowerCase();
+      if (sub === "remove") {
+        const roleId = (ctx.args[2] ?? ctx.getRole("role")?.id ?? "").replace(/[<@&>]/g, "");
+        if (!roleId) return ctx.reply({ embeds: [errorEmbed("Provide the shared role to leave.")] });
+        const [share] = await db.select().from(boosterRoleShares).where(and(eq(boosterRoleShares.guildId, guild.id), eq(boosterRoleShares.sharedUserId, ctx.user.id), eq(boosterRoleShares.roleId, roleId)));
+        if (!share) return ctx.reply({ embeds: [errorEmbed("You are not listed as a member of that shared booster role.")] });
+        const role = guild.roles.cache.get(roleId);
+        if (role) await member.roles.remove(role).catch(() => {});
+        await db.delete(boosterRoleShares).where(and(eq(boosterRoleShares.guildId, guild.id), eq(boosterRoleShares.ownerUserId, share.ownerUserId), eq(boosterRoleShares.sharedUserId, ctx.user.id)));
+        return ctx.reply({ embeds: [successEmbed("You left the shared booster role.", "settings")] });
+      }
+      if (sub === "max" || sub === "limit" || sub === "list") {
+        if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server for this share setting.")] });
+        const [cfg] = await db.select().from(boosterRoleConfig).where(eq(boosterRoleConfig.guildId, guild.id));
+        if (sub === "list") {
+          const rows = await db.select().from(boosterRoleShares).where(eq(boosterRoleShares.guildId, guild.id));
+          return ctx.reply({ embeds: [brandEmbed({ title: "Shared booster roles", description: rows.length ? rows.map(row => `<@&${row.roleId}> — owner <@${row.ownerUserId}>, member <@${row.sharedUserId}>`).join("\n") : "No shared booster roles." })] });
+        }
+        const amount = Number(ctx.args[2] ?? ctx.getString("value") ?? "");
+        if (!Number.isInteger(amount) || amount < 1 || amount > 100) return ctx.reply({ embeds: [errorEmbed("Set a whole-number limit between 1 and 100.")] });
+        const values = { guildId: guild.id, baseRoleId: cfg?.baseRoleId ?? null, roleLimit: cfg?.roleLimit ?? 0, maxSharedMembers: sub === "max" ? amount : cfg?.maxSharedMembers ?? 0, maxRolesPerMember: sub === "limit" ? amount : cfg?.maxRolesPerMember ?? 0 };
+        await db.insert(boosterRoleConfig).values(values).onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { maxSharedMembers: values.maxSharedMembers, maxRolesPerMember: values.maxRolesPerMember } });
+        return ctx.reply({ embeds: [successEmbed(`booster role share ${sub} set to ${amount}.`, "settings")] });
+      }
+      const target = ctx.getMember("member") ?? (ctx.args[1] ? await guild.members.fetch(ctx.args[1].replace(/[<@!>]/g, "")).catch(() => null) : null);
+      if (!target) return ctx.reply({ embeds: [errorEmbed("Mention a member to share your booster role with.")] });
+      if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You already own this booster role.")] });
+      const roleId = await getBoosterRole(guild.id, ctx.user.id);
+      if (!roleId) return ctx.reply({ embeds: [errorEmbed("Create your booster role first.")] });
+      const role = guild.roles.cache.get(roleId);
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Your booster role no longer exists.")] });
+      const [cfg] = await db.select().from(boosterRoleConfig).where(eq(boosterRoleConfig.guildId, guild.id));
+      const roleShares = await db.select().from(boosterRoleShares).where(and(eq(boosterRoleShares.guildId, guild.id), eq(boosterRoleShares.ownerUserId, ctx.user.id)));
+      const memberShares = await db.select().from(boosterRoleShares).where(and(eq(boosterRoleShares.guildId, guild.id), eq(boosterRoleShares.sharedUserId, target.id)));
+      if (cfg?.maxSharedMembers && roleShares.length >= cfg.maxSharedMembers) return ctx.reply({ embeds: [errorEmbed("Your booster role has reached its share-member limit.")] });
+      if (cfg?.maxRolesPerMember && memberShares.length >= cfg.maxRolesPerMember) return ctx.reply({ embeds: [errorEmbed("That member has reached the maximum number of shared booster roles.")] });
+      try { await target.roles.add(role); } catch { return ctx.reply({ embeds: [errorEmbed("I could not assign that role. Check my role hierarchy and Manage Roles permission.")] }); }
+      await db.insert(boosterRoleShares).values({ guildId: guild.id, ownerUserId: ctx.user.id, sharedUserId: target.id, roleId })
+        .onConflictDoUpdate({ target: [boosterRoleShares.guildId, boosterRoleShares.ownerUserId, boosterRoleShares.sharedUserId], set: { roleId } });
+      return ctx.reply({ embeds: [successEmbed(`shared <@&${roleId}> with <@${target.id}>.`, "settings")] });
     }
 
     const isBoosting = member.premiumSince !== null;
