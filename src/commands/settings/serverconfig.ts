@@ -88,7 +88,14 @@ export const command: HybridCommand = {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
       if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a mute role.")] });
       await updateGuildSettings(ctx.guild.id, action === "rmuted" ? { reactionMuteRole: role.id } as any : { imageMuteRole: role.id } as any);
-      return ctx.reply({ embeds: [successEmbed(`${action === "rmuted" ? "Reaction" : "Image"} mute role set to <@&${role.id}>.`)] });
+      const permissionPatch = action === "rmuted" ? { AddReactions: false, UseExternalEmojis: false } : { AttachFiles: false, EmbedLinks: false };
+      let updatedChannels = 0;
+      for (const channel of ctx.guild.channels.cache.values()) {
+        if (!channel.isTextBased()) continue;
+        const ok = await (channel as any).permissionOverwrites.edit(role, permissionPatch).then(() => true).catch(() => false);
+        if (ok) updatedChannels++;
+      }
+      return ctx.reply({ embeds: [successEmbed(`${action === "rmuted" ? "Reaction" : "Image"} mute role set to <@&${role.id}> and applied to ${updatedChannels} text channels.`)] });
     }
     if (action === "jailrole" || action === "muted") {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
