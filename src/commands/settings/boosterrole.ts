@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   description: "Manage personal booster roles, server limits, reward roles, name filters, and role sharing.",
   category: "settings",
   guildOnly: true,
-  usage: "boosterrole (create|delete|remove|rename|color|random|icon|setbase|base|list|cleanup|limit) [value]",
+  usage: "boosterrole (create|delete|remove|rename|color|random|icon|setbase|base|list|cleanup|limit|award|filter|link|share) [value]",
   examples: [
     "boosterrole create",
     "boosterrole rename My Awesome Role",
@@ -24,7 +24,7 @@ export const command: HybridCommand = {
   options: [
     {
       name: "action",
-      description: "create, delete, remove, rename, color, random, icon, setbase, base, list, or cleanup",
+      description: "create, delete, remove, rename, color, random, icon, setbase, base, list, cleanup, limit, award, filter, link, or share",
       type: ApplicationCommandOptionType.String,
       required: true,
       choices: [
