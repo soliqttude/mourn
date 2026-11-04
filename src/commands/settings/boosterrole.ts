@@ -24,7 +24,7 @@ export const command: HybridCommand = {
   options: [
     {
       name: "action",
-      description: "create, delete, remove, rename, color, random, icon, setbase, base, list, cleanup, link, or share",
+      description: "create, delete, remove, rename, color, random, icon, setbase, base, list, or cleanup",
       type: ApplicationCommandOptionType.String,
       required: true,
       choices: [
@@ -39,7 +39,6 @@ export const command: HybridCommand = {
         { name: "random", value: "random" },
         { name: "list", value: "list" },
         { name: "cleanup", value: "cleanup" },
-        { name: "limit", value: "limit" }, { name: "award", value: "award" }, { name: "filter", value: "filter" },
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
