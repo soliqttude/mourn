@@ -113,19 +113,31 @@ export const command: HybridCommand = {
     }
 
     if (action === "share") {
-      const target = ctx.getMember("member") ?? (ctx.args[1] ? await guild.members.fetch(ctx.args[1].replace(/[<@!>]/g, "")).catch(() => null) : null);
-      if (!target) return ctx.reply({ embeds: [errorEmbed("Mention a member to share your booster role with.")] });
-      if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You already own this booster role.")] });
       const ownedRoleId = await getBoosterRole(guild.id, ctx.user.id);
       if (!ownedRoleId) return ctx.reply({ embeds: [errorEmbed("Create your booster role first.")] });
       const ownedRole = guild.roles.cache.get(ownedRoleId);
       if (!ownedRole) return ctx.reply({ embeds: [errorEmbed("Your booster role no longer exists.")] });
-      if (action === "share") {
-        await target.roles.add(ownedRole).catch(() => null);
-        await db.insert(boosterRoles).values({ guildId: guild.id, userId: target.id, roleId: ownedRoleId })
-          .onConflictDoUpdate({ target: [boosterRoles.guildId, boosterRoles.userId], set: { roleId: ownedRoleId } });
-        return ctx.reply({ embeds: [successEmbed(`shared <@&${ownedRoleId}> with <@${target.id}>.`, "settings")] });
+      const shareAction = (ctx.args[1] ?? "").toLowerCase();
+      if (shareAction === "list") {
+        const rows = await db.select().from(boosterRoles).where(and(eq(boosterRoles.guildId, guild.id), eq(boosterRoles.roleId, ownedRoleId)));
+        const shared = rows.filter(row => row.userId !== ctx.user.id);
+        return ctx.reply({ embeds: [brandEmbed({ title: "Shared booster role", description: shared.length ? shared.map(row => `<@${row.userId}>`).join("\n") : "This role is not shared with anyone." })] });
       }
+      const targetArg = shareAction === "remove" ? ctx.args[2] : ctx.args[1];
+      const target = ctx.getMember("member") ?? (targetArg ? await guild.members.fetch(targetArg.replace(/[<@!>]/g, "")).catch(() => null) : null);
+      if (!target) return ctx.reply({ embeds: [errorEmbed("Mention a member, or use share list / share remove @member.")] });
+      if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You already own this booster role.")] });
+      if (shareAction === "remove") {
+        await target.roles.remove(ownedRole).catch(() => null);
+        await db.delete(boosterRoles).where(and(eq(boosterRoles.guildId, guild.id), eq(boosterRoles.userId, target.id), eq(boosterRoles.roleId, ownedRoleId)));
+        return ctx.reply({ embeds: [successEmbed(`removed <@&${ownedRoleId}> from <@${target.id}>.`, "settings")] });
+      }
+      try { await target.roles.add(ownedRole); } catch {
+        return ctx.reply({ embeds: [errorEmbed("I could not assign that role. Check my role hierarchy and Manage Roles permission.")] });
+      }
+      await db.insert(boosterRoles).values({ guildId: guild.id, userId: target.id, roleId: ownedRoleId })
+        .onConflictDoUpdate({ target: [boosterRoles.guildId, boosterRoles.userId], set: { roleId: ownedRoleId } });
+      return ctx.reply({ embeds: [successEmbed(`shared <@&${ownedRoleId}> with <@${target.id}>.`, "settings")] });
     }
 
     const roleId = await getBoosterRole(guild.id, ctx.user.id);
