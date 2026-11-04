@@ -10,11 +10,11 @@ export const command: HybridCommand = {
   name: "prefix",
   description: "View or manage this server's command prefix.",
   usage: "prefix | prefix set <prefix> | prefix remove | prefix self <prefix>",
-  examples: ["prefix", "prefix set !", "prefix remove"],
+  examples: ["prefix", "prefix set !", "prefix remove", "prefix self ."],
   category: "settings",
   guildOnly: true,
   options: [
-    { name: "action", description: "set | remove", type: ApplicationCommandOptionType.String, required: false, choices: [
+    { name: "action", description: "set | remove | self", type: ApplicationCommandOptionType.String, required: false, choices: [
       { name: "set", value: "set" }, { name: "remove", value: "remove" }, { name: "self", value: "self" },
     ] },
     { name: "prefix", description: "New command prefix", type: ApplicationCommandOptionType.String, required: false },
@@ -26,7 +26,7 @@ export const command: HybridCommand = {
     const settings = await getGuildSettings(ctx.guild.id);
 
     if (action === "self") {
-      if (!value || value.length > 5 || /\\s/.test(value)) return ctx.reply({ embeds: [errorEmbed("Provide a personal prefix from 1–5 characters with no spaces.")] });
+      if (!value || value.length > 5 || /\s/.test(value)) return ctx.reply({ embeds: [errorEmbed("Provide a personal prefix from 1–5 characters with no spaces.")] });
       await db.insert(userPrefixes).values({ userId: ctx.user.id, prefix: value }).onConflictDoUpdate({ target: userPrefixes.userId, set: { prefix: value } });
       return ctx.reply({ embeds: [successEmbed("Your personal prefix is now " + value + " across servers.")] });
     }
