@@ -305,7 +305,7 @@ const STATEMENTS: string[] = [
     role_id TEXT NOT NULL,
     PRIMARY KEY (guild_id, owner_user_id, shared_user_id)
   )`,
-  `ALTER TABLE booster_role_config ADD COLUMN IF NOT EXISTS role_limit INTEGER NOT NULL DEFAULT 0`,
+
   `CREATE TABLE IF NOT EXISTS invoke_messages (
     guild_id TEXT NOT NULL,
     command TEXT NOT NULL,
