@@ -81,6 +81,8 @@ export const guildSettings = pgTable("guild_settings", {
   customizeBanner: text("customize_banner"),
   customizeBio: text("customize_bio"),
   premiumRole: text("premium_role"),
+  googleSafeSearch: boolean("google_safe_search").default(false).notNull(),
+  disableCustomFms: boolean("disable_custom_fms").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
