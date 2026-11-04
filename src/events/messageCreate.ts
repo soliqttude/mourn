@@ -72,6 +72,7 @@ async function isCommandDisabled(guildId: string, channelId: string, memberId: s
   for (const row of rows) {
     if (row.targetType === "channel" && row.targetId === channelId) return true;
     if (row.targetType === "role" && roleIds.includes(row.targetId)) return true;
+    if (row.targetType === "member" && row.targetId === memberId) return true;
   }
   return false;
 }
