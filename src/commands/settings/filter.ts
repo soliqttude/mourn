@@ -4,16 +4,10 @@ import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
 import { wordFilter, filterExempts, filterWhitelist, filterChannelSettings, filterLinkWhitelist } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
-import { updateGuildSettings } from "../../db/settings.js";
 
 type FilterType = "caps" | "invites" | "links" | "spam" | "spoilers" | "massmention" | "emoji" | "musicfiles";
 const TYPES: FilterType[] = ["caps", "invites", "links", "spam", "spoilers", "massmention", "emoji", "musicfiles"];
 const DEFAULTS: Record<FilterType, number> = { caps: 70, invites: 1, links: 1, spam: 5, spoilers: 1, massmention: 5, emoji: 10, musicfiles: 1 };
-const SETTING_KEYS: Record<FilterType, string> = {
-  caps: "capsFilterEnabled", invites: "inviteFilterEnabled", links: "linkFilterEnabled",
-  spam: "automodEnabled", spoilers: "spoilersFilterEnabled", massmention: "massMentionEnabled",
-  emoji: "emojiFilterEnabled", musicfiles: "musicFilesFilterEnabled",
-};
 
 function idOf(value: string): string {
   return value.replace(/[<#@&!>]/g, "");
@@ -162,8 +156,6 @@ export const command: HybridCommand = {
         target: [filterChannelSettings.guildId, filterChannelSettings.channelId, filterChannelSettings.filterType],
         set: { enabled: isOn, threshold },
       });
-      // Keep the legacy guild-wide toggle in sync for older configurations.
-      await updateGuildSettings(ctx.guild.id, { [SETTING_KEYS[type]]: isOn } as any);
       return ctx.reply({ embeds: [successEmbed(`${type} filter ${isOn ? "enabled" : "disabled"} in <#${channel.id}> (threshold: ${threshold}).`)] });
     }
 
