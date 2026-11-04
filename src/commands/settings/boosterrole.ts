@@ -10,10 +10,10 @@ import { createBoosterRole, deleteBoosterRole, getBoosterRole } from "../../feat
 export const command: HybridCommand = {
   name: "boosterrole",
   aliases: ["boostrole", "br"],
-  description: "Manage personal booster roles, server limits, reward roles, name filters, and role sharing.",
+  description: "Create and customize personal booster roles for server boosters.",
   category: "settings",
   guildOnly: true,
-  usage: "boosterrole (create|delete|remove|rename|color|random|icon|setbase|base|list|cleanup|limit|award|filter|link|share) [value]",
+  usage: "boosterrole base <role> | color <color> [second_color] [name] | rename <name> | icon <url> | remove | award <set|view|remove> | list | cleanup",
   examples: [
     "boosterrole create",
     "boosterrole rename My Awesome Role",
@@ -23,38 +23,37 @@ export const command: HybridCommand = {
     "boosterrole setbase @Nitro Booster",
   ],
   options: [
-    {
-      name: "action",
-      description: "create, delete, remove, rename, color, random, dominant, icon, setbase, base, list, cleanup, limit, award, filter, link, or share",
-      type: ApplicationCommandOptionType.String,
-      required: true,
-      choices: [
-        { name: "create", value: "create" },
-        { name: "delete", value: "delete" },
-        { name: "rename", value: "rename" },
-        { name: "color", value: "color" },
-        { name: "icon", value: "icon" },
-        { name: "setbase", value: "setbase" },
-        { name: "base", value: "base" },
-        { name: "remove", value: "remove" },
-        { name: "random", value: "random" },
-        { name: "list", value: "list" },
-        { name: "cleanup", value: "cleanup" },
-        { name: "limit", value: "limit" }, { name: "award", value: "award" }, { name: "filter", value: "filter" },
-        { name: "link", value: "link" }, { name: "share", value: "share" }, { name: "dominant", value: "dominant" },
-      ],
-    },
-    { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
-    { name: "role", description: "Role for base or awards", type: ApplicationCommandOptionType.Role, required: false },
-    { name: "member", description: "Member to link or share the role with", type: ApplicationCommandOptionType.User, required: false },
-    { name: "subaction", description: "Share or award sub-action", type: ApplicationCommandOptionType.String, required: false, choices: [{ name: "max", value: "max" }, { name: "limit", value: "limit" }, { name: "list", value: "list" }, { name: "remove", value: "remove" }, { name: "unset", value: "unset" }, { name: "view", value: "view" }] },
+    { type: ApplicationCommandOptionType.Subcommand, name: "base", description: "Set the role booster roles are placed below", options: [
+      { type: ApplicationCommandOptionType.Role, name: "role", description: "Base role", required: true },
+    ] },
+    { type: ApplicationCommandOptionType.Subcommand, name: "color", description: "Create or update your custom booster role", options: [
+      { type: ApplicationCommandOptionType.String, name: "color", description: "Hex code or color name", required: true },
+      { type: ApplicationCommandOptionType.String, name: "second_color", description: "Optional second gradient color", required: false },
+      { type: ApplicationCommandOptionType.String, name: "name", description: "Booster role name", required: false },
+    ] },
+    { type: ApplicationCommandOptionType.Subcommand, name: "rename", description: "Rename your booster role", options: [
+      { type: ApplicationCommandOptionType.String, name: "name", description: "New role name", required: true },
+    ] },
+    { type: ApplicationCommandOptionType.Subcommand, name: "icon", description: "Set your booster role icon", options: [
+      { type: ApplicationCommandOptionType.String, name: "url", description: "Emoji or image URL", required: true },
+    ] },
+    { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Remove your booster role" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "list", description: "View all booster roles" },
+    { type: ApplicationCommandOptionType.Subcommand, name: "cleanup", description: "Clean up stale booster roles" },
+    { type: ApplicationCommandOptionType.SubcommandGroup, name: "award", description: "Configure the role granted to boosters", options: [
+      { type: ApplicationCommandOptionType.Subcommand, name: "set", description: "Set the boost reward role", options: [
+        { type: ApplicationCommandOptionType.Role, name: "role", description: "Reward role", required: true },
+      ] },
+      { type: ApplicationCommandOptionType.Subcommand, name: "view", description: "View the current reward role" },
+      { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Remove the reward role" },
+    ] },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
     if (!guild) return;
     const member = ctx.member as GuildMember;
 
-    const action = ctx.getString("action");
+    const action = (ctx.getSubcommandGroup() ?? ctx.getSubcommand() ?? ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
 
     if (action === "limit") {
       if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to set the booster role limit.")] });
@@ -84,10 +83,10 @@ export const command: HybridCommand = {
 
     if (action === "award") {
       if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to configure the boost reward role.")] });
-      const sub = (ctx.getString("subaction") ?? ctx.args[1] ?? "").toLowerCase();
+      const sub = (ctx.getSubcommand() ?? ctx.getString("subaction") ?? ctx.args[1] ?? "").toLowerCase();
       const [current] = await db.select().from(boostAutoRole).where(eq(boostAutoRole.guildId, guild.id));
       if (sub === "view") return ctx.reply({ embeds: [brandEmbed({ title: "Booster reward role", description: current?.roleId ? `<@&${current.roleId}>` : "No reward role configured." })] });
-      if (sub === "unset") {
+      if (sub === "unset" || sub === "remove") {
         await db.delete(boostAutoRole).where(eq(boostAutoRole.guildId, guild.id));
         return ctx.reply({ embeds: [successEmbed("Booster reward role removed.", "settings")] });
       }
@@ -277,12 +276,13 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("Your **booster** **role** no longer exists.")] });
 
     if (action === "delete" || action === "remove") {
-      await deleteBoosterRole(guild, ctx.user.id);
-      return ctx.reply({ embeds: [successEmbed("Your **booster** **role** has been deleted.", "settings")] });
+      const deleted = await deleteBoosterRole(guild, ctx.user.id);
+      if (!deleted) return ctx.reply({ embeds: [errorEmbed("I could not remove your booster role. Check my Manage Roles permission and try again.")] });
+      return ctx.reply({ embeds: [successEmbed("Your booster role was successfully removed.", "settings")] });
     }
 
     if (action === "rename") {
-      const name = ctx.getString("value");
+      const name = ctx.getString("name") ?? ctx.getString("value") ?? ctx.args.slice(1).join(" ");
       if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a new name.")] });
       if (name.length > 100) return ctx.reply({ embeds: [errorEmbed("**Role** name must be 100 characters or less.")] });
       const blocked = await db.select().from(filterWhitelist).where(and(eq(filterWhitelist.guildId, guild.id), eq(filterWhitelist.filterType, "boosterrole-name")));
