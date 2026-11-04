@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import type { Client, GuildMember, GuildTextBasedChannel, Message } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, type Client, type GuildMember, type GuildTextBasedChannel, type Message } from "discord.js";
 import { db } from "../db/index.js";
 import { config } from "../config.js";
 import { autoresponders } from "../db/schema.js";
@@ -125,6 +125,16 @@ export async function handleAutoresponders(client: Client, message: Message) {
       client,
     };
     const { embeds, content, components } = parseScript(ar.response, scriptingContext);
+
+    const components = [...(components ?? [])];
+    if (ar.ticketForm) {
+      components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("ticket_open_b64_" + Buffer.from(ar.ticketForm, "utf8").toString("base64url"))
+          .setLabel("Open Ticket")
+          .setStyle(ButtonStyle.Secondary)
+      ));
+    }
 
     const sent = ar.reply
       ? await message.reply({
