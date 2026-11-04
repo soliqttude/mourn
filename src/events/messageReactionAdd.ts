@@ -2,6 +2,7 @@ import type { Client, MessageReaction, PartialMessageReaction, User, PartialUser
 import { handleStarboardReaction } from "../features/starboard.js";
 import { handleReactionRoleAdd } from "../features/reactionRoles.js";
 import { handleShameReaction } from "../features/shame.js";
+import { handlePaginationReaction } from "../features/pagination.js";
 
 export const event = {
   name: "messageReactionAdd",
@@ -20,5 +21,6 @@ export const event = {
     await handleStarboardReaction(client, reaction as MessageReaction);
     await handleReactionRoleAdd(client, reaction as MessageReaction, user as User);
     await handleShameReaction(client, reaction as MessageReaction);
+    await handlePaginationReaction(reaction as MessageReaction, user as User);
   },
 };
