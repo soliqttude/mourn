@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   description: "Manage your personal booster role — create, rename, color, or delete your custom role.",
   category: "settings",
   guildOnly: true,
-  usage: "boosterrole (create|delete|remove|rename|color|random|icon|setbase|base|list|cleanup) [value]",
+  usage: "boosterrole (create|delete|remove|rename|color|random|icon|setbase|base|list|cleanup|limit) [value]",
   examples: [
     "boosterrole create",
     "boosterrole rename My Awesome Role",
@@ -39,6 +39,7 @@ export const command: HybridCommand = {
         { name: "random", value: "random" },
         { name: "list", value: "list" },
         { name: "cleanup", value: "cleanup" },
+        { name: "limit", value: "limit" },
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
@@ -50,6 +51,16 @@ export const command: HybridCommand = {
     const member = ctx.member as GuildMember;
 
     const action = ctx.getString("action");
+
+    if (action === "limit") {
+      if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to set the booster role limit.")] });
+      const raw = ctx.getString("value") ?? ctx.args[1] ?? "";
+      const limit = Number(raw);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 250) return ctx.reply({ embeds: [errorEmbed("Set a whole-number limit between 1 and 250.")] });
+      await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: null, roleLimit: limit })
+        .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { roleLimit: limit } });
+      return ctx.reply({ embeds: [successEmbed(`server booster role limit set to ${limit}.`, "settings")] });
+    }
 
     if (action === "setbase" || action === "base") {
       if (!member.permissions.has("Administrator" as any))
