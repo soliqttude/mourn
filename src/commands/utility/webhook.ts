@@ -10,19 +10,20 @@ import { parseScript } from "../../lib/scripting.js";
 export const command: HybridCommand = {
   name: "webhook",
   aliases: ["wh"],
-  description: "Manage server webhooks. Subcommands: create, send, delete, list, info",
+  description: "Manage server webhooks. Subcommands: create, send, edit, delete, list, info",
   category: "utility",
   permission: "manage_webhooks",
   guildOnly: true,
-  usage: "webhook [create|send|delete|list|info] [args]",
+  usage: "webhook [create|send|edit|delete|list|info] [args]",
   examples: [
     "webhook create alerts #general",
     "webhook send alerts Hello world!",
+    "webhook edit https://discord.com/channels/GUILD/CHANNEL/MESSAGE Updated message",
     "webhook delete alerts",
     "webhook list",
   ],
   options: [
-    { name: "subcommand", description: "create | send | delete | list | info", type: ApplicationCommandOptionType.String, required: true },
+    { name: "subcommand", description: "create | send | edit | delete | list | info", type: ApplicationCommandOptionType.String, required: true },
     { name: "name", description: "Webhook identifier", type: ApplicationCommandOptionType.String, required: false },
     { name: "channel", description: "Target channel (for create)", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "message", description: "Message to send (for send)", type: ApplicationCommandOptionType.String, required: false },
@@ -57,6 +58,25 @@ export const command: HybridCommand = {
       }
     }
 
+    if (sub === "edit") {
+      const messageLink = name ?? "";
+      const match = messageLink.match(/^https?:\\/\\/discord(?:app)?\\.com\\/channels\\/(\\d+)\\/(\\d+)\\/(\\d+)(?:\\?.*)?$/i);
+      if (!match || match[1] !== guildId) return ctx.reply({ embeds: [errorEmbed("Provide a valid message link from this server.")] });
+      const [, , channelId, messageId] = match;
+      const messageText = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
+      if (!messageText) return ctx.reply({ embeds: [errorEmbed("Provide the replacement message or embed script.")] });
+      const rows = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.channelId, channelId!)));
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No Villain-managed webhook is registered in that message channel.")] });
+      const { embeds, content } = parseScript(messageText);
+      for (const row of rows) {
+        try {
+          const client = new WebhookClient({ id: row.webhookId, token: row.webhookToken });
+          await client.editMessage(messageId!, { content: content ?? messageText, embeds });
+          return ctx.reply({ embeds: [successEmbed("webhook message edited.")] });
+        } catch { /* Try another managed webhook in the same channel. */ }
+      }
+      return ctx.reply({ embeds: [errorEmbed("Could not edit that message. It may not have been sent by a Villain-managed webhook, or the webhook token is no longer valid.")] });
+    }
     if (sub === "send") {
       if (!name) return ctx.reply({ embeds: [errorEmbed("Provide the **webhook** name.")] });
       const messageText = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
@@ -97,6 +117,6 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [brandEmbed({ title: `Webhook: ${wh.identifier}`, fields: [{ name: "channel", value: `<#${wh.channelId}>`, inline: true }, { name: "created", value: `<t:${Math.floor(wh.createdAt.getTime() / 1000)}:R>`, inline: true }] })] });
     }
 
-    return ctx.reply({ embeds: [brandEmbed({ description: "**subcommands:** create, send, delete, list, info" })] });
+    return ctx.reply({ embeds: [brandEmbed({ description: "**subcommands:** create, send, edit, delete, list, info" })] });
   },
 };
