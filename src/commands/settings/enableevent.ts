@@ -21,6 +21,12 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const evt = ctx.getString("event") ?? ctx.args[0] ?? "";
+    if (evt.toLowerCase() === "all") {
+      const events = ["messageCreate", "messageDelete", "messageUpdate", "guildMemberAdd", "guildMemberRemove", "guildMemberUpdate", "voiceStateUpdate", "guildBanAdd", "guildBanRemove", "channelCreate", "channelDelete", "channelUpdate", "roleCreate", "roleDelete", "roleUpdate", "inviteCreate", "inviteDelete", "emojiCreate", "emojiDelete"];
+      await db.insert(eventsSettings).values(events.map(event => ({ guildId: ctx.guild!.id, event, enabled: true })))
+        .onConflictDoUpdate({ target: [eventsSettings.guildId, eventsSettings.event], set: { enabled: true } });
+      return ctx.reply({ embeds: [successEmbed(`re-enabled all ${events.length} supported events.`)] });
+    }
     await db.insert(eventsSettings).values({ guildId: ctx.guild.id, event: evt, enabled: true })
       .onConflictDoUpdate({ target: [eventsSettings.guildId, eventsSettings.event], set: { enabled: true } });
     return ctx.reply({ embeds: [successEmbed(`event \`${evt}\` re-enabled.`)] });
