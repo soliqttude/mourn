@@ -188,6 +188,9 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [errorEmbed("You must be a server **booster** to use **booster** **roles**.")] });
 
     if (action === "create") {
+      const blockedNames = await db.select().from(filterWhitelist).where(and(eq(filterWhitelist.guildId, guild.id), eq(filterWhitelist.filterType, "boosterrole-name")));
+      const blockedName = blockedNames.find(row => member.user.username.toLowerCase().includes(row.value));
+      if (blockedName) return ctx.reply({ embeds: [errorEmbed("Your username contains a word blocked from booster role names.")] });
       const existing = await getBoosterRole(guild.id, ctx.user.id);
       if (existing)
         return ctx.reply({ embeds: [errorEmbed(`you already have a booster role (<@&${existing}>). delete it first.`)] });
