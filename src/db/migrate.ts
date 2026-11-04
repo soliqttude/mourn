@@ -456,6 +456,10 @@ const STATEMENTS: string[] = [
     enabled BOOLEAN NOT NULL DEFAULT true, threshold INTEGER NOT NULL,
     PRIMARY KEY (guild_id, channel_id, filter_type)
   )`,
+  `CREATE TABLE IF NOT EXISTS filter_link_whitelist (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, url TEXT NOT NULL,
+    PRIMARY KEY (guild_id, channel_id, url)
+  )`,
   `CREATE TABLE IF NOT EXISTS filter_exempts (
     guild_id TEXT NOT NULL, filter_type TEXT NOT NULL, role_id TEXT NOT NULL,
     PRIMARY KEY (guild_id, filter_type, role_id)
