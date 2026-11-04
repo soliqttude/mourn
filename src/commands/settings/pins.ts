@@ -53,6 +53,9 @@ export const command: HybridCommand = {
     }
 
     if (sub === "set") {
+      if (!["on", "off", "true", "false", "enable", "disable"].includes(option)) {
+        return ctx.reply({ embeds: [errorEmbed("Specify **on** or **off** for pin archival.")] });
+      }
       const on = option === "on" || option === "true" || option === "enable";
       await db.insert(pinsConfig).values({ guildId: ctx.guild.id, enabled: on, archiveChannel: null, unpinOnArchive: false })
         .onConflictDoUpdate({ target: pinsConfig.guildId, set: { enabled: on } });
@@ -60,6 +63,9 @@ export const command: HybridCommand = {
     }
 
     if (sub === "unpin") {
+      if (!["on", "off", "true", "false"].includes(option)) {
+        return ctx.reply({ embeds: [errorEmbed("Specify **on** or **off** for unpin on archive.")] });
+      }
       const on = option === "on" || option === "true";
       await db.insert(pinsConfig).values({ guildId: ctx.guild.id, enabled: false, archiveChannel: null, unpinOnArchive: on })
         .onConflictDoUpdate({ target: pinsConfig.guildId, set: { unpinOnArchive: on } });
