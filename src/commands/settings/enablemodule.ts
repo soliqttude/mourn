@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "enablemodule <module> [#channel] | enablemodule all <module>",
   examples: ["enablemodule fun #general", "enablemodule levels", "enablemodule all levels"],
   category: "settings",
-  permission: "administrator",
+  permission: "everyone",
   guildOnly: true,
   options: [
     { name: "module", description: "Module name to re-enable", type: ApplicationCommandOptionType.String, required: true },
