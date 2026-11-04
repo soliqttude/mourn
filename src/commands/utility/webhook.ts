@@ -6,13 +6,14 @@ import { managedWebhooks } from "../../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { resolveChannel } from "../../lib/parsing.js";
 import { parseScript } from "../../lib/scripting.js";
+import { checkTierWithFake } from "../../lib/permissions.js";
 
 export const command: HybridCommand = {
   name: "webhook",
   aliases: ["wh"],
   description: "Manage server webhooks. Subcommands: create, send, edit, delete, list, info, lock, unlock",
   category: "utility",
-  permission: "manage_webhooks",
+  permission: "everyone",
   guildOnly: true,
   usage: "webhook [create|send|edit|delete|list|info|lock|unlock] [args]",
   examples: [
@@ -41,6 +42,10 @@ export const command: HybridCommand = {
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No **webhooks** configured.")] });
       const lines = rows.map(r => `**${r.identifier}** → <#${r.channelId}> · ${r.locked ? "locked" : "active"}`);
       return ctx.reply({ embeds: [brandEmbed({ title: "Server Webhooks", description: lines.join("\n") })] });
+    }
+
+    if (sub !== "list" && (!ctx.member || !(await checkTierWithFake(ctx.member, "manage_webhooks")))) {
+      return ctx.reply({ embeds: [errorEmbed("You need **Manage Webhooks** to use this action.")] });
     }
 
     if (sub === "create") {
