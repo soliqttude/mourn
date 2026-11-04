@@ -52,9 +52,12 @@ export const command: HybridCommand = {
       const raw = ctx.raw as Message;
 
       if (raw.reference?.messageId) {
-        const ref = await (ctx.channel as any).messages
-          .fetch(raw.reference.messageId)
-          .catch(() => null) as Message | null;
+        const refChannel = raw.reference.channelId
+          ? await ctx.client.channels.fetch(raw.reference.channelId).catch(() => null)
+          : ctx.channel;
+        const ref = refChannel && "messages" in refChannel
+          ? await refChannel.messages.fetch(raw.reference.messageId).catch(() => null) as Message | null
+          : null;
         if (ref?.content) {
           text   = ref.content;
           author = { name: ref.author.tag, iconURL: ref.author.displayAvatarURL() };
