@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   name: "settings",
   aliases: ["serverconfig", "config", "guildconfig"],
   description: "View all configured settings for this server.",
-  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jailmsg|jailrole|muted|resetcases|reset]",
+  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jailmsg|jailrole|muted|rmuted|imuted|resetcases|reset]",
   examples: ["settings config", "settings modlog #mod-log", "settings joinlogs #joins", "settings jailrole @Jailed", "settings resetcases"],
   category: "settings",
   permission: "manage_guild",
@@ -72,6 +72,12 @@ export const command: HybridCommand = {
       const updated = roles.includes(role.id) ? roles.filter(id => id !== role.id) : [...roles, role.id];
       await updateGuildSettings(ctx.guild.id, { staffRoleIds: updated } as any);
       return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> ${updated.includes(role.id) ? "added to" : "removed from"} the staff role list.`)] });
+    }
+    if (action === "rmuted" || action === "imuted") {
+      const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a mute role.")] });
+      await updateGuildSettings(ctx.guild.id, action === "rmuted" ? { reactionMuteRole: role.id } as any : { imageMuteRole: role.id } as any);
+      return ctx.reply({ embeds: [successEmbed(`${action === "rmuted" ? "Reaction" : "Image"} mute role set to <@&${role.id}>.`)] });
     }
     if (action === "jailrole" || action === "muted") {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
