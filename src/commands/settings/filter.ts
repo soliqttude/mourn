@@ -40,6 +40,19 @@ export const command: HybridCommand = {
     const channel = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get(idOf(channelArg));
     const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(idOf(args[args[1] === "exempt" ? 2 : 1] ?? ""));
 
+    if (!sub) {
+      return ctx.reply({ embeds: [brandEmbed({
+        title: "Chat Filters",
+        description: [
+          "**Content filters** — links, invites, caps, spoilers, mass mentions, emoji, music files and spam.",
+          "**Word filters** — add, remove, list and reset filtered words.",
+          "**Controls** — role exemptions, link/word whitelists, regex rules and AutoMod migration.",
+          "",
+          "Use `filter <type> #channel on|off [threshold]` to configure a channel.",
+        ].join("\\n"),
+      })] });
+    }
+
     if (sub === "add" || sub === "remove") {
       const phrase = (ctx.source === "prefix" ? args.slice(1).join(" ") : ctx.getString("value") ?? "").trim().toLowerCase();
       if (!phrase) return ctx.reply({ embeds: [errorEmbed("Provide a word or phrase.")] });
