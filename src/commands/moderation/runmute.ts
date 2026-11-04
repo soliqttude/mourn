@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { getGuildSettings } from "../../db/settings.js";
 
 export const command: HybridCommand = {
   name: "runmute",
@@ -19,6 +20,18 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const target = await ctx.getMember("user", true);
     if (!target) return ctx.reply({ embeds: [errorEmbed("**Member** not found.")] });
+    const settings = await getGuildSettings(ctx.guild.id);
+    const configuredRoleId = settings.reactionMuteRole;
+    if (configuredRoleId) {
+      const configuredRole = ctx.guild.roles.cache.get(configuredRoleId);
+      if (!configuredRole) return ctx.reply({ embeds: [errorEmbed("The configured mute role no longer exists.")] });
+      try {
+        await target.roles.remove(configuredRole, reason);
+        return ctx.reply({ embeds: [successEmbed(`Removed reaction-mute from **${target.user.tag}** — ${reason}`)] });
+      } catch {
+        return ctx.reply({ embeds: [errorEmbed("I couldn't update the configured mute role. Check my role hierarchy.")] });
+      }
+    }
     const botMember = ctx.guild.members.me;
     if (!botMember?.permissions.has(PermissionFlagsBits.ManageRoles)) return ctx.reply({ embeds: [errorEmbed("I need **Manage Roles** to change channel permissions.")] });
     const reason = (ctx.getString("reason") ?? ctx.args.slice(1).join(" ")) || "No reason provided";
