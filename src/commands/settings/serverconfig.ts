@@ -110,7 +110,7 @@ export const command: HybridCommand = {
     }
     if (action === "reset") {
       if (!member?.permissions?.has(PermissionFlagsBits.Administrator)) return ctx.reply({ embeds: [errorEmbed("You need Administrator to reset moderation settings.")] });
-      await updateGuildSettings(ctx.guild.id, { jailRole: null, muteRole: null, modLogChannel: null, automodEnabled: false, linkFilterEnabled: false, inviteFilterEnabled: false, capsFilterEnabled: false, spoilersFilterEnabled: false, massMentionEnabled: false, emojiFilterEnabled: false, musicFilesFilterEnabled: false } as any);
+      await updateGuildSettings(ctx.guild.id, { jailRole: null, jailChannel: null, jailMessage: null, jailRemoveRoles: false, muteRole: null, imageMuteRole: null, reactionMuteRole: null, modLogChannel: null, automodEnabled: false, linkFilterEnabled: false, inviteFilterEnabled: false, capsFilterEnabled: false, spoilersFilterEnabled: false, massMentionEnabled: false, emojiFilterEnabled: false, musicFilesFilterEnabled: false } as any);
       return ctx.reply({ embeds: [successEmbed("Moderation roles, log channel, and built-in content-filter toggles have been reset.")] });
     }
     if (action !== "config") return ctx.reply({ embeds: [errorEmbed("That settings action is not implemented yet.")] });
@@ -124,6 +124,12 @@ export const command: HybridCommand = {
       { name: "goodbye", value: ch(s.goodbyeChannel), inline: true },
       { name: "autoroles", value: autoroleDisplay, inline: true },
       { name: "mod log", value: ch(s.modLogChannel), inline: true },
+      { name: "jail channel", value: ch((s as any).jailChannel), inline: true },
+      { name: "jail role", value: role(s.jailRole), inline: true },
+      { name: "jail removes roles", value: yn((s as any).jailRemoveRoles), inline: true },
+      { name: "mute role", value: role(s.muteRole), inline: true },
+      { name: "image mute role", value: role((s as any).imageMuteRole), inline: true },
+      { name: "reaction mute role", value: role((s as any).reactionMuteRole), inline: true },
       { name: "message log", value: ch(s.msgLogChannel), inline: true },
       { name: "join log", value: ch(s.joinLogChannel), inline: true },
       { name: "voice log", value: ch(s.voiceLogChannel), inline: true },
