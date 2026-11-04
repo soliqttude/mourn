@@ -6,7 +6,7 @@ export const command: HybridCommand = {
   name: "extractstickers",
   description: "Download all server stickers as a zip file.",
   category: "utility",
-  permission: "manage_expressions",
+  permission: "administrator",
   guildOnly: true,
   async execute(ctx) {
     if (!ctx.guild) return;
