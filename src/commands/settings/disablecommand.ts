@@ -5,104 +5,79 @@ import { db } from "../../db/index.js";
 import { disabledCommands } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 
+function cleanId(value: string) { return value.replace(/[<#@&!>]/g, ""); }
+function targetLabel(type: string, id: string) {
+  return type === "channel" ? `<#${id}>` : type === "member" ? `<@${id}>` : `<@&${id}>`;
+}
+
 export const command: HybridCommand = {
   name: "disablecommand",
   aliases: ["disable", "cmdoff"],
-  description: "Disable a command in a specific channel or for a role.",
-  usage: "disablecommand <command> [#channel|@role] | disablecommand list | disablecommand reset",
-  examples: [
-    "disablecommand ban #general",
-    "disablecommand warn @Members",
-    "disablecommand list",
-    "disablecommand reset ban #general",
-  ],
+  description: "Disable a command in a channel or for a member or role.",
+  usage: "disablecommand [#channel|@member|@role] <command> | disablecommand all <command> | disablecommand list",
+  examples: ["disablecommand #general ban", "disablecommand @Member ban", "disablecommand all ban", "disablecommand list"],
   category: "settings",
   permission: "manage_channels",
   guildOnly: true,
-
   options: [
-    { name: "command", description: "Command name, list, or reset", type: ApplicationCommandOptionType.String, required: true },
-    { name: "target", description: "Channel or role to restrict in", type: ApplicationCommandOptionType.String, required: false },
-    { name: "channel", description: "Channel to restrict in", type: ApplicationCommandOptionType.Channel, required: false },
-    { name: "role", description: "Role to restrict for", type: ApplicationCommandOptionType.Role, required: false },
-    { name: "member", description: "Member to restrict for", type: ApplicationCommandOptionType.User, required: false },
+    { name: "command", description: "Command name, list, or all", type: ApplicationCommandOptionType.String, required: true },
+    { name: "target", description: "Channel, member, or role (prefix usage may put target first)", type: ApplicationCommandOptionType.String, required: false },
+    { name: "channel", description: "Channel restriction", type: ApplicationCommandOptionType.Channel, required: false },
+    { name: "role", description: "Role restriction", type: ApplicationCommandOptionType.Role, required: false },
+    { name: "member", description: "Member restriction", type: ApplicationCommandOptionType.User, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const cmdArg = (ctx.getString("command") ?? ctx.args[0] ?? "").toLowerCase();
-
-    if (cmdArg === "all") {
-      const commandName = (ctx.getString("target") ?? ctx.args[1] ?? "").toLowerCase();
-      if (!commandName) return ctx.reply({ embeds: [errorEmbed("Usage: disablecommand all <command>")] });
-      const channels = ctx.guild.channels.cache.filter(ch => ch.isTextBased());
-      for (const channel of channels.values()) {
-        await db.insert(disabledCommands).values({ guildId: ctx.guild.id, command: commandName, targetId: channel.id, targetType: "channel" }).onConflictDoNothing();
+    const positional = [...ctx.args];
+    let commandName = (ctx.getString("command") ?? positional[0] ?? "").toLowerCase();
+    let rawTarget = ctx.getString("target") ?? positional[1] ?? "";
+    if (ctx.source === "prefix" && positional.length >= 2) {
+      const first = positional[0] ?? "";
+      const second = positional[1] ?? "";
+      if (/^(<#|<@|\d{15,25}$)/.test(first)) {
+        rawTarget = first;
+        commandName = second.toLowerCase();
       }
-      return ctx.reply({ embeds: [successEmbed(`disabled \`${commandName}\` in ${channels.size} text channels.`)] });
     }
 
-    if (cmdArg === "list") {
+    if (commandName === "list") {
       const rows = await db.select().from(disabledCommands).where(eq(disabledCommands.guildId, ctx.guild.id));
-      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No disabled **commands**.")] });
-      const lines = rows.map(r => `**${r.command}** → ${r.targetType === "channel" ? `<#${r.targetId}>` : r.targetType === "member" ? `<@${r.targetId}>` : `<@&${r.targetId}>`}`);
-      return ctx.reply({ embeds: [brandEmbed({ title: "disabled commands", description: lines.join("\n") })] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Disabled Commands", description: rows.length
+        ? rows.map(r => `**${r.command}** → ${targetLabel(r.targetType, r.targetId)}`).join("\n")
+        : "No disabled commands." })] });
     }
 
-    if (cmdArg === "reset") {
-      const specificCmd = (ctx.args[1] ?? "").toLowerCase();
-      if (specificCmd) {
-        const targetStr = ctx.args[2] ?? "";
-        const targetId = targetStr.replace(/[<#@&!>]/g, "");
-        if (targetId) {
-          await db.delete(disabledCommands).where(and(eq(disabledCommands.guildId, ctx.guild.id), eq(disabledCommands.command, specificCmd), eq(disabledCommands.targetId, targetId)));
-          return ctx.reply({ embeds: [successEmbed(`re-enabled \`${specificCmd}\` for that target.`)] });
-        }
+    if (commandName === "all") {
+      const targetCommand = (ctx.getString("target") ?? positional[1] ?? "").toLowerCase();
+      if (!targetCommand) return ctx.reply({ embeds: [errorEmbed("Usage: disablecommand all <command>")] });
+      const channels = ctx.guild.channels.cache.filter(ch => ch.isTextBased() && "messages" in ch);
+      for (const channel of channels.values()) {
+        await db.insert(disabledCommands).values({ guildId: ctx.guild.id, command: targetCommand, targetId: channel.id, targetType: "channel" }).onConflictDoNothing();
       }
-      await db.delete(disabledCommands).where(eq(disabledCommands.guildId, ctx.guild.id));
-      return ctx.reply({ embeds: [successEmbed("All **command** restrictions cleared.")] });
+      return ctx.reply({ embeds: [successEmbed(`disabled \`${targetCommand}\` in ${channels.size} text channels.`)] });
     }
 
-    const targetStr = ctx.getString("target") ?? ctx.args[1] ?? "";
-    const rawId = targetStr.replace(/[<#@&!>]/g, "");
-    let targetId: string | null = null;
-    let targetType: "channel" | "role" = "channel";
-
-    const ch = ctx.getChannel("channel") ?? (rawId ? ctx.guild.channels.cache.get(rawId) : null);
+    if (!commandName) return ctx.reply({ embeds: [errorEmbed("Provide a command name.")] });
+    const rawId = cleanId(rawTarget);
+    const channel = ctx.getChannel("channel") ?? (rawId ? ctx.guild.channels.cache.get(rawId) : null);
     const role = ctx.getRole("role") ?? (rawId ? ctx.guild.roles.cache.get(rawId) : null);
     const member = await ctx.getMember("member").catch(() => null) ?? (rawId ? await ctx.guild.members.fetch(rawId).catch(() => null) : null);
+    const targetId = channel?.id ?? member?.id ?? role?.id;
+    const targetType = channel ? "channel" : member ? "member" : role ? "role" : null;
+    if (!targetId || !targetType) return ctx.reply({ embeds: [errorEmbed("Provide a channel, member, or role target.")] });
 
-    if (ch) { targetId = ch.id; targetType = "channel"; }
-    else if (role) { targetId = role.id; targetType = "role"; }
-    else if (member) { targetId = member.id; targetType = "member"; }
-    else if (rawId) {
-      // try channel first, then role
-      const foundCh = ctx.guild.channels.cache.get(rawId);
-      const foundRole = ctx.guild.roles.cache.get(rawId);
-      if (foundCh) { targetId = foundCh.id; targetType = "channel"; }
-      else if (foundRole) { targetId = foundRole.id; targetType = "role"; }
-    }
-
-    if (!targetId) return ctx.reply({ embeds: [errorEmbed("Provide a **channel** or **role** to disable this **command** for.")] });
-
-    // Toggle behavior
-    const existing = await db.select().from(disabledCommands).where(and(
+    const where = and(
       eq(disabledCommands.guildId, ctx.guild.id),
-      eq(disabledCommands.command, cmdArg),
+      eq(disabledCommands.command, commandName),
       eq(disabledCommands.targetId, targetId),
-    ));
-
+      eq(disabledCommands.targetType, targetType),
+    );
+    const existing = await db.select().from(disabledCommands).where(where);
     if (existing.length) {
-      await db.delete(disabledCommands).where(and(
-        eq(disabledCommands.guildId, ctx.guild.id),
-        eq(disabledCommands.command, cmdArg),
-        eq(disabledCommands.targetId, targetId),
-      ));
-      return ctx.reply({ embeds: [successEmbed(`re-enabled \`${cmdArg}\` for that ${targetType}.`)] });
+      await db.delete(disabledCommands).where(where);
+      return ctx.reply({ embeds: [successEmbed(`re-enabled \`${commandName}\` for ${targetLabel(targetType, targetId)}.`)] });
     }
-
-    await db.insert(disabledCommands).values({
-      guildId: ctx.guild.id, command: cmdArg, targetId, targetType,
-    }).onConflictDoNothing();
-    return ctx.reply({ embeds: [successEmbed(`\`${cmdArg}\` disabled for ${targetType === "channel" ? `<#${targetId}>` : `<@&${targetId}>`}.`)] });
+    await db.insert(disabledCommands).values({ guildId: ctx.guild.id, command: commandName, targetId, targetType }).onConflictDoNothing();
+    return ctx.reply({ embeds: [successEmbed(`\`${commandName}\` disabled for ${targetLabel(targetType, targetId)}.`)] });
   },
 };
