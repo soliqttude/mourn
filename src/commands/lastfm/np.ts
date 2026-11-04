@@ -17,6 +17,11 @@ export const command: HybridCommand = {
     { name: "user", description: "Discord user to check", type: ApplicationCommandOptionType.User, required: false },
   ],
   async execute(ctx) {
+    if (ctx.guild) {
+      const { getGuildSettings } = await import("../../db/settings.js");
+      const settings = await getGuildSettings(ctx.guild.id);
+      if (settings.disableCustomFms) return ctx.reply({ embeds: [errorEmbed("Custom Last.fm Now Playing commands are disabled in this server.")] });
+    }
     if (!hasApiKey()) return ctx.reply({ embeds: [errorEmbed("Last.fm api key not configured.")] });
 
     const target = (await ctx.getUser("user")) ?? ctx.user;
