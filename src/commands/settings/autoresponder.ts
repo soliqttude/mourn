@@ -32,6 +32,7 @@ export const command: HybridCommand = {
     { name: "role", description: "Role to add/remove or restrict to", type: ApplicationCommandOptionType.Role, required: false },
     { name: "channel", description: "Channel to restrict to", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "setting", description: "on or off", type: ApplicationCommandOptionType.String, required: false },
+    { name: "ticket_form", description: "Ticket form topic to open from the reply button", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
@@ -53,9 +54,9 @@ export const command: HybridCommand = {
 
     if (sub === "list") {
       const ticketOnly = (args[1] ?? "").toLowerCase() === "tickets";
-      const selected = ticketOnly ? rows.filter(row => Boolean((row as any).ticketForm)) : rows;
+      const selected = ticketOnly ? rows.filter(row => Boolean(row.ticketForm)) : rows;
       return ctx.reply({ embeds: [brandEmbed({ title: ticketOnly ? "Ticket Autoresponders" : "Autoresponders", description: selected.length
-        ? selected.map(row => `**${row.trigger}** — ${row.response.slice(0, 90)}`).join("\n")
+        ? selected.map(row => `**${row.trigger}** — ${row.response.slice(0, 90)}${row.ticketForm ? ` • ticket form: ${row.ticketForm}` : ""}`).join("\n")
         : "No autoresponders configured." })] });
     }
 
@@ -77,6 +78,7 @@ export const command: HybridCommand = {
       const deleteTrigger = ctx.getBoolean("delete") ?? false;
       const ignoreCommandCheck = ctx.getBoolean("ignore_command_check") ?? false;
       const strict = ctx.getBoolean("strict") ?? false;
+      const ticketForm = ctx.getString("ticket_form")?.trim() || null;
       const selfDestructSeconds = ctx.getNumber("self_destruct");
       if (selfDestructSeconds !== null && (selfDestructSeconds < 6 || selfDestructSeconds > 60))
         return ctx.reply({ embeds: [errorEmbed("self_destruct must be between 6 and 60 seconds.")] });
@@ -85,12 +87,13 @@ export const command: HybridCommand = {
         await addAutoresponder(ctx.guild.id, trigger, response, strict ? "exact" : "contains", ctx.user.id, {
           notStrict: !strict, selfDestructSeconds, deleteTrigger, reply, ignoreCommandCheck,
         });
+        if (ticketForm) await db.update(autoresponders).set({ ticketForm }).where(and(eq(autoresponders.guildId, ctx.guild.id), eq(autoresponders.trigger, trigger)));
       } else {
         const existing = find();
         if (!existing) return ctx.reply({ embeds: [errorEmbed("No autoresponder found for that trigger.")] });
         await db.update(autoresponders).set({
           response, matchType: strict ? "exact" : "contains", notStrict: !strict,
-          selfDestructSeconds, deleteTrigger, reply, ignoreCommandCheck,
+          selfDestructSeconds, deleteTrigger, reply, ignoreCommandCheck, ticketForm,
         }).where(and(eq(autoresponders.guildId, ctx.guild.id), eq(autoresponders.id, existing.id)));
       }
       const preview = parseScript(response, { user: ctx.member ?? ctx.user, guild: ctx.guild, channel: ctx.channel as any, client: ctx.client });
