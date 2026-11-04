@@ -101,7 +101,7 @@ export const command: HybridCommand = {
     if (action === "setbase" || action === "base") {
       if (!member.permissions.has("Administrator" as any))
         return ctx.reply({ embeds: [errorEmbed("Only admins can set the base **role**.")] });
-      const role = ctx.getRole("role");
+      const role = ctx.getRole("role") ?? guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
       if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify the base **role**.")] });
       await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: role.id })
         .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { baseRoleId: role.id } });
@@ -218,6 +218,56 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`your booster role (<@&${roleId}>) has been created! use \`boosterrole rename\` and \`boosterrole color\` to customize it.`, "settings")] });
     }
 
+    if (action === "color") {
+      if (!member.premiumSince) return ctx.reply({ embeds: [errorEmbed("You must be boosting this server to create a booster role.")] });
+      const colorInput = ctx.getString("color") ?? ctx.getString("value") ?? ctx.args[1] ?? "";
+      const secondInput = ctx.getString("second_color") ?? ctx.args[2] ?? "";
+      const requestedName = ctx.getString("name") ?? (ctx.source === "prefix" ? ctx.args.slice(secondInput ? 3 : 2).join(" ") : "");
+      const named: Record<string, number> = { red: 0xff0000, green: 0x00ff00, blue: 0x0000ff, white: 0xffffff, black: 0x000000, orange: 0xffa500, purple: 0x800080, pink: 0xffc0cb, yellow: 0xffff00, cyan: 0x00ffff, magenta: 0xff00ff, gold: 0xffd700, silver: 0xc0c0c0, teal: 0x008080, navy: 0x000080 };
+      const parseColor = (value: string): number | null => { const v = value.trim().toLowerCase(); if (named[v] !== undefined) return named[v]; const h = v.replace(/^#/, ""); return /^[0-9a-f]{6}$/i.test(h) ? parseInt(h, 16) : null; };
+      const primary = parseColor(colorInput);
+      const secondary = secondInput ? parseColor(secondInput) : null;
+      if (primary === null || (secondInput && secondary === null)) return ctx.reply({ embeds: [errorEmbed("Provide a valid color name or six-digit hex code, such as `#3498db`.")] });
+      const [cfg] = await db.select().from(boosterRoleConfig).where(eq(boosterRoleConfig.guildId, guild.id));
+      if (!cfg?.baseRoleId) return ctx.reply({ embeds: [errorEmbed("The server has not configured a booster role base. Ask an administrator to run `/boosterrole base`.")] });
+      const baseRole = guild.roles.cache.get(cfg.baseRoleId);
+      if (!baseRole) return ctx.reply({ embeds: [errorEmbed("The configured base role no longer exists. Ask an administrator to set it again.")] });
+      const name = (requestedName || `${member.user.username}'s role`).trim().slice(0, 100);
+      const blocked = await db.select().from(filterWhitelist).where(and(eq(filterWhitelist.guildId, guild.id), eq(filterWhitelist.filterType, "boosterrole-name")));
+      const blockedWord = blocked.find(row => name.toLowerCase().includes(row.value));
+      if (blockedWord) return ctx.reply({ embeds: [errorEmbed(`That role name contains a blocked word: \`${blockedWord.value}\`.`)] });
+      const existingId = await getBoosterRole(guild.id, ctx.user.id);
+      let role = existingId ? guild.roles.cache.get(existingId) : null;
+      if (!role) {
+        if (cfg.roleLimit > 0) {
+          const rows = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
+          if (rows.filter(row => guild.roles.cache.has(row.roleId)).length >= cfg.roleLimit) return ctx.reply({ embeds: [errorEmbed("The server has reached its booster role limit.")] });
+        }
+        role = await guild.roles.create({ name, color: primary, reason: "Personal booster role" }).catch(() => null);
+        if (!role) return ctx.reply({ embeds: [errorEmbed("I could not create the booster role. Check my Manage Roles permission and role hierarchy.")] });
+        try {
+          await role.setPosition(Math.max(1, baseRole.position - 1));
+          await member.roles.add(role);
+          await db.insert(boosterRoles).values({ guildId: guild.id, userId: ctx.user.id, roleId: role.id });
+        } catch {
+          await member.roles.remove(role).catch(() => {});
+          await role.delete().catch(() => {});
+          return ctx.reply({ embeds: [errorEmbed("The booster role could not be assigned or saved. Check role hierarchy and database connectivity.")] });
+        }
+      } else {
+        await role.setName(name);
+        await role.setColor(primary);
+      }
+      if (secondary !== null) {
+        try {
+          await guild.client.rest.patch(`/guilds/${guild.id}/roles/${role.id}` as any, { body: { colors: { primary_color: primary, secondary_color: secondary } } as any });
+        } catch {
+          return ctx.reply({ embeds: [errorEmbed("Discord rejected the second color. Gradient role colors may not be available to this server.")] });
+        }
+      }
+      return ctx.reply({ embeds: [successEmbed(`@ ${ctx.user.username}: Your booster role was assigned with hex code #${primary.toString(16).padStart(6, "0")}${secondary !== null ? ` and second color #${secondary.toString(16).padStart(6, "0")}` : ""}.`, "settings")] });
+    }
+
     const roleId = await getBoosterRole(guild.id, ctx.user.id);
     if (!roleId)
       return ctx.reply({ embeds: [errorEmbed("You don't have a **booster** **role**. use `boosterrole create` first.")] });
@@ -271,15 +321,6 @@ export const command: HybridCommand = {
       const color = Math.floor(Math.random() * 0xffffff);
       await role.setColor(color);
       return ctx.reply({ embeds: [successEmbed("randomized your booster role color to #" + color.toString(16).padStart(6, "0") + ".", "settings")] });
-    }
-
-    if (action === "color") {
-      const hex = ctx.getString("value");
-      if (!hex) return ctx.reply({ embeds: [errorEmbed("Please provide a hex color e.g. `#ff0099`.")] });
-      const parsed = parseInt(hex.replace("#", ""), 16);
-      if (isNaN(parsed)) return ctx.reply({ embeds: [errorEmbed("Invalid hex color.")] });
-      await role.setColor(parsed).catch(() => null);
-      return ctx.reply({ embeds: [successEmbed(`updated your booster role color to \`${hex}\`.`, "settings")] });
     }
 
     if (action === "icon") {
