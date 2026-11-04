@@ -45,6 +45,19 @@ export const command: HybridCommand = {
       await updateGuildSettings(ctx.guild.id, { autoNick: nickname } as any);
       return ctx.reply({ embeds: [successEmbed("Automatic join nickname set. Use {username} or {displayname} as placeholders.")] });
     }
+    if (action === "googlesafetylevel" || action === "disablecustomfms") {
+      const value = (ctx.args[1] ?? ctx.getString("value") ?? "").toLowerCase();
+      if (!["yes", "no", "on", "off", "true", "false"].includes(value)) {
+        return ctx.reply({ embeds: [errorEmbed(`Use settings ${action} yes or settings ${action} no.`)] });
+      }
+      const enabled = ["yes", "on", "true"].includes(value);
+      if (action === "googlesafetylevel") {
+        await updateGuildSettings(ctx.guild.id, { googleSafeSearch: enabled });
+        return ctx.reply({ embeds: [successEmbed(`Google SafeSearch has been ${enabled ? "enabled" : "disabled"} for Villain's Google search command.`)] });
+      }
+      await updateGuildSettings(ctx.guild.id, { disableCustomFms: enabled });
+      return ctx.reply({ embeds: [successEmbed(`Custom Last.fm Now Playing command has been ${enabled ? "disabled" : "enabled"}.`)] });
+    }
     if (action === "premiumrole") {
       const raw = ctx.args[1] ?? ctx.getString("value") ?? "";
       if (["off", "none", "reset", "remove"].includes(raw.toLowerCase())) {
