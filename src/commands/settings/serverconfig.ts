@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   name: "settings",
   aliases: ["serverconfig", "config", "guildconfig"],
   description: "View all configured settings for this server.",
-  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jailmsg|jailroles|jailrole|muted|rmuted|imuted|resetcases|reset]",
+  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jail|jailmsg|jailroles|jailrole|muted|rmuted|imuted|resetcases|reset]",
   examples: ["settings config", "settings modlog #mod-log", "settings joinlogs #joins", "settings jailrole @Jailed", "settings resetcases"],
   category: "settings",
   permission: "manage_guild",
@@ -33,6 +33,12 @@ export const command: HybridCommand = {
     const member = ctx.member as any;
     if (action !== "config" && action !== "resetcases" && action !== "reset" && !member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
       return ctx.reply({ embeds: [errorEmbed("You need Manage Server to change settings.")] });
+    }
+    if (action === "jail") {
+      const channel = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, ""));
+      if (!channel?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Provide a text channel for jail notifications.")] });
+      await updateGuildSettings(ctx.guild.id, { jailChannel: channel.id } as any);
+      return ctx.reply({ embeds: [successEmbed("Jail notification channel set to <#" + channel.id + ">.")] });
     }
     if (action === "jailroles") {
       const value = (ctx.args[1] ?? ctx.getString("value") ?? "").toLowerCase();
