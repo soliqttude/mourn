@@ -4,14 +4,14 @@
 - **Repository:** `soliqttude/mourn`
 - **Branch:** `feature/bleed-306-moderation-commands`
 - **Audited HEAD:** `30985e381a087876a8ce6a0d31f8290827ff81b1` (the next audit-doc commit follows this source audit)
-- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the audited source head. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock; the database migration is required before deployment.
+- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the audited source head. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock; the database migration is required before deployment. Booster-role share listing is now scoped to the caller's own booster role.
 
 ## Result
 
 | Status | Entries |
 |---|---:|
-| Implemented in source (not runtime-verified) | 282 |
-| Partial / invocation or behavior caveat | 19 |
+| Implemented in source (not runtime-verified) | 283 |
+| Partial / invocation or behavior caveat | 18 |
 | Missing | 4 |
 | Unsupported safely | 1 |
 | **Total** | **306** |
@@ -36,7 +36,6 @@
 
 | Source entry | Finding |
 |---|---|
-| `boosterrole share list` | The list action exists, but returns server-wide share rows rather than only members sharing the caller's booster role. |
 | `settings muted` | Stores a mute-role setting, but the current `mute` path uses Discord timeouts rather than that role. |
 | `filter` | The bare root invocation has no distinct configured action; subcommands are implemented separately. |
 | `alias` | Bare root invocation does not perform an action; the add/remove/list/view/reset/removeall subcommands exist. |
@@ -63,7 +62,7 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 | Root | Total | Implemented | Partial | Missing | Unsupported |
 |---|---:|---:|---:|---:|---:|
 | prefix | 4 | 4 | 0 | 0 | 0 |
-| boosterrole | 22 | 21 | 1 | 0 | 0 |
+| boosterrole | 22 | 22 | 0 | 0 | 0 |
 | settings | 22 | 17 | 1 | 3 | 1 |
 | boosts | 6 | 5 | 1 | 0 | 0 |
 | alias | 7 | 6 | 1 | 0 | 0 |
