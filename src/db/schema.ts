@@ -152,6 +152,7 @@ export const autoresponders = pgTable("autoresponders",
     deleteTrigger: boolean("delete_trigger").default(false).notNull(),
     reply: boolean("reply").default(false).notNull(),
     ignoreCommandCheck: boolean("ignore_command_check").default(false).notNull(),
+    ticketForm: text("ticket_form"),
   },
   (t) => ({ guildIdx: index("ar_guild_idx").on(t.guildId) })
 );
