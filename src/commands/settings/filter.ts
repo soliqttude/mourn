@@ -89,7 +89,7 @@ export const command: HybridCommand = {
 
     if (sub === "links" && args[1]?.toLowerCase() === "whitelist") {
       const target = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get(idOf(args[2] ?? ""));
-      const url = (ctx.source === "prefix" ? args.slice(3).join(" ") : ctx.getString("value") ?? "").trim().toLowerCase().replace(/^https?:\\/\\//, "").replace(/\\/$/, "");
+      const url = (ctx.source === "prefix" ? args.slice(3).join(" ") : ctx.getString("value") ?? "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
       if (!target || !url) return ctx.reply({ embeds: [errorEmbed("Usage: filter links whitelist #channel domain-or-url")] });
       const where = and(eq(filterLinkWhitelist.guildId, ctx.guild.id), eq(filterLinkWhitelist.channelId, target.id), eq(filterLinkWhitelist.url, url));
       const existing = await db.select().from(filterLinkWhitelist).where(where);
