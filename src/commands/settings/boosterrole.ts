@@ -1,4 +1,5 @@
 import { ApplicationCommandOptionType, type GuildMember } from "discord.js";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
@@ -24,7 +25,7 @@ export const command: HybridCommand = {
   options: [
     {
       name: "action",
-      description: "create, delete, remove, rename, color, random, icon, setbase, base, list, cleanup, limit, award, filter, link, or share",
+      description: "create, delete, remove, rename, color, random, dominant, icon, setbase, base, list, cleanup, limit, award, filter, link, or share",
       type: ApplicationCommandOptionType.String,
       required: true,
       choices: [
@@ -39,7 +40,8 @@ export const command: HybridCommand = {
         { name: "random", value: "random" },
         { name: "list", value: "list" },
         { name: "cleanup", value: "cleanup" },
-        { name: "limit", value: "limit" }, { name: "award", value: "award" }, { name: "filter", value: "filter" },\n        { name: "link", value: "link" }, { name: "share", value: "share" },
+        { name: "limit", value: "limit" }, { name: "award", value: "award" }, { name: "filter", value: "filter" },
+        { name: "link", value: "link" }, { name: "share", value: "share" }, { name: "dominant", value: "dominant" },
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
@@ -234,6 +236,31 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`renamed your booster role to **${name}**.`, "settings")] });
     }
 
+    if (action === "dominant") {
+      try {
+        const avatar = await loadImage(member.displayAvatarURL({ extension: "png", size: 256 }));
+        const canvas = createCanvas(32, 32);
+        const context = canvas.getContext("2d");
+        context.drawImage(avatar, 0, 0, 32, 32);
+        const pixels = context.getImageData(0, 0, 32, 32).data;
+        const buckets = new Map<number, number>();
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (pixels[i + 3]! < 128) continue;
+          const red = pixels[i]!, green = pixels[i + 1]!, blue = pixels[i + 2]!;
+          const max = Math.max(red, green, blue), min = Math.min(red, green, blue);
+          if (max < 35 || min > 242 || max - min < 12) continue;
+          const key = ((red >> 4) << 8) | ((green >> 4) << 4) | (blue >> 4);
+          buckets.set(key, (buckets.get(key) ?? 0) + 1);
+        }
+        const dominant = [...buckets.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+        if (dominant === undefined) return ctx.reply({ embeds: [errorEmbed("Could not find a distinct dominant color in your avatar.")] });
+        const color = ((((dominant >> 8) & 15) * 17) << 16) | ((((dominant >> 4) & 15) * 17) << 8) | ((dominant & 15) * 17);
+        await role.setColor(color);
+        return ctx.reply({ embeds: [successEmbed("set your booster role color to your avatar dominant color (#" + color.toString(16).padStart(6, "0") + ").", "settings")] });
+      } catch {
+        return ctx.reply({ embeds: [errorEmbed("Could not read your avatar or update the role color.")] });
+      }
+    }
     if (action === "random") {
       const color = Math.floor(Math.random() * 0xffffff);
       await role.setColor(color);
