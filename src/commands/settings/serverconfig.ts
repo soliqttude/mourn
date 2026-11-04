@@ -74,7 +74,7 @@ export const command: HybridCommand = {
     if (action === "staff") {
       const settings = await getGuildSettings(ctx.guild.id);
       const roles = [...((settings as any).staffRoleIds ?? [])] as string[];
-      const sub = (ctx.args[1] ?? "").toLowerCase();
+      const sub = (ctx.args[1] ?? ctx.getString("value") ?? "").toLowerCase();
       if (sub === "list") return ctx.reply({ embeds: [brandEmbed({ title: "Staff roles", description: roles.length ? roles.map(id => `<@&${id}>`).join("\n") : "No staff roles configured." })] });
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
       if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a role, or use staff list.")] });
