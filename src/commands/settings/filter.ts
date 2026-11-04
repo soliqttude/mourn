@@ -128,7 +128,7 @@ export const command: HybridCommand = {
         ));
         return ctx.reply({ embeds: [brandEmbed({
           title: `${filterType} whitelist`,
-          description: rows.length ? rows.map(row => `\`${row.value}\``).join("\\n") : "No whitelist entries configured."
+          description: rows.length ? rows.map(row => `\`${row.value}\``).join("\n") : "No whitelist entries configured."
         })] });
       }
       if (!entry.trim()) {
