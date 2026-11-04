@@ -305,8 +305,10 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
     return void interaction.reply({ content: "transcript sent to the ticket log channel.", ephemeral: true });
   }
 
-  if (customId.startsWith("ticket_open_")) {
-    const topic = customId.replace("ticket_open_", "") || undefined;
+  if (customId.startsWith("ticket_open_b64_") || customId.startsWith("ticket_open_")) {
+    const topic = customId.startsWith("ticket_open_b64_")
+      ? Buffer.from(customId.slice("ticket_open_b64_".length), "base64url").toString("utf8") || undefined
+      : customId.replace("ticket_open_", "") || undefined;
     const fields = await getTicketForm(guild.id, topic);
     if (fields.length) {
       const modal = new ModalBuilder().setCustomId("ticket_form_" + Buffer.from(topic ?? "general").toString("base64url")).setTitle((topic ?? "support") + " ticket");
