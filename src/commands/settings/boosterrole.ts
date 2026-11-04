@@ -39,7 +39,7 @@ export const command: HybridCommand = {
         { name: "random", value: "random" },
         { name: "list", value: "list" },
         { name: "cleanup", value: "cleanup" },
-        { name: "limit", value: "limit" }, { name: "award", value: "award" }, { name: "filter", value: "filter" },
+        { name: "limit", value: "limit" }, { name: "award", value: "award" }, { name: "filter", value: "filter" },\n        { name: "link", value: "link" }, { name: "share", value: "share" },
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
