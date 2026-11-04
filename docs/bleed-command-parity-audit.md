@@ -4,15 +4,15 @@
 - **Repository:** `soliqttude/mourn`
 - **Branch:** `feature/bleed-306-moderation-commands`
 - **Audited HEAD:** `30985e381a087876a8ce6a0d31f8290827ff81b1` (the next audit-doc commit follows this source audit)
-- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the audited source head. Discord runtime tests were not performed.
+- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the audited source head. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock; the database migration is required before deployment.
 
 ## Result
 
 | Status | Entries |
 |---|---:|
-| Implemented in source (not runtime-verified) | 280 |
+| Implemented in source (not runtime-verified) | 282 |
 | Partial / invocation or behavior caveat | 19 |
-| Missing | 6 |
+| Missing | 4 |
 | Unsupported safely | 1 |
 | **Total** | **306** |
 
@@ -24,8 +24,7 @@
 | `settings googlesafetylevel` | No Google Safe Browsing level setting or integration. |
 | `settings disablecustomfms` | No matching custom-FM disable setting or feature. |
 | `autoresponder list tickets` | No `list tickets` branch. |
-| `webhook lock` | No lock action in the utility webhook dispatcher. |
-| `webhook unlock` | No unlock action in the utility webhook dispatcher. |
+
 
 ## Unsupported safely
 
@@ -91,7 +90,7 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 | pin | 1 | 1 | 0 | 0 | 0 |
 | firstmessage | 1 | 1 | 0 | 0 | 0 |
 | pins | 7 | 6 | 1 | 0 | 0 |
-| webhook | 8 | 5 | 1 | 2 | 0 |
+| webhook | 8 | 7 | 1 | 0 | 0 |
 | fakepermissions | 5 | 4 | 1 | 0 | 0 |
 | extractstickers | 1 | 1 | 0 | 0 | 0 |
 | extractemotes | 1 | 1 | 0 | 0 | 0 |
@@ -106,4 +105,4 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 1. This audit uses the 306 entries in the supplied reference. It does not infer undocumented Bleed behavior.
 2. “Implemented” is source-level evidence only. Command registration, permission correctness, prefix/slash parity, persistence, migrations, and Discord API behavior still require build and runtime tests.
 3. Parent/root rows marked partial are distinguished from their separately audited child actions.
-4. The next implementation pass should close the six missing entries and resolve the partial behavior caveats, then run typecheck/build and Discord runtime tests. Do not merge to `main` based on this audit alone.
+4. The next implementation pass should close the four missing entries and resolve the partial behavior caveats, then run typecheck/build and Discord runtime tests. Do not merge to `main` based on this audit alone.
