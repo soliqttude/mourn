@@ -447,6 +447,61 @@ async function handleSelect(client: Client, interaction: StringSelectMenuInterac
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
+  if (interaction.customId.startsWith("pagination:modal:")) {
+    const parts = interaction.customId.split(":");
+    const action = parts[2];
+    const requesterId = parts[3];
+    const channelId = parts[4];
+    const messageId = parts[5];
+    const pageNumber = Number(parts[6] ?? 0);
+    if (!interaction.guild || interaction.user.id !== requesterId || !channelId || !messageId || !["set", "add", "update"].includes(action ?? "")) {
+      return interaction.reply({ content: "This pagination editor is not valid for this user or server.", flags: MessageFlags.Ephemeral });
+    }
+    const code = interaction.fields.getTextInputValue("page_content").trim();
+    if (!code) return interaction.reply({ content: "Page content cannot be empty.", flags: MessageFlags.Ephemeral });
+    const { db } = await import("../db/index.js");
+    const { paginatedEmbeds } = await import("../db/schema.js");
+    const { and, eq } = await import("drizzle-orm");
+    const { parseScript } = await import("../lib/scripting.js");
+    const { buildNavRow } = await import("../features/pagination.js");
+    const channel = interaction.guild.channels.cache.get(channelId);
+    if (!channel?.isTextBased() || !("messages" in channel)) {
+      return interaction.reply({ content: "The pagination channel could not be found.", flags: MessageFlags.Ephemeral });
+    }
+    const message = await channel.messages.fetch(messageId).catch(() => null);
+    if (!message || message.author.id !== client.user?.id) {
+      return interaction.reply({ content: "Only an existing Villain message can be paginated.", flags: MessageFlags.Ephemeral });
+    }
+    const where = and(eq(paginatedEmbeds.guildId, interaction.guild.id), eq(paginatedEmbeds.messageId, messageId));
+    const records = await db.select().from(paginatedEmbeds).where(where);
+    const current = records[0];
+    if (action === "set") {
+      if (current) return interaction.reply({ content: "This message is already configured for pagination.", flags: MessageFlags.Ephemeral });
+      const parsed = parseScript(code, { guild: interaction.guild, client });
+      await db.insert(paginatedEmbeds).values({ guildId: interaction.guild.id, channelId, messageId, pages: [code], currentPage: 0 });
+      await message.edit({ content: parsed.content ?? "", embeds: parsed.embeds, components: [buildNavRow(0, 1, messageId)] });
+      return interaction.reply({ content: "Pagination enabled.", flags: MessageFlags.Ephemeral });
+    }
+    if (!current) return interaction.reply({ content: "Paginated embed not found.", flags: MessageFlags.Ephemeral });
+    const pages = [...current.pages];
+    let currentPage = current.currentPage;
+    if (action === "add") {
+      pages.push(code);
+    } else {
+      if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pages.length) {
+        return interaction.reply({ content: "That page number is invalid.", flags: MessageFlags.Ephemeral });
+      }
+      pages[pageNumber - 1] = code;
+    }
+    await db.update(paginatedEmbeds).set({ pages }).where(where);
+    if (action === "update" && currentPage === pageNumber - 1) {
+      const parsed = parseScript(code, { guild: interaction.guild, client });
+      await message.edit({ content: parsed.content ?? "", embeds: parsed.embeds, components: [buildNavRow(currentPage, pages.length, messageId)] });
+    } else {
+      await message.edit({ components: [buildNavRow(currentPage, pages.length, messageId)] });
+    }
+    return interaction.reply({ content: action === "add" ? "Page added." : "Page updated.", flags: MessageFlags.Ephemeral });
+  }
   if (interaction.customId.startsWith("ar:modal:")) {
     const [, , action, requesterId] = interaction.customId.split(":");
     if (!interaction.guild || interaction.user.id !== requesterId || !["add", "update"].includes(action ?? "")) {
