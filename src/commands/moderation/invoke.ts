@@ -12,17 +12,21 @@ export const command: HybridCommand = {
   category: "moderation",
   guildOnly: true,
   permission: "manage_guild",
-  options: [
-    { name: "punishment", description: "Punishment command", type: ApplicationCommandOptionType.String, required: true, choices: punishments.map(value => ({ name: value, value })) },
-    { name: "target", description: "Where to apply the custom text", type: ApplicationCommandOptionType.String, required: true, choices: [{ name: "DM", value: "dm" }, { name: "Message", value: "message" }] },
-    { name: "text", description: "Text to send. Supports {user.mention}, {user.tag}, {reason}, {moderator.mention}, {guild.name}.", type: ApplicationCommandOptionType.String, required: false },
-  ],
+  options: [{
+    type: ApplicationCommandOptionType.Subcommand, name: "set", description: "Set a punishment DM or response message.",
+    options: [
+      { name: "punishment", description: "Punishment command", type: ApplicationCommandOptionType.String, required: true, choices: punishments.map(value => ({ name: value, value })) },
+      { name: "target", description: "Where to apply the custom text", type: ApplicationCommandOptionType.String, required: true, choices: [{ name: "DM", value: "dm" }, { name: "Message", value: "message" }] },
+      { name: "text", description: "Text to send. Supports {user.mention}, {user.tag}, {reason}, {moderator.mention}, {guild.name}.", type: ApplicationCommandOptionType.String, required: false },
+    ],
+  }],
   async execute(ctx) {
     if (!ctx.guild) return;
     const sub = ctx.getSubcommand(false);
-    const punishment = (ctx.getString("punishment") ?? ctx.args[0] ?? "").toLowerCase();
-    const target = (ctx.getString("target") ?? ctx.args[1] ?? "").toLowerCase();
-    const value = ctx.getString("text") ?? ctx.args.slice(2).join(" ");
+    const offset = ctx.source === "prefix" && ctx.args[0]?.toLowerCase() === "set" ? 1 : 0;
+    const punishment = (ctx.getString("punishment") ?? ctx.args[offset] ?? "").toLowerCase();
+    const target = (ctx.getString("target") ?? ctx.args[offset + 1] ?? "").toLowerCase();
+    const value = ctx.getString("text") ?? ctx.args.slice(offset + 2).join(" ");
     if (!punishments.includes(punishment) || !["dm", "message"].includes(target)) {
       return ctx.reply({ embeds: [errorEmbed("Usage: /invoke set punishment:<punishment> target:<dm|message> text:<message>")] });
     }
