@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   name: "settings",
   aliases: ["serverconfig", "config", "guildconfig"],
   description: "View all configured settings for this server.",
-  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jailrole|muted|resetcases|reset]",
+  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jailmsg|jailrole|muted|resetcases|reset]",
   examples: ["settings config", "settings modlog #mod-log", "settings joinlogs #joins", "settings jailrole @Jailed", "settings resetcases"],
   category: "settings",
   permission: "manage_guild",
@@ -25,6 +25,7 @@ export const command: HybridCommand = {
     { name: "action", description: "Setting to view or update", type: ApplicationCommandOptionType.String, required: false },
     { name: "channel", description: "Target channel", type: ApplicationCommandOptionType.Channel, required: false },
     { name: "role", description: "Target role", type: ApplicationCommandOptionType.Role, required: false },
+    { name: "value", description: "Message or setting value", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
@@ -32,6 +33,12 @@ export const command: HybridCommand = {
     const member = ctx.member as any;
     if (action !== "config" && action !== "resetcases" && action !== "reset" && !member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
       return ctx.reply({ embeds: [errorEmbed("You need Manage Server to change settings.")] });
+    }
+    if (action === "jailmsg") {
+      const message = ctx.getString("value") ?? ctx.args.slice(1).join(" ");
+      if (!message) return ctx.reply({ embeds: [errorEmbed("Provide the custom jail message text.")] });
+      await updateGuildSettings(ctx.guild.id, { jailMessage: message } as any);
+      return ctx.reply({ embeds: [successEmbed("Custom jail message updated.")] });
     }
     if (action === "modlog" || action === "joinlogs") {
       const channel = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, ""));
