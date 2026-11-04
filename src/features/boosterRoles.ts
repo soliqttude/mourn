@@ -36,7 +36,11 @@ export async function createBoosterRole(guild: Guild, member: GuildMember): Prom
   }
 
   const cfg = await getBoosterRoleConfig(guild.id);
-  if (cfg?.roleLimit && cfg.roleLimit > 0) {
+  if (!cfg?.baseRoleId || !guild.roles.cache.has(cfg.baseRoleId)) {
+    logger.warn({ guild: guild.id }, "boosterrole: base role is missing; refusing to create a role");
+    return null;
+  }
+  if (cfg.roleLimit && cfg.roleLimit > 0) {
     const activeRoles = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
     if (activeRoles.filter(row => guild.roles.cache.has(row.roleId)).length >= cfg.roleLimit) {
       logger.info({ guild: guild.id, limit: cfg.roleLimit }, "boosterrole: server role cap reached");
@@ -54,12 +58,15 @@ export async function createBoosterRole(guild: Guild, member: GuildMember): Prom
 
   if (!role) return null;
 
-  if (cfg?.baseRoleId) {
-    const baseRole = guild.roles.cache.get(cfg.baseRoleId);
-    if (baseRole) {
-      await role.setPosition(baseRole.position).catch(() => {});
-    }
+  const baseRole = guild.roles.cache.get(cfg.baseRoleId);
+  if (!baseRole) {
+    await role.delete("boosterrole: configured base role is missing").catch(() => {});
+    return null;
   }
+  await role.setPosition(Math.max(1, baseRole.position - 1)).catch(async (err) => {
+    logger.warn({ err, guild: guild.id }, "boosterrole: failed to position role below base role");
+    await role.delete("boosterrole: could not position below base role").catch(() => {});
+  });
 
   const added = await member.roles.add(role).then(() => true).catch((err) => {
     logger.warn({ err, guild: guild.id, user: member.id }, "boosterrole: failed to assign role to member");
