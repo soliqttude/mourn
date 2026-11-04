@@ -8,30 +8,29 @@ import { and, eq } from "drizzle-orm";
 export const command: HybridCommand = {
   name: "enablemodule",
   aliases: ["moduleon"],
-  description: "Re-enable a module in a channel.",
-  usage: "enablemodule <module> [#channel]",
-  examples: ["enablemodule fun #general", "enablemodule levels"],
+  description: "Re-enable a module in a channel or every channel.",
+  usage: "enablemodule <module> [#channel] | enablemodule all <module>",
+  examples: ["enablemodule fun #general", "enablemodule levels", "enablemodule all levels"],
   category: "settings",
-  permission: "manage_guild",
+  permission: "everyone",
   guildOnly: true,
-  userPermissions: ["ManageGuild"],
   options: [
     { name: "module", description: "Module name to re-enable", type: ApplicationCommandOptionType.String, required: true },
-    { name: "channel", description: "Channel to re-enable in", type: ApplicationCommandOptionType.Channel, required: false },
+    { name: "channel", description: "Only re-enable in this channel", type: ApplicationCommandOptionType.Channel, required: false },
+    { name: "all_channels", description: "Re-enable this module in every channel", type: ApplicationCommandOptionType.Boolean, required: false },
   ],
   async execute(ctx) {
     if (!ctx.guild) return;
-    const mod = (ctx.getString("module") ?? ctx.args[0] ?? "").toLowerCase();
-    const ch = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, "")) ?? null;
-    if (mod === "all") {
-      const conditions: any[] = [eq(disabledModules.guildId, ctx.guild.id)];
-      if (ch) conditions.push(eq(disabledModules.channelId, ch.id));
-      await db.delete(disabledModules).where(and(...conditions));
-      return ctx.reply({ embeds: [successEmbed(`re-enabled all disabled modules${ch ? ` in <#${ch.id}>` : " in every channel"}.`)] });
-    }
-    const conditions: any[] = [eq(disabledModules.guildId, ctx.guild.id), eq(disabledModules.module, mod)];
-    if (ch) conditions.push(eq(disabledModules.channelId, ch.id));
+    const raw = ctx.getString("module") ?? ctx.args[0] ?? "";
+    const allChannels = raw.toLowerCase() === "all";
+    const mod = (allChannels ? (ctx.args[1] ?? "") : raw).toLowerCase();
+    const channel = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[allChannels ? 2 : 1] ?? "").replace(/[<#>]/g, "")) ?? null;
+    const everyChannel = allChannels || ctx.getString("all_channels") === "true" || ctx.args.some(a => a.toLowerCase() === "all");
+    const moduleName = allChannels ? mod : raw.toLowerCase();
+    if (!moduleName || moduleName === "all") return ctx.reply({ embeds: [errorEmbed("Provide a module name.")] });
+    const conditions = [eq(disabledModules.guildId, ctx.guild.id), eq(disabledModules.module, moduleName)];
+    if (!everyChannel && channel) conditions.push(eq(disabledModules.channelId, channel.id));
     await db.delete(disabledModules).where(and(...conditions));
-    return ctx.reply({ embeds: [successEmbed(`**${mod}** re-enabled${ch ? ` in <#${ch.id}>` : " everywhere"}.`)] });
+    return ctx.reply({ embeds: [successEmbed("**" + moduleName + "** re-enabled " + (everyChannel || !channel ? "in every channel." : "in <#" + channel.id + ">.") )] });
   },
 };
