@@ -39,7 +39,7 @@ export const command: HybridCommand = {
     if (sub === "list") {
       const rows = await db.select().from(managedWebhooks).where(eq(managedWebhooks.guildId, guildId));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No **webhooks** configured.")] });
-      const lines = rows.map(r => `**${r.identifier}** → <#${r.channelId}>`);
+      const lines = rows.map(r => `**${r.identifier}** → <#${r.channelId}> · ${r.locked ? "locked" : "active"}`);
       return ctx.reply({ embeds: [brandEmbed({ title: "Server Webhooks", description: lines.join("\n") })] });
     }
 
@@ -116,6 +116,7 @@ export const command: HybridCommand = {
       const rows = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.identifier, name)));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`webhook \`${name}\` not found.`)] });
       const wh = rows[0];
+      if (wh.locked) return ctx.reply({ embeds: [errorEmbed(`webhook \`${name}\` is locked. Use webhook unlock ${name} first.`)] });
       try {
         const client = new WebhookClient({ id: wh.webhookId, token: wh.webhookToken });
         const { embeds, content } = parseScript(messageText);
@@ -146,7 +147,7 @@ export const command: HybridCommand = {
       const rows = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.identifier, name)));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed(`webhook \`${name}\` not found.`)] });
       const wh = rows[0];
-      return ctx.reply({ embeds: [brandEmbed({ title: `Webhook: ${wh.identifier}`, fields: [{ name: "channel", value: `<#${wh.channelId}>`, inline: true }, { name: "created", value: `<t:${Math.floor(wh.createdAt.getTime() / 1000)}:R>`, inline: true }] })] });
+      return ctx.reply({ embeds: [brandEmbed({ title: `Webhook: ${wh.identifier}`, fields: [{ name: "channel", value: `<#${wh.channelId}>`, inline: true }, { name: "created", value: `<t:${Math.floor(wh.createdAt.getTime() / 1000)}:R>`, inline: true }, { name: "status", value: wh.locked ? "locked" : "active", inline: true }] })] });
     }
 
     return ctx.reply({ embeds: [brandEmbed({ description: "**subcommands:** create, send, edit, delete, list, info" })] });
