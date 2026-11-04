@@ -1,4 +1,10 @@
+import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
+import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { updateGuildSettings } from "../../db/settings.js";
+import { db } from "../../db/index.js";
+import { warnings } from "../../db/schema.js";
+import { eq } from "drizzle-orm";
 import { brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings } from "../../db/settings.js";
 import { config } from "../../config.js";
@@ -8,16 +14,50 @@ function role(id: string | null | undefined): string { return id ? `<@&${id}>` :
 function yn(v: unknown): string { return v ? "enabled" : "disabled"; }
 
 export const command: HybridCommand = {
-  name: "serverconfig",
-  aliases: ["config", "guildconfig"],
+  name: "settings",
+  aliases: ["serverconfig", "config", "guildconfig"],
   description: "View all configured settings for this server.",
-  usage: "serverconfig",
-  examples: ["serverconfig"],
+  usage: "settings [config|modlog|joinlogs|baserole|jailrole|muted|resetcases|reset]",
+  examples: ["settings config", "settings modlog #mod-log", "settings joinlogs #joins", "settings jailrole @Jailed", "settings resetcases"],
   category: "settings",
   permission: "manage_guild",
   guildOnly: true,
+  options: [
+    { name: "action", description: "Setting to view or update", type: ApplicationCommandOptionType.String, required: false },
+    { name: "channel", description: "Target channel", type: ApplicationCommandOptionType.Channel, required: false },
+    { name: "role", description: "Target role", type: ApplicationCommandOptionType.Role, required: false },
+  ],
   async execute(ctx) {
     if (!ctx.guild) return;
+    const action = (ctx.getString("action") ?? ctx.args[0] ?? "config").toLowerCase();
+    const member = ctx.member as any;
+    if (action !== "config" && action !== "resetcases" && action !== "reset" && !member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
+      return ctx.reply({ embeds: [errorEmbed("You need Manage Server to change settings.")] });
+    }
+    if (action === "modlog" || action === "joinlogs") {
+      const channel = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, ""));
+      if (!channel) return ctx.reply({ embeds: [errorEmbed("Provide a target channel.")] });
+      await updateGuildSettings(ctx.guild.id, action === "modlog" ? { modLogChannel: channel.id } : { joinLogChannel: channel.id });
+      return ctx.reply({ embeds: [successEmbed(action + " channel set to <#" + channel.id + ">.")] });
+    }
+    if (action === "baserole" || action === "jailrole" || action === "muted") {
+      const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a target role.")] });
+      const key = action === "baserole" ? "autoroleId" : action === "jailrole" ? "jailRole" : "muteRole";
+      await updateGuildSettings(ctx.guild.id, { [key]: role.id } as any);
+      return ctx.reply({ embeds: [successEmbed(action + " role set to <@&" + role.id + ">.")] });
+    }
+    if (action === "resetcases") {
+      if (!member?.permissions?.has(PermissionFlagsBits.Administrator)) return ctx.reply({ embeds: [errorEmbed("You need Administrator to reset moderation cases.")] });
+      await db.delete(warnings).where(eq(warnings.guildId, ctx.guild.id));
+      return ctx.reply({ embeds: [successEmbed("All warning cases for this server have been reset.")] });
+    }
+    if (action === "reset") {
+      if (!member?.permissions?.has(PermissionFlagsBits.Administrator)) return ctx.reply({ embeds: [errorEmbed("You need Administrator to reset moderation settings.")] });
+      await updateGuildSettings(ctx.guild.id, { jailRole: null, muteRole: null, modLogChannel: null } as any);
+      return ctx.reply({ embeds: [successEmbed("Moderation role and log configuration has been reset.")] });
+    }
+    if (action !== "config") return ctx.reply({ embeds: [errorEmbed("That settings action is not implemented yet.")] });
     const s = await getGuildSettings(ctx.guild.id);
     const autoroleDisplay = String(s.autoroleId ?? "").split(",").filter(Boolean).map(role).join(", ") || "none";
     const fields = [
