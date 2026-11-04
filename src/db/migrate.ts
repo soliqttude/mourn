@@ -314,6 +314,7 @@ const STATEMENTS: string[] = [
     PRIMARY KEY (guild_id, command, type)
   )`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_message TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_channel TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_remove_roles BOOLEAN NOT NULL DEFAULT false`,
   `CREATE TABLE IF NOT EXISTS jailed_member_roles (
     guild_id TEXT NOT NULL,
