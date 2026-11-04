@@ -46,6 +46,9 @@ export const command: HybridCommand = {
       })] });
     }
 
+    if (!["on", "off", "true", "false", "enable", "disable"].includes(option)) {
+      return ctx.reply({ embeds: [errorEmbed("Specify **on** or **off** for this setting.")] });
+    }
     const on = option === "on" || option === "true" || option === "enable";
     const patch: Record<string, boolean> = {
       prefix: { prefixEnabled: on } as any,
