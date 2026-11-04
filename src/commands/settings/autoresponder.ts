@@ -99,7 +99,6 @@ export const command: HybridCommand = {
 
     if (sub === "role" || sub === "exclusive") {
       const action = (args[1] ?? "").toLowerCase();
-      const mode = (args[2] ?? "").toLowerCase();
       const selectedTrigger = (ctx.getString("trigger") ?? args[3] ?? "").trim().toLowerCase();
       const row = rows.find(item => item.trigger === selectedTrigger);
       if (action === "list") {
@@ -110,11 +109,10 @@ export const command: HybridCommand = {
         return ctx.reply({ embeds: [brandEmbed({ title: `${sub} settings — ${selectedTrigger}`, description })] });
       }
       if (!row) return ctx.reply({ embeds: [errorEmbed("Provide an existing trigger using the trigger option.")] });
-      const role = ctx.getRole("role");
-      const channel = ctx.getChannel("channel");
+      const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get(cleanId(args[2] ?? ""));
+      const channel = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get(cleanId(args[2] ?? ""));
       if (sub === "role") {
         if (!role || !["add", "remove"].includes(action)) return ctx.reply({ embeds: [errorEmbed("Use role add/remove with a role and trigger.")] });
-        const column = action === "add" ? autoresponders.rewardRoleAdd : autoresponders.rewardRoleRemove;
         const current = action === "add" ? row.rewardRoleAdd : row.rewardRoleRemove;
         const next = current === role.id ? null : role.id;
         await db.update(autoresponders).set(action === "add" ? { rewardRoleAdd: next } : { rewardRoleRemove: next }).where(eq(autoresponders.id, row.id));
