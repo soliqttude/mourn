@@ -37,7 +37,7 @@ async function urlToDataUri(url: string): Promise<string> {
 export const command: HybridCommand = {
   name: "customize",
   aliases: ["botcustomize", "botcustom"],
-  description: "customize the bot's server avatar/banner or global application bio",
+  description: "customize the bot's avatar, banner, or bio for this server only",
   category: "settings",
   permission: "owner",
   guildOnly: true,
@@ -63,7 +63,7 @@ export const command: HybridCommand = {
     },
     {
       name: "value",
-      description: "image URL for avatar/banner; bio text changes the bot globally",
+      description: "image URL for avatar/banner, or server-specific bio text",
       type: ApplicationCommandOptionType.String,
       required: false,
     },
@@ -91,8 +91,6 @@ export const command: HybridCommand = {
       if (resetErr instanceof Error) {
         return ctx.reply({ embeds: [errorEmbed(`discord rejected the reset: ${resetErr.message}`)] });
       }
-      // Reset global bio via application endpoint
-      await rest.patch("/applications/@me", { body: { description: "" } }).catch(() => {});
       await updateGuildSettings(ctx.guild.id, {
         customizeAvatar: null,
         customizeBanner: null,
@@ -151,17 +149,8 @@ export const command: HybridCommand = {
     if (field === "bio") {
       if (value.length > 400)
         return ctx.reply({ embeds: [errorEmbed("Bio must be 400 characters or less.")] });
-      // Update the bot's application description (this is the actual Discord bio)
-      const bioErr = await rest
-        .patch("/applications/@me", { body: { description: value } })
-        .catch((e: Error) => e);
-      if (bioErr instanceof Error) {
-        return ctx.reply({
-          embeds: [errorEmbed(`discord rejected the bio update: ${(bioErr as Error).message}`)],
-        });
-      }
       await updateGuildSettings(ctx.guild.id, { customizeBio: value });
-      return ctx.reply({ embeds: [successEmbed(`global application bio updated — **${value}**`, "settings")] });
+      return ctx.reply({ embeds: [successEmbed(`server bio updated — **${value}**`, "settings")] });
     }
 
     return ctx.reply({
