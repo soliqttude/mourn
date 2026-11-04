@@ -57,6 +57,7 @@ export const guildSettings = pgTable("guild_settings", {
   levelsEnabled: boolean("levels_enabled").default(true).notNull(),
   levelUpChannel: text("level_up_channel"),
   jailRole: text("jail_role"),
+  jailChannel: text("jail_channel"),
   jailMessage: text("jail_message"),
   jailRemoveRoles: boolean("jail_remove_roles").default(false).notNull(),
   muteRole: text("mute_role"),
