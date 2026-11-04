@@ -2,10 +2,8 @@ import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { updateGuildSettings, getGuildSettings } from "../../db/settings.js";
-import { db } from "../../db/index.js";
 import { brandEmbed } from "../../lib/embeds.js";
-import { musicSettings } from "../../db/schema.js";
-import { eq } from "drizzle-orm";
+import { getMusicSettings, setMusicSettings } from "../../features/music.js";
 import { config } from "../../config.js";
 
 function ch(id: string | null | undefined): string { return id ? `<#${id}>` : "none"; }
