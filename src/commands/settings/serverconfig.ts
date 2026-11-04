@@ -47,19 +47,17 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(action + " channel set to <#" + channel.id + ">.")] });
     }
     if (action === "dj" || action === "autoplay") {
-      const [music] = await db.select().from(musicSettings).where(eq(musicSettings.guildId, ctx.guild.id));
+      const music = await getMusicSettings(ctx.guild.id);
       if (action === "dj") {
         const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
         if (!role) return ctx.reply({ embeds: [errorEmbed("Provide the DJ role.")] });
-        await db.insert(musicSettings).values({ guildId: ctx.guild.id, djRoleId: role.id, autoplay: music?.autoplay ?? false })
-          .onConflictDoUpdate({ target: musicSettings.guildId, set: { djRoleId: role.id } });
+        await setMusicSettings(ctx.guild.id, { djRoleId: role.id });
         return ctx.reply({ embeds: [successEmbed(`DJ role set to <@&${role.id}>.`)] });
       }
       const value = (ctx.args[1] ?? ctx.getString("value") ?? "").toLowerCase();
       if (!["on", "off", "true", "false"].includes(value)) return ctx.reply({ embeds: [errorEmbed("Use settings autoplay on or settings autoplay off.")] });
       const enabled = value === "on" || value === "true";
-      await db.insert(musicSettings).values({ guildId: ctx.guild.id, djRoleId: music?.djRoleId ?? null, autoplay: enabled })
-        .onConflictDoUpdate({ target: musicSettings.guildId, set: { autoplay: enabled } });
+      await setMusicSettings(ctx.guild.id, { autoplay: enabled });
       return ctx.reply({ embeds: [successEmbed(`music autoplay ${enabled ? "enabled" : "disabled"}.`)] });
     }
     if (action === "staff") {
