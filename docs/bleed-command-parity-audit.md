@@ -3,8 +3,8 @@
 - **Reference:** user-provided Bleed command list, 306 `arguments` entries.
 - **Repository:** `soliqttude/mourn`
 - **Branch:** `feature/bleed-306-moderation-commands`
-- **Audited HEAD:** `c69114b9d23ecfcf031ff661b6cae2e8a2c6bf36`
-- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the audited source head. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock; the database migration is required before deployment. Booster-role share listing is now scoped to the caller's own booster role. `autoresponder list tickets` now lists autoresponders whose exclusive channel is a recorded ticket channel.
+- **Audited source HEAD:** `c69114b9d23ecfcf031ff661b6cae2e8a2c6bf36` (the current branch's two later commits are audit documentation and migration only).
+- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the current branch head before the migration-only commit. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock. Migration `drizzle/0002_managed_webhook_locks.sql` now adds the persistent `locked` column; apply it before deploying this branch. Booster-role share listing is scoped to the caller's own booster role. `autoresponder list tickets` lists autoresponders whose exclusive channel is a recorded ticket channel.
 
 ## Result
 
@@ -103,4 +103,4 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 1. This audit uses the 306 entries in the supplied reference. It does not infer undocumented Bleed behavior.
 2. “Implemented” is source-level evidence only. Command registration, permission correctness, prefix/slash parity, persistence, migrations, and Discord API behavior still require build and runtime tests.
 3. Parent/root rows marked partial are distinguished from their separately audited child actions.
-4. Three entries remain blocked by missing product subsystems: server-subscription premium-role support, Google Safe Browsing integration for Google commands, and custom Last.fm/Now Playing command controls. These require implementing their underlying features, not adding no-op settings. The current CI build passes; Discord runtime and production database migration tests are still required. Do not merge to `main` based on this audit alone.
+4. Three entries remain blocked by missing product subsystems: server-subscription premium-role support, Google Safe Browsing integration for Google commands, and custom Last.fm/Now Playing command controls. The repository currently has no Google-command subsystem, and its Last.fm/Now Playing commands are fixed built-ins rather than a custom Now Playing command framework. These require implementing their underlying features, not adding no-op settings. The CI build passed on the previous branch head; rerun it after the migration commit. Discord runtime and production database migration tests are still required. Do not merge to `main` based on this audit alone.
