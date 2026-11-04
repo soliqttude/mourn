@@ -45,6 +45,19 @@ export const command: HybridCommand = {
       await updateGuildSettings(ctx.guild.id, { autoNick: nickname } as any);
       return ctx.reply({ embeds: [successEmbed("Automatic join nickname set. Use {username} or {displayname} as placeholders.")] });
     }
+    if (action === "premiumrole") {
+      const raw = ctx.args[1] ?? ctx.getString("value") ?? "";
+      if (["off", "none", "reset", "remove"].includes(raw.toLowerCase())) {
+        await updateGuildSettings(ctx.guild.id, { premiumRole: null } as any);
+        return ctx.reply({ embeds: [successEmbed("Premium subscription role cleared.")] });
+      }
+      const premiumRole = ctx.getRole("role") ?? ctx.guild.roles.cache.get(raw.replace(/[<@&>]/g, ""));
+      if (!premiumRole || premiumRole.id === ctx.guild.id) {
+        return ctx.reply({ embeds: [errorEmbed("Provide a valid premium-member role, or use `settings premiumrole off` to clear it.")] });
+      }
+      await updateGuildSettings(ctx.guild.id, { premiumRole: premiumRole.id } as any);
+      return ctx.reply({ embeds: [successEmbed(`Premium subscription role set to <@&${premiumRole.id}>. Discord manages subscription membership; this setting records the role for Villain features.`)] });
+    }
     if (action === "baserole") {
       const baseRole = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
       if (!baseRole) return ctx.reply({ embeds: [errorEmbed("Provide the base role for booster roles.")] });
@@ -128,7 +141,7 @@ export const command: HybridCommand = {
     }
     if (action === "reset") {
       if (!member?.permissions?.has(PermissionFlagsBits.Administrator)) return ctx.reply({ embeds: [errorEmbed("You need Administrator to reset moderation settings.")] });
-      await updateGuildSettings(ctx.guild.id, { jailRole: null, jailChannel: null, jailMessage: null, jailRemoveRoles: false, muteRole: null, imageMuteRole: null, reactionMuteRole: null, modLogChannel: null, automodEnabled: false, linkFilterEnabled: false, inviteFilterEnabled: false, capsFilterEnabled: false, spoilersFilterEnabled: false, massMentionEnabled: false, emojiFilterEnabled: false, musicFilesFilterEnabled: false } as any);
+      await updateGuildSettings(ctx.guild.id, { jailRole: null, jailChannel: null, jailMessage: null, premiumRole: null, jailRemoveRoles: false, muteRole: null, imageMuteRole: null, reactionMuteRole: null, modLogChannel: null, automodEnabled: false, linkFilterEnabled: false, inviteFilterEnabled: false, capsFilterEnabled: false, spoilersFilterEnabled: false, massMentionEnabled: false, emojiFilterEnabled: false, musicFilesFilterEnabled: false } as any);
       return ctx.reply({ embeds: [successEmbed("Moderation roles, log channel, and built-in content-filter toggles have been reset.")] });
     }
     if (action !== "config") return ctx.reply({ embeds: [errorEmbed("That settings action is not implemented yet.")] });
@@ -138,6 +151,7 @@ export const command: HybridCommand = {
       { name: "prefix", value: `\`${s.prefix ?? config.defaultPrefix}\``, inline: true },
       { name: "database", value: config.databaseEnabled ? "enabled" : "disabled", inline: true },
       { name: "levels", value: yn(s.levelsEnabled), inline: true },
+      { name: "premium role", value: role((s as any).premiumRole), inline: true },
       { name: "welcome", value: ch(s.welcomeChannel), inline: true },
       { name: "goodbye", value: ch(s.goodbyeChannel), inline: true },
       { name: "autoroles", value: autoroleDisplay, inline: true },
