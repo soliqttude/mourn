@@ -3,8 +3,8 @@
 - **Reference:** user-provided Bleed command list, 306 `arguments` entries.
 - **Repository:** `soliqttude/mourn`
 - **Branch:** `feature/bleed-306-moderation-commands`
-- **Audited source HEAD:** `7b7decbd75d5cf9daeba8151c5c1838bec05d369`.
-- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. The Google SafeSearch setting is persisted and consumed by the Google search command. The custom-FM setting disables the guild's Last.fm Now Playing command. CI must be rerun against this revision; Discord runtime tests have not been performed. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock. Migration `drizzle/0002_managed_webhook_locks.sql` now adds the persistent `locked` column; apply it before deploying this branch. Booster-role share listing is scoped to the caller's own booster role. `autoresponder list tickets` lists autoresponders whose exclusive channel is a recorded ticket channel.
+- **Audited source HEAD:** `282cf86287b9092ab9f9a549288ab2e605954a2c`.
+- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. CI build passed on the prior implementation revision; the latest formatting and reset-message edits require the current run to finish. Discord runtime tests and test-database migration validation have not been performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock. Migration `drizzle/0002_managed_webhook_locks.sql` now adds the persistent `locked` column; apply it before deploying this branch. Booster-role share listing is scoped to the caller's own booster role. `autoresponder list tickets` lists autoresponders whose exclusive channel is a recorded ticket channel.
 
 ## Result
 
@@ -16,13 +16,13 @@
 | Unsupported safely | 1 |
 | **Total** | **306** |
 
-## Missing
+## Resolved settings
 
 | Source entry | Finding |
 |---|---|
 | `settings premiumrole` | Implemented as a persisted server-subscription role setting, including reset and config display. Discord itself assigns subscription members to the selected role; Villain records the role for its own features. |
-| `settings googlesafetylevel` | Resolved: persisted yes/no setting; the `google` search command applies Google SafeSearch (`safe=active` or `safe=off`) according to the server setting. |
-| `settings disablecustomfms` | Resolved: persisted yes/no setting; disables the server's Last.fm Now Playing command (`np` / `fm`) while leaving the music-player `nowplaying` command available. |
+| `settings googlesafetylevel` | Persisted yes/no setting; the `google` search command applies Google SafeSearch (`safe=active` or `safe=off`) according to the server setting. |
+| `settings disablecustomfms` | Persisted yes/no setting; disables the server's Last.fm Now Playing command (`np` / `fm`) while leaving the music-player `nowplaying` command available. |
 
 
 ## Unsupported safely
@@ -103,4 +103,4 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 1. This audit uses the 306 entries in the supplied reference. It does not infer undocumented Bleed behavior.
 2. “Implemented” is source-level evidence only. Command registration, permission correctness, prefix/slash parity, persistence, migrations, and Discord API behavior still require build and runtime tests.
 3. Parent/root rows marked partial are distinguished from their separately audited child actions.
-4. The two previously missing settings are now implemented with real consumers: Google SafeSearch is applied by the Google search command, and the custom-FM toggle gates the Last.fm Now Playing command. The `reset` action clears both settings. This interpretation maps Bleed's “custom Now Playing commands” wording to Villain's Last.fm `np`/`fm` command; the separate music-player `nowplaying` command remains available. CI, Discord runtime, and test-database migration validation are still required before merging. Discord runtime and production database migration tests are still required. Do not merge to `main` based on this audit alone.
+4. Google SafeSearch is applied by the Google search command, and the custom-FM toggle gates the Last.fm `np`/`fm` command. The `reset` action clears both settings and the premium role. This interpretation maps Bleed's “custom Now Playing commands” wording to Villain's Last.fm `np`/`fm` command; the separate music-player `nowplaying` command remains available. Build CI has passed on the implementation changes, but the latest formatting/reset-message commits still need a completed CI run. Discord runtime and test-database migration validation remain required before merge. Do not merge to `main` based on this audit alone.
