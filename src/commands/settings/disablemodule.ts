@@ -30,6 +30,13 @@ export const command: HybridCommand = {
     if (!ctx.guild) return;
     const mod = (ctx.getString("module") ?? ctx.args[0] ?? "").toLowerCase();
 
+    if (mod === "all") {
+      const ch = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[1] ?? "").replace(/[<#>]/g, "")) ?? ctx.channel;
+      if (!ch) return ctx.reply({ embeds: [errorEmbed("Invalid **channel**.")] });
+      await db.insert(disabledModules).values(KNOWN_MODULES.map(module => ({ guildId: ctx.guild!.id, channelId: ch.id, module }))).onConflictDoNothing();
+      return ctx.reply({ embeds: [successEmbed(`disabled all ${KNOWN_MODULES.length} supported modules in <#${ch.id}>.`)] });
+    }
+
     if (mod === "modules") {
       return ctx.reply({ embeds: [brandEmbed({ title: "available modules", description: KNOWN_MODULES.map(m => `\`${m}\``).join(", ") })] });
     }
