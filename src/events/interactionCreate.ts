@@ -29,8 +29,9 @@ import { buildLeaderboardMessage } from "../commands/utility/invites.js";
 import { EmbedBuilder } from "discord.js";
 import { handlePageButton } from "../features/pagination.js";
 import { db } from "../db/index.js";
-import { disabledCommands } from "../db/schema.js";
+import { disabledCommands, disabledModules } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
+import { isGloballyIgnored } from "../lib/ignore.js";
 
 // Inject "emoji @user: " into styled embeds — used in button handlers that bypass contextFactory
 function applyMention(embeds: EmbedBuilder[], userId: string): EmbedBuilder[] {
@@ -137,6 +138,10 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
     }
   }
 
+  if (interaction.guild && !isBotOwner(interaction.user.id) && await isGloballyIgnored(interaction.guild.id, interaction.user.id, interaction.channelId).catch(() => false)) {
+    return replyToSlash(interaction, { content: "Villain is disabled for you in this channel.", flags: MessageFlags.Ephemeral });
+  }
+
   if (interaction.guild && ownerState.disabledGuilds.has(interaction.guild.id) && !isBotOwner(interaction.user.id)) {
     return replyToSlash(interaction, { embeds: [errorEmbed("the bot is currently disabled in this server.")], flags: MessageFlags.Ephemeral });
   }
@@ -161,13 +166,17 @@ async function handleSlashCommand(client: Client, interaction: ChatInputCommandI
       (row.targetType === "member" && row.targetId === interaction.user.id) ||
       (row.targetType === "role" && Boolean(member?.roles.cache.has(row.targetId)))
     );
-    if (blocked) {
+    const moduleRows = cmd.category ? await db.select().from(disabledModules).where(and(
+      eq(disabledModules.guildId, interaction.guild.id),
+      eq(disabledModules.channelId, interaction.channelId),
+      eq(disabledModules.module, cmd.category),
+    )).catch(() => []) : [];
+    if (blocked || moduleRows.length > 0) {
       return replyToSlash(interaction, {
-        embeds: [errorEmbed(`\`${cmd.name}\` is disabled for you in this channel.`)],
+        embeds: [errorEmbed("This command or its module is disabled in this channel.")],
         flags: MessageFlags.Ephemeral,
       });
-    }
-  }
+    }  }
 
   if (SLOW_CATEGORIES.has(cmd.category) && !interaction.deferred && !interaction.replied) {
     await interaction.deferReply().catch(() => {});
