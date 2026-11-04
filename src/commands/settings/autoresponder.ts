@@ -76,7 +76,7 @@ export const command: HybridCommand = {
         const modal = new ModalBuilder().setCustomId(`ar:modal:${sub}:${ctx.user.id}`).setTitle(sub === "add" ? "Add autoresponder" : "Update autoresponder");
         const triggerInput = new TextInputBuilder().setCustomId("trigger").setLabel("Trigger").setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(100);
         const responseInput = new TextInputBuilder().setCustomId("response").setLabel("Response / embed script").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(4000);
-        const flagsInput = new TextInputBuilder().setCustomId("flags").setLabel("strict, reply, delete, ignore_command_check, self_destruct").setStyle(TextInputStyle.Short).setRequired(false).setPlaceholder("false, false, false, false, 0");
+        const flagsInput = new TextInputBuilder().setCustomId("flags").setLabel("Flags: strict, reply, delete, ignore, seconds").setStyle(TextInputStyle.Short).setRequired(false).setPlaceholder("false, false, false, false, 0");
         const formInput = new TextInputBuilder().setCustomId("ticket_form").setLabel("Ticket form topic (optional)").setStyle(TextInputStyle.Short).setRequired(false);
         modal.addComponents(
           new ActionRowBuilder<TextInputBuilder>().addComponents(triggerInput),
@@ -92,7 +92,7 @@ export const command: HybridCommand = {
           const modal = new ModalBuilder().setCustomId(`ar:modal:${sub}:${ctx.user.id}`).setTitle(sub === "add" ? "Add autoresponder" : "Update autoresponder");
           const triggerInput = new TextInputBuilder().setCustomId("trigger").setLabel("Trigger").setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(100).setValue(trigger);
           const responseInput = new TextInputBuilder().setCustomId("response").setLabel("Response / embed script").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(4000);
-          const flagsInput = new TextInputBuilder().setCustomId("flags").setLabel("strict, reply, delete, ignore_command_check, self_destruct").setStyle(TextInputStyle.Short).setRequired(false).setPlaceholder("false, false, false, false, 0");
+          const flagsInput = new TextInputBuilder().setCustomId("flags").setLabel("Flags: strict, reply, delete, ignore, seconds").setStyle(TextInputStyle.Short).setRequired(false).setPlaceholder("false, false, false, false, 0");
           const formInput = new TextInputBuilder().setCustomId("ticket_form").setLabel("Ticket form topic (optional)").setStyle(TextInputStyle.Short).setRequired(false);
           modal.addComponents(
             new ActionRowBuilder<TextInputBuilder>().addComponents(triggerInput),
