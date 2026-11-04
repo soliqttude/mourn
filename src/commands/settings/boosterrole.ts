@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType, type GuildMember } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
-import { boosterRoles, boosterRoleConfig, boostAutoRole } from "../../db/schema.js";
+import { boosterRoles, boosterRoleConfig, boostAutoRole, filterWhitelist } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { createBoosterRole, deleteBoosterRole, getBoosterRole } from "../../features/boosterRoles.js";
 
@@ -39,7 +39,7 @@ export const command: HybridCommand = {
         { name: "random", value: "random" },
         { name: "list", value: "list" },
         { name: "cleanup", value: "cleanup" },
-        { name: "limit", value: "limit" }, { name: "award", value: "award" },
+        { name: "limit", value: "limit" }, { name: "award", value: "award" }, { name: "filter", value: "filter" },
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
@@ -60,6 +60,22 @@ export const command: HybridCommand = {
       await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: null, roleLimit: limit })
         .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { roleLimit: limit } });
       return ctx.reply({ embeds: [successEmbed(`server booster role limit set to ${limit}.`, "settings")] });
+    }
+
+    if (action === "filter") {
+      if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to manage booster role name filters.")] });
+      const word = (ctx.args[1] ?? ctx.getString("value") ?? "").trim().toLowerCase();
+      const rows = await db.select().from(filterWhitelist).where(and(eq(filterWhitelist.guildId, guild.id), eq(filterWhitelist.filterType, "boosterrole-name")));
+      if (!word || word === "list") {
+        return ctx.reply({ embeds: [brandEmbed({ title: "Booster role name blacklist", description: rows.length ? rows.map(row => `\`${row.value}\``).join("\n") : "No blocked words configured." })] });
+      }
+      const existing = rows.find(row => row.value === word);
+      if (existing) {
+        await db.delete(filterWhitelist).where(and(eq(filterWhitelist.guildId, guild.id), eq(filterWhitelist.filterType, "boosterrole-name"), eq(filterWhitelist.value, word)));
+        return ctx.reply({ embeds: [successEmbed(`removed \`${word}\` from the booster role blacklist.`, "settings")] });
+      }
+      await db.insert(filterWhitelist).values({ guildId: guild.id, filterType: "boosterrole-name", value: word }).onConflictDoNothing();
+      return ctx.reply({ embeds: [successEmbed(`added \`${word}\` to the booster role blacklist.`, "settings")] });
     }
 
     if (action === "award") {
@@ -143,6 +159,9 @@ export const command: HybridCommand = {
       const name = ctx.getString("value");
       if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a new name.")] });
       if (name.length > 100) return ctx.reply({ embeds: [errorEmbed("**Role** name must be 100 characters or less.")] });
+      const blocked = await db.select().from(filterWhitelist).where(and(eq(filterWhitelist.guildId, guild.id), eq(filterWhitelist.filterType, "boosterrole-name")));
+      const blockedWord = blocked.find(row => name.toLowerCase().includes(row.value));
+      if (blockedWord) return ctx.reply({ embeds: [errorEmbed(`Your role name contains a blocked word: \`${blockedWord.value}\`.`)] });
       await role.setName(name).catch(() => null);
       return ctx.reply({ embeds: [successEmbed(`renamed your booster role to **${name}**.`, "settings")] });
     }
