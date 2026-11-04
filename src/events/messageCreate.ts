@@ -21,7 +21,7 @@ import { ownerState, logCommand } from "../lib/ownerState.js";
 import { cleanError } from "../lib/format.js";
 import { isBlacklisted } from "../lib/blacklistCache.js";
 import { db } from "../db/index.js";
-import { commandAliases, customCommands, disabledCommands, disabledModules, eventsSettings } from "../db/schema.js";
+import { commandAliases, customCommands, disabledCommands, disabledModules, eventsSettings, userPrefixes } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { isEventEnabled } from "../commands/settings/events.js";
 
@@ -189,12 +189,14 @@ export const event = {
     }
 
     const settings = await getGuildSettings(guildId);
+    const personalPrefixRows = await db.select().from(userPrefixes).where(eq(userPrefixes.userId, message.author.id));
+    const personalPrefix = personalPrefixRows[0]?.prefix;
     const guildPrefix = settings.prefix || config.defaultPrefix;
     const mentionPrefix = `<@${client.user?.id}>`;
     const mentionPrefixNick = `<@!${client.user?.id}>`;
 
     let usedPrefix = "";
-    const allPrefixes = [guildPrefix, ...HYBRID_PREFIXES, mentionPrefix, mentionPrefixNick];
+    const allPrefixes = [personalPrefix, guildPrefix, ...HYBRID_PREFIXES, mentionPrefix, mentionPrefixNick].filter((p): p is string => Boolean(p));
     for (const p of allPrefixes) {
       if (message.content.startsWith(p)) { usedPrefix = p; break; }
     }
