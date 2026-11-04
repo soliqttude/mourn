@@ -9,7 +9,7 @@ import { createBoosterRole, deleteBoosterRole, getBoosterRole } from "../../feat
 export const command: HybridCommand = {
   name: "boosterrole",
   aliases: ["boostrole", "br"],
-  description: "Manage your personal booster role — create, rename, color, or delete your custom role.",
+  description: "Manage personal booster roles, server limits, reward roles, name filters, and role sharing.",
   category: "settings",
   guildOnly: true,
   usage: "boosterrole (create|delete|remove|rename|color|random|icon|setbase|base|list|cleanup|limit) [value]",
