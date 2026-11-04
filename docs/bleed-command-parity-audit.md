@@ -3,15 +3,15 @@
 - **Reference:** user-provided Bleed command list, 306 `arguments` entries.
 - **Repository:** `soliqttude/mourn`
 - **Branch:** `feature/bleed-306-moderation-commands`
-- **Audited source HEAD:** `282cf86287b9092ab9f9a549288ab2e605954a2c`.
-- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. CI build passed on the prior implementation revision; the latest formatting and reset-message edits require the current run to finish. Discord runtime tests and test-database migration validation have not been performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock. Migration `drizzle/0002_managed_webhook_locks.sql` now adds the persistent `locked` column; apply it before deploying this branch. Booster-role share listing is scoped to the caller's own booster role. `autoresponder list tickets` lists autoresponders whose exclusive channel is a recorded ticket channel.
+- **Audited source revision:** `b15c75c861805cd9fea894ce720be19ff61ce531` (source implementation; this audit correction is committed separately).
+- **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions build passed on `b15c75c861805cd9fea894ce720be19ff61ce531`. Discord runtime tests and test-database migration validation have not been performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock. Migration `drizzle/0002_managed_webhook_locks.sql` now adds the persistent `locked` column; apply it before deploying this branch. Booster-role share listing is scoped to the caller's own booster role. `autoresponder list tickets` lists autoresponders whose exclusive channel is a recorded ticket channel.
 
 ## Result
 
 | Status | Entries |
 |---|---:|
 | Implemented in source (not runtime-verified) | 287 |
-| Partial / invocation or behavior caveat | 16 |
+| Partial / invocation or behavior caveat | 18 |
 | Missing | 0 |
 | Unsupported safely | 1 |
 | **Total** | **306** |
@@ -103,4 +103,4 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 1. This audit uses the 306 entries in the supplied reference. It does not infer undocumented Bleed behavior.
 2. “Implemented” is source-level evidence only. Command registration, permission correctness, prefix/slash parity, persistence, migrations, and Discord API behavior still require build and runtime tests.
 3. Parent/root rows marked partial are distinguished from their separately audited child actions.
-4. Google SafeSearch is applied by the Google search command, and the custom-FM toggle gates the Last.fm `np`/`fm` command. The `reset` action clears both settings and the premium role. This interpretation maps Bleed's “custom Now Playing commands” wording to Villain's Last.fm `np`/`fm` command; the separate music-player `nowplaying` command remains available. Build CI has passed on the implementation changes, but the latest formatting/reset-message commits still need a completed CI run. Discord runtime and test-database migration validation remain required before merge. Do not merge to `main` based on this audit alone.
+4. Google SafeSearch is applied by the Google search command, and the custom-FM toggle gates the Last.fm `np`/`fm` command. The `reset` action clears both settings and the premium role. This interpretation maps Bleed's “custom Now Playing commands” wording to Villain's Last.fm `np`/`fm` command; the separate music-player `nowplaying` command remains available. Build CI has passed on the implementation changes, but the latest formatting/reset-message commits have passed CI. Discord runtime and test-database migration validation remain required before merge. Do not merge to `main` based on this audit alone.
