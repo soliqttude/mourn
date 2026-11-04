@@ -47,6 +47,7 @@ export const command: HybridCommand = {
     const code = ctx.getString("code") ?? (ctx.args.length > 3 ? ctx.args.slice(3).join(" ") : "");
 
     if (sub === "reset") {
+      if (!ctx.member?.permissions.has("Administrator")) return ctx.reply({ embeds: [errorEmbed("Administrator permission is required to reset all paginations.")] });
       await db.delete(paginatedEmbeds).where(eq(paginatedEmbeds.guildId, guildId));
       return ctx.reply({ embeds: [successEmbed("pagination has been reset.", "utility")] });
     }
@@ -72,6 +73,7 @@ export const command: HybridCommand = {
       if (!channel?.isTextBased()) return ctx.reply({ embeds: [errorEmbed("Provide a valid text channel.")] });
       const message = await (channel as any).messages.fetch(msgId).catch(() => null);
       if (!message) return ctx.reply({ embeds: [errorEmbed("I couldn't find that message.")] });
+      if (message.author.id !== ctx.client.user?.id) return ctx.reply({ embeds: [errorEmbed("Only messages sent by Villain can be paginated.")] });
       const firstCode = code || message.content || (message.embeds[0] ? message.embeds[0].toJSON().description ?? "" : "");
       if (!firstCode) return ctx.reply({ embeds: [errorEmbed("The message has no page content to paginate.")] });
       await db.insert(paginatedEmbeds).values({ messageId: msgId, guildId, channelId: channel.id, pages: [firstCode], currentPage: 0 });
@@ -85,6 +87,11 @@ export const command: HybridCommand = {
       if (!code) return ctx.reply({ embeds: [errorEmbed("Provide the page content.")] });
       const pages = [...existing.pages, code];
       await db.update(paginatedEmbeds).set({ pages }).where(eq(paginatedEmbeds.messageId, msgId));
+      const channel = ctx.guild.channels.cache.get(existing.channelId);
+      if (channel?.isTextBased()) {
+        const message = await (channel as any).messages.fetch(msgId).catch(() => null);
+        if (message) await message.edit({ components: [buildNavRow(existing.currentPage, pages.length, msgId)] }).catch(() => {});
+      }
       return ctx.reply({ embeds: [successEmbed(`page ${pages.length} added.`, "utility")] });
     }
 
@@ -115,6 +122,14 @@ export const command: HybridCommand = {
       const pages = existing.pages.filter((_, i) => i !== page - 1);
       const currentPage = Math.min(existing.currentPage, pages.length - 1);
       await db.update(paginatedEmbeds).set({ pages, currentPage }).where(eq(paginatedEmbeds.messageId, msgId));
+      const channel = ctx.guild.channels.cache.get(existing.channelId);
+      if (channel?.isTextBased()) {
+        const message = await (channel as any).messages.fetch(msgId).catch(() => null);
+        if (message) {
+          const parsed = parseScript(pages[currentPage] ?? "", { guild: ctx.guild, client: ctx.client });
+          await message.edit({ content: parsed.content ?? "", embeds: parsed.embeds, components: [buildNavRow(currentPage, pages.length, msgId)] }).catch(() => {});
+        }
+      }
       return ctx.reply({ embeds: [successEmbed(`page ${page} removed.`, "utility")] });
     }
 
