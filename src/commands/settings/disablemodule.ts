@@ -19,7 +19,7 @@ export const command: HybridCommand = {
   usage: "disablemodule <module> [#channel] | disablemodule all <module> | disablemodule list",
   examples: ["disablemodule fun #general", "disablemodule levels", "disablemodule all levels", "disablemodule list"],
   category: "settings",
-  permission: "everyone",
+  permission: "manage_channels",
   guildOnly: true,
   options: [
     { name: "module", description: "Module name, or list", type: ApplicationCommandOptionType.String, required: true },
