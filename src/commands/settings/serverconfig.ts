@@ -165,6 +165,8 @@ export const command: HybridCommand = {
       { name: "database", value: config.databaseEnabled ? "enabled" : "disabled", inline: true },
       { name: "levels", value: yn(s.levelsEnabled), inline: true },
       { name: "premium role", value: role((s as any).premiumRole), inline: true },
+      { name: "google safesearch", value: yn((s as any).googleSafeSearch), inline: true },
+      { name: "custom Last.fm Now Playing", value: (s as any).disableCustomFms ? "disabled" : "enabled", inline: true },
       { name: "welcome", value: ch(s.welcomeChannel), inline: true },
       { name: "goodbye", value: ch(s.goodbyeChannel), inline: true },
       { name: "autoroles", value: autoroleDisplay, inline: true },
