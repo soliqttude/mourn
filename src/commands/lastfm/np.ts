@@ -8,7 +8,7 @@ import { getNowPlaying, hasApiKey } from "../../features/lastfm.js";
 
 export const command: HybridCommand = {
   name: "np",
-  aliases: ["nowplaying", "fm"],
+  aliases: ["fm"],
   description: "Show what you or another user is listening to on Last.fm.",
   usage: "np [user]",
   examples: ["np", "np @mmoudder"],
