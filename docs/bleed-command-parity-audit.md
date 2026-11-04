@@ -3,7 +3,7 @@
 - **Reference:** user-provided Bleed command list, 306 `arguments` entries.
 - **Repository:** `soliqttude/mourn`
 - **Branch:** `feature/bleed-306-moderation-commands`
-- **Audited source HEAD:** `1794f59f1e71334cb0b3392522e0b9304d6ecca9`.
+- **Audited source HEAD:** `7b7decbd75d5cf9daeba8151c5c1838bec05d369`.
 - **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. The Google SafeSearch setting is persisted and consumed by the Google search command. The custom-FM setting disables the guild's Last.fm Now Playing command. CI must be rerun against this revision; Discord runtime tests have not been performed. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock. Migration `drizzle/0002_managed_webhook_locks.sql` now adds the persistent `locked` column; apply it before deploying this branch. Booster-role share listing is scoped to the caller's own booster role. `autoresponder list tickets` lists autoresponders whose exclusive channel is a recorded ticket channel.
 
 ## Result
