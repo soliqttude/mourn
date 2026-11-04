@@ -119,15 +119,9 @@ export const command: HybridCommand = {
         .patch(memberEndpoint, { body: { avatar: dataUri } })
         .catch((e: Error) => e);
       if (guildErr instanceof Error) {
-        // Fall back to global avatar change
-        const globalErr = await rest
-          .patch("/users/@me", { body: { avatar: dataUri } })
-          .catch((e: Error) => e);
-        if (globalErr instanceof Error) {
-          return ctx.reply({
-            embeds: [errorEmbed(`discord rejected the avatar — make sure the image is under 10mb and is png/jpg/gif/webp. (${(globalErr as Error).message})`)],
-          });
-        }
+        return ctx.reply({
+          embeds: [errorEmbed(`discord rejected the server avatar — no global avatar was changed. (${guildErr.message})`)],
+        });
       }
       await updateGuildSettings(ctx.guild.id, { customizeAvatar: value });
       return ctx.reply({ embeds: [successEmbed("Server avatar updated.", "settings")] });
