@@ -113,3 +113,7 @@ CREATE TABLE IF NOT EXISTS goodbye_channels (
 );
 ALTER TABLE welcome_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER;
 ALTER TABLE goodbye_channels ADD COLUMN IF NOT EXISTS self_destruct_seconds INTEGER;
+
+
+-- Managed webhook lock state; locking revokes the old webhook token.
+ALTER TABLE managed_webhooks ADD COLUMN IF NOT EXISTS locked BOOLEAN NOT NULL DEFAULT FALSE;
