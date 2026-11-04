@@ -43,12 +43,27 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
 
-    const action = ctx.getString("action");
+    const action = (ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
+    const aliasArg = ctx.getString("alias") ?? ctx.args[1];
+    const commandArg = ctx.getString("command") ?? ctx.args.slice(2).join(" ");
 
-    if (action === "reset" || action === "removeall") {
+    if (action === "reset") {
       const rows = await db.select().from(commandAliases).where(eq(commandAliases.guildId, guild.id));
       await db.delete(commandAliases).where(eq(commandAliases.guildId, guild.id));
       return ctx.reply({ embeds: [successEmbed(`removed ${rows.length} command alias(es) from this server.`, "settings")] });
+    }
+
+    if (action === "removeall") {
+      const targetName = commandArg.trim().toLowerCase();
+      if (!targetName) return ctx.reply({ embeds: [errorEmbed("Please provide the **command** whose aliases should be removed.")] });
+      const target = findCommand(targetName);
+      const canonicalName = target?.name ?? targetName;
+      const rows = await db.select().from(commandAliases)
+        .where(and(eq(commandAliases.guildId, guild.id), eq(commandAliases.command, canonicalName)));
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No aliases are mapped to **" + canonicalName + "**.")] });
+      await db.delete(commandAliases)
+        .where(and(eq(commandAliases.guildId, guild.id), eq(commandAliases.command, canonicalName)));
+      return ctx.reply({ embeds: [successEmbed("removed " + rows.length + " alias(es) mapped to **" + canonicalName + "**.", "settings")] });
     }
 
     if (action === "list") {
@@ -67,7 +82,7 @@ export const command: HybridCommand = {
       });
     }
 
-    const aliasName = ctx.getString("alias")?.toLowerCase();
+    const aliasName = aliasArg?.trim().toLowerCase();
     if (!aliasName) return ctx.reply({ embeds: [errorEmbed("Please provide an **alias** name.")] });
 
     if (action === "view") {
@@ -94,7 +109,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "add") {
-      const cmdName = ctx.getString("command")?.toLowerCase();
+      const cmdName = commandArg.trim().toLowerCase();
       if (!cmdName) return ctx.reply({ embeds: [errorEmbed("Please provide the **command** name to map to.")] });
 
       const cmd = findCommand(cmdName);
