@@ -1,0 +1,9 @@
+import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
+import type { HybridCommand } from "../../lib/command.js";
+import { getGuildSettings, updateGuildSettings } from "../../db/settings.js";
+import { errorEmbed, successEmbed } from "../../lib/embeds.js";
+export const command: HybridCommand = {
+ name:"staff",description:"Configure and view server staff roles.",category:"settings",guildOnly:true,permission:"manage_guild",
+ options:[{name:"action",description:"set, remove, or list",type:ApplicationCommandOptionType.String,required:true,choices:[{name:"set",value:"set"},{name:"remove",value:"remove"},{name:"list",value:"list"}]},{name:"role",description:"Role to add or remove",type:ApplicationCommandOptionType.Role,required:false}],
+ async execute(ctx){if(!ctx.guild)return;const action=(ctx.getString("action")??ctx.args[0]??"list").toLowerCase();const settings=await getGuildSettings(ctx.guild.id);const ids=[...(settings.staffRoleIds??[])];if(action==="set"||action==="add"){const role=ctx.getRole("role")??ctx.guild.roles.cache.find(r=>r.id===ctx.args[1]||r.name.toLowerCase()===ctx.args.slice(1).join(" ").toLowerCase());if(!role)return ctx.reply({embeds:[errorEmbed("Provide a valid staff role.")]});if(!ids.includes(role.id))ids.push(role.id);await updateGuildSettings(ctx.guild.id,{staffRoleIds:ids});return ctx.reply({embeds:[successEmbed("Added <@&"+role.id+"> as a staff role.")]});}if(action==="remove"){const role=ctx.getRole("role")??ctx.guild.roles.cache.get(ctx.args[1]??"");if(!role)return ctx.reply({embeds:[errorEmbed("Provide a valid staff role.")]});await updateGuildSettings(ctx.guild.id,{staffRoleIds:ids.filter(id=>id!==role.id)});return ctx.reply({embeds:[successEmbed("Removed <@&"+role.id+"> from staff roles.")]});}return ctx.reply({embeds:[new EmbedBuilder().setColor(0x8b1e2d).setTitle("Staff roles").setDescription(ids.length?ids.map(id=>"• <@&"+id+">").join("\n"):"No staff roles configured. Use staff set.")]});}
+};
