@@ -10,11 +10,11 @@ import { parseScript } from "../../lib/scripting.js";
 export const command: HybridCommand = {
   name: "webhook",
   aliases: ["wh"],
-  description: "Manage server webhooks. Subcommands: create, send, edit, delete, list, info",
+  description: "Manage server webhooks. Subcommands: create, send, edit, delete, list, info, lock, unlock",
   category: "utility",
   permission: "manage_webhooks",
   guildOnly: true,
-  usage: "webhook [create|send|edit|delete|list|info] [args]",
+  usage: "webhook [create|send|edit|delete|list|info|lock|unlock] [args]",
   examples: [
     "webhook create alerts #general",
     "webhook send alerts Hello world!",
@@ -77,6 +77,38 @@ export const command: HybridCommand = {
       }
       return ctx.reply({ embeds: [errorEmbed("Could not edit that message. It may not have been sent by a Villain-managed webhook, or the webhook token is no longer valid.")] });
     }
+    if (sub === "lock" || sub === "unlock") {
+      if (!name) return ctx.reply({ embeds: [errorEmbed("Provide the webhook name to " + sub + ".")] });
+      const rows = await db.select().from(managedWebhooks).where(and(eq(managedWebhooks.guildId, guildId), eq(managedWebhooks.identifier, name)));
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("webhook " + name + " not found.")] });
+      const row = rows[0]!;
+      if (sub === "lock") {
+        if (row.locked) return ctx.reply({ embeds: [errorEmbed("webhook " + name + " is already locked.")] });
+        try {
+          const client = new WebhookClient({ id: row.webhookId, token: row.webhookToken });
+          await client.delete("Webhook locked; previous token revoked");
+          await db.update(managedWebhooks).set({ locked: true }).where(eq(managedWebhooks.id, row.id));
+          return ctx.reply({ embeds: [successEmbed("webhook " + name + " locked. Its previous token has been revoked.")] });
+        } catch {
+          return ctx.reply({ embeds: [errorEmbed("Could not revoke the webhook token. It was not marked as locked.")] });
+        }
+      }
+      if (!row.locked) return ctx.reply({ embeds: [errorEmbed("webhook " + name + " is not locked.")] });
+      try {
+        const channel = await ctx.guild.channels.fetch(row.channelId);
+        if (!channel?.isTextBased() || !("createWebhook" in channel)) return ctx.reply({ embeds: [errorEmbed("The original channel is unavailable or cannot host webhooks.")] });
+        const replacement = await (channel as any).createWebhook({ name: name + " (villain)" });
+        if (!replacement.token) {
+          await replacement.delete().catch(() => {});
+          return ctx.reply({ embeds: [errorEmbed("Discord did not return a replacement webhook token.")] });
+        }
+        await db.update(managedWebhooks).set({ webhookId: replacement.id, webhookToken: replacement.token, locked: false }).where(eq(managedWebhooks.id, row.id));
+        return ctx.reply({ embeds: [successEmbed("webhook " + name + " unlocked with a new token. The previous token remains revoked.")] });
+      } catch {
+        return ctx.reply({ embeds: [errorEmbed("Could not recreate the webhook. Check Manage Webhooks permission in its original channel.")] });
+      }
+    }
+
     if (sub === "send") {
       if (!name) return ctx.reply({ embeds: [errorEmbed("Provide the **webhook** name.")] });
       const messageText = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
