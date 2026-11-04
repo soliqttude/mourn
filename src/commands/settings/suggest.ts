@@ -162,7 +162,7 @@ export const command: HybridCommand = {
 
     // ── Admin config subcommands ───────────────────────────────────────────────
     if (action === "set") {
-      const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(val.replace(/[<#>]/g, ""));
+      const ch = ctx.getChannel("channel") as any ?? ctx.guild.channels.cache.get(reviewTarget.replace(/[<#>]/g, ""));
       if (!ch) return ctx.reply({ embeds: [errorEmbed("Provide a **channel**.")] });
       await updateGuildSettings(ctx.guild.id, { suggestionsChannel: ch.id });
       return ctx.reply({ embeds: [successEmbed(`suggestions channel set to <#${ch.id}>.`)] });
@@ -199,7 +199,8 @@ export const command: HybridCommand = {
     }
 
     if (action === "review") {
-      if (val.toLowerCase() === "off" || !val) {
+      const reviewTarget = val.toLowerCase() === "channel" ? (val2 || "") : val;
+      if (reviewTarget.toLowerCase() === "off" || !reviewTarget) {
         await db.insert(suggestExtended).values({ guildId: ctx.guild.id, threadsEnabled: false, upvoteEmoji: "👍", downvoteEmoji: "👎", reviewChannel: null, reviewEnabled: false, ignoreIds: [] })
           .onConflictDoUpdate({ target: suggestExtended.guildId, set: { reviewChannel: null, reviewEnabled: false } });
         return ctx.reply({ embeds: [successEmbed("Suggestion review **channel** disabled.")] });
@@ -240,7 +241,7 @@ export const command: HybridCommand = {
 
     const ext = await getExtended(ctx.guild.id);
     const ignoreIds: string[] = (ext.ignoreIds as string[]) ?? [];
-    if (ignoreIds.includes(ctx.user.id)) return ctx.reply({ embeds: [errorEmbed("You are not allowed to submit suggestions.")] });
+    if (ignoreIds.includes(ctx.user.id) || ignoreIds.some(id => (ctx.member as any)?.roles?.cache?.has(id))) return ctx.reply({ embeds: [errorEmbed("You are not allowed to submit suggestions.")] });
 
     const up = ext.upvoteEmoji ?? "👍";
     const down = ext.downvoteEmoji ?? "👎";
