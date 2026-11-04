@@ -155,7 +155,7 @@ export const command: HybridCommand = {
     if (action === "reset") {
       if (!member?.permissions?.has(PermissionFlagsBits.Administrator)) return ctx.reply({ embeds: [errorEmbed("You need Administrator to reset moderation settings.")] });
       await updateGuildSettings(ctx.guild.id, { jailRole: null, jailChannel: null, jailMessage: null, premiumRole: null, googleSafeSearch: false, disableCustomFms: false, jailRemoveRoles: false, muteRole: null, imageMuteRole: null, reactionMuteRole: null, modLogChannel: null, automodEnabled: false, linkFilterEnabled: false, inviteFilterEnabled: false, capsFilterEnabled: false, spoilersFilterEnabled: false, massMentionEnabled: false, emojiFilterEnabled: false, musicFilesFilterEnabled: false } as any);
-      return ctx.reply({ embeds: [successEmbed("Moderation roles, log channel, and built-in content-filter toggles have been reset.")] });
+      return ctx.reply({ embeds: [successEmbed("Moderation roles, log channels, premium role, Google SafeSearch, custom Last.fm Now Playing, and built-in content-filter settings have been reset.")] });
     }
     if (action !== "config") return ctx.reply({ embeds: [errorEmbed("That settings action is not implemented yet.")] });
     const s = await getGuildSettings(ctx.guild.id);
