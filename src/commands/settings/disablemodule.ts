@@ -37,7 +37,7 @@ export const command: HybridCommand = {
     const allChannels = raw === "all";
     const moduleName = allChannels ? (ctx.args[1] ?? "").toLowerCase() : raw;
     const channel = ctx.getChannel("channel") ?? ctx.guild.channels.cache.get((ctx.args[allChannels ? 2 : 1] ?? "").replace(/[<#>]/g, "")) ?? ctx.channel;
-    const everyChannel = allChannels || ctx.getString("all_channels") === "true" || ctx.args.some(a => a.toLowerCase() === "all");
+    const everyChannel = allChannels || ctx.getBoolean("all_channels") === true || ctx.args.some(a => a.toLowerCase() === "all");
     if (!moduleName || moduleName === "all") return ctx.reply({ embeds: [errorEmbed("Provide a module name.")] });
     if (!KNOWN_MODULES.includes(moduleName)) return ctx.reply({ embeds: [errorEmbed("Unknown module. Use a valid module name.")] });
     if (everyChannel) {
