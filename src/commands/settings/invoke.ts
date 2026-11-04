@@ -6,133 +6,61 @@ import { invokeMessages } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { invalidateInvokeCache } from "../../features/invokeMessages.js";
 
-const SUPPORTED_COMMANDS = [
-  "ban", "kick", "mute", "warn", "timeout", "softban", "hackban", "hardban",
-  "jail", "unjail", "unban", "untimeout", "tempban", "imute", "iunmute",
-  "rmute", "runmute", "vmute", "vunmute", "strip",
-];
+const MESSAGE_COMMANDS = ["unmute", "kick", "tempban", "unban", "softban", "jail", "untimeout", "iunmute", "mute", "ban", "imute", "unjail", "warn", "rmute", "runmute", "hardban", "timeout"];
+const DM_COMMANDS = ["unmute", "kick", "tempban", "unban", "softban", "jail", "untimeout", "mute", "ban", "unjail", "warn", "hardban", "timeout"];
 
 export const command: HybridCommand = {
   name: "invoke",
   aliases: ["invokemsg", "invokeresponse"],
-  description: "Customize bot response messages when moderation commands are used.",
+  description: "Customize moderation command response and DM messages.",
   category: "settings",
   permission: "manage_guild",
   guildOnly: true,
-  usage: "invoke (set|remove|list|variables) [command] [message|dm] [content]",
-  examples: [
-    "invoke set ban message You have been banned from {guild} by {moderator}",
-    "invoke set ban dm {embed}$v{title: Banned}$v{description: You were banned from {guild}}",
-    "invoke set kick dm {embed}$v{color: red}$v{description: You were kicked from {guild}.}",
-    "invoke remove ban message",
-    "invoke list",
-    "invoke variables",
-  ],
+  usage: "invoke <command> <message|dm> [message|view]",
+  examples: ["invoke ban message You were banned.", "invoke ban dm You were banned.", "invoke ban message view"],
   options: [
-    {
-      name: "action",
-      description: "set, remove, list, or variables",
-      type: ApplicationCommandOptionType.String,
-      required: true,
-      choices: [
-        { name: "set", value: "set" },
-        { name: "remove", value: "remove" },
-        { name: "list", value: "list" },
-        { name: "variables", value: "variables" },
-      ],
-    },
-    { name: "command", description: "Mod command e.g. ban, kick, mute", type: ApplicationCommandOptionType.String, required: false },
-    {
-      name: "type",
-      description: "message (channel reply) or dm (DM to target)",
-      type: ApplicationCommandOptionType.String,
-      required: false,
-      choices: [{ name: "message", value: "message" }, { name: "dm", value: "dm" }],
-    },
-    { name: "content", description: "The message content (supports embed scripting)", type: ApplicationCommandOptionType.String, required: false },
+    { name: "action", description: "Moderation command or legacy action", type: ApplicationCommandOptionType.String, required: true },
+    { name: "type", description: "message or dm", type: ApplicationCommandOptionType.String, required: false, choices: [{ name: "message", value: "message" }, { name: "dm", value: "dm" }] },
+    { name: "content", description: "Response text or embed script", type: ApplicationCommandOptionType.String, required: false },
   ],
   async execute(ctx) {
-    const guild = ctx.guild;
-    if (!guild) return;
-
-    const action = ctx.getString("action") ?? ctx.args[0] ?? "";
-
-    if (action === "variables") {
-      return ctx.reply({
-        embeds: [brandEmbed({
-          description: [
-            "**invoke variables**\n",
-            "```",
-            "{user}              → target username",
-            "{user.mention}      → @target",
-            "{user.id}           → target user ID",
-            "{user.tag}          → target tag",
-            "{guild}             → server name",
-            "{guild.id}          → server ID",
-            "{guild.count}       → member count",
-            "{moderator}         → moderator username",
-            "{moderator.mention} → @moderator",
-            "{moderator.id}      → moderator ID",
-            "{channel}           → channel mention",
-            "{reason}            → action reason",
-            "{duration}          → action duration",
-            "```\n",
-            "**embed scripting:**",
-            "```",
-            "{embed}$v{title: Banned from {guild}}$v{color: red}$v{description: You were banned.}",
-            "```\n",
-            "**conditionals:**",
-            "```",
-            "{if:{reason}==no reason provided}",
-            "  No reason was given.",
-            "{else}",
-            "  Reason: {reason}",
-            "{/if}",
-            "```",
-          ].join("\n"),
-        })],
-      });
-    }
-
+    if (!ctx.guild) return;
+    const args = ctx.args;
+    const action = (ctx.getString("action") ?? args[0] ?? "").toLowerCase();
+    const legacy = ["set", "remove", "list", "variables"].includes(action);
     if (action === "list") {
-      const rows = await db.select().from(invokeMessages).where(eq(invokeMessages.guildId, guild.id));
+      const rows = await db.select().from(invokeMessages).where(eq(invokeMessages.guildId, ctx.guild.id));
       if (!rows.length) return ctx.reply({ embeds: [errorEmbed("No invoke messages configured.")] });
-      const lines = rows.map(r => {
-        const preview = r.content.length > 45 ? r.content.slice(0, 45) + "…" : r.content;
-        return `**${r.command}** (${r.type}) — \`${preview}\``;
-      });
-      return ctx.reply({
-        embeds: [brandEmbed({ description: `**invoke messages (${rows.length})**\n\n${lines.join("\n")}` })],
-      });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Invoke Messages", description: rows.map(r => "**" + r.command + "** (" + r.type + ") — " + r.content.slice(0, 70)).join("\n") })] });
     }
-
-    const cmdName = (ctx.getString("command") ?? ctx.args[1] ?? "").toLowerCase();
-    if (!cmdName) return ctx.reply({ embeds: [errorEmbed(`specify a command.\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
-    if (!SUPPORTED_COMMANDS.includes(cmdName)) return ctx.reply({ embeds: [errorEmbed(`unsupported command.\nsupported: \`${SUPPORTED_COMMANDS.join(", ")}\``)] });
-
-    const type = ctx.getString("type") ?? ctx.args[2] ?? "";
-    if (!type || !["message", "dm"].includes(type)) return ctx.reply({ embeds: [errorEmbed("Specify type: `message` or `dm`.")] });
-
-    if (action === "remove") {
-      await db.delete(invokeMessages).where(and(eq(invokeMessages.guildId, guild.id), eq(invokeMessages.command, cmdName), eq(invokeMessages.type, type)));
-      invalidateInvokeCache(guild.id);
-      return ctx.reply({ embeds: [successEmbed(`removed invoke ${type} for \`${cmdName}\`.`)] });
+    if (action === "variables") return ctx.reply({ embeds: [brandEmbed({ title: "Invoke Variables", description: "{user}, {user.mention}, {user.id}, {user.tag}, {guild}, {guild.id}, {guild.count}, {moderator}, {moderator.mention}, {moderator.id}, {channel}, {reason}, {duration}. Embed scripting is supported." })] });
+    let commandName = action;
+    let type = (ctx.getString("type") ?? args[1] ?? "").toLowerCase();
+    let body = ctx.getString("content") ?? "";
+    if (legacy) { commandName = (args[1] ?? "").toLowerCase(); type = (args[2] ?? "").toLowerCase(); body = args.slice(3).join(" ") || body; }
+    if (!legacy && !type) {
+      if (!MESSAGE_COMMANDS.includes(commandName)) return ctx.reply({ embeds: [errorEmbed("Unknown invoke command. Supported: " + MESSAGE_COMMANDS.join(", "))] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Invoke: " + commandName, description: "Set a response with invoke " + commandName + " message <text>" + (DM_COMMANDS.includes(commandName) ? " or invoke " + commandName + " dm <text>" : "") + ". Add view to display the current message." })] });
     }
-
-    if (action === "set") {
-      const content = ctx.rawArgs
-        ? ctx.rawArgs.split(" ").slice(2).join(" ")
-        : (ctx.getString("content") ?? "");
-      if (!content) return ctx.reply({ embeds: [errorEmbed("Provide the message content.")] });
-      await db.insert(invokeMessages).values({ guildId: guild.id, command: cmdName, type, content })
-        .onConflictDoUpdate({
-          target: [invokeMessages.guildId, invokeMessages.command, invokeMessages.type],
-          set: { content },
-        });
-      invalidateInvokeCache(guild.id);
-      return ctx.reply({ embeds: [successEmbed(`invoke ${type} for \`${cmdName}\` set.`)] });
+    if (!MESSAGE_COMMANDS.includes(commandName)) return ctx.reply({ embeds: [errorEmbed("Unsupported command. Supported: " + MESSAGE_COMMANDS.join(", "))] });
+    if (type !== "message" && type !== "dm") return ctx.reply({ embeds: [errorEmbed("Specify message or dm.")] });
+    if (type === "dm" && !DM_COMMANDS.includes(commandName)) return ctx.reply({ embeds: [errorEmbed("DM messages are not supported for " + commandName + ".")] });
+    const tail = legacy ? args.slice(4) : args.slice(2);
+    const view = tail[0]?.toLowerCase() === "view" || body.toLowerCase() === "view";
+    if (action === "remove" || action === "reset") {
+      await db.delete(invokeMessages).where(and(eq(invokeMessages.guildId, ctx.guild.id), eq(invokeMessages.command, commandName), eq(invokeMessages.type, type)));
+      invalidateInvokeCache(ctx.guild.id);
+      return ctx.reply({ embeds: [successEmbed("Reset the " + type + " invoke message for " + commandName + ".")] });
     }
-
-    return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
+    if (view) {
+      const [row] = await db.select().from(invokeMessages).where(and(eq(invokeMessages.guildId, ctx.guild.id), eq(invokeMessages.command, commandName), eq(invokeMessages.type, type)));
+      return ctx.reply({ embeds: [row ? brandEmbed({ title: commandName + " — " + type, description: row.content.slice(0, 4000) }) : errorEmbed("No " + type + " invoke message is configured for " + commandName + ".")] });
+    }
+    if (legacy && action !== "set") return ctx.reply({ embeds: [errorEmbed("Use invoke <command> <message|dm> [view].")] });
+    if (!body) body = tail.join(" ");
+    if (!body) return ctx.reply({ embeds: [errorEmbed("Provide a message, or add view to display the current one.")] });
+    await db.insert(invokeMessages).values({ guildId: ctx.guild.id, command: commandName, type, content: body }).onConflictDoUpdate({ target: [invokeMessages.guildId, invokeMessages.command, invokeMessages.type], set: { content: body } });
+    invalidateInvokeCache(ctx.guild.id);
+    return ctx.reply({ embeds: [successEmbed("Updated the " + type + " invoke message for " + commandName + ".")] });
   },
 };
