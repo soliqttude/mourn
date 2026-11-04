@@ -2,6 +2,9 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { getGuildSettings } from "../../db/settings.js";
+import { db } from "../../db/index.js";
+import { jailedMemberRoles } from "../../db/schema.js";
+import { and, eq } from "drizzle-orm";
 
 export const command: HybridCommand = {
   name: "unjail",
@@ -31,6 +34,16 @@ export const command: HybridCommand = {
     const reason = ctx.getString("reason") ?? "Released from jail";
     try {
       await target.roles.remove(jailRole, reason);
+      const [saved] = await db.select().from(jailedMemberRoles).where(and(eq(jailedMemberRoles.guildId, guild.id), eq(jailedMemberRoles.userId, target.id)));
+      if (saved?.roleIds?.length) {
+        const botHighest = guild.members.me?.roles.highest.position ?? 0;
+        const restore = saved.roleIds.filter(id => {
+          const role = guild.roles.cache.get(id);
+          return Boolean(role && !role.managed && role.position < botHighest);
+        });
+        if (restore.length) await target.roles.add(restore, "Restoring roles after jail");
+      }
+      await db.delete(jailedMemberRoles).where(and(eq(jailedMemberRoles.guildId, guild.id), eq(jailedMemberRoles.userId, target.id)));
       return ctx.reply({ embeds: [successEmbed(`Released **${target.user.tag}** from jail.`)] });
     } catch {
       return ctx.reply({ embeds: [errorEmbed("Failed to unjail. Check my **role** hierarchy.")] });
