@@ -201,9 +201,13 @@ export const command: HybridCommand = {
     }
 
     if (action === "ignore") {
+      const ext = await getExtended(ctx.guild.id);
+      if (val.toLowerCase() === "list") {
+        const ids = ext.ignoreIds as string[];
+        return ctx.reply({ embeds: [brandEmbed({ title: "Ignored suggestion submitters", description: ids.length ? ids.map(id => `<@${id}>`).join("\n") : "No ignored members or roles." })] });
+      }
       const targetId = val.replace(/[<@!&>]/g, "");
       if (!targetId) return ctx.reply({ embeds: [errorEmbed("Mention a **member** or **role** to ignore.")] });
-      const ext = await getExtended(ctx.guild.id);
       const current = ext.ignoreIds as string[];
       const updated = current.includes(targetId) ? current.filter(i => i !== targetId) : [...current, targetId];
       await db.insert(suggestExtended).values({ guildId: ctx.guild.id, threadsEnabled: false, upvoteEmoji: "👍", downvoteEmoji: "👎", reviewChannel: null, reviewEnabled: false, ignoreIds: updated })
