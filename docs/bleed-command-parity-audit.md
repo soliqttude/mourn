@@ -3,7 +3,7 @@
 - **Reference:** user-provided Bleed command list, 306 `arguments` entries.
 - **Repository:** `soliqttude/mourn`
 - **Branch:** `feature/bleed-306-moderation-commands`
-- **Audited HEAD:** `30985e381a087876a8ce6a0d31f8290827ff81b1` (the next audit-doc commit follows this source audit)
+- **Audited HEAD:** `c69114b9d23ecfcf031ff661b6cae2e8a2c6bf36`
 - **Method:** static inspection of each mapped command source, its registered command name/aliases, dispatcher branches, options and usage. GitHub Actions `npm run build` passed on the audited source head. Discord runtime tests were not performed. The webhook lock/unlock implementation revokes the old webhook by deleting it, then creates a replacement on unlock; the database migration is required before deployment. Booster-role share listing is now scoped to the caller's own booster role. `autoresponder list tickets` now lists autoresponders whose exclusive channel is a recorded ticket channel.
 
 ## Result
@@ -46,7 +46,7 @@
 | `autoresponder` | Bare root invocation does not perform an action; child subcommands exist. |
 | `pagination` | Bare root invocation does not perform an action; child subcommands exist. |
 | `pins` | Bare root invocation does not perform an action; child subcommands exist. |
-| `webhook` | Bare root invocation does not perform an action; create/send/delete/list/info are present, but edit/lock/unlock are missing. |
+| `webhook` | Bare root invocation does not perform an action; create/send/edit/delete/list/info/lock/unlock are present. |
 | `boosts` | Bare root invocation does not perform an action; child subcommands exist. |
 | `badge` | Bare root invocation does not perform an action; child subcommands exist. |
 | `honeypot` | Bare root invocation does not perform an action; child subcommands exist. |
@@ -103,4 +103,4 @@ Counts below are source entries, not unique Discord slash commands. “Implement
 1. This audit uses the 306 entries in the supplied reference. It does not infer undocumented Bleed behavior.
 2. “Implemented” is source-level evidence only. Command registration, permission correctness, prefix/slash parity, persistence, migrations, and Discord API behavior still require build and runtime tests.
 3. Parent/root rows marked partial are distinguished from their separately audited child actions.
-4. The next implementation pass should close the three remaining missing entries and resolve the partial behavior caveats, then run typecheck/build and Discord runtime tests. Do not merge to `main` based on this audit alone.
+4. Three entries remain blocked by missing product subsystems: server-subscription premium-role support, Google Safe Browsing integration for Google commands, and custom Last.fm/Now Playing command controls. These require implementing their underlying features, not adding no-op settings. The current CI build passes; Discord runtime and production database migration tests are still required. Do not merge to `main` based on this audit alone.
