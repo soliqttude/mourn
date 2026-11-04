@@ -12,7 +12,7 @@ export const command: HybridCommand = {
   usage: "imgonly <add|remove|list> [channel]",
   examples: ["imgonly add #media", "imgonly remove #media", "imgonly list"],
   category: "settings",
-  permission: "manage_channels",
+  permission: "manage_guild",
   guildOnly: true,
   options: [
     { name: "subcommand", description: "add | remove | list", type: ApplicationCommandOptionType.String, required: true,
