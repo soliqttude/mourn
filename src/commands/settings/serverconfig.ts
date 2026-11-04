@@ -2,9 +2,6 @@ import { ApplicationCommandOptionType, PermissionFlagsBits } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 import { updateGuildSettings } from "../../db/settings.js";
-import { db } from "../../db/index.js";
-import { warnings } from "../../db/schema.js";
-import { eq } from "drizzle-orm";
 import { brandEmbed } from "../../lib/embeds.js";
 import { getGuildSettings } from "../../db/settings.js";
 import { config } from "../../config.js";
@@ -47,15 +44,11 @@ export const command: HybridCommand = {
       await updateGuildSettings(ctx.guild.id, { [key]: role.id } as any);
       return ctx.reply({ embeds: [successEmbed(action + " role set to <@&" + role.id + ">.")] });
     }
-    if (action === "resetcases") {
-      if (!member?.permissions?.has(PermissionFlagsBits.Administrator)) return ctx.reply({ embeds: [errorEmbed("You need Administrator to reset moderation cases.")] });
-      await db.delete(warnings).where(eq(warnings.guildId, ctx.guild.id));
-      return ctx.reply({ embeds: [successEmbed("All warning cases for this server have been reset.")] });
-    }
+    if (action === "resetcases") return ctx.reply({ embeds: [errorEmbed("This server does not currently store the jail-log case records required for this action; no records were changed.")] });
     if (action === "reset") {
       if (!member?.permissions?.has(PermissionFlagsBits.Administrator)) return ctx.reply({ embeds: [errorEmbed("You need Administrator to reset moderation settings.")] });
-      await updateGuildSettings(ctx.guild.id, { jailRole: null, muteRole: null, modLogChannel: null } as any);
-      return ctx.reply({ embeds: [successEmbed("Moderation role and log configuration has been reset.")] });
+      await updateGuildSettings(ctx.guild.id, { jailRole: null, muteRole: null, modLogChannel: null, automodEnabled: false, linkFilterEnabled: false, inviteFilterEnabled: false, capsFilterEnabled: false, spoilersFilterEnabled: false, massMentionEnabled: false, emojiFilterEnabled: false, musicFilesFilterEnabled: false } as any);
+      return ctx.reply({ embeds: [successEmbed("Moderation roles, log channel, and built-in content-filter toggles have been reset.")] });
     }
     if (action !== "config") return ctx.reply({ embeds: [errorEmbed("That settings action is not implemented yet.")] });
     const s = await getGuildSettings(ctx.guild.id);
