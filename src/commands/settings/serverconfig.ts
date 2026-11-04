@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   name: "settings",
   aliases: ["serverconfig", "config", "guildconfig"],
   description: "View all configured settings for this server.",
-  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jailmsg|jailrole|muted|rmuted|imuted|resetcases|reset]",
+  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|jailmsg|jailroles|jailrole|muted|rmuted|imuted|resetcases|reset]",
   examples: ["settings config", "settings modlog #mod-log", "settings joinlogs #joins", "settings jailrole @Jailed", "settings resetcases"],
   category: "settings",
   permission: "manage_guild",
@@ -33,6 +33,13 @@ export const command: HybridCommand = {
     const member = ctx.member as any;
     if (action !== "config" && action !== "resetcases" && action !== "reset" && !member?.permissions?.has(PermissionFlagsBits.ManageGuild)) {
       return ctx.reply({ embeds: [errorEmbed("You need Manage Server to change settings.")] });
+    }
+    if (action === "jailroles") {
+      const value = (ctx.args[1] ?? ctx.getString("value") ?? "").toLowerCase();
+      if (!["yes", "no", "on", "off"].includes(value)) return ctx.reply({ embeds: [errorEmbed("Use settings jailroles yes or settings jailroles no.")] });
+      const enabled = value === "yes" || value === "on";
+      await updateGuildSettings(ctx.guild.id, { jailRemoveRoles: enabled } as any);
+      return ctx.reply({ embeds: [successEmbed(`Role removal during jail has been ${enabled ? "enabled" : "disabled"}.`)] });
     }
     if (action === "jailmsg") {
       const message = ctx.getString("value") ?? ctx.args.slice(1).join(" ");
