@@ -4,9 +4,10 @@ import { successEmbed, errorEmbed } from "../../lib/embeds.js";
 
 export const command: HybridCommand = {
   name: "setbanner",
-  description: "Set the server banner via URL (requires boost level 2).",
+  aliases: ["serverbanner"],
+  description: "Set the server banner via URL (requires a banner-capable server).",
   usage: "setbanner <url>",
-  examples: ["setbanner https://i.imgur.com/abc.png"],
+  examples: ["setbanner https://example.com/banner.png"],
   category: "utility",
   permission: "manage_guild",
   guildOnly: true,
@@ -14,12 +15,12 @@ export const command: HybridCommand = {
   async execute(ctx) {
     if (!ctx.guild) return;
     const url = ctx.getString("url") ?? ctx.args[0];
-    if (!url) return ctx.reply({ embeds: [errorEmbed("Please provide an image URL.")] });
+    if (!url || !/^https?:\/\//i.test(url)) return ctx.reply({ embeds: [errorEmbed("Provide a valid HTTP or HTTPS image URL.")] });
     try {
       await ctx.guild.setBanner(url);
       return ctx.reply({ embeds: [successEmbed("Server banner updated.")] });
     } catch (e: any) {
-      return ctx.reply({ embeds: [errorEmbed(`failed to set banner: ${e.message ?? "unknown error"}`)] });
+      return ctx.reply({ embeds: [errorEmbed(`Failed to set server banner: ${e.message ?? "unknown error"}`)] });
     }
   },
 };
