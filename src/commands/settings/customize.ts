@@ -37,7 +37,7 @@ async function urlToDataUri(url: string): Promise<string> {
 export const command: HybridCommand = {
   name: "customize",
   aliases: ["botcustomize", "botcustom"],
-  description: "customize the bot's avatar, banner, or bio for this server",
+  description: "customize the bot's server avatar/banner or global application bio",
   category: "settings",
   permission: "owner",
   guildOnly: true,
@@ -63,7 +63,7 @@ export const command: HybridCommand = {
     },
     {
       name: "value",
-      description: "the new value (url for avatar/banner, text for bio)",
+      description: "image URL for avatar/banner; bio text changes the bot globally",
       type: ApplicationCommandOptionType.String,
       required: false,
     },
@@ -161,7 +161,7 @@ export const command: HybridCommand = {
         });
       }
       await updateGuildSettings(ctx.guild.id, { customizeBio: value });
-      return ctx.reply({ embeds: [successEmbed(`bio updated — **${value}**`, "settings")] });
+      return ctx.reply({ embeds: [successEmbed(`global application bio updated — **${value}**`, "settings")] });
     }
 
     return ctx.reply({
