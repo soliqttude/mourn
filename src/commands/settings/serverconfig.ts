@@ -154,8 +154,14 @@ export const command: HybridCommand = {
     }
     if (action === "reset") {
       if (!member?.permissions?.has(PermissionFlagsBits.Administrator)) return ctx.reply({ embeds: [errorEmbed("You need Administrator to reset moderation settings.")] });
-      await updateGuildSettings(ctx.guild.id, { jailRole: null, jailChannel: null, jailMessage: null, premiumRole: null, googleSafeSearch: false, disableCustomFms: false, jailRemoveRoles: false, muteRole: null, imageMuteRole: null, reactionMuteRole: null, modLogChannel: null, automodEnabled: false, linkFilterEnabled: false, inviteFilterEnabled: false, capsFilterEnabled: false, spoilersFilterEnabled: false, massMentionEnabled: false, emojiFilterEnabled: false, musicFilesFilterEnabled: false } as any);
-      return ctx.reply({ embeds: [successEmbed("Moderation roles, log channels, premium role, Google SafeSearch, custom Last.fm Now Playing, and built-in content-filter settings have been reset.")] });
+      await updateGuildSettings(ctx.guild.id, {
+        jailRole: null, jailChannel: null, jailMessage: null, jailRemoveRoles: false,
+        muteRole: null, imageMuteRole: null, reactionMuteRole: null, modLogChannel: null, staffRoleIds: [],
+        automodEnabled: false, linkFilterEnabled: false, inviteFilterEnabled: false, capsFilterEnabled: false,
+        spoilersFilterEnabled: false, massMentionEnabled: false, emojiFilterEnabled: false, musicFilesFilterEnabled: false,
+        antinukeEnabled: false, antinukeLogChannel: null, antiraidEnabled: false, antiraidLogChannel: null,
+      } as any);
+      return ctx.reply({ embeds: [successEmbed("Moderation configuration reset: jail and mute settings, staff roles, moderation logs, content filters, antinuke, and antiraid have been disabled or cleared. Unrelated server settings were left unchanged.")] });
     }
     if (action !== "config") return ctx.reply({ embeds: [errorEmbed("That settings action is not implemented yet.")] });
     const s = await getGuildSettings(ctx.guild.id);
