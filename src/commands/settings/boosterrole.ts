@@ -163,13 +163,19 @@ export const command: HybridCommand = {
         await db.delete(boosterRoleShares).where(and(eq(boosterRoleShares.guildId, guild.id), eq(boosterRoleShares.ownerUserId, share.ownerUserId), eq(boosterRoleShares.sharedUserId, ctx.user.id)));
         return ctx.reply({ embeds: [successEmbed("You left the shared booster role.", "settings")] });
       }
-      if (sub === "max" || sub === "limit" || sub === "list") {
+      if (sub === "list") {
+        const ownRoleId = await getBoosterRole(guild.id, ctx.user.id);
+        if (!ownRoleId) return ctx.reply({ embeds: [errorEmbed("Create your booster role first.")] });
+        const rows = await db.select().from(boosterRoleShares).where(and(
+          eq(boosterRoleShares.guildId, guild.id),
+          eq(boosterRoleShares.ownerUserId, ctx.user.id),
+          eq(boosterRoleShares.roleId, ownRoleId),
+        ));
+        return ctx.reply({ embeds: [brandEmbed({ title: "Your shared booster role", description: rows.length ? rows.map(row => `<@! ${row.sharedUserId}>`).join("\n").replace(/<@! /g, "<@!") : "You have not shared your booster role with anyone." })] });
+      }
+      if (sub === "max" || sub === "limit") {
         if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server for this share setting.")] });
         const [cfg] = await db.select().from(boosterRoleConfig).where(eq(boosterRoleConfig.guildId, guild.id));
-        if (sub === "list") {
-          const rows = await db.select().from(boosterRoleShares).where(eq(boosterRoleShares.guildId, guild.id));
-          return ctx.reply({ embeds: [brandEmbed({ title: "Shared booster roles", description: rows.length ? rows.map(row => `<@&${row.roleId}> — owner <@${row.ownerUserId}>, member <@${row.sharedUserId}>`).join("\n") : "No shared booster roles." })] });
-        }
         const amount = Number(ctx.args[2] ?? ctx.getString("value") ?? "");
         if (!Number.isInteger(amount) || amount < 1 || amount > 100) return ctx.reply({ embeds: [errorEmbed("Set a whole-number limit between 1 and 100.")] });
         const values = { guildId: guild.id, baseRoleId: cfg?.baseRoleId ?? null, roleLimit: cfg?.roleLimit ?? 0, maxSharedMembers: sub === "max" ? amount : cfg?.maxSharedMembers ?? 0, maxRolesPerMember: sub === "limit" ? amount : cfg?.maxRolesPerMember ?? 0 };
