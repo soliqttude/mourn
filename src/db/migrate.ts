@@ -56,6 +56,7 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_avatar TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_banner TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS customize_bio TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS premium_role TEXT`,
 
   `CREATE TABLE IF NOT EXISTS antinuke_whitelist (
     guild_id TEXT NOT NULL, user_id TEXT NOT NULL, PRIMARY KEY (guild_id, user_id)
