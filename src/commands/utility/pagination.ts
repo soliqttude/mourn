@@ -5,7 +5,7 @@ import { db } from "../../db/index.js";
 import { paginatedEmbeds } from "../../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { parseScript } from "../../lib/scripting.js";
-import { buildNavRow } from "../../features/pagination.js";
+import { buildNavRow, restorePaginationReactions } from "../../features/pagination.js";
 
 function extractMessageId(input: string): string {
   const match = input.match(/(?:channels\/\d+\/\d+\/)?(\d{15,25})/);
@@ -84,6 +84,7 @@ export const command: HybridCommand = {
       if (!firstCode) return ctx.reply({ embeds: [errorEmbed("The message has no page content to paginate.")] });
       await db.insert(paginatedEmbeds).values({ messageId: msgId, guildId, channelId: channel.id, pages: [firstCode], currentPage: 0 });
       await message.edit({ components: [buildNavRow(0, 1, msgId)] }).catch(() => {});
+      await restorePaginationReactions(message).catch(() => {});
       return ctx.reply({ embeds: [successEmbed("pagination enabled for that message.", "utility")] });
     }
 
@@ -167,7 +168,8 @@ export const command: HybridCommand = {
       const message = await (channel as any).messages.fetch(msgId).catch(() => null);
       if (!message) return ctx.reply({ embeds: [errorEmbed("I couldn't find that message.")] });
       await message.edit({ components: [buildNavRow(existing.currentPage, existing.pages.length, msgId)] }).catch(() => {});
-      return ctx.reply({ embeds: [successEmbed("pagination controls restored.", "utility")] });
+      await restorePaginationReactions(message).catch(() => {});
+      return ctx.reply({ embeds: [successEmbed("pagination controls and arrow reactions restored.", "utility")] });
     }
 
     return ctx.reply({ embeds: [errorEmbed("Invalid pagination subcommand.")] });
