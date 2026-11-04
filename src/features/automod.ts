@@ -39,8 +39,10 @@ export async function handleAutomod(_client: Client, message: Message) {
   );
   const content = message.content;
   let reason: string | null = null;
+  const regexRules = whitelist.filter(row => row.filterType === "regex");
+  if (regexRules.some(row => { try { return new RegExp(row.value, "i").test(content); } catch { return false; } })) reason = "your message matched a blocked regular expression";
 
-  if (enabled.links && !exempt("links")) {
+  if (!reason && enabled.links && !exempt("links")) {
     const urls = content.match(URL_RE) ?? [];
     if (urls.some(url => { const host = hostOf(url); return !host || !allowed("links", host); })) reason = "links are not allowed here";
   }
