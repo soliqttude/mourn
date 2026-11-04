@@ -150,7 +150,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "share") {
-      const sub = (ctx.args[1] ?? "").toLowerCase();
+      const sub = (ctx.getString("subaction") ?? ctx.args[1] ?? "").toLowerCase();
       if (sub === "remove") {
         const roleId = (ctx.args[2] ?? ctx.getRole("role")?.id ?? "").replace(/[<@&>]/g, "");
         if (!roleId) return ctx.reply({ embeds: [errorEmbed("Provide the shared role to leave.")] });
