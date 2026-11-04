@@ -36,6 +36,13 @@ export async function createBoosterRole(guild: Guild, member: GuildMember): Prom
   }
 
   const cfg = await getBoosterRoleConfig(guild.id);
+  if (cfg?.roleLimit && cfg.roleLimit > 0) {
+    const activeRoles = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
+    if (activeRoles.length >= cfg.roleLimit) {
+      logger.info({ guild: guild.id, limit: cfg.roleLimit }, "boosterrole: server role cap reached");
+      return null;
+    }
+  }
   const role = await guild.roles.create({
     name: `${member.user.username}'s role`,
     color: 0x2f3136,
