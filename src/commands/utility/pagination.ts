@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
@@ -74,6 +74,12 @@ export const command: HybridCommand = {
       const message = await (channel as any).messages.fetch(msgId).catch(() => null);
       if (!message) return ctx.reply({ embeds: [errorEmbed("I couldn't find that message.")] });
       if (message.author.id !== ctx.client.user?.id) return ctx.reply({ embeds: [errorEmbed("Only messages sent by Villain can be paginated.")] });
+      if (!code && ctx.source === "slash") {
+        const modal = new ModalBuilder().setCustomId(`pagination:modal:set:${ctx.user.id}:${channel.id}:${msgId}`).setTitle("Set pagination");
+        const input = new TextInputBuilder().setCustomId("page_content").setLabel("First page embed code").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(4000);
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+        return (ctx.raw as any).showModal(modal);
+      }
       const firstCode = code || message.content || (message.embeds[0] ? message.embeds[0].toJSON().description ?? "" : "");
       if (!firstCode) return ctx.reply({ embeds: [errorEmbed("The message has no page content to paginate.")] });
       await db.insert(paginatedEmbeds).values({ messageId: msgId, guildId, channelId: channel.id, pages: [firstCode], currentPage: 0 });
@@ -84,7 +90,13 @@ export const command: HybridCommand = {
     if (!existing) return ctx.reply({ embeds: [errorEmbed("Paginated embed not found.")] });
 
     if (sub === "add") {
-      if (!code) return ctx.reply({ embeds: [errorEmbed("Provide the page content.")] });
+      if (!code && ctx.source === "slash") {
+        const modal = new ModalBuilder().setCustomId(`pagination:modal:add:${ctx.user.id}:${existing.channelId}:${msgId}`).setTitle("Add pagination page");
+        const input = new TextInputBuilder().setCustomId("page_content").setLabel("New page embed code").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(4000);
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+        return (ctx.raw as any).showModal(modal);
+      }
+      if (!code) return ctx.reply({ embeds: [errorEmbed("Use the slash command to open the page editor, or provide page content.")] });
       const pages = [...existing.pages, code];
       await db.update(paginatedEmbeds).set({ pages }).where(eq(paginatedEmbeds.messageId, msgId));
       const channel = ctx.guild.channels.cache.get(existing.channelId);
@@ -97,6 +109,12 @@ export const command: HybridCommand = {
 
     if (sub === "update") {
       const page = Number.isInteger(pageArg) ? pageArg : NaN;
+      if (!code && ctx.source === "slash" && Number.isInteger(page) && page >= 1 && page <= existing.pages.length) {
+        const modal = new ModalBuilder().setCustomId(`pagination:modal:update:${ctx.user.id}:${existing.channelId}:${msgId}:${page}`).setTitle("Update pagination page");
+        const input = new TextInputBuilder().setCustomId("page_content").setLabel("Updated page embed code").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(4000).setValue(existing.pages[page - 1]!.slice(0, 4000));
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+        return (ctx.raw as any).showModal(modal);
+      }
       if (!Number.isInteger(page) || page < 1 || page > existing.pages.length)
         return ctx.reply({ embeds: [errorEmbed(`Page must be between 1 and ${existing.pages.length}.`)] });
       if (!code) return ctx.reply({ embeds: [errorEmbed("Provide the updated page content.")] });
