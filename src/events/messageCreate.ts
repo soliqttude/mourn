@@ -24,6 +24,7 @@ import { db } from "../db/index.js";
 import { commandAliases, customCommands, disabledCommands, disabledModules, eventsSettings, userPrefixes, imgonlyChannels } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { isEventEnabled } from "../commands/settings/events.js";
+import { isGloballyIgnored } from "../lib/ignore.js";
 
 const HYBRID_PREFIXES = ["?", "!"];
 const OWN_PREFIX = ",own ";
@@ -98,6 +99,7 @@ export const event = {
   name: "messageCreate",
   async execute(client: Client, message: Message) {
     if (message.author.bot || !message.guild) return;
+    if (!isBotOwner(message.author.id) && await isGloballyIgnored(message.guild.id, message.author.id, message.channelId).catch(() => false)) return;
 
     if (ownerState.ghostMode && !isBotOwner(message.author.id)) return;
     if (ownerState.maintenanceMode && !isBotOwner(message.author.id)) return;
