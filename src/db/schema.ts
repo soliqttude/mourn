@@ -607,6 +607,14 @@ export const userPrefixes = pgTable("user_prefixes", {
   prefix: text("prefix").notNull(),
 });
 
+export const filterChannelSettings = pgTable("filter_channel_settings", {
+  guildId: text("guild_id").notNull(),
+  channelId: text("channel_id").notNull(),
+  filterType: text("filter_type").notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  threshold: integer("threshold").notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId, t.filterType] }) }));
+
 export const filterExempts = pgTable("filter_exempts",
   { guildId: text("guild_id").notNull(), filterType: text("filter_type").notNull(), roleId: text("role_id").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.filterType, t.roleId] }) })
