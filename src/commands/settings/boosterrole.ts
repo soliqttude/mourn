@@ -125,7 +125,15 @@ export const command: HybridCommand = {
           removed++;
         }
       }
-      return ctx.reply({ embeds: [successEmbed(`Cleaned ${removed} stale booster role record(s).`, "settings")] });
+      const sharedRows = await db.select().from(boosterRoleShares).where(eq(boosterRoleShares.guildId, guild.id));
+      let removedShares = 0;
+      for (const row of sharedRows) {
+        if (!guild.roles.cache.has(row.roleId) || !members.has(row.sharedUserId) || !members.has(row.ownerUserId)) {
+          await db.delete(boosterRoleShares).where(and(eq(boosterRoleShares.guildId, guild.id), eq(boosterRoleShares.ownerUserId, row.ownerUserId), eq(boosterRoleShares.sharedUserId, row.sharedUserId)));
+          removedShares++;
+        }
+      }
+      return ctx.reply({ embeds: [successEmbed(`Cleaned ${removed} stale booster role record(s) and ${removedShares} stale share record(s).`, "settings")] });
     }
 
     if (action === "link") {
