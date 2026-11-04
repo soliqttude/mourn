@@ -72,9 +72,11 @@ export const command: HybridCommand = {
     if (action === "cleanup") {
       if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to clean up booster roles.")] });
       const rows = await db.select().from(boosterRoles).where(eq(boosterRoles.guildId, guild.id));
+      const members = await guild.members.fetch().catch(() => null);
+      if (!members) return ctx.reply({ embeds: [errorEmbed("I couldn't fetch the server member list, so cleanup was cancelled without deleting records.")] });
       let removed = 0;
       for (const row of rows) {
-        if (!guild.roles.cache.has(row.roleId) || !guild.members.cache.has(row.userId)) {
+        if (!guild.roles.cache.has(row.roleId) || !members.has(row.userId)) {
           await db.delete(boosterRoles).where(and(eq(boosterRoles.guildId, guild.id), eq(boosterRoles.userId, row.userId)));
           removed++;
         }
