@@ -153,7 +153,7 @@ export const command: HybridCommand = {
         await db.insert(boosterRoleConfig).values(values).onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { maxSharedMembers: values.maxSharedMembers, maxRolesPerMember: values.maxRolesPerMember } });
         return ctx.reply({ embeds: [successEmbed(`booster role share ${sub} set to ${amount}.`, "settings")] });
       }
-      const target = ctx.getMember("member") ?? (ctx.args[1] ? await guild.members.fetch(ctx.args[1].replace(/[<@!>]/g, "")).catch(() => null) : null);
+      const target = (await ctx.getMember("member")) ?? (ctx.args[1] ? await guild.members.fetch(ctx.args[1].replace(/[<@!>]/g, "")).catch(() => null) : null);
       if (!target) return ctx.reply({ embeds: [errorEmbed("Mention a member to share your booster role with.")] });
       if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You already own this booster role.")] });
       const roleId = await getBoosterRole(guild.id, ctx.user.id);
