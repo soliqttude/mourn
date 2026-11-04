@@ -5,7 +5,7 @@ import { filterExempts, filterWhitelist, filterChannelSettings, filterLinkWhitel
 import { getGuildSettings } from "../db/settings.js";
 import { hasModPerms } from "../lib/permissions.js";
 
-const URL_RE = /https?:\\/\\/[^\\s]+/gi;
+const URL_RE = /https?:\/\/[^\s]+/gi;
 const recentMessages = new Map<string, number[]>();
 
 function hostOf(value: string): string | null {
@@ -64,7 +64,7 @@ export async function handleAutomod(_client: Client, message: Message) {
     if (urls.some(url => { const host = hostOf(url); return !host || !allowed("links", host); })) reason = "links are not allowed here";
   }
   if (!reason && enabled("invites") && !exempt("invites")) {
-    const invites = content.match(/(?:discord\\.gg|discord(?:app)?\\.com\\/invite)\\/[a-z0-9-]+/gi) ?? [];
+    const invites = content.match(/(?:discord\.gg|discord(?:app)?\.com\/invite)\/[a-z0-9-]+/gi) ?? [];
     if (invites.some(invite => !allowed("invites", invite.toLowerCase()))) reason = "server invites are not allowed";
   }
   if (!reason && enabled("caps") && !exempt("caps")) {
@@ -74,7 +74,7 @@ export async function handleAutomod(_client: Client, message: Message) {
     if (letters.length >= 10 && percent >= threshold("caps", 70)) reason = "excessive capital letters are not allowed";
   }
   if (!reason && enabled("spoilers") && !exempt("spoilers")) {
-    const count = (content.match(/\\|\\|[\\s\\S]+?\\|\\|/g) ?? []).length;
+    const count = (content.match(/\|\|[\s\S]+?\|\|/g) ?? []).length;
     if (count >= threshold("spoilers", 1)) reason = "spoilers are not allowed";
   }
   if (!reason && enabled("massmention") && !exempt("massmention")) {
@@ -82,11 +82,11 @@ export async function handleAutomod(_client: Client, message: Message) {
     if (message.mentions.everyone || count >= threshold("massmention", 5)) reason = "mass mentions are not allowed";
   }
   if (!reason && enabled("emoji") && !exempt("emoji")) {
-    const count = (content.match(/\\p{Extended_Pictographic}/gu) ?? []).length;
+    const count = (content.match(/\p{Extended_Pictographic}/gu) ?? []).length;
     if (count >= threshold("emoji", 10)) reason = "excessive emoji are not allowed";
   }
   if (!reason && enabled("musicfiles") && !exempt("musicfiles")) {
-    const hasMusic = message.attachments.some(a => /\\.(mp3|wav|ogg|flac|m4a|aac|opus)(?:$|\\?)/i.test(a.name ?? a.url));
+    const hasMusic = message.attachments.some(a => /\.(mp3|wav|ogg|flac|m4a|aac|opus)(?:$|\?)/i.test(a.name ?? a.url));
     if (hasMusic) reason = "music files are not allowed here";
   }
   if (!reason && enabled("spam") && !exempt("spam")) {
