@@ -80,6 +80,7 @@ export const guildSettings = pgTable("guild_settings", {
   customizeAvatar: text("customize_avatar"),
   customizeBanner: text("customize_banner"),
   customizeBio: text("customize_bio"),
+  premiumRole: text("premium_role"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
