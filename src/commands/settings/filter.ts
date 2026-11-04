@@ -87,17 +87,39 @@ export const command: HybridCommand = {
     if (sub === "regex") {
       if (!val) return ctx.reply({ embeds: [errorEmbed("Provide a regex pattern.")] });
       try { new RegExp(val); } catch { return ctx.reply({ embeds: [errorEmbed("Invalid regex pattern.")] }); }
+      const existing = await db.select().from(filterWhitelist).where(and(
+        eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, "regex"), eq(filterWhitelist.value, val)
+      ));
+      if (existing.length) {
+        await db.delete(filterWhitelist).where(and(eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, "regex"), eq(filterWhitelist.value, val)));
+        return ctx.reply({ embeds: [successEmbed(`regex pattern removed: \`${val}\`.`)] });
+      }
       await db.insert(filterWhitelist).values({ guildId: ctx.guild.id, filterType: "regex", value: val }).onConflictDoNothing();
       return ctx.reply({ embeds: [successEmbed(`regex pattern added: \`${val}\`.`)] });
     }
 
-    if (sub === "whitelist") {
-      // filter whitelist links example.com
-      const filterType = val.toLowerCase();
-      const whitelistVal = args[2] ?? ctx.getString("setting") ?? "";
-      if (!filterType || !whitelistVal) return ctx.reply({ embeds: [errorEmbed("Usage: **filter** whitelist <links|**invites**> <value>")] });
+    // Bleed-compatible whitelist commands. Calling the same value twice toggles it off.
+    if (sub === "whitelist" || (sub === "links" && args[1]?.toLowerCase() === "whitelist")) {
+      const nestedLinks = sub === "links";
+      const filterType = nestedLinks ? "links" : (val.toLowerCase() || "word");
+      const whitelistVal = nestedLinks ? (args.slice(2).join(" ") || ctx.getString("setting") || "") : args.slice(2).join(" ") || ctx.getString("setting") || "";
+      if (!whitelistVal) return ctx.reply({ embeds: [errorEmbed(nestedLinks ? "Usage: filter links whitelist <url>" : "Usage: filter whitelist <word>")] });
+      const existing = await db.select().from(filterWhitelist).where(and(
+        eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, filterType), eq(filterWhitelist.value, whitelistVal)
+      ));
+      if (existing.length) {
+        await db.delete(filterWhitelist).where(and(eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, filterType), eq(filterWhitelist.value, whitelistVal)));
+        return ctx.reply({ embeds: [successEmbed(`\`${whitelistVal}\` removed from the **${filterType}** whitelist.`)] });
+      }
       await db.insert(filterWhitelist).values({ guildId: ctx.guild.id, filterType, value: whitelistVal }).onConflictDoNothing();
-      return ctx.reply({ embeds: [successEmbed(`\`${whitelistVal}\` whitelisted from the **${filterType}** filter.`)] });
+      return ctx.reply({ embeds: [successEmbed(`\`${whitelistVal}\` added to the **${filterType}** whitelist.`)] });
+    }
+
+    if (sub === "exempt" && args[1]?.toLowerCase() === "list") {
+      const exempts = await db.select().from(filterExempts).where(and(
+        eq(filterExempts.guildId, ctx.guild.id), eq(filterExempts.filterType, "word")
+      ));
+      return ctx.reply({ embeds: [brandEmbed({ title: "Word filter exemptions", description: exempts.length ? exempts.map(e => `<@&${e.roleId}>`).join("\\n") : "No exempt roles configured." })] });
     }
 
     if (sub === "snipe") {
