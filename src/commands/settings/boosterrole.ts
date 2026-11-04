@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType, type GuildMember } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
-import { boosterRoles, boosterRoleConfig } from "../../db/schema.js";
+import { boosterRoles, boosterRoleConfig, boostAutoRole } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { createBoosterRole, deleteBoosterRole, getBoosterRole } from "../../features/boosterRoles.js";
 
@@ -39,7 +39,7 @@ export const command: HybridCommand = {
         { name: "random", value: "random" },
         { name: "list", value: "list" },
         { name: "cleanup", value: "cleanup" },
-        { name: "limit", value: "limit" },
+        { name: "limit", value: "limit" }, { name: "award", value: "award" },
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
@@ -60,6 +60,22 @@ export const command: HybridCommand = {
       await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: null, roleLimit: limit })
         .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { roleLimit: limit } });
       return ctx.reply({ embeds: [successEmbed(`server booster role limit set to ${limit}.`, "settings")] });
+    }
+
+    if (action === "award") {
+      if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to configure the boost reward role.")] });
+      const sub = (ctx.args[1] ?? "").toLowerCase();
+      const [current] = await db.select().from(boostAutoRole).where(eq(boostAutoRole.guildId, guild.id));
+      if (sub === "view") return ctx.reply({ embeds: [brandEmbed({ title: "Booster reward role", description: current?.roleId ? `<@&${current.roleId}>` : "No reward role configured." })] });
+      if (sub === "unset") {
+        await db.delete(boostAutoRole).where(eq(boostAutoRole.guildId, guild.id));
+        return ctx.reply({ embeds: [successEmbed("Booster reward role removed.", "settings")] });
+      }
+      const role = ctx.getRole("role") ?? guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a role, or use award unset / award view.")] });
+      await db.insert(boostAutoRole).values({ guildId: guild.id, roleId: role.id })
+        .onConflictDoUpdate({ target: boostAutoRole.guildId, set: { roleId: role.id } });
+      return ctx.reply({ embeds: [successEmbed(`boosters will receive <@&${role.id}> when they start boosting.`, "settings")] });
     }
 
     if (action === "setbase" || action === "base") {
