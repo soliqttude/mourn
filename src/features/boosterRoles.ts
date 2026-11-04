@@ -63,10 +63,13 @@ export async function createBoosterRole(guild: Guild, member: GuildMember): Prom
     await role.delete("boosterrole: configured base role is missing").catch(() => {});
     return null;
   }
-  await role.setPosition(Math.max(1, baseRole.position - 1)).catch(async (err) => {
+  try {
+    await role.setPosition(Math.max(1, baseRole.position - 1));
+  } catch (err) {
     logger.warn({ err, guild: guild.id }, "boosterrole: failed to position role below base role");
     await role.delete("boosterrole: could not position below base role").catch(() => {});
-  });
+    return null;
+  }
 
   const added = await member.roles.add(role).then(() => true).catch((err) => {
     logger.warn({ err, guild: guild.id, user: member.id }, "boosterrole: failed to assign role to member");
