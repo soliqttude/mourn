@@ -537,11 +537,6 @@ export const disabledModules = pgTable("disabled_modules",
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.channelId, t.module] }) })
 );
 
-export const boosterRoleShares = pgTable("booster_role_shares",
-  { guildId: text("guild_id").notNull(), ownerId: text("owner_id").notNull(), sharedWithId: text("shared_with_id").notNull() },
-  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.ownerId, t.sharedWithId] }) })
-);
-
 export const boosterRoleFilter = pgTable("booster_role_filter",
   { guildId: text("guild_id").notNull(), word: text("word").notNull() },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.word] }) })
