@@ -61,7 +61,7 @@ export const command: HybridCommand = {
       if (isStaffAction && !isAdmin) {
         const settings = await getGuildSettings(ctx.guild.id);
         const staffRoles: string[] = (settings as any).staffRoleIds ?? [];
-        const isStaff = staffRoles.length === 0 || staffRoles.some((r: string) => member?.roles?.cache?.has(r));
+        const isStaff = staffRoles.length > 0 && staffRoles.some((r: string) => member?.roles?.cache?.has(r));
         if (!isStaff) return ctx.reply({ embeds: [errorEmbed("You need staff **permissions** to use this.")] });
       } else if (isAdminAction && !isAdmin) {
         return ctx.reply({ embeds: [errorEmbed("You need **Manage Guild** to configure suggestions.")] });
