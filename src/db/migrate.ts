@@ -313,6 +313,7 @@ const STATEMENTS: string[] = [
     content TEXT NOT NULL,
     PRIMARY KEY (guild_id, command, type)
   )`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_message TEXT`,
   `ALTER TABLE invite_uses ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ`,
   `ALTER TABLE invite_uses ADD COLUMN IF NOT EXISTS is_fake BOOLEAN NOT NULL DEFAULT false`,
   `CREATE TABLE IF NOT EXISTS invite_bonus (
