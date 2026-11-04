@@ -386,6 +386,7 @@ export const boosterRoles = pgTable("booster_roles",
 export const boosterRoleConfig = pgTable("booster_role_config", {
   guildId: text("guild_id").primaryKey(),
   baseRoleId: text("base_role_id"),
+  roleLimit: integer("role_limit").default(0).notNull(),
 });
 
 export const invokeMessages = pgTable("invoke_messages",
