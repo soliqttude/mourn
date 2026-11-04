@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
@@ -72,8 +72,38 @@ export const command: HybridCommand = {
     }
 
     if (sub === "add" || sub === "update") {
+      if (!trigger && ctx.source === "slash") {
+        const modal = new ModalBuilder().setCustomId(`ar:modal:${sub}:${ctx.user.id}`).setTitle(sub === "add" ? "Add autoresponder" : "Update autoresponder");
+        const triggerInput = new TextInputBuilder().setCustomId("trigger").setLabel("Trigger").setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(100);
+        const responseInput = new TextInputBuilder().setCustomId("response").setLabel("Response / embed script").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(4000);
+        const flagsInput = new TextInputBuilder().setCustomId("flags").setLabel("strict, reply, delete, ignore_command_check, self_destruct").setStyle(TextInputStyle.Short).setRequired(false).setPlaceholder("false, false, false, false, 0");
+        const formInput = new TextInputBuilder().setCustomId("ticket_form").setLabel("Ticket form topic (optional)").setStyle(TextInputStyle.Short).setRequired(false);
+        modal.addComponents(
+          new ActionRowBuilder<TextInputBuilder>().addComponents(triggerInput),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(responseInput),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(flagsInput),
+          new ActionRowBuilder<TextInputBuilder>().addComponents(formInput),
+        );
+        return (ctx.raw as any).showModal(modal);
+      }
       if (!trigger) return ctx.reply({ embeds: [errorEmbed("Provide a trigger.")] });
-      if (!response) return ctx.reply({ embeds: [errorEmbed("Provide response content. Use embed scripting in the response field.")] });
+      if (!response) {
+        if (ctx.source === "slash") {
+          const modal = new ModalBuilder().setCustomId(`ar:modal:${sub}:${ctx.user.id}`).setTitle(sub === "add" ? "Add autoresponder" : "Update autoresponder");
+          const triggerInput = new TextInputBuilder().setCustomId("trigger").setLabel("Trigger").setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(100).setValue(trigger);
+          const responseInput = new TextInputBuilder().setCustomId("response").setLabel("Response / embed script").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(4000);
+          const flagsInput = new TextInputBuilder().setCustomId("flags").setLabel("strict, reply, delete, ignore_command_check, self_destruct").setStyle(TextInputStyle.Short).setRequired(false).setPlaceholder("false, false, false, false, 0");
+          const formInput = new TextInputBuilder().setCustomId("ticket_form").setLabel("Ticket form topic (optional)").setStyle(TextInputStyle.Short).setRequired(false);
+          modal.addComponents(
+            new ActionRowBuilder<TextInputBuilder>().addComponents(triggerInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(responseInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(flagsInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(formInput),
+          );
+          return (ctx.raw as any).showModal(modal);
+        }
+        return ctx.reply({ embeds: [errorEmbed("Use the slash command to open the response editor, or provide response content after the trigger.")] });
+      }
       const reply = ctx.getBoolean("reply") ?? false;
       const deleteTrigger = ctx.getBoolean("delete") ?? false;
       const ignoreCommandCheck = ctx.getBoolean("ignore_command_check") ?? false;
