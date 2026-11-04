@@ -21,7 +21,7 @@ import { ownerState, logCommand } from "../lib/ownerState.js";
 import { cleanError } from "../lib/format.js";
 import { isBlacklisted } from "../lib/blacklistCache.js";
 import { db } from "../db/index.js";
-import { commandAliases, customCommands, disabledCommands, disabledModules, eventsSettings, userPrefixes } from "../db/schema.js";
+import { commandAliases, customCommands, disabledCommands, disabledModules, eventsSettings, userPrefixes, imgonlyChannels } from "../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { isEventEnabled } from "../commands/settings/events.js";
 
@@ -151,6 +151,26 @@ export const event = {
       } catch (err) {
         logger.warn({ err }, "honeypot check failed");
       }
+    }
+
+    // Image-only gallery channels allow image attachments/embeds with optional captions.
+    try {
+      const [gallery] = await db.select().from(imgonlyChannels).where(
+        and(eq(imgonlyChannels.guildId, message.guild.id), eq(imgonlyChannels.channelId, message.channelId))
+      );
+      if (gallery) {
+        const hasImageAttachment = message.attachments.some((attachment) =>
+          attachment.contentType?.toLowerCase().startsWith("image/") ||
+          /\.(png|jpe?g|gif|webp|avif|bmp)$/i.test(attachment.name ?? attachment.url)
+        );
+        const hasImageEmbed = message.embeds.some((embed) => Boolean(embed.image?.url || embed.thumbnail?.url));
+        if (!hasImageAttachment && !hasImageEmbed) {
+          await message.delete().catch(() => {});
+          return;
+        }
+      }
+    } catch (err) {
+      logger.warn({ err, guildId: message.guild.id, channelId: message.channelId }, "image-only channel check failed");
     }
 
     // Repost the configured sticky after each human message in its channel.
