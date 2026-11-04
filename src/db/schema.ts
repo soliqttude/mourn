@@ -57,6 +57,7 @@ export const guildSettings = pgTable("guild_settings", {
   levelsEnabled: boolean("levels_enabled").default(true).notNull(),
   levelUpChannel: text("level_up_channel"),
   jailRole: text("jail_role"),
+  jailMessage: text("jail_message"),
   muteRole: text("mute_role"),
   autoroleId: text("autorole_id"),
   logColors: jsonb("log_colors").$type<Record<string, string>>().default({}).notNull(),
