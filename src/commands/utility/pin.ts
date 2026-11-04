@@ -10,10 +10,22 @@ export const command: HybridCommand = {
   category: "utility",
   permission: "manage_messages",
   guildOnly: true,
-  options: [{ name: "message", description: "Message link or ID", type: ApplicationCommandOptionType.String, required: true }],
+  options: [{ name: "message", description: "Message link or ID", type: ApplicationCommandOptionType.String, required: false }],
   async execute(ctx) {
     if (!ctx.guild) return;
     const input = ctx.getString("message") ?? ctx.args[0] ?? "";
+    if (!input && ctx.source === "prefix") {
+      const raw = ctx.raw as import("discord.js").Message;
+      const reference = raw.reference?.messageId ? await raw.fetchReference().catch(() => null) : null;
+      if (reference) {
+        try {
+          await reference.pin();
+          return ctx.reply({ embeds: [successEmbed("Replied-to message pinned.")] });
+        } catch (e: any) {
+          return ctx.reply({ embeds: [errorEmbed("failed to pin: " + (e.message ?? "unknown error"))] });
+        }
+      }
+    }
     // Parse message link: https://discord.com/channels/guildId/channelId/messageId
     const linkMatch = input.match(/channels\/\d+\/(\d+)\/(\d+)/);
     let channelId: string, messageId: string;
