@@ -102,7 +102,7 @@ export const command: HybridCommand = {
     if (sub === "whitelist" || (sub === "links" && args[1]?.toLowerCase() === "whitelist")) {
       const nestedLinks = sub === "links";
       const filterType = nestedLinks ? "links" : (val.toLowerCase() || "word");
-      const whitelistVal = nestedLinks ? (args.slice(2).join(" ") || ctx.getString("setting") || "") : args.slice(2).join(" ") || ctx.getString("setting") || "";
+      const whitelistVal = nestedLinks ? (args.slice(2).join(" ") || ctx.getString("setting") || "") : (args.slice(1).join(" ") || ctx.getString("setting") || "");
       if (!whitelistVal) return ctx.reply({ embeds: [errorEmbed(nestedLinks ? "Usage: filter links whitelist <url>" : "Usage: filter whitelist <word>")] });
       const existing = await db.select().from(filterWhitelist).where(and(
         eq(filterWhitelist.guildId, ctx.guild.id), eq(filterWhitelist.filterType, filterType), eq(filterWhitelist.value, whitelistVal)
@@ -119,7 +119,7 @@ export const command: HybridCommand = {
       const exempts = await db.select().from(filterExempts).where(and(
         eq(filterExempts.guildId, ctx.guild.id), eq(filterExempts.filterType, "word")
       ));
-      return ctx.reply({ embeds: [brandEmbed({ title: "Word filter exemptions", description: exempts.length ? exempts.map(e => `<@&${e.roleId}>`).join("\\n") : "No exempt roles configured." })] });
+      return ctx.reply({ embeds: [brandEmbed({ title: "Word filter exemptions", description: exempts.length ? exempts.map(e => `<@&${e.roleId}>`).join("\n") : "No exempt roles configured." })] });
     }
 
     if (sub === "snipe") {
