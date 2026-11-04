@@ -330,13 +330,12 @@ export const command: HybridCommand = {
 
     if (action === "icon") {
       const icon = ctx.getString("url") ?? ctx.getString("value") ?? ctx.args.slice(1).join(" ");
-      if (!icon) return ctx.reply({ embeds: [errorEmbed("Please provide an **emoji** or image url.")] });
-      await role.setUnicodeEmoji(icon).catch(async () => {
-        if (/^https?:\/\//.test(icon)) {
-          await role.setIcon(icon).catch(() => {});
-        }
-      });
-      return ctx.reply({ embeds: [successEmbed(`updated your booster role icon.`, "settings")] });
+      if (!icon) return ctx.reply({ embeds: [errorEmbed("Please provide an emoji or image URL.")] });
+      const updated = /^https?:\/\//i.test(icon)
+        ? await role.setIcon(icon).then(() => true).catch(() => false)
+        : await role.setUnicodeEmoji(icon).then(() => true).catch(() => false);
+      if (!updated) return ctx.reply({ embeds: [errorEmbed("I could not update the role icon. Check that the emoji or image URL is valid and that this server supports role icons.")] });
+      return ctx.reply({ embeds: [successEmbed("Your booster role icon was successfully updated.", "settings")] });
     }
 
     return ctx.reply({ embeds: [errorEmbed("Invalid action.")] });
