@@ -45,6 +45,10 @@ export const command: HybridCommand = {
         const [saved] = await db.select().from(jailedMemberRoles).where(and(eq(jailedMemberRoles.guildId, guild.id), eq(jailedMemberRoles.userId, target.id)));
         if (saved?.roleIds?.length) await target.roles.remove(saved.roleIds, reason);
       }
+      if (settings.jailChannel) {
+        const channel = guild.channels.cache.get(settings.jailChannel);
+        if (channel?.isTextBased()) await (channel as any).send({ content: `<@${target.id}> was jailed by <@${ctx.user.id}>. Reason: ${reason}`, allowedMentions: { users: [target.id, ctx.user.id] } }).catch(() => {});
+      }
       if (settings.jailMessage) {
         const message = renderTemplate(settings.jailMessage, { member: target });
         await target.send({ content: message, allowedMentions: { parse: [] } }).catch(() => {});
