@@ -365,6 +365,7 @@ const STATEMENTS: string[] = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS webhook_guild_ident_idx ON managed_webhooks (guild_id, identifier)`,
+  `ALTER TABLE managed_webhooks ADD COLUMN IF NOT EXISTS locked BOOLEAN NOT NULL DEFAULT false`,
   `CREATE TABLE IF NOT EXISTS music_settings (
     guild_id TEXT PRIMARY KEY, dj_role_id TEXT, autoplay BOOLEAN NOT NULL DEFAULT false
   )`,
