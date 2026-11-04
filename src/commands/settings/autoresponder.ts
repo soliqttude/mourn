@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
 import { successEmbed, errorEmbed, brandEmbed } from "../../lib/embeds.js";
 import { db } from "../../db/index.js";
-import { autoresponders } from "../../db/schema.js";
+import { autoresponders, ticketForms } from "../../db/schema.js";
 import { and, eq } from "drizzle-orm";
 import {
   addAutoresponder, listAutoresponders, removeAutoresponderByTrigger, resetAutoresponders,
@@ -79,6 +79,12 @@ export const command: HybridCommand = {
       const ignoreCommandCheck = ctx.getBoolean("ignore_command_check") ?? false;
       const strict = ctx.getBoolean("strict") ?? false;
       const ticketForm = ctx.getString("ticket_form")?.trim() || null;
+      if (ticketForm) {
+        const forms = await db.select().from(ticketForms).where(eq(ticketForms.guildId, ctx.guild.id));
+        if (!forms.some(form => (form.topic ?? "").toLowerCase() === ticketForm.toLowerCase())) {
+          return ctx.reply({ embeds: [errorEmbed(`No ticket form found for topic \`${ticketForm}\`. Configure it in the ticket forms first.`)] });
+        }
+      }
       const selfDestructSeconds = ctx.getNumber("self_destruct");
       if (selfDestructSeconds !== null && (selfDestructSeconds < 6 || selfDestructSeconds > 60))
         return ctx.reply({ embeds: [errorEmbed("self_destruct must be between 6 and 60 seconds.")] });
