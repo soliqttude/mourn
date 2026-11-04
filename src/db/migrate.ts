@@ -84,6 +84,7 @@ const STATEMENTS: string[] = [
   `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS delete_trigger BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS reply BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS ignore_command_check BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE autoresponders ADD COLUMN IF NOT EXISTS ticket_form TEXT`,
   `CREATE TABLE IF NOT EXISTS reaction_roles (
     guild_id TEXT NOT NULL, message_id TEXT NOT NULL, emoji TEXT NOT NULL,
     role_id TEXT NOT NULL, channel_id TEXT NOT NULL, PRIMARY KEY (message_id, emoji)
