@@ -56,6 +56,13 @@ export const event = {
       }
     }
 
+    // Apply the configured nickname before autoroles and welcome messages.
+    const autoNick = (settings as any).autoNick;
+    if (autoNick?.trim()) {
+      const nickname = autoNick.replace(/\{username\}/gi, member.user.username).replace(/\{displayname\}/gi, member.displayName).slice(0, 32);
+      if (nickname && nickname !== member.nickname) await member.setNickname(nickname, "Configured automatic join nickname").catch(() => {});
+    }
+
     // Apply every configured autorole before the member's welcome message.
     const autoroleIds = String(settings.autoroleId ?? "").split(",").map((id) => id.trim()).filter(Boolean);
     if (autoroleIds.length) {
