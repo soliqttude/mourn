@@ -13,7 +13,7 @@ export const command: HybridCommand = {
   name: "settings",
   aliases: ["serverconfig", "config", "guildconfig"],
   description: "View all configured settings for this server.",
-  usage: "settings [config|modlog|joinlogs|jailrole|muted|resetcases|reset]",
+  usage: "settings [config|modlog|joinlogs|staff|jailrole|muted|resetcases|reset]",
   examples: ["settings config", "settings modlog #mod-log", "settings joinlogs #joins", "settings jailrole @Jailed", "settings resetcases"],
   category: "settings",
   permission: "manage_guild",
@@ -35,6 +35,17 @@ export const command: HybridCommand = {
       if (!channel) return ctx.reply({ embeds: [errorEmbed("Provide a target channel.")] });
       await updateGuildSettings(ctx.guild.id, action === "modlog" ? { modLogChannel: channel.id } : { joinLogChannel: channel.id });
       return ctx.reply({ embeds: [successEmbed(action + " channel set to <#" + channel.id + ">.")] });
+    }
+    if (action === "staff") {
+      const settings = await getGuildSettings(ctx.guild.id);
+      const roles = [...((settings as any).staffRoleIds ?? [])] as string[];
+      const sub = (ctx.args[1] ?? "").toLowerCase();
+      if (sub === "list") return ctx.reply({ embeds: [brandEmbed({ title: "Staff roles", description: roles.length ? roles.map(id => `<@&${id}>`).join("\n") : "No staff roles configured." })] });
+      const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a role, or use staff list.")] });
+      const updated = roles.includes(role.id) ? roles.filter(id => id !== role.id) : [...roles, role.id];
+      await updateGuildSettings(ctx.guild.id, { staffRoleIds: updated } as any);
+      return ctx.reply({ embeds: [successEmbed(`<@&${role.id}> ${updated.includes(role.id) ? "added to" : "removed from"} the staff role list.`)] });
     }
     if (action === "jailrole" || action === "muted") {
       const role = ctx.getRole("role") ?? ctx.guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
