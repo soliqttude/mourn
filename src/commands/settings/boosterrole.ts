@@ -56,7 +56,10 @@ export const command: HybridCommand = {
     if (!guild) return;
     const member = ctx.member as GuildMember;
 
-    const action = (ctx.getSubcommandGroup() ?? ctx.getSubcommand() ?? ctx.getString("action") ?? ctx.args[0] ?? "").toLowerCase();
+    // Prefix commands receive positional args; slash commands receive Discord subcommands.
+    const action = (ctx.source === "prefix"
+      ? ctx.args[0]
+      : (ctx.getSubcommandGroup() ?? ctx.getSubcommand()))?.toLowerCase() ?? "";
 
     if (action === "limit") {
       if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to set the booster role limit.")] });
@@ -86,15 +89,15 @@ export const command: HybridCommand = {
 
     if (action === "award") {
       if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to configure the boost reward role.")] });
-      const sub = (ctx.getSubcommand() ?? ctx.getString("subaction") ?? ctx.args[1] ?? "").toLowerCase();
+      const sub = (ctx.source === "prefix" ? ctx.args[1] : ctx.getSubcommand())?.toLowerCase() ?? "";
       const [current] = await db.select().from(boostAutoRole).where(eq(boostAutoRole.guildId, guild.id));
       if (sub === "view") return ctx.reply({ embeds: [brandEmbed({ title: "Booster reward role", description: current?.roleId ? `<@&${current.roleId}>` : "No reward role configured." })] });
       if (sub === "unset" || sub === "remove") {
         await db.delete(boostAutoRole).where(eq(boostAutoRole.guildId, guild.id));
         return ctx.reply({ embeds: [successEmbed("Booster reward role removed.", "settings")] });
       }
-      const roleArg = ctx.args[sub === "set" ? 2 : 1] ?? "";
-      const role = ctx.getRole("role") ?? guild.roles.cache.get(roleArg.replace(/[<@&>]/g, ""));
+      const roleArg = ctx.source === "prefix" ? (ctx.args[2] ?? "") : "";
+      const role = (ctx.source === "slash" ? ctx.getRole("role") : null) ?? guild.roles.cache.get(roleArg.replace(/[<@&>]/g, ""));
       if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a role, or use award view / award remove.")] });
       await db.insert(boostAutoRole).values({ guildId: guild.id, roleId: role.id })
         .onConflictDoUpdate({ target: boostAutoRole.guildId, set: { roleId: role.id } });
@@ -104,7 +107,7 @@ export const command: HybridCommand = {
     if (action === "setbase" || action === "base") {
       if (!member.permissions.has("ManageGuild" as any))
         return ctx.reply({ embeds: [errorEmbed("You need Manage Server to set the base role.")] });
-      const role = ctx.getRole("role") ?? guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
+      const role = (ctx.source === "slash" ? ctx.getRole("role") : null) ?? guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
       if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify the base **role**.")] });
       await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: role.id })
         .onConflictDoUpdate({ target: boosterRoleConfig.guildId, set: { baseRoleId: role.id } });
@@ -223,9 +226,11 @@ export const command: HybridCommand = {
 
     if (action === "color") {
       if (!member.premiumSince) return ctx.reply({ embeds: [errorEmbed("You must be boosting this server to create a booster role.")] });
-      const colorInput = ctx.getString("color") ?? ctx.getString("value") ?? ctx.args[1] ?? "";
-      const secondInput = ctx.getString("second_color") ?? ctx.args[2] ?? "";
-      const requestedName = ctx.getString("name") ?? (ctx.source === "prefix" ? ctx.args.slice(secondInput ? 3 : 2).join(" ") : "");
+      const colorInput = ctx.source === "prefix" ? (ctx.args[1] ?? "") : (ctx.getString("color") ?? "");
+      const secondInput = ctx.source === "prefix" ? (ctx.args[2] ?? "") : (ctx.getString("second_color") ?? "");
+      const requestedName = ctx.source === "prefix"
+        ? ctx.args.slice(secondInput ? 3 : 2).join(" ")
+        : (ctx.getString("name") ?? "");
       const named: Record<string, number> = { red: 0xff0000, green: 0x00ff00, blue: 0x0000ff, white: 0xffffff, black: 0x000000, orange: 0xffa500, purple: 0x800080, pink: 0xffc0cb, yellow: 0xffff00, cyan: 0x00ffff, magenta: 0xff00ff, gold: 0xffd700, silver: 0xc0c0c0, teal: 0x008080, navy: 0x000080, crimson: 0xdc143c, coral: 0xff7f50, violet: 0xee82ee, indigo: 0x4b0082, lime: 0x00ff00, maroon: 0x800000, olive: 0x808000, turquoise: 0x40e0d0, brown: 0xa52a2a, salmon: 0xfa8072, orchid: 0xda70d6, plum: 0xdda0dd };
       const parseColor = (value: string): number | null => { const v = value.trim().toLowerCase(); if (named[v] !== undefined) return named[v]; const h = v.replace(/^#/, ""); return /^[0-9a-f]{6}$/i.test(h) ? parseInt(h, 16) : null; };
       const primary = parseColor(colorInput);
@@ -286,7 +291,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "rename") {
-      const name = ctx.getString("name") ?? ctx.getString("value") ?? ctx.args.slice(1).join(" ");
+      const name = ctx.source === "prefix" ? ctx.args.slice(1).join(" ") : (ctx.getString("name") ?? "");
       if (!name) return ctx.reply({ embeds: [errorEmbed("Please provide a new name.")] });
       if (name.length > 100) return ctx.reply({ embeds: [errorEmbed("**Role** name must be 100 characters or less.")] });
       const blocked = await db.select().from(filterWhitelist).where(and(eq(filterWhitelist.guildId, guild.id), eq(filterWhitelist.filterType, "boosterrole-name")));
@@ -329,7 +334,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "icon") {
-      const icon = ctx.getString("url") ?? ctx.getString("value") ?? ctx.args.slice(1).join(" ");
+      const icon = ctx.source === "prefix" ? ctx.args.slice(1).join(" ") : (ctx.getString("url") ?? "");
       if (!icon) return ctx.reply({ embeds: [errorEmbed("Please provide an emoji or image URL.")] });
       const updated = /^https?:\/\//i.test(icon)
         ? await role.setIcon(icon).then(() => true).catch(() => false)
