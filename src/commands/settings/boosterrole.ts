@@ -171,7 +171,7 @@ export const command: HybridCommand = {
           eq(boosterRoleShares.ownerUserId, ctx.user.id),
           eq(boosterRoleShares.roleId, ownRoleId),
         ));
-        return ctx.reply({ embeds: [brandEmbed({ title: "Your shared booster role", description: rows.length ? rows.map(row => `<@! ${row.sharedUserId}>`).join("\n").replace(/<@! /g, "<@!") : "You have not shared your booster role with anyone." })] });
+        return ctx.reply({ embeds: [brandEmbed({ title: "Your shared booster role", description: rows.length ? rows.map(row => `<@${row.sharedUserId}>`).join("\n") : "You have not shared your booster role with anyone." })] });
       }
       if (sub === "max" || sub === "limit") {
         if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server for this share setting.")] });
