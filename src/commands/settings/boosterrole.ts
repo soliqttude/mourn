@@ -24,7 +24,7 @@ export const command: HybridCommand = {
   options: [
     {
       name: "action",
-      description: "create, delete, remove, rename, color, random, icon, setbase, base, list, or cleanup",
+      description: "create, delete, remove, rename, color, random, icon, setbase, base, list, cleanup, link, or share",
       type: ApplicationCommandOptionType.String,
       required: true,
       choices: [
@@ -39,10 +39,13 @@ export const command: HybridCommand = {
         { name: "random", value: "random" },
         { name: "list", value: "list" },
         { name: "cleanup", value: "cleanup" },
+        { name: "limit", value: "limit" }, { name: "award", value: "award" }, { name: "filter", value: "filter" },
+        { name: "link", value: "link" }, { name: "share", value: "share" }, { name: "dominant", value: "dominant" },
       ],
     },
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
-    { name: "role", description: "Base role for setbase", type: ApplicationCommandOptionType.Role, required: false },
+    { name: "role", description: "Role for base, linking, or awards", type: ApplicationCommandOptionType.Role, required: false },
+    { name: "member", description: "Member to link or share the role with", type: ApplicationCommandOptionType.User, required: false },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
@@ -82,6 +85,18 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [successEmbed(`Cleaned ${removed} stale booster role record(s).`, "settings")] });
     }
 
+    // Administrators can link an existing role to a member; this uses the same
+    // ownership table as roles created by boosters, so no parallel feature is introduced.
+    if (action === "link") {
+      if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to link booster roles.")] });
+      const target = ctx.getMember("member") ?? (ctx.args[1] ? await guild.members.fetch(ctx.args[1].replace(/[<@!>]/g, "")).catch(() => null) : null);
+      const linkedRole = ctx.getRole("role");
+      if (!target || !linkedRole) return ctx.reply({ embeds: [errorEmbed("Provide both a member and an existing role.")] });
+      await db.insert(boosterRoles).values({ guildId: guild.id, userId: target.id, roleId: linkedRole.id })
+        .onConflictDoUpdate({ target: [boosterRoles.guildId, boosterRoles.userId], set: { roleId: linkedRole.id } });
+      return ctx.reply({ embeds: [successEmbed(`linked <@&${linkedRole.id}> to <@${target.id}>.`, "settings")] });
+    }
+
     const isBoosting = member.premiumSince !== null;
     if (!isBoosting)
       return ctx.reply({ embeds: [errorEmbed("You must be a server **booster** to use **booster** **roles**.")] });
@@ -95,6 +110,22 @@ export const command: HybridCommand = {
       if (!roleId) return ctx.reply({ embeds: [errorEmbed("Failed to create **booster** **role**.")] });
 
       return ctx.reply({ embeds: [successEmbed(`your booster role (<@&${roleId}>) has been created! use \`boosterrole rename\` and \`boosterrole color\` to customize it.`, "settings")] });
+    }
+
+    if (action === "share") {
+      const target = ctx.getMember("member") ?? (ctx.args[1] ? await guild.members.fetch(ctx.args[1].replace(/[<@!>]/g, "")).catch(() => null) : null);
+      if (!target) return ctx.reply({ embeds: [errorEmbed("Mention a member to share your booster role with.")] });
+      if (target.id === ctx.user.id) return ctx.reply({ embeds: [errorEmbed("You already own this booster role.")] });
+      const ownedRoleId = await getBoosterRole(guild.id, ctx.user.id);
+      if (!ownedRoleId) return ctx.reply({ embeds: [errorEmbed("Create your booster role first.")] });
+      const ownedRole = guild.roles.cache.get(ownedRoleId);
+      if (!ownedRole) return ctx.reply({ embeds: [errorEmbed("Your booster role no longer exists.")] });
+      if (action === "share") {
+        await target.roles.add(ownedRole).catch(() => null);
+        await db.insert(boosterRoles).values({ guildId: guild.id, userId: target.id, roleId: ownedRoleId })
+          .onConflictDoUpdate({ target: [boosterRoles.guildId, boosterRoles.userId], set: { roleId: ownedRoleId } });
+        return ctx.reply({ embeds: [successEmbed(`shared <@&${ownedRoleId}> with <@${target.id}>.`, "settings")] });
+      }
     }
 
     const roleId = await getBoosterRole(guild.id, ctx.user.id);
