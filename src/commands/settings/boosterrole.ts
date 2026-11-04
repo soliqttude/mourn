@@ -90,16 +90,17 @@ export const command: HybridCommand = {
         await db.delete(boostAutoRole).where(eq(boostAutoRole.guildId, guild.id));
         return ctx.reply({ embeds: [successEmbed("Booster reward role removed.", "settings")] });
       }
-      const role = ctx.getRole("role") ?? guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
-      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a role, or use award unset / award view.")] });
+      const roleArg = ctx.args[sub === "set" ? 2 : 1] ?? "";
+      const role = ctx.getRole("role") ?? guild.roles.cache.get(roleArg.replace(/[<@&>]/g, ""));
+      if (!role) return ctx.reply({ embeds: [errorEmbed("Provide a role, or use award view / award remove.")] });
       await db.insert(boostAutoRole).values({ guildId: guild.id, roleId: role.id })
         .onConflictDoUpdate({ target: boostAutoRole.guildId, set: { roleId: role.id } });
       return ctx.reply({ embeds: [successEmbed(`boosters will receive <@&${role.id}> when they start boosting.`, "settings")] });
     }
 
     if (action === "setbase" || action === "base") {
-      if (!member.permissions.has("Administrator" as any))
-        return ctx.reply({ embeds: [errorEmbed("Only admins can set the base **role**.")] });
+      if (!member.permissions.has("ManageGuild" as any))
+        return ctx.reply({ embeds: [errorEmbed("You need Manage Server to set the base role.")] });
       const role = ctx.getRole("role") ?? guild.roles.cache.get((ctx.args[1] ?? "").replace(/[<@&>]/g, ""));
       if (!role) return ctx.reply({ embeds: [errorEmbed("Please specify the base **role**.")] });
       await db.insert(boosterRoleConfig).values({ guildId: guild.id, baseRoleId: role.id })
@@ -222,7 +223,7 @@ export const command: HybridCommand = {
       const colorInput = ctx.getString("color") ?? ctx.getString("value") ?? ctx.args[1] ?? "";
       const secondInput = ctx.getString("second_color") ?? ctx.args[2] ?? "";
       const requestedName = ctx.getString("name") ?? (ctx.source === "prefix" ? ctx.args.slice(secondInput ? 3 : 2).join(" ") : "");
-      const named: Record<string, number> = { red: 0xff0000, green: 0x00ff00, blue: 0x0000ff, white: 0xffffff, black: 0x000000, orange: 0xffa500, purple: 0x800080, pink: 0xffc0cb, yellow: 0xffff00, cyan: 0x00ffff, magenta: 0xff00ff, gold: 0xffd700, silver: 0xc0c0c0, teal: 0x008080, navy: 0x000080 };
+      const named: Record<string, number> = { red: 0xff0000, green: 0x00ff00, blue: 0x0000ff, white: 0xffffff, black: 0x000000, orange: 0xffa500, purple: 0x800080, pink: 0xffc0cb, yellow: 0xffff00, cyan: 0x00ffff, magenta: 0xff00ff, gold: 0xffd700, silver: 0xc0c0c0, teal: 0x008080, navy: 0x000080, crimson: 0xdc143c, coral: 0xff7f50, violet: 0xee82ee, indigo: 0x4b0082, lime: 0x00ff00, maroon: 0x800000, olive: 0x808000, turquoise: 0x40e0d0, brown: 0xa52a2a, salmon: 0xfa8072, orchid: 0xda70d6, plum: 0xdda0dd };
       const parseColor = (value: string): number | null => { const v = value.trim().toLowerCase(); if (named[v] !== undefined) return named[v]; const h = v.replace(/^#/, ""); return /^[0-9a-f]{6}$/i.test(h) ? parseInt(h, 16) : null; };
       const primary = parseColor(colorInput);
       const secondary = secondInput ? parseColor(secondInput) : null;
@@ -264,7 +265,7 @@ export const command: HybridCommand = {
           return ctx.reply({ embeds: [errorEmbed("Discord rejected the second color. Gradient role colors may not be available to this server.")] });
         }
       }
-      return ctx.reply({ embeds: [successEmbed(`@ ${ctx.user.username}: Your booster role was assigned with hex code #${primary.toString(16).padStart(6, "0")}${secondary !== null ? ` and second color #${secondary.toString(16).padStart(6, "0")}` : ""}.`, "settings")] });
+      return ctx.reply({ embeds: [successEmbed(`Your booster role was assigned with hex code #${primary.toString(16).padStart(6, "0")}${secondary !== null ? ` and second color #${secondary.toString(16).padStart(6, "0")}` : ""}.`, "settings")] });
     }
 
     const roleId = await getBoosterRole(guild.id, ctx.user.id);
@@ -324,7 +325,7 @@ export const command: HybridCommand = {
     }
 
     if (action === "icon") {
-      const icon = ctx.getString("value");
+      const icon = ctx.getString("url") ?? ctx.getString("value") ?? ctx.args.slice(1).join(" ");
       if (!icon) return ctx.reply({ embeds: [errorEmbed("Please provide an **emoji** or image url.")] });
       await role.setUnicodeEmoji(icon).catch(async () => {
         if (/^https?:\/\//.test(icon)) {
