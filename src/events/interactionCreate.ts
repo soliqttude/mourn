@@ -447,6 +447,51 @@ async function handleSelect(client: Client, interaction: StringSelectMenuInterac
 }
 
 async function handleModal(client: Client, interaction: ModalSubmitInteraction) {
+  if (interaction.customId.startsWith("ar:modal:")) {
+    const [, , action, requesterId] = interaction.customId.split(":");
+    if (!interaction.guild || interaction.user.id !== requesterId || !["add", "update"].includes(action ?? "")) {
+      return interaction.reply({ content: "This autoresponder form is not valid for this user or server.", flags: MessageFlags.Ephemeral });
+    }
+    const trigger = interaction.fields.getTextInputValue("trigger").trim().toLowerCase();
+    const response = interaction.fields.getTextInputValue("response").trim();
+    const flags = interaction.fields.getTextInputValue("flags").split(",").map(value => value.trim().toLowerCase());
+    const strict = ["true", "yes", "on", "1"].includes(flags[0] ?? "");
+    const reply = ["true", "yes", "on", "1"].includes(flags[1] ?? "");
+    const deleteTrigger = ["true", "yes", "on", "1"].includes(flags[2] ?? "");
+    const ignoreCommandCheck = ["true", "yes", "on", "1"].includes(flags[3] ?? "");
+    const selfDestructValue = Number(flags[4] ?? 0);
+    const selfDestructSeconds = selfDestructValue > 0 ? selfDestructValue : null;
+    const ticketForm = interaction.fields.getTextInputValue("ticket_form").trim() || null;
+    if (!trigger || !response) return interaction.reply({ content: "Trigger and response are required.", flags: MessageFlags.Ephemeral });
+    if (selfDestructSeconds !== null && (!Number.isInteger(selfDestructSeconds) || selfDestructSeconds < 6 || selfDestructSeconds > 60)) {
+      return interaction.reply({ content: "self_destruct must be a whole number from 6 to 60 seconds.", flags: MessageFlags.Ephemeral });
+    }
+    const { db } = await import("../db/index.js");
+    const { autoresponders, ticketForms } = await import("../db/schema.js");
+    const { and, eq } = await import("drizzle-orm");
+    const { addAutoresponder, listAutoresponders } = await import("../features/autoresponders.js");
+    if (ticketForm) {
+      const forms = await db.select().from(ticketForms).where(eq(ticketForms.guildId, interaction.guild.id));
+      if (!forms.some(form => (form.topic ?? "").toLowerCase() === ticketForm.toLowerCase())) {
+        return interaction.reply({ content: `No ticket form found for topic "${ticketForm}". Configure it in ticket forms first.`, flags: MessageFlags.Ephemeral });
+      }
+    }
+    const existing = (await listAutoresponders(interaction.guild.id)).find(row => row.trigger === trigger);
+    if (action === "add") {
+      if (existing) return interaction.reply({ content: "An autoresponder already exists for that trigger. Use update.", flags: MessageFlags.Ephemeral });
+      await addAutoresponder(interaction.guild.id, trigger, response, strict ? "exact" : "contains", interaction.user.id, {
+        notStrict: !strict, selfDestructSeconds, deleteTrigger, reply, ignoreCommandCheck,
+      });
+      await db.update(autoresponders).set({ ticketForm }).where(and(eq(autoresponders.guildId, interaction.guild.id), eq(autoresponders.trigger, trigger)));
+    } else {
+      if (!existing) return interaction.reply({ content: "No autoresponder found for that trigger.", flags: MessageFlags.Ephemeral });
+      await db.update(autoresponders).set({
+        response, matchType: strict ? "exact" : "contains", notStrict: !strict,
+        selfDestructSeconds, deleteTrigger, reply, ignoreCommandCheck, ticketForm,
+      }).where(and(eq(autoresponders.guildId, interaction.guild.id), eq(autoresponders.id, existing.id)));
+    }
+    return interaction.reply({ content: `Autoresponder ${action === "add" ? "created" : "updated"} for "${trigger}".`, flags: MessageFlags.Ephemeral });
+  }
   if (interaction.customId.startsWith("antinuke:config-submit:")) {
     const [, , guildId, requesterId, moduleName] = interaction.customId.split(":");
     if (!interaction.guild || interaction.guild.id !== guildId || interaction.user.id !== requesterId) {
