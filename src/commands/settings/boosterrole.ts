@@ -45,6 +45,7 @@ export const command: HybridCommand = {
     { name: "value", description: "Name / color hex / emoji / base role", type: ApplicationCommandOptionType.String, required: false },
     { name: "role", description: "Role for base or awards", type: ApplicationCommandOptionType.Role, required: false },
     { name: "member", description: "Member to link or share the role with", type: ApplicationCommandOptionType.User, required: false },
+    { name: "subaction", description: "Share or award sub-action", type: ApplicationCommandOptionType.String, required: false, choices: [{ name: "max", value: "max" }, { name: "limit", value: "limit" }, { name: "list", value: "list" }, { name: "remove", value: "remove" }, { name: "unset", value: "unset" }, { name: "view", value: "view" }] },
   ],
   async execute(ctx) {
     const guild = ctx.guild;
@@ -81,7 +82,7 @@ export const command: HybridCommand = {
 
     if (action === "award") {
       if (!member.permissions.has("ManageGuild" as any)) return ctx.reply({ embeds: [errorEmbed("You need Manage Server to configure the boost reward role.")] });
-      const sub = (ctx.args[1] ?? "").toLowerCase();
+      const sub = (ctx.getString("subaction") ?? ctx.args[1] ?? "").toLowerCase();
       const [current] = await db.select().from(boostAutoRole).where(eq(boostAutoRole.guildId, guild.id));
       if (sub === "view") return ctx.reply({ embeds: [brandEmbed({ title: "Booster reward role", description: current?.roleId ? `<@&${current.roleId}>` : "No reward role configured." })] });
       if (sub === "unset") {
