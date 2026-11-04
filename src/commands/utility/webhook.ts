@@ -60,7 +60,7 @@ export const command: HybridCommand = {
 
     if (sub === "edit") {
       const messageLink = name ?? "";
-      const match = messageLink.match(/^https?:\\/\\/discord(?:app)?\\.com\\/channels\\/(\\d+)\\/(\\d+)\\/(\\d+)(?:\\?.*)?$/i);
+      const match = messageLink.match(/^https?:\/\/discord(?:app)?\.com\/channels\/(\d+)\/(\d+)\/(\d+)(?:\?.*)?$/i);
       if (!match || match[1] !== guildId) return ctx.reply({ embeds: [errorEmbed("Provide a valid message link from this server.")] });
       const [, , channelId, messageId] = match;
       const messageText = ctx.getString("message") ?? ctx.args.slice(2).join(" ");
