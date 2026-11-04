@@ -28,7 +28,8 @@ export const command: HybridCommand = {
     const embed = new EmbedBuilder()
       .setColor(config.brandColor)
       .setTitle("Google search")
-      .setDescription(`[${query.replace(/\[/g, "\\[").replace(/\]/g, "\\]")}](${url.toString()})`)
+      .setURL(url.toString())
+      .setDescription(query.slice(0, 4000))
       .setFooter({ text: `SafeSearch ${safeSearch ? "enabled" : "disabled"}` });
     return ctx.reply({ embeds: [embed] });
   },
