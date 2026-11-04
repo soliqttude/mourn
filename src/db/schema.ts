@@ -58,6 +58,7 @@ export const guildSettings = pgTable("guild_settings", {
   levelUpChannel: text("level_up_channel"),
   jailRole: text("jail_role"),
   jailMessage: text("jail_message"),
+  jailRemoveRoles: boolean("jail_remove_roles").default(false).notNull(),
   muteRole: text("mute_role"),
   autoroleId: text("autorole_id"),
   logColors: jsonb("log_colors").$type<Record<string, string>>().default({}).notNull(),
@@ -115,6 +116,11 @@ export const antinukePermissionWatches = pgTable(
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.direction, t.permission] }) }),
 );
 
+export const jailedMemberRoles = pgTable("jailed_member_roles", {
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  roleIds: jsonb("role_ids").$type<string[]>().default([]).notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));
 export const warnings = pgTable("warnings",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), reason: text("reason").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildUserIdx: index("warnings_guild_user_idx").on(t.guildId, t.userId) })
