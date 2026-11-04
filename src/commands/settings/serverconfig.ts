@@ -16,7 +16,7 @@ export const command: HybridCommand = {
   name: "settings",
   aliases: ["serverconfig", "config", "guildconfig"],
   description: "View all configured settings for this server.",
-  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|autonick|baserole|jail|jailmsg|jailroles|jailrole|muted|rmuted|imuted|resetcases|reset]",
+  usage: "settings [config|modlog|joinlogs|staff|dj|autoplay|autonick|baserole|jail|jailmsg|jailroles|jailrole|muted|rmuted|imuted|googlesafetylevel|disablecustomfms|premiumrole|resetcases|reset]",
   examples: ["settings config", "settings modlog #mod-log", "settings joinlogs #joins", "settings jailrole @Jailed", "settings resetcases"],
   category: "settings",
   permission: "manage_guild",
