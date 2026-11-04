@@ -314,6 +314,13 @@ const STATEMENTS: string[] = [
     PRIMARY KEY (guild_id, command, type)
   )`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_message TEXT`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS jail_remove_roles BOOLEAN NOT NULL DEFAULT false`,
+  `CREATE TABLE IF NOT EXISTS jailed_member_roles (
+    guild_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    role_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+    PRIMARY KEY (guild_id, user_id)
+  )`,
   `ALTER TABLE invite_uses ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ`,
   `ALTER TABLE invite_uses ADD COLUMN IF NOT EXISTS is_fake BOOLEAN NOT NULL DEFAULT false`,
   `CREATE TABLE IF NOT EXISTS invite_bonus (
