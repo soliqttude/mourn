@@ -23,7 +23,7 @@ export const command: HybridCommand = {
     const guild = ctx.guild;
     if (!guild) return;
     const prefixOffset = ctx.source === "prefix" && ["add", "list"].includes((ctx.args[0] ?? "").toLowerCase()) ? 1 : 0;
-    const action = (ctx.getString("action") ?? (ctx.source === "prefix" ? (ctx.args[0]?.toLowerCase() === "list" ? "list" : "add") : "add")).toLowerCase();
+    const action = (ctx.source === "prefix" ? (ctx.args[0]?.toLowerCase() === "list" ? "list" : "add") : (ctx.getString("action") ?? "add")).toLowerCase();
 
     if (action === "list") {
       const rows = await db.select().from(tempRoles).where(eq(tempRoles.guildId, guild.id)).orderBy(asc(tempRoles.expiresAt)).limit(40);
