@@ -64,6 +64,7 @@ export const guildSettings = pgTable("guild_settings", {
   muteRole: text("mute_role"),
   autoroleId: text("autorole_id"),
   logColors: jsonb("log_colors").$type<Record<string, string>>().default({}).notNull(),
+  lockdownIgnoreChannels: jsonb("lockdown_ignore_channels").$type<string[]>().default([]).notNull(),
   confessionChannel: text("confession_channel"),
   reportChannel: text("report_channel"),
   suggestionsChannel: text("suggestions_channel"),
@@ -292,6 +293,33 @@ export const modNotes = pgTable("mod_notes",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), note: text("note").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildUserIdx: index("mod_notes_guild_user_idx").on(t.guildId, t.userId) })
 );
+export const hardBans = pgTable("hard_bans", {
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  moderatorId: text("moderator_id").notNull(),
+  reason: text("reason").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));
+
+export const caseProofs = pgTable("case_proofs", {
+  guildId: text("guild_id").notNull(),
+  caseId: integer("case_id").notNull(),
+  explanation: text("explanation").default("").notNull(),
+  attachmentUrls: jsonb("attachment_urls").$type<string[]>().default([]).notNull(),
+  updatedBy: text("updated_by").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.caseId] }) }));
+
+export const tempRoles = pgTable("temp_roles", {
+  id: serial("id").primaryKey(),
+  guildId: text("guild_id").notNull(),
+  userId: text("user_id").notNull(),
+  roleId: text("role_id").notNull(),
+  addedBy: text("added_by").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({ guildExpiryIdx: index("temp_roles_guild_expiry_idx").on(t.guildId, t.expiresAt) }));
+
 export const tempBans = pgTable("temp_bans",
   { id: serial("id").primaryKey(), guildId: text("guild_id").notNull(), userId: text("user_id").notNull(), moderatorId: text("moderator_id").notNull(), reason: text("reason").notNull(), unbanAt: timestamp("unban_at", { withTimezone: true }).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull() },
   (t) => ({ guildIdx: index("temp_bans_guild_idx").on(t.guildId) })

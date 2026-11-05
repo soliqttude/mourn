@@ -59,6 +59,7 @@ const STATEMENTS: string[] = [
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS premium_role TEXT`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS google_safe_search BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS disable_custom_fms BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE guild_settings ADD COLUMN IF NOT EXISTS lockdown_ignore_channels JSONB NOT NULL DEFAULT '[]'::jsonb`,
 
   `CREATE TABLE IF NOT EXISTS antinuke_whitelist (
     guild_id TEXT NOT NULL, user_id TEXT NOT NULL, PRIMARY KEY (guild_id, user_id)
@@ -112,6 +113,16 @@ const STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS afk (
     guild_id TEXT NOT NULL, user_id TEXT NOT NULL, message TEXT NOT NULL,
     since TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (guild_id, user_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS hard_bans (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, moderator_id TEXT NOT NULL,
+    reason TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (guild_id, user_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS case_proofs (
+    guild_id TEXT NOT NULL, case_id INTEGER NOT NULL, explanation TEXT NOT NULL DEFAULT '',
+    attachment_urls JSONB NOT NULL DEFAULT '[]'::jsonb, updated_by TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (guild_id, case_id)
   )`,
   `CREATE TABLE IF NOT EXISTS reminders (
     id SERIAL PRIMARY KEY, user_id TEXT NOT NULL, channel_id TEXT NOT NULL,
@@ -175,6 +186,12 @@ const STATEMENTS: string[] = [
     duration TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS mod_cases_guild_user_idx ON mod_cases (guild_id, user_id)`,
+  `CREATE TABLE IF NOT EXISTS temp_roles (
+    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
+    role_id TEXT NOT NULL, added_by TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS temp_roles_guild_expiry_idx ON temp_roles (guild_id, expires_at)`,
   `CREATE TABLE IF NOT EXISTS temp_bans (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
     moderator_id TEXT NOT NULL, reason TEXT NOT NULL, unban_at TIMESTAMPTZ NOT NULL,

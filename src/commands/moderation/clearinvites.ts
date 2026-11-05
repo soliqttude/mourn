@@ -1,0 +1,4 @@
+import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import type { HybridCommand } from "../../lib/command.js";
+import { errorEmbed } from "../../lib/embeds.js";
+export const command:HybridCommand={name:"clearinvites",description:"Delete all active invites in this server.",category:"moderation",guildOnly:true,permission:"manage_guild",async execute(ctx){if(!ctx.guild)return;if(!ctx.guild.members.me?.permissions.has(PermissionFlagsBits.ManageGuild))return ctx.reply({embeds:[errorEmbed("I need Manage Server to delete invites.")]});await ctx.defer();const invites=await ctx.guild.invites.fetch();let removed=0,failed=0;for(const invite of invites.values()){await invite.delete("All invites cleared by "+ctx.user.tag).then(()=>removed++).catch(()=>failed++);}return ctx.reply({embeds:[new EmbedBuilder().setColor(0x8b1e2d).setTitle("Invites cleared").setDescription("Deleted **"+removed+"** invites"+(failed?" • failed: **"+failed+"**":"")+".")]});}};
