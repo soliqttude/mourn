@@ -1,56 +1,81 @@
-import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
-import { and, asc, eq } from "drizzle-orm";
+import { ApplicationCommandOptionType, ApplicationCommandOptionData, EmbedBuilder } from "discord.js";
 import type { HybridCommand } from "../../lib/command.js";
+import { errorEmbed, successEmbed, brandEmbed } from "../../lib/embeds.js";
+import { parseDuration } from "../../lib/time.js";
+import { addReminder } from "../../features/reminders.js";
 import { db } from "../../db/index.js";
 import { remindersTable } from "../../db/schema.js";
-import { addReminder } from "../../features/reminders.js";
-import { errorEmbed, successEmbed } from "../../lib/embeds.js";
-import { parseDuration } from "../../lib/time.js";
+import { and, asc, eq } from "drizzle-orm";
+
+const options: ApplicationCommandOptionData[] = [
+  {
+    name: "set",
+    description: "Create a reminder",
+    type: ApplicationCommandOptionType.Subcommand,
+    options: [
+      { name: "duration", description: "When to remind you (e.g. 10m, 2h, 1d)", type: ApplicationCommandOptionType.String, required: true },
+      { name: "reminder", description: "What should I remind you about?", type: ApplicationCommandOptionType.String, required: true },
+    ],
+  },
+  {
+    name: "list",
+    description: "View your pending reminders",
+    type: ApplicationCommandOptionType.Subcommand,
+  },
+  {
+    name: "remove",
+    description: "Remove one of your reminders",
+    type: ApplicationCommandOptionType.Subcommand,
+    options: [{ name: "id", description: "Reminder ID", type: ApplicationCommandOptionType.Integer, required: true, minValue: 1 }],
+  },
+];
 
 export const command: HybridCommand = {
   name: "remind",
-  aliases: ["reminder", "remindme"],
+  aliases: ["reminder", "remindme", "reminders"],
   description: "Create, list, or remove your reminders.",
-  category: "utility",
-  options: [
-    { type: ApplicationCommandOptionType.Subcommand, name: "set", description: "Create a reminder", options: [
-      { name: "duration", description: "When to remind you (e.g. 10m, 2h, 1d)", type: ApplicationCommandOptionType.String, required: true },
-      { name: "reminder", description: "What should I remind you about?", type: ApplicationCommandOptionType.String, required: true },
-    ]},
-    { type: ApplicationCommandOptionType.Subcommand, name: "list", description: "View your active reminders" },
-    { type: ApplicationCommandOptionType.Subcommand, name: "remove", description: "Remove one of your reminders", options: [
-      { name: "id", description: "Reminder ID", type: ApplicationCommandOptionType.Integer, required: true },
-    ]},
-  ],
+  category: "moderation",
+  options,
   async execute(ctx) {
-    const action = (ctx.getSubcommand() ?? ctx.args[0] ?? "set").toLowerCase();
-    if (action === "list") {
+    const subcommand = ctx.getSubcommand() ?? (ctx.source === "prefix" ? ctx.args[0]?.toLowerCase() : null) ?? "set";
+    const offset = ctx.source === "prefix" && ["set", "list", "remove"].includes(subcommand) ? 1 : 0;
+
+    if (subcommand === "list") {
       const rows = await db.select().from(remindersTable)
         .where(eq(remindersTable.userId, ctx.user.id))
-        .orderBy(asc(remindersTable.remindAt)).limit(25);
-      if (!rows.length) return ctx.reply({ content: "You have no active reminders.", ephemeral: true });
-      const description = rows.map(r => `**#${r.id}** • <t:${Math.floor(r.remindAt.getTime()/1000)}:R>\n${r.message.slice(0,180)}`).join("\n\n");
-      return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x8b1e2d).setTitle("Your reminders").setDescription(description).setFooter({ text: "Showing up to 25 active reminders." })], ephemeral: true });
+        .orderBy(asc(remindersTable.remindAt))
+        .limit(25);
+      if (!rows.length) return ctx.reply({ embeds: [brandEmbed({ title: "Your reminders", description: "You have no pending reminders.", page: "Reminders" })] });
+      const description = rows.map((row) =>
+        `**#${row.id}** — <t:${Math.floor(row.remindAt.getTime() / 1000)}:R>\n${row.message.slice(0, 250)}`
+      ).join("\n\n");
+      return ctx.reply({ embeds: [brandEmbed({ title: "Your reminders", description, page: "Reminders" })] });
     }
-    if (action === "remove") {
-      const id = ctx.getNumber("id") ?? Number(ctx.args[1]);
-      if (!Number.isSafeInteger(id) || id <= 0) return ctx.reply({ embeds: [errorEmbed("Provide a valid reminder ID.")], ephemeral: true });
-      const deleted = await db.delete(remindersTable).where(and(eq(remindersTable.id,id),eq(remindersTable.userId,ctx.user.id))).returning({id:remindersTable.id});
-      if (!deleted.length) return ctx.reply({ embeds: [errorEmbed("That reminder does not exist or does not belong to you.")], ephemeral: true });
-      return ctx.reply({ embeds: [successEmbed(`Removed reminder **#${id}**.`)], ephemeral: true });
+
+    if (subcommand === "remove") {
+      const id = ctx.getNumber("id") ?? Number(ctx.args[offset + 1]);
+      if (!Number.isSafeInteger(id) || id < 1) return ctx.reply({ embeds: [errorEmbed("Provide a valid reminder ID.")] });
+      const rows = await db.delete(remindersTable)
+        .where(and(eq(remindersTable.id, id), eq(remindersTable.userId, ctx.user.id)))
+        .returning({ id: remindersTable.id });
+      if (!rows.length) return ctx.reply({ embeds: [errorEmbed("That reminder was not found, or it belongs to another user.")] });
+      return ctx.reply({ embeds: [successEmbed(`Removed reminder **#${id}**.`)] });
     }
-    if (action !== "set") return ctx.reply({ embeds: [errorEmbed("Use `,remind <duration> <reminder>`, `,remind list`, or `,remind remove <id>`.")] });
-    const duration = ctx.getString("duration") ?? ctx.args[0];
-    const message = ctx.getString("reminder") ?? ctx.args.slice(1).join(" ").trim();
+
+    if (subcommand !== "set") return ctx.reply({ embeds: [errorEmbed("Use `remind`, `remind list`, or `remind remove <id>`.")] });
+    const duration = ctx.getString("duration") ?? ctx.args[offset] ?? null;
+    const message = ctx.getString("reminder") ?? ctx.args.slice(offset + 1).join(" ").trim();
     if (!duration || !message) return ctx.reply({ embeds: [errorEmbed("Usage: `,remind <duration> <reminder>`.")] });
     const ms = parseDuration(duration);
-    if (!ms || ms < 60_000 || ms > 365 * 24 * 60 * 60 * 1000) return ctx.reply({ embeds: [errorEmbed("Use a duration from 1 minute up to 365 days (e.g. `30m`, `2h`, or `1d`).")] });
+    if (!ms || ms < 60_000 || ms > 365 * 24 * 60 * 60 * 1000) {
+      return ctx.reply({ embeds: [errorEmbed("Use a valid duration from 1 minute up to 365 days (for example, `30m`, `2h`, or `1d`).")] });
+    }
     const channelId = ctx.channel?.id;
-    if (!channelId) return ctx.reply({ embeds: [errorEmbed("Could not determine a channel for this reminder.")] });
-    const remindAt = new Date(Date.now()+ms);
+    if (!channelId) return ctx.reply({ embeds: [errorEmbed("Reminders must be set in a server or direct-message channel.")] });
+    const remindAt = new Date(Date.now() + ms);
     try {
-      await addReminder(ctx.user.id,channelId,ctx.guild?.id ?? null,message,remindAt);
-      return ctx.reply({ embeds: [successEmbed(`Reminder set for <t:${Math.floor(remindAt.getTime()/1000)}:R>.\n**Reminder:** ${message}`)] });
+      await addReminder(ctx.user.id, channelId, ctx.guild?.id ?? null, message, remindAt);
+      return ctx.reply({ embeds: [successEmbed(`Reminder set for <t:${Math.floor(remindAt.getTime() / 1000)}:R>.\n**Reminder:** ${message}`)] });
     } catch (error) {
       return ctx.reply({ embeds: [errorEmbed((error as Error).message || "Could not save your reminder.")] });
     }
