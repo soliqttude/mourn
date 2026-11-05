@@ -301,6 +301,15 @@ export const hardBans = pgTable("hard_bans", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }));
 
+export const caseProofs = pgTable("case_proofs", {
+  guildId: text("guild_id").notNull(),
+  caseId: integer("case_id").notNull(),
+  explanation: text("explanation").default("").notNull(),
+  attachmentUrls: jsonb("attachment_urls").$type<string[]>().default([]).notNull(),
+  updatedBy: text("updated_by").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({ pk: primaryKey({ columns: [t.guildId, t.caseId] }) }));
+
 export const tempRoles = pgTable("temp_roles", {
   id: serial("id").primaryKey(),
   guildId: text("guild_id").notNull(),
