@@ -119,6 +119,11 @@ const STATEMENTS: string[] = [
     reason TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (guild_id, user_id)
   )`,
+  `CREATE TABLE IF NOT EXISTS case_proofs (
+    guild_id TEXT NOT NULL, case_id INTEGER NOT NULL, explanation TEXT NOT NULL DEFAULT '',
+    attachment_urls JSONB NOT NULL DEFAULT '[]'::jsonb, updated_by TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (guild_id, case_id)
+  )`,
   `CREATE TABLE IF NOT EXISTS reminders (
     id SERIAL PRIMARY KEY, user_id TEXT NOT NULL, channel_id TEXT NOT NULL,
     guild_id TEXT, message TEXT NOT NULL, remind_at TIMESTAMPTZ NOT NULL,
