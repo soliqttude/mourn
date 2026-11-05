@@ -9,6 +9,7 @@ import { registerSlashCommands } from "./handlers/slashRegister.js";
 import { startReminderLoop } from "./features/reminders.js";
 import { startGiveawayLoop } from "./features/giveaway.js";
 import { startTempBanLoop } from "./features/tempbans.js";
+import { startTempRoleLoop } from "./features/temproles.js";
 import { startAutoMessageLoop } from "./features/autoMessages.js";
 import { startSocialNotificationLoop } from "./features/socialNotifications.js";
 import { setupMusic } from "./features/music.js";
@@ -63,6 +64,7 @@ async function main() {
       startReminderLoop(client);
       startGiveawayLoop(client);
       startTempBanLoop(client);
+      startTempRoleLoop(client);
       startAutoMessageLoop(client);
       startSocialNotificationLoop(client);
     } else {
