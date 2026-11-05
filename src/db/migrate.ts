@@ -114,6 +114,11 @@ const STATEMENTS: string[] = [
     guild_id TEXT NOT NULL, user_id TEXT NOT NULL, message TEXT NOT NULL,
     since TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (guild_id, user_id)
   )`,
+  `CREATE TABLE IF NOT EXISTS hard_bans (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, moderator_id TEXT NOT NULL,
+    reason TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (guild_id, user_id)
+  )`,
   `CREATE TABLE IF NOT EXISTS reminders (
     id SERIAL PRIMARY KEY, user_id TEXT NOT NULL, channel_id TEXT NOT NULL,
     guild_id TEXT, message TEXT NOT NULL, remind_at TIMESTAMPTZ NOT NULL,
