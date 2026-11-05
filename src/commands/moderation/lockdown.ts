@@ -24,7 +24,6 @@ export const command: HybridCommand = {
   description: "Lock a channel or manage server lockdown settings.",
   aliases: ["lockdownchannel"],
   category: "moderation",
-  permission: "manage_channels",
   guildOnly: true,
   options,
   async execute(ctx) {
@@ -61,6 +60,7 @@ export const command: HybridCommand = {
 
     const me = guild.members.me;
     if (!me?.permissions.has(PermissionFlagsBits.ManageChannels)) return ctx.reply({ embeds: [errorEmbed("I need Manage Channels.")] });
+    if (!ctx.member?.permissions.has(PermissionFlagsBits.ManageChannels)) return ctx.reply({ embeds: [errorEmbed("Manage Channels permission is required for channel lockdown.")] });
     if (action === "all") {
       const settings = await getGuildSettings(guild.id);
       const ignored = new Set(settings.lockdownIgnoreChannels ?? []);
