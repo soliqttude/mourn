@@ -4,6 +4,7 @@ import type { HybridCommand } from "../../lib/command.js";
 import { db } from "../../db/index.js";
 import { hardBans, antinukeAdmins } from "../../db/schema.js";
 import { successEmbed, errorEmbed } from "../../lib/embeds.js";
+import { resolveUser } from "../../lib/parsing.js";
 
 export const command: HybridCommand = {
   name: "hardban",
@@ -33,8 +34,8 @@ export const command: HybridCommand = {
       return ctx.reply({ embeds: [new EmbedBuilder().setColor(0x8b1e2d).setTitle("Hardbanned members (" + rows.length + ")").setDescription(lines.join("\\n").slice(0, 4000))], allowedMentions: { parse: [] } });
     }
     if (action !== "ban") return ctx.reply({ embeds: [errorEmbed("Choose ban or list.")] });
-    const target = await ctx.getUser("user", true);
-    const reason = ctx.getString("reason") ?? (ctx.source === "prefix" ? ctx.args.slice(1).join(" ").trim() : "") || "No reason provided";
+    const target = ctx.source === "prefix" ? await resolveUser(ctx.client, ctx.args[0] ?? "") : await ctx.getUser("user", true);
+    const reason = (ctx.getString("reason") ?? (ctx.source === "prefix" ? ctx.args.slice(1).join(" ").trim() : "")) || "No reason provided";
     if (!target) return ctx.reply({ embeds: [errorEmbed("Provide a member to hardban.")] });
     if (target.id === ctx.user.id || target.id === guild.ownerId) return ctx.reply({ embeds: [errorEmbed("You cannot hardban yourself or the server owner.")] });
     const already = await db.select().from(hardBans).where(and(eq(hardBans.guildId, guild.id), eq(hardBans.userId, target.id))).limit(1);
