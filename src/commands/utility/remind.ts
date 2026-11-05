@@ -32,12 +32,12 @@ const options: ApplicationCommandOptionData[] = [
 
 export const command: HybridCommand = {
   name: "remind",
-  aliases: ["reminder", "remindme", "reminders"],
+  aliases: ["reminder", "remindme"],
   description: "Create, list, or remove your reminders.",
   category: "moderation",
   options,
   async execute(ctx) {
-    const subcommand = ctx.getSubcommand() ?? (ctx.source === "prefix" ? ctx.args[0]?.toLowerCase() : null) ?? "set";
+    const subcommand = ctx.getSubcommand(false) ?? (ctx.source === "prefix" ? ctx.args[0]?.toLowerCase() : null) ?? "set";
     const offset = ctx.source === "prefix" && ["set", "list", "remove"].includes(subcommand) ? 1 : 0;
 
     if (subcommand === "list") {
