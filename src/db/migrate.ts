@@ -181,6 +181,12 @@ const STATEMENTS: string[] = [
     duration TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS mod_cases_guild_user_idx ON mod_cases (guild_id, user_id)`,
+  `CREATE TABLE IF NOT EXISTS temp_roles (
+    id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
+    role_id TEXT NOT NULL, added_by TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS temp_roles_guild_expiry_idx ON temp_roles (guild_id, expires_at)`,
   `CREATE TABLE IF NOT EXISTS temp_bans (
     id SERIAL PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
     moderator_id TEXT NOT NULL, reason TEXT NOT NULL, unban_at TIMESTAMPTZ NOT NULL,
